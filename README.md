@@ -2,7 +2,7 @@
 
 MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for modern personal and small-business apps across SBCL / ECL / ABCL.
 
-**This repo is the backlog and docs hub.** Implementation lives in sibling libraries under `egao1980`. Distribution: [`egao1980/cl-repository`](https://github.com/egao1980/cl-repository) (OCI + platform overlays).
+**This repo is the backlog and docs hub.** Implementation lives in sibling libraries under `egao1980`. Distribution: [`egao1980/cl-repository`](https://github.com/egao1980/cl-repository) (OCI + platform overlays). TLS natives: [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) (OpenSSL overlays + stock cl+ssl).
 
 ## Tracking
 
