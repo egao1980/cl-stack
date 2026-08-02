@@ -11,9 +11,15 @@ Policy companion to [overlays.md](overlays.md). **Canonical live pipelines** alr
 
 Pattern: **parallel matrix build** → upload `native-<os>-<arch>` artifacts → single `publish` job arranges `lib/<os>-<arch>/` → atomic `build-package` / `publish-package` into `egao1980/cl-systems`.
 
+**Formalized reusable workflow** (prefer this for new packages):
+
+`egao1980/cl-repository/.github/workflows/publish-native-package.yml@main`
+
+Docs: [cl-repository `docs/ci-native-publish.md`](https://github.com/egao1980/cl-repository/blob/main/docs/ci-native-publish.md). Caller only owns the **build matrix**; publish/stage/oras verify is shared. Reference consumer: [`cl-stack-ssl` `publish-oci.yml`](https://github.com/egao1980/cl-stack-ssl/blob/main/.github/workflows/publish-oci.yml).
+
 Local / clean-container consume: each repo’s `scripts/test-oci-local.sh` + workspace notes in [lisp-workspace `LESSONS_LEARNED.md`](https://github.com/egao1980/lisp-workspace/blob/main/LESSONS_LEARNED.md) (relative overlay `:files`, empty layers from `(directory #p"*")`, catalog 403 / `:skip-catalog`, `host.docker.internal` for act → local registry).
 
-**Spike criteria for #10 are satisfied by the above.** New stack natives (OpenSSL, event loops) should copy this workflow shape, not invent a second demo package.
+**Spike criteria for #10 are satisfied by the above.** New stack natives should **call the reusable workflow**, not paste another copy of the publish job.
 
 ## Recommended GHA matrix (#11)
 
