@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29); overlays `#45`/`#46` done; CE protocol + encoding backends split (`http-protocol` + `http-encoding-{chipz,brotli,zstd}`); next `#30` sync dexador
+**Status:** brief locked (#29); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade; next `#31` async
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -336,7 +336,7 @@ Default: **do not** signal on 4xx/5xx (httpx/requests style — inspect `status`
 | Layer | Repo (planned) | Notes |
 |-------|----------------|-------|
 | Protocol | `egao1980/http-protocol` | generics + shared conformance |
-| Sync | dexador behind `http-backend-dexador` (or facade in same repo) | wave-1 `#30` |
+| Sync | [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) | wave-1 `#30` |
 | Async | implement on `event-protocol` × libuv + libev | `#31` |
 | TLS natives | `egao1980/cl-stack-ssl` | already published |
 
