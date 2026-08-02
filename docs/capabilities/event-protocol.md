@@ -42,6 +42,14 @@ Scores: **1** (poor) … **5** (excellent) for wave-1 cl-stack needs.
 
 **Implementation note:** Prefer thin `event-backend-libuv` / `event-backend-libev` that CFFI the C APIs (or wrap the minimal subset of cl-async / lev). Do **not** force the entire cl-async driver zoo into the protocol system.
 
+**Repo layout (locked):** one GitHub project per layer — not colocated under `event-protocol`.
+
+| Layer | Repo |
+|-------|------|
+| Protocol + shared conformance suite | [`egao1980/event-protocol`](https://github.com/egao1980/event-protocol) |
+| Default backend A | [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) |
+| Second backend B (Unix) | [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) |
+
 ---
 
 ## Async DX (#13)
@@ -173,10 +181,10 @@ Same overlay policy as OpenSSL ([overlays.md](../overlays.md)): `native-library`
 
 ## Implementation order
 
-1. `#15` — `event-protocol` generics + conditions (no natives)
-2. `#16` — libuv backend + overlay + smoke
-3. `#17` — libev backend + overlay + smoke
-4. `#18` — Rove conformance × both backends
+1. `#15` — `event-protocol` generics + conditions (no natives) — **Done** (PR merged)
+2. `#16` — libuv backend + overlay + smoke → repo `event-backend-libuv`
+3. `#17` — libev backend + overlay + smoke → repo `event-backend-libev`
+4. `#18` — shared Rove suite in `event-protocol/conformance`; backends set `*test-backend-maker*`
 
 HTTP async (#31) and WSS (#35) **depend on** `#15`+`#16` at minimum.
 
