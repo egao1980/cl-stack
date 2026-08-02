@@ -151,7 +151,7 @@ oras pull --platform linux/amd64 \
 | This matrix + naming | #8 #9 | done |
 | Spike: one native → GHCR → clean container | #10 | done — prior art: grpc / cl-protobufs ([overlay-ci.md](overlay-ci.md)) |
 | Multi-arch CI pattern | #11 | done pattern in grpc; Windows via `windows-latest` or self-hosted ([overlay-ci.md](overlay-ci.md)) |
-| OpenSSL overlay | #12 | in progress — [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) (libs + stock cl+ssl) |
+| OpenSSL overlay | #12 | done — [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) `ghcr.io/egao1980/cl-systems/cl-stack-ssl:3.4.1` (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK |
 
 ## Pitfalls (short)
 
