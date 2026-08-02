@@ -1,0 +1,50 @@
+name: Capability
+description: Assess / ship a stack capability (matrix row)
+title: "[capability] "
+labels: ["capability"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options: [P0, P1, P2, P3]
+    validations:
+      required: true
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      options: [event, http, ws, overlays, packaging, testing, docs, json, config, other]
+    validations:
+      required: true
+  - type: dropdown
+    id: disposition
+    attributes:
+      label: Disposition (working)
+      options: [pin, pr-upstream, fork, rewrite, protocol, undecided]
+    validations:
+      required: true
+  - type: textarea
+    id: demand
+    attributes:
+      label: Demand scan
+      description: Py/Java/C++ anchors and use cases
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol surface
+      description: Generics, conditions, backends (if applicable)
+  - type: textarea
+    id: survey
+    attributes:
+      label: CL survey
+      description: ANSI / de-facto libs / liveliness
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Acceptance criteria
+    validations:
+      required: true

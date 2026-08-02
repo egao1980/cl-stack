@@ -1,0 +1,23 @@
+name: Rove gap
+description: pytest/JUnit capability missing in Rove — dogfood upstream PR
+title: "[rove] "
+labels: ["testing", "rove-dogfood"]
+body:
+  - type: input
+    id: counterpart
+    attributes:
+      label: Py/Java counterpart
+      description: e.g. pytest.mark.parametrize, JUnit @Timeout
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why cl-stack needs it
+    validations:
+      required: true
+  - type: input
+    id: upstream
+    attributes:
+      label: Upstream issue/PR
+      description: Link once filed on fukamachi/rove or egao1980/rove

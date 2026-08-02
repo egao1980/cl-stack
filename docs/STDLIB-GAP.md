@@ -1,0 +1,67 @@
+# Stdlib gap analysis (ANSI / CDR / CL21 vs Python / Java)
+
+Canonical structural matrix for cl-stack prioritization. **Do not rediscover** that ANSI lacks threads/HTTP/i18n — see [Absent appendix](#absent-appendix).
+
+## Taxonomy
+
+| Tag | Meaning |
+|-----|---------|
+| Kernel-strong | ANSI/CDR better or equal — teach, don't wrap away |
+| De-facto converged | One obvious QL answer — pin |
+| Fragmented | Many libs — protocol + curated default |
+| Impl-private | Per-impl only — portability layer |
+| Absent | Known missing batteries |
+| Wrong-shape | Exists but hostile to overlays/async/DX |
+
+## Category matrix (summary)
+
+| Category | Tag | Priority | cl-stack action |
+|----------|-----|----------|-----------------|
+| Conditions / restarts | Kernel-strong | P2 | Cookbooks; map IO errors → conditions |
+| CLOS / MOP | Kernel-strong | P0 | GF protocols; pin closer-mop |
+| Numbers / sequences | Kernel-strong | P2–P3 | Pin Alexandria+Serapeum |
+| Concurrency | De-facto converged | P1 | Pin bt2 |
+| Async I/O / event loop | Wrong-shape | P0 | `event-protocol` + **multi-backend**; overlays; one app DX |
+| Sockets / DNS | De-facto converged | P1 | Pin usocket |
+| HTTP client | Fragmented | P0 | `http-protocol` + facade (dexador sync + async on protocol) |
+| HTTP server | Fragmented | P1 | Pin Clack shape |
+| WebSocket | Fragmented | P0 | `ws-protocol` + websocket-driver |
+| TLS / SSL | Wrong-shape | P0 | OpenSSL OCI overlays; pin cl+ssl |
+| Crypto / secrets | De-facto converged | P2 | Pin Ironclad |
+| Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first |
+| i18n / gettext | Absent | P3 | Later |
+| Regex | De-facto converged | P2 | Pin cl-ppcre |
+| Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
+| Subprocess | De-facto converged | P2 | Pin UIOP |
+| JSON / CSV / XML | Fragmented | P1 | `json-protocol` + pin |
+| SQL | Fragmented | P2 | cl-dbi/Mito after I/O |
+| Logging | Fragmented | P2 | Pin one |
+| CLI | Fragmented | P2 | Pin clingon or adopt |
+| Config | Fragmented | P1 | env + one file format |
+| Packaging | Fragmented | P0 | **cl-repository** product path |
+| FFI | De-facto converged | P0 | CFFI + overlays |
+| Time / TZ | De-facto converged | P2 | local-time + tzdata overlay |
+| Testing | Fragmented | P0 | **Rove** + corpus; dogfood PRs |
+| Gray streams | De-facto converged | P1 | trivial-gray-streams |
+| Weak refs | De-facto converged | P2 | trivial-garbage |
+
+## Wave-1 (P0) ranking
+
+1. Platform overlays (OpenSSL, event natives, CFFI-friendly)
+2. `event-protocol` + default loop + second backend
+3. `http-protocol` facade (sync + async)
+4. `ws-protocol` + websocket-driver
+5. cl-repository locks / cl-stack pins
+6. Rove + license-clean corpus pipeline + Rove gap PRs
+
+## Absent appendix
+
+Portable threads, async I/O, sockets/HTTP/WS, TLS, regex, UUID, JSON/CSV/XML, SQL, crypto, logging, argparse, subprocess, pathlib-grade FS, i18n, venv-equivalent — ANSI-missing; addressed via pins/facades above.
+
+## CDR / CL21
+
+CDR1 MOP is real; other CDRs are language polish. CL21 stalled; ignored batteries. Batteries coherence = curation + protocols (this project).
+
+## Full deep dives
+
+See planning notes / capability issues for Fragmented/Wrong-shape writeups (async, HTTP, paths, TLS, JSON, packaging).
