@@ -11,8 +11,8 @@ Normative packager/client behavior: [cl-repository `docs/spec.md`](https://githu
 | **Required** | `linux` | `amd64` | GitHub-hosted Ubuntu runner |
 | **Required** | `linux` | `arm64` | GitHub-hosted ARM Ubuntu runner |
 | **Required** | `darwin` | `arm64` | Apple Silicon (e.g. `macos-14`); M4 self-hosted OK |
+| **Required** | `windows` | `amd64` | Self-hosted Windows builder (maintainer machine / runner) |
 | Stretch | `darwin` | `amd64` | Intel Mac runner if available |
-| Stretch | `windows` | `amd64` | Post wave-1 unless a pin hard-requires it |
 
 CL implementation for wave-1 CI: **SBCL**. Overlays that are grovel/native-ABI only do **not** need a `:lisp` / `dev.common-lisp.implementation` pin (one overlay serves all impls on that OS/arch). Use `--lisp` only for impl-specific compiled artifacts.
 
@@ -24,7 +24,7 @@ cl-repository authoring keys (`.asd` `:platform`, `overlay-spec`, `cl-repo add-o
 |-----|-----------|----------|----------|
 | `os` | `platform.os` | yes (overlays) | `linux`, `darwin`, `windows` |
 | `arch` | `platform.architecture` | yes (overlays) | `amd64`, `arm64` |
-| `os-version` | `platform.os.version` | optional | `ubuntu-22.04`, `ubuntu-24.04`, `macos-14` |
+| `os-version` | `platform.os.version` | optional | `ubuntu-22.04`, `ubuntu-24.04`, `macos-14`, `windows-11` |
 | `lisp` | annotation `dev.common-lisp.implementation` | optional | `sbcl` |
 
 > Workspace notes sometimes say `release` for the third dimension — the **wire/API name is `os-version`** (OCI `os.version`). Prefer that name in pins, docs, and CLI.
@@ -47,7 +47,7 @@ cl-repository authoring keys (`.asd` `:platform`, `overlay-spec`, `cl-repo add-o
 4. Optionally filter by CL implementation annotation.
 5. Standard OCI clients: `oras pull --platform linux/amd64 <ref>` (omit `--platform` → first/universal manifest).
 
-Clean-container proof (wave-1 spike, #10): Ubuntu image with Roswell/SBCL, **no** `gcc`/headers, install from GHCR, load foreign lib / TLS smoke.
+Clean-container proof (wave-1 spike, #10): Linux first (Ubuntu image with Roswell/SBCL, **no** `gcc`/headers), then mirror smoke on Windows when the native overlay exists — install from GHCR, load foreign lib / TLS smoke.
 
 ## GHCR namespace + artifact naming
 
