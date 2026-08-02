@@ -15,9 +15,10 @@ Conventions: [API.md](../API.md). Overlay shipping: [overlays.md](../overlays.md
 |----------|--------|-----------|
 | **App-level async DX** | **Promises** (Blackbird-shaped) | Compose HTTP/WS like httpx; `attach`/`catcher`/`finally` map to conditions; await-macros = P2 sugar later |
 | **Protocol primitive** | Callbacks + cancel tokens | Backends stay thin; promises wrap protocol ops in the facade |
-| **Default backend (A)** | **libuv** | Cross-platform (IOCP later), Node-proven, matches OpenSSL overlay story |
-| **Second backend (B)** | **libev** | Woo/Clack server stack; proves multi-backend without inventing a third native |
+| **Default backend (A)** | **libuv** | **Windows is primary** (IOCP, same as Node); also linux/darwin; matches OpenSSL overlay story |
+| **Second backend (B)** | **libev** | Woo/Clack server stack; **Unix-only** (libev has no Windows) |
 | **Not wave-1 second** | iolib | Unix/epoll-strong, weaker Windows + less Woo reuse; revisit P2 |
+| **CFFI grovel** | Overlay build time | Grovel on CI/builder per os/arch; ship `cffi-grovel-output` → `grovel-cache/`. Consumers need no C toolchain (incl. Windows). |
 | **Loop affinity** | One loop per thread; ops on “current” loop | Cross-thread schedule via notifier/wake (backend-specific) |
 | **Selection DX** | ASDF system + pin / `*event-backend*` | Default pin loads A; apps swap with `asdf:load-system` + bind special (no plugin DSL) |
 
@@ -29,17 +30,25 @@ Scores: **1** (poor) … **5** (excellent) for wave-1 cl-stack needs.
 
 | Criterion | libuv (+ cl-async lineage) | libev (+ Woo) | iolib |
 |-----------|----------------------------|---------------|-------|
-| Platform coverage (linux/darwin now, win later) | **5** (IOCP) | **3** (POSIX-first; Woo docs UNIX) | **2** (Unix-centric) |
-| Overlay pain (ship `.so`/`.dylib`) | **4** (one well-known lib) | **4** (same) | **5** (less native, more syscalls) |
+| Platform coverage (win+linux+darwin) | **5** (IOCP) | **3** (POSIX-only) | **2** (Unix-centric) |
+| Overlay pain (ship `.so`/`.dylib`/`.dll` + grovel) | **4** | **4** (no win row) | **5** |
 | Existing CL stack fit | **4** (cl-async, drivers, blackbird) | **5** (Woo = de-facto fast server) | **3** (Conserv/teepeedee2 niche) |
 | Maintenance / liveliness | **3** (mature, slower churn) | **4** (Fukamachi ecosystem active) | **3** |
-| Windows later | **5** | **2** | **1** |
+| Windows (primary) | **5** | **1** (unsupported) | **1** |
 | Conformance surface (timers/IO/wake) | **5** | **4** | **3** |
 | **Wave-1 role** | **Default (A)** | **Second (B)** | Stretch / not B |
 
 **Woo coupling:** Backend B does **not** require running Woo. We use libev (and optionally patterns from Woo’s ev bindings) so a future Clack/Woo deploy shares the same native overlay. HTTP client async (#31) targets `event-protocol`, not Woo’s accept loop.
 
 **Implementation note:** Prefer thin `event-backend-libuv` / `event-backend-libev` that CFFI the C APIs (or wrap the minimal subset of cl-async / lev). Do **not** force the entire cl-async driver zoo into the protocol system.
+
+**Repo layout (locked):** one GitHub project per layer — not colocated under `event-protocol`.
+
+| Layer | Repo |
+|-------|------|
+| Protocol + shared conformance suite | [`egao1980/event-protocol`](https://github.com/egao1980/event-protocol) |
+| Default backend A | [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) |
+| Second backend B (Unix) | [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) |
 
 ---
 
@@ -161,21 +170,21 @@ No central plugin registry. Metapackage (#21) may depend on the default backend 
 
 ## Overlay plan (feeds #16 / #17)
 
-| Backend | Native | GHCR (planned) |
-|---------|--------|----------------|
-| A libuv | `libuv` | `ghcr.io/egao1980/cl-systems/cl-stack-libuv:<ver>` |
-| B libev | `libev` | `ghcr.io/egao1980/cl-systems/cl-stack-libev:<ver>` |
+| Backend | Native | GHCR (planned) | Matrix |
+|---------|--------|----------------|--------|
+| A libuv | `libuv` + grovel | `ghcr.io/egao1980/cl-systems/event-backend-libuv:<ver>` | linux/amd64+arm64, darwin/arm64, **windows/amd64** |
+| B libev | `libev` + grovel | `ghcr.io/egao1980/cl-systems/event-backend-libev:<ver>` | linux/amd64+arm64, darwin/arm64 (**no Windows**) |
 
-Same matrix/policy as OpenSSL ([overlays.md](../overlays.md)): linux/amd64+arm64, darwin/arm64, windows/amd64 (libuv first; libev windows = stretch).
+Same overlay policy as OpenSSL ([overlays.md](../overlays.md)): `native-library` + `cffi-grovel-output` per os/arch. Grovel runs on the builder only.
 
 ---
 
 ## Implementation order
 
-1. `#15` — `event-protocol` generics + conditions (no natives)
-2. `#16` — libuv backend + overlay + smoke
-3. `#17` — libev backend + overlay + smoke
-4. `#18` — Rove conformance × both backends
+1. `#15` — `event-protocol` generics + conditions (no natives) — **Done** (PR merged)
+2. `#16` — libuv backend + overlay + smoke → repo `event-backend-libuv`
+3. `#17` — libev backend + overlay + smoke → repo `event-backend-libev`
+4. `#18` — shared Rove suite in `event-protocol/conformance`; backends set `*test-backend-maker*`
 
 HTTP async (#31) and WSS (#35) **depend on** `#15`+`#16` at minimum.
 
