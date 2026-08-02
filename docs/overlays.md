@@ -47,7 +47,7 @@ cl-repository authoring keys (`.asd` `:platform`, `overlay-spec`, `cl-repo add-o
 4. Optionally filter by CL implementation annotation.
 5. Standard OCI clients: `oras pull --platform linux/amd64 <ref>` (omit `--platform` → first/universal manifest).
 
-Clean-container proof (wave-1 spike, #10): Linux first (Ubuntu image with Roswell/SBCL, **no** `gcc`/headers), then mirror smoke on Windows when the native overlay exists — install from GHCR, load foreign lib / TLS smoke.
+Clean-container proof: already demonstrated with **`grpc` / `cl-protobufs`** on GHCR (see [overlay-ci.md](overlay-ci.md) § Prior art). New natives should reuse that consume path — Linux first (no `gcc`/headers), then Windows when the overlay exists.
 
 ## GHCR namespace + artifact naming
 
