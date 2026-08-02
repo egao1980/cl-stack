@@ -337,8 +337,8 @@ Default: **do not** signal on 4xx/5xx (httpx/requests style — inspect `status`
 |-------|----------------|-------|
 | Protocol | `egao1980/http-protocol` | generics + shared conformance |
 | Sync | [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) | wave-1 `#30` |
-| Async | implement on `event-protocol` × libuv + libev | `#31` |
-| TLS natives | `egao1980/cl-stack-ssl` | already published |
+| Async | [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` × libuv + libev | `#31` — **Carrier rejected** (cl-async/libuv hard-wire); thin rewrite + `register-io` |
+| TLS natives | `egao1980/cl-stack-ssl` | already published; wire into async backend next |
 
 Selection DX: ASDF + `*http-backend*` (same as event — no plugin registry).
 
@@ -364,7 +364,7 @@ Provenance file required (same pattern as `event-protocol` conformance).
 1. `#29` — this brief + condition taxonomy — **Done when merged**
 2. `#45` / `#46` — `cl-stack-brotli` + `cl-stack-zstd` overlays (can parallel `#30`)
 3. `#47` + `#30` — encoding pipeline in facade + sync dexador backend + all method helpers
-4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev
+4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev — **done** (cleartext); HTTPS on same backend still open
 5. `#32` — corpus slice + OCI consumer test (HTTPS via cl-stack-ssl; encoding round-trips)
 
 ---
