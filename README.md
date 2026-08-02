@@ -16,6 +16,7 @@ MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for m
 |-----|------|
 | [docs/STDLIB-GAP.md](docs/STDLIB-GAP.md) | ANSI/CDR/CL21 vs Python/Java structural matrix |
 | [docs/API.md](docs/API.md) | Protocol / facade / backend conventions |
+| [docs/capabilities/event-protocol.md](docs/capabilities/event-protocol.md) | Event loop protocol brief + backend picks (libuv/libev) |
 | [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix + GHCR overlay naming |
 | [docs/overlay-ci.md](docs/overlay-ci.md) | Multi-arch publish CI prior art + Windows runners |
 | [docs/LICENSE-POLICY.md](docs/LICENSE-POLICY.md) | MIT + inbound allowlist |

@@ -19,7 +19,8 @@
 
 ## Wave-1 protocol set
 
-- `event-protocol` — run / defer / cancel / sleep / register-io; multi-backend + default pin
+- `event-protocol` — run / defer / cancel / sleep / register-io; multi-backend + default pin  
+  **Brief:** [capabilities/event-protocol.md](capabilities/event-protocol.md) — DX = **promises**; default **libuv**, second **libev**
 - `http-protocol` — sync + async send; request/response values
 - `ws-protocol` — connect, send, on-message, ping, close
 
