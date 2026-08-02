@@ -120,6 +120,13 @@ cl-repo add-overlay my-cffi-lib \
   --native-paths lib/darwin-arm64/libfoo.dylib \
   --tag 1.0.0 \
   --registry ghcr.io --namespace egao1980/cl-systems
+
+# windows/amd64 (self-hosted builder)
+cl-repo add-overlay my-cffi-lib \
+  --os windows --arch amd64 \
+  --native-paths lib/windows-amd64/foo.dll \
+  --tag 1.0.0 \
+  --registry ghcr.io --namespace egao1980/cl-systems
 ```
 
 Consumer (conceptual):
@@ -152,3 +159,4 @@ oras pull --platform linux/amd64 \
 - Catalog package under a namespace may be writable only by the creating repo — use `:skip-catalog t` / packager warn path when cross-repo publish hits 403.
 - Local registry from act/devcontainer: use `host.docker.internal` + `--add-host=host.docker.internal:host-gateway` as needed.
 - Homebrew-linked binaries are not portable overlays — bundle self-contained natives or official static releases.
+- Windows overlays: ship the DLL set the consumer needs (CRT/UCRT linkage); don't assume MSVC Build Tools on the install machine. CI for `windows/amd64` is self-hosted until GHA Windows runners are wired (#11).
