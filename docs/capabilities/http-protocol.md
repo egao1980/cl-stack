@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29); Content-Encoding (gzip/deflate/**br**/**zstd**) wave-1; impl → overlays `#45`/`#46` + pipeline `#47` → `#30` → `#31` → `#32`
+**Status:** brief locked (#29); overlays `#45`/`#46` done; Content-Encoding pipeline in [`http-protocol`](https://github.com/egao1980/http-protocol) (`#47` lib done — wire in `#30`/`#31`); next `#30` sync dexador
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
