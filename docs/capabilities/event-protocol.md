@@ -1,7 +1,7 @@
 # event-protocol (wave-1)
 
 **Issues:** [#2](https://github.com/egao1980/cl-stack/issues/2) · [#13](https://github.com/egao1980/cl-stack/issues/13) · [#14](https://github.com/egao1980/cl-stack/issues/14)  
-**Status:** brief locked (API + DX + backend picks) — implementation = `#15`–`#18`
+**Status:** brief locked; `#15` done; backends A/B scaffolded in separate repos; `#16`/`#17` OCI overlay close-out next; `#18` conformance lives in this repo + backend CI
 
 Pluggable event loops (asyncio policies / NIO `SelectorProvider` shape). One app-level async DX; multiple native backends behind `event-protocol`.
 
