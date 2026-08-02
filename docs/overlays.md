@@ -47,7 +47,7 @@ cl-repository authoring keys (`.asd` `:platform`, `overlay-spec`, `cl-repo add-o
 4. Optionally filter by CL implementation annotation.
 5. Standard OCI clients: `oras pull --platform linux/amd64 <ref>` (omit `--platform` → first/universal manifest).
 
-Clean-container proof (wave-1 spike, #10): Linux first (Ubuntu image with Roswell/SBCL, **no** `gcc`/headers), then mirror smoke on Windows when the native overlay exists — install from GHCR, load foreign lib / TLS smoke.
+Clean-container proof: already demonstrated with **`grpc` / `cl-protobufs`** on GHCR (see [overlay-ci.md](overlay-ci.md) § Prior art). New natives should reuse that consume path — Linux first (no `gcc`/headers), then Windows when the overlay exists.
 
 ## GHCR namespace + artifact naming
 
@@ -146,12 +146,12 @@ oras pull --platform linux/amd64 \
 
 ## Wave-1 deliverables (tracking)
 
-| Task | Issue |
-|------|-------|
-| This matrix + naming | #8 #9 |
-| Spike: one native → GHCR → clean container | #10 |
-| Multi-arch CI pattern | #11 |
-| OpenSSL overlay | #12 |
+| Task | Issue | Status |
+|------|-------|--------|
+| This matrix + naming | #8 #9 | done |
+| Spike: one native → GHCR → clean container | #10 | done — prior art: grpc / cl-protobufs ([overlay-ci.md](overlay-ci.md)) |
+| Multi-arch CI pattern | #11 | done pattern in grpc; Windows via `windows-latest` or self-hosted ([overlay-ci.md](overlay-ci.md)) |
+| OpenSSL overlay | #12 | next product native |
 
 ## Pitfalls (short)
 
@@ -159,4 +159,4 @@ oras pull --platform linux/amd64 \
 - Catalog package under a namespace may be writable only by the creating repo — use `:skip-catalog t` / packager warn path when cross-repo publish hits 403.
 - Local registry from act/devcontainer: use `host.docker.internal` + `--add-host=host.docker.internal:host-gateway` as needed.
 - Homebrew-linked binaries are not portable overlays — bundle self-contained natives or official static releases.
-- Windows overlays: ship the DLL set the consumer needs (CRT/UCRT linkage); don't assume MSVC Build Tools on the install machine. CI for `windows/amd64` is self-hosted until GHA Windows runners are wired (#11).
+- Windows overlays: ship the DLL set the consumer needs (CRT/UCRT linkage); don't assume MSVC Build Tools on the install machine. Prefer GHA `windows-latest`; optional self-hosted runner — [overlay-ci.md](overlay-ci.md).
