@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` (cleartext HTTP/1.1; HTTPS next)
+**Status:** brief locked (#29); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` (HTTP/1.1 + HTTPS; live CE via `HTTP_ASYNC_LIVE`)
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -337,8 +337,8 @@ Default: **do not** signal on 4xx/5xx (httpx/requests style — inspect `status`
 |-------|----------------|-------|
 | Protocol | `egao1980/http-protocol` | generics + shared conformance |
 | Sync | [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) | wave-1 `#30` |
-| Async | [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` × libuv + libev | `#31` — **Carrier rejected** (cl-async/libuv hard-wire); thin rewrite + `register-io` |
-| TLS natives | `egao1980/cl-stack-ssl` | already published; wire into async backend next |
+| Async | [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` × libuv + libev | `#31` — **Carrier rejected**; thin rewrite + `register-io`; HTTPS via cl+ssl/`cl-stack-ssl` |
+| TLS natives | `egao1980/cl-stack-ssl` | used by async backend (run-to-completion TLS after async connect) |
 
 Selection DX: ASDF + `*http-backend*` (same as event — no plugin registry).
 
@@ -364,8 +364,8 @@ Provenance file required (same pattern as `event-protocol` conformance).
 1. `#29` — this brief + condition taxonomy — **Done when merged**
 2. `#45` / `#46` — `cl-stack-brotli` + `cl-stack-zstd` overlays (can parallel `#30`)
 3. `#47` + `#30` — encoding pipeline in facade + sync dexador backend + all method helpers
-4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev — **done** (cleartext); HTTPS on same backend still open
-5. `#32` — corpus slice + OCI consumer test (HTTPS via cl-stack-ssl; encoding round-trips)
+4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev — **done** (cleartext + HTTPS; requests-shaped CE live tests)
+5. `#32` — corpus slice + OCI consumer test (redirects/cookies/sessions; encoding round-trips)
 
 ---
 
