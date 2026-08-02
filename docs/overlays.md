@@ -154,6 +154,8 @@ oras pull --platform linux/amd64 \
 | OpenSSL overlay | #12 | done — [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) `ghcr.io/egao1980/cl-systems/cl-stack-ssl:3.4.1` (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK |
 | libuv overlay (event A) | #16 | done — [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) `ghcr.io/egao1980/cl-systems/event-backend-libuv:0.1.0` (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK — [event-protocol.md](capabilities/event-protocol.md) |
 | libev overlay (event B) | #17 | done — [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) `ghcr.io/egao1980/cl-systems/event-backend-libev:0.1.0` (linux/amd64+arm64, darwin/arm64; Unix-only); clean-container smoke OK — [event-protocol.md](capabilities/event-protocol.md) |
+| Brotli (`br`) overlay | #45 | planned — `cl-stack-brotli` / `libbrotli`; matrix linux/amd64+arm64, darwin/arm64, **windows/amd64** — [http-protocol.md](capabilities/http-protocol.md) |
+| Zstd overlay | #46 | planned — `cl-stack-zstd` / `libzstd`; same matrix — [http-protocol.md](capabilities/http-protocol.md) |
 
 ## Pitfalls (short)
 
