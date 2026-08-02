@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29); overlays `#45`/`#46` done; Content-Encoding pipeline in [`http-protocol`](https://github.com/egao1980/http-protocol) (`#47` lib done — wire in `#30`/`#31`); next `#30` sync dexador
+**Status:** brief locked (#29); overlays `#45`/`#46` done; CE protocol + encoding backends split (`http-protocol` + `http-encoding-{chipz,brotli,zstd}`); next `#30` sync dexador
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -38,10 +38,10 @@ Wave-1: pin what dexador already uses, **except IDNA** — use stack `cl-idna`.
 |---------|-----|--------|
 | IDNA / punycode | **[`cl-idna`](https://github.com/egao1980/cl-idna)** | Stack-owned; `to-ascii` / `to-unicode` (UTR#46). OCI `ghcr.io/egao1980/cl-systems/cl-idna:0.1.0`. Not on Quicklisp (Ultralisp/GitHub). |
 | URI parse/build | **[`egao1980/quri`](https://github.com/egao1980/quri)** fork `0.7.1` | Patched to `cl-idna` (not QL `idna`). OCI `ghcr.io/egao1980/cl-systems/quri:0.7.1`. **No upstream PR** until `cl-idna` is on Quicklisp. qlot: `github egao1980/quri`. |
-| Content decode gzip/deflate | **chipz** | Via dexador today; keep |
-| Content encode gzip/deflate | **salza2** | Wave-1 (request `Content-Encoding`) |
-| Content decode/encode **br** | CFFI + **libbrotli** overlay | Wave-1 — new `cl-stack-brotli` (bindings + natives), pattern of `cl-stack-ssl` |
-| Content decode/encode **zstd** | CFFI + **libzstd** overlay | Wave-1 — new `cl-stack-zstd` |
+| Content decode gzip/deflate | **chipz** via [`http-encoding-chipz`](https://github.com/egao1980/http-encoding-chipz) | event-backend-shaped method package |
+| Content encode gzip/deflate | **salza2** via `http-encoding-chipz` | Wave-1 (request `Content-Encoding`) |
+| Content decode/encode **br** | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) → [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) | CFFI + `libbrotli` OCI overlay |
+| Content decode/encode **zstd** | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) → [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) | CFFI + `libzstd` OCI overlay |
 | MIME type guess | **trivial-mimes** | Via dexador (filename → type) |
 | MIME parse/print + CTE | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** | Fork of 40ants/cl-mime (hanshuebner lineage, LGPL+Lisp exception). `mime:decode-content` / `encode-content` = **Content-Transfer-Encoding** (7bit/8bit/base64/qp) — **not** HTTP Content-Encoding. qlot: `github egao1980/cl-mime`. |
 | Multipart / chunked | **cl-mime** + **chunga** (+ dexador body) | Prefer cl-mime for structured MIME; chunga for chunked framing |
@@ -147,15 +147,17 @@ Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked f
 
 ### Codings
 
-| Token | Spec | Decode | Encode | Shipping |
-|-------|------|--------|--------|----------|
-| `identity` | RFC 9110 | nop | nop | always |
-| `gzip` | RFC 1952 | **chipz** | **salza2** | pure Lisp (QL) |
-| `deflate` | RFC 1950/1951 | **chipz** | **salza2** | pure Lisp (QL) |
-| `br` | RFC 7932 | CFFI | CFFI | **`cl-stack-brotli`** + `libbrotli` OCI overlay |
-| `zstd` | RFC 8878 | CFFI | CFFI | **`cl-stack-zstd`** + `libzstd` OCI overlay |
+| Token | Spec | Backend package | Natives |
+|-------|------|-----------------|---------|
+| `identity` | RFC 9110 | in `http-protocol` | — |
+| `gzip` | RFC 1952 | [`http-encoding-chipz`](https://github.com/egao1980/http-encoding-chipz) | pure Lisp (chipz/salza2) |
+| `deflate` | RFC 1950/1951 | `http-encoding-chipz` | pure Lisp |
+| `br` | RFC 7932 | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) | [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) OCI |
+| `zstd` | RFC 8878 | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) | [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) OCI |
 
 Skip obsolete `compress` (LZW). Dictionary transport (`dcb` / `dcz`, RFC 9842) = **P2**.
+
+**Layout (same as event-protocol):** `http-protocol` holds generics + parse + soft-load probe (`*content-coding-systems*`) + shared `http-protocol/conformance`. Encoding backends are **separate repos** that specialize `decode-content-coding` / `encode-content-coding` (octets **and** Gray streams). No plugin registry — load the ASDF system; methods appear. Natives stay in `cl-stack-brotli` / `cl-stack-zstd` (overlays do not depend on `http-protocol`).
 
 ### Client policy
 
@@ -164,20 +166,18 @@ Skip obsolete `compress` (LZW). Dictionary transport (`dcb` / `dcz`, RFC 9842) =
 3. Request body compression is **opt-in**: `:content-encoding :gzip` / `:br` / `:zstd` / `:deflate` (sets header + encodes publisher).
 4. Multiple codings in one header (applied left-to-right on wire) — decode in **reverse** order.
 5. Unknown coding → `http-protocol-error` (or `unsupported-operation`) unless `:decompress nil`.
-6. Missing native overlay for `br`/`zstd`: omit that token from default `Accept-Encoding` **or** signal at client construction (prefer omit + warn once; never advertise what we cannot decode).
+6. Missing encoding backend / native overlay for `br`/`zstd`: omit that token from default `Accept-Encoding` **or** signal at client construction (prefer omit + warn once; never advertise what we cannot decode).
 
 ### Protocol / facade bits
-
-Tiny helpers (in `http-protocol` or sibling `content-encoding`).
 
 **Name clash:** `cl-mime` already exports `decode-content` / `encode-content` for CTE.
 HTTP Content-Encoding uses distinct names:
 
 ```lisp
-(defgeneric decode-content-coding (coding input &key)) ; :gzip/:deflate/:br/:zstd; octets/stream → octets/stream
-(defgeneric encode-content-coding (coding input &key level))
-(defun content-coding-supported-p (coding) …)
-(defun default-accept-encoding () …)              ; based on loaded overlays
+(defgeneric decode-content-coding (coding input &key)) ; octets/stream → octets/stream
+(defgeneric encode-content-coding (coding input &key level quality))
+(defun content-coding-supported-p (coding) …)   ; soft-loads http-encoding-* systems
+(defun default-accept-encoding () …)
 ;; cl-mime (package mime): decode-content / encode-content remain CTE only
 ```
 
@@ -198,7 +198,7 @@ Same policy as OpenSSL ([overlays.md](../overlays.md)): grovel at build time if 
 | `cl-stack-brotli` | `libbrotli` (dec+enc) | linux/amd64+arm64, darwin/arm64, **windows/amd64** |
 | `cl-stack-zstd` | `libzstd` | same |
 
-Bindings: prefer thin CFFI (prior art: [glv2/cl-zstd](https://github.com/glv2/cl-zstd), [fsm/cl-brotli](https://codeberg.org/fsm/cl-brotli)) forked/vendored under `egao1980` if license-clean; do **not** require a C toolchain on consumer machines.
+Thin CFFI in overlay repos; `http-encoding-*` only specializes HTTP generics. Consumers must not need a C toolchain.
 
 ### Dexador gap
 
