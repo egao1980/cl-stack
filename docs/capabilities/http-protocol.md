@@ -26,7 +26,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
 | **URI** | **quri** (`egao1980/quri`) | Host/query/IPv6; IDNA via `cl-idna` |
 | **Content-Encoding** | **gzip / deflate / br / zstd** (wave-1) | httpx parity; see [Content encoding](#content-encoding-wave-1) |
-| **MIME sniff / multipart** | **trivial-mimes** + **chunga** | Already via dexador; no `cl-mime` for client |
+| **MIME / multipart** | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** (fork of [40ants/cl-mime](https://github.com/40ants/cl-mime)) + **trivial-mimes** / **chunga** where dexador already uses them | Full MIME parse/print + CTE; see support libs |
 
 ---
 
@@ -42,8 +42,9 @@ Wave-1: pin what dexador already uses, **except IDNA** — use stack `cl-idna`.
 | Content encode gzip/deflate | **salza2** | Wave-1 (request `Content-Encoding`) |
 | Content decode/encode **br** | CFFI + **libbrotli** overlay | Wave-1 — new `cl-stack-brotli` (bindings + natives), pattern of `cl-stack-ssl` |
 | Content decode/encode **zstd** | CFFI + **libzstd** overlay | Wave-1 — new `cl-stack-zstd` |
-| MIME type guess | **trivial-mimes** | Via dexador |
-| Multipart / chunked | **chunga** (+ dexador body) | Via dexador; skip full `cl-mime` |
+| MIME type guess | **trivial-mimes** | Via dexador (filename → type) |
+| MIME parse/print + CTE | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** | Fork of 40ants/cl-mime (hanshuebner lineage, LGPL+Lisp exception). `mime:decode-content` / `encode-content` = **Content-Transfer-Encoding** (7bit/8bit/base64/qp) — **not** HTTP Content-Encoding. qlot: `github egao1980/cl-mime`. |
+| Multipart / chunked | **cl-mime** + **chunga** (+ dexador body) | Prefer cl-mime for structured MIME; chunga for chunked framing |
 | Charset | **babel** | Via dexador |
 | Cookies | **cl-cookie** | Via dexador |
 | HTTP parse | **fast-http** | Via dexador |
@@ -167,13 +168,17 @@ Skip obsolete `compress` (LZW). Dictionary transport (`dcb` / `dcz`, RFC 9842) =
 
 ### Protocol / facade bits
 
-Tiny helpers (in `http-protocol` or sibling `content-encoding`):
+Tiny helpers (in `http-protocol` or sibling `content-encoding`).
+
+**Name clash:** `cl-mime` already exports `decode-content` / `encode-content` for CTE.
+HTTP Content-Encoding uses distinct names:
 
 ```lisp
-(defgeneric decode-content (coding input &key))   ; coding keyword/string; input octets/stream → octets/stream
-(defgeneric encode-content (coding input &key level))
+(defgeneric decode-content-coding (coding input &key)) ; :gzip/:deflate/:br/:zstd; octets/stream → octets/stream
+(defgeneric encode-content-coding (coding input &key level))
 (defun content-coding-supported-p (coding) …)
 (defun default-accept-encoding () …)              ; based on loaded overlays
+;; cl-mime (package mime): decode-content / encode-content remain CTE only
 ```
 
 Facade:
