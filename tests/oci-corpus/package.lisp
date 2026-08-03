@@ -6,6 +6,6 @@
                 #:response-body
                 #:*http-backend*)
   (:import-from #:http-backend-dexador
-                #:make-dexador-backend))
+                #:dexador-backend))
 
 (in-package #:cl-stack/oci-corpus)

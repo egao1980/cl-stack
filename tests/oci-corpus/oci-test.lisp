@@ -30,9 +30,8 @@
     (testing n
       (ok (asdf:find-system n nil))
       (ok (system-installed-via-oci-p n)
-          (format nil "~a not under ~a (got ~a)"
+          (format nil "~a source ~a"
                   n
-                  (ignore-errors (cl-repository-client/installer:systems-root))
                   (ignore-errors
                    (asdf:system-source-directory (asdf:find-system n))))))))
 
@@ -58,7 +57,8 @@
 (deftest oci-dexador-cleartext-ok
   "OCI http-backend-dexador GET against local fixture."
   (with-fixture ()
-    (let ((*http-backend* (make-dexador-backend)))
+    ;; Avoid MAKE-DEXADOR-BACKEND soft-load of optional br/zstd from local trees.
+    (let ((*http-backend* (make-instance 'dexador-backend)))
       (let ((res (http:get (fixture-url "/ok"))))
         (ok (= 200 (response-status res)))
         (ok (equalp (babel:string-to-octets "ok") (response-body res)))))))
@@ -67,7 +67,7 @@
   "Drive redirect-policy vectors through OCI dexador (follow / max-redirects)."
   (let ((rows (%read-form (%corpus-file "http/redirect-policy/vectors.lisp"))))
     (with-fixture ()
-      (let ((*http-backend* (make-dexador-backend)))
+      (let ((*http-backend* (make-instance 'dexador-backend)))
         (dolist (row rows)
           (testing (princ-to-string (getf row :id))
             (let* ((status (getf row :status))
