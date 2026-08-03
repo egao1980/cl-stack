@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` (HTTP/1.1 + HTTPS; live CE via `HTTP_ASYNC_LIVE`)
+**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); remaining `#32` corpus + OCI consumer; facade gaps in [#54](https://github.com/egao1980/cl-stack/issues/54)
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -364,9 +364,9 @@ Provenance file required (same pattern as `event-protocol` conformance).
 1. `#29` — this brief + condition taxonomy — **Done when merged**
 2. `#45` / `#46` — `cl-stack-brotli` + `cl-stack-zstd` overlays (can parallel `#30`)
 3. `#47` + `#30` — encoding pipeline in facade + sync dexador backend + all method helpers
-4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev — **done** (cleartext + HTTPS; requests-shaped CE live tests)
-5. Cookie jar / sessions (`cl-cookie`) on `http-client` + both backends — **in progress** (protocol + sync/async wire-up)
-6. `#32` — corpus slice + OCI consumer test (redirects/history; encoding round-trips)
+4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev — **done** (cleartext + HTTPS; requests-shaped CE live tests; PR [#6](https://github.com/egao1980/http-backend-async/pull/6) merged)
+5. Cookie jar / sessions (`cl-cookie`) on `http-client` + both backends — **done** (protocol + sync/async wire-up)
+6. `#32` — corpus slice + OCI consumer test (redirects/history; encoding round-trips) — **open**
 
 ---
 
