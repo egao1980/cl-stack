@@ -21,6 +21,22 @@ Local / clean-container consume: each repo’s `scripts/test-oci-local.sh` + wor
 
 **Spike criteria for #10 are satisfied by the above.** New stack natives should **call the reusable workflow**, not paste another copy of the publish job.
 
+## Consumer test matrix (Windows primary) — #55
+
+Lisp **test** workflows (not only overlay publish) must include `windows-latest` for Windows-primary packages.
+
+| Repo | Windows row | Notes |
+|------|-------------|-------|
+| `http-backend-async` | ✓ (`libuv`) | libev = Unix-only exception |
+| `http-backend-dexador` | ✓ | |
+| `http-encoding-{chipz,brotli,zstd}` | ✓ | |
+| `event-backend-libuv` / `cl-stack-ssl` / natives | ✓ | |
+| `cl-idna` / `cl-mime` / `cl-stack-pathlib` | ✓ | |
+| `quri` | ✓ (added with #55) | |
+| `event-backend-libev` | Unix-only | libev has no Windows |
+
+Flaky Windows `ERROR 12002` during GHCR pull = retry; not a Unix-only escape hatch.
+
 ## Recommended GHA matrix (#11)
 
 GitHub-hosted runners cover all **required** wave-1 platforms except you may prefer self-hosted for Windows toolchain control:
