@@ -28,7 +28,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **Filesystem** | **Out of this layer** | No `*http-filesystem*` / path coerce / `download` here — requests-like later (UIOP/CL default or pathlib) |
 | **Timeout** | `http-timeout` CLOS (`:connect` / `:read` / `:total`) | Protocol value; backends interpret. Number/plist coerce. |
 | **Retry** | `http-retry` CLOS (total/connect/read/status + backoff + Retry-After) | Protocol policy; backends loop attempts. |
-| **Proxy** | `http-proxy-config` CLOS | (1) `configure-proxy` manual URL/alist/chain (2) `configure-proxy-script` manual PAC (3) `load-proxy-system` = env + Win registry + OS PAC/WPAD; schemes `http(s)` + `socks5`/`socks5h`; methods `resolve-proxy-chain` / `proxy-next-hop` → hop list / `(scheme . host)`; `resolve-proxy` = first hop / NIL / `:system`. |
+| **Proxy** | `http-proxy-config` CLOS | (1) `configure-proxy` manual URL/alist (2) `configure-proxy-script` manual PAC (3) `load-proxy-system` = env + Win registry + OS PAC/WPAD; schemes `http(s)` + `socks5`/`socks5h`; **one proxy per request** (no multi-hop); methods `resolve-proxy` → URL / NIL / `:system`, `proxy-next-hop` → `(scheme . host)`. |
 | **Pool** | `http-connection-pool` + `lru-connection-pool` + `pooled-body-stream` | Acquire/release/discard; stream EOF → `pool-release` (urllib3 release_conn). |
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
@@ -133,7 +133,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y** basic/bearer (`:auth`); Digest **P2** |
 | Redirects | 9110 §15.4 | Y (policy) | N | Y | Y (`max-redirects`) | **Y** (NEVER/ALWAYS/NORMAL policy like Java) |
 | Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** — `http-timeout` in protocol; backends apply |
-| Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y** — `http-proxy-config` methods (`resolve-proxy-chain` / `proxy-next-hop`, chains, NO_PROXY globs); CONNECT/SOCKS in backends |
+| Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y** — `http-proxy-config` (`resolve-proxy` / `proxy-next-hop`, NO_PROXY globs; one hop); CONNECT/SOCKS in backends |
 | TLS verify / client cert | 2818 | Y | via Asio SSL | Y | Y | **Y** via cl-stack-ssl |
 | HTTP/2 | 9113 | Y | N (msg model ready) | Y (opt) | N | **prefer** when backend can; else 1.1 |
 | HTTP/3 | 9114 | Y (SE 26) | N | N | N | **P2** |
