@@ -133,7 +133,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y** basic/bearer (`:auth`); Digest **P2** |
 | Redirects | 9110 §15.4 | Y (policy) | N | Y | Y (`max-redirects`) | **Y** (NEVER/ALWAYS/NORMAL policy like Java) |
 | Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** — `http-timeout` in protocol; backends apply |
-| Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y** — `http-proxy-config` + `resolve-proxy` (env/NO_PROXY/IPv6); CONNECT/SOCKS in backends |
+| Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y** — `http-proxy-config` methods (`resolve-proxy-chain` / `proxy-next-hop`, chains, NO_PROXY globs); CONNECT/SOCKS in backends |
 | TLS verify / client cert | 2818 | Y | via Asio SSL | Y | Y | **Y** via cl-stack-ssl |
 | HTTP/2 | 9113 | Y | N (msg model ready) | Y (opt) | N | **prefer** when backend can; else 1.1 |
 | HTTP/3 | 9114 | Y (SE 26) | N | N | N | **P2** |
