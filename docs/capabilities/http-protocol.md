@@ -28,7 +28,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **Filesystem** | **Out of this layer** | No `*http-filesystem*` / path coerce / `download` here — requests-like later (UIOP/CL default or pathlib) |
 | **Timeout** | `http-timeout` CLOS (`:connect` / `:read` / `:total`) | Protocol value; backends interpret. Number/plist coerce. |
 | **Retry** | `http-retry` CLOS (total/connect/read/status + backoff + Retry-After) | Protocol policy; backends loop attempts. |
-| **Proxy** | `http-proxy-config` CLOS | Discovery methods: `load-proxy-environment` (unix env), `load-proxy-command-line`, `load-proxy-system` (Win registry/PAC/WPAD — specialize), `load-proxy-script` (PAC fetch via `:fetch`/usocket); compose with `load-proxy`; `resolve-proxy` → URL / NIL / `:system`. |
+| **Proxy** | `http-proxy-config` CLOS | Set `:proxy` programmatically; discover via `load-proxy-environment` / `load-proxy-system` (Win registry/PAC/WPAD) / `load-proxy-script` (`:fetch`); compose with `load-proxy`; `resolve-proxy` → URL / NIL / `:system`. |
 | **Pool** | `http-connection-pool` + `lru-connection-pool` + `pooled-body-stream` | Acquire/release/discard; stream EOF → `pool-release` (urllib3 release_conn). |
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
