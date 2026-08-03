@@ -337,8 +337,8 @@ Default: **do not** signal on 4xx/5xx (httpx/requests style — inspect `status`
 |-------|----------------|-------|
 | Protocol | `egao1980/http-protocol` | generics + shared conformance |
 | Sync | [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) | wave-1 `#30` |
-| Async | [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` × libuv + libev | `#31` **done** (usocket + HTTPS); cookie-jar Session persistence |
-| TLS natives | `egao1980/cl-stack-ssl` | used by async backend (run-to-completion TLS after async connect) |
+| Async | [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` × libuv + libev | `#31` **done** (NB connect + async TLS WANT_*; cookies/redirects) |
+| TLS natives | `egao1980/cl-stack-ssl` | async: socket-BIO + WANT_READ/WANT_WRITE on `register-io` (not run-to-completion) |
 
 Selection DX: ASDF + `*http-backend*` (same as event — no plugin registry).
 
