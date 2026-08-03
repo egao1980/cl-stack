@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams (sync download + stream upload; async chunked upload; async `:want-stream` pending)
+**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams; `#73` `http-file` CLOS + multipart `:data`/`:files` (FS-free wire; pathlib facade later)
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -21,7 +21,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **WebSocket** | **Out of this protocol** → `ws-protocol` (#4) | Java puts WS on `HttpClient`; we keep separate per API.md |
 | **HTTP versions** | Wave-1: **HTTP/1.1**; prefer/negotiate **HTTP/2** when backend can; **HTTP/3** = P2 | Java SE 26: 1.1/2/3; httpx: 1.1+2; Beast: HTTP/1 wire only |
 | **Method surface** | All RFC 9110 methods + **PATCH** (RFC 5789); extension methods via string/keyword escape | Match Beast `http::verb` core + Java `method(...)` |
-| **Bodies** | Typed publishers/handlers (Java shape) + httpx convenience (`json` / `data` / `files` / `content`) | Stream large payloads; no silent full-buffer default for huge files |
+| **Bodies** | Streams / octets / strings + `http-file` CLOS; httpx `:content` / `:data` / `:files` | Stream large payloads; **no pathnames in protocol** (pathlib+MIME higher layer) |
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
 | **URI** | **quri** (`egao1980/quri`) | Host/query/IPv6; IDNA via `cl-idna` |
@@ -115,7 +115,8 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
 | Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray stream / chunked (`*http-stream-buffer-size*`, default 64KiB); `#71` |
 | Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync (`:want-stream` / `http:stream` + CE wrap); async `:want-stream` **pending** (`unsupported-operation`) |
-| Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** (facade) |
+| Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** — `:data`+`:files` as `http-file`/streams; pull Gray multipart (`#73`); **no pathnames in protocol** |
+| File upload/download value | — | P | N | Y | P | **Y** — CLOS `http-file` (filename, content-type, length, content stream/octets); `response-as-http-file`; FS open/save → higher lib (pathlib+MIME) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
 | Form urlencoded | — | P | N | Y | Y | **Y** |
 | Cookies | 6265 | Y (`CookieHandler`) | N | Y | Y (cl-cookie) | **Y** |
@@ -256,10 +257,12 @@ Tiny ASDF system `http-protocol`: generics, conditions, value types. Sync backen
   :url "https://example.com/x"
   :params '(("q" . "1"))  ; query merge
   :headers '(("x-foo" . "bar"))
-  :content …              ; raw publisher / octets / string / pathname / stream
+  :content …              ; octets / string / binary stream / http-file
   :json <lisp-data>       ; encode via pinned JSON lib; sets Content-Type
-  :data <alist>           ; application/x-www-form-urlencoded
-  :files <alist>          ; multipart/form-data (pathnames / streams / octets)
+  :data <alist>           ; form fields (with :files → multipart; alone may urlencode later)
+  :files <alist|list>     ; multipart; value = http-file | stream | octets | plist
+                          ; or list of http-file (field-name from slot)
+  :want-stream t          ; response body as buffered binary input stream
   :auth '(:basic "u" "p") ; or :bearer (Digest = P2)
   :cookies …
   :timeout 5.0            ; or (:connect 2 :read 5 :total 10)
@@ -295,6 +298,9 @@ Package `http` (later `cl-stack/http`):
 (http:stream method url &key …)         ; forces :want-stream t (sync)
 (http:stream-async method url &key …)   ; async; may signal unsupported-operation
 (http:body-stream response)             ; binary input stream over body
+(http:make-http-file content &key filename content-type content-length field-name)
+(http:response-as-http-file response &key filename content-type)
+;; FS open/save of http-file → higher lib (cl-stack-pathlib + MIME), not protocol
 ;; *http-stream-buffer-size* — default 65536; peak body memory ≈ buffer, not body
 
 (http:with-client (client &key …) …)
