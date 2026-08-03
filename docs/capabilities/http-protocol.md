@@ -67,6 +67,8 @@ Do **not** add a parallel IDNA dep on `antifuchs/idna` in stack systems.
 | **[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html)** | URI |
 | **[RFC 5890](https://www.rfc-editor.org/rfc/rfc5890.html)**–**[5894](https://www.rfc-editor.org/rfc/rfc5894.html)** / [UTS #46](https://unicode.org/reports/tr46/) | IDNA2008 — implemented by `cl-idna` |
 | **[RFC 6265](https://www.rfc-editor.org/rfc/rfc6265.html)** / 6265bis | Cookies |
+| **[RFC 6266](https://www.rfc-editor.org/rfc/rfc6266.html)** | `Content-Disposition` (`filename` / `filename*`) |
+| **[RFC 8187](https://www.rfc-editor.org/rfc/rfc8187.html)** | Header parameter charset encoding (`ext-value`; obsoletes RFC 5987) |
 | **[RFC 7617](https://www.rfc-editor.org/rfc/rfc7617.html)** / **[RFC 7616](https://www.rfc-editor.org/rfc/rfc7616.html)** | Basic / Digest auth |
 | **[RFC 6750](https://www.rfc-editor.org/rfc/rfc6750.html)** | Bearer tokens |
 | **[RFC 2818](https://www.rfc-editor.org/rfc/rfc2818.html)** | HTTP over TLS |
