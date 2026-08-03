@@ -1,0 +1,67 @@
+name: OCI corpus consumer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/corpus/**'
+      - 'tests/oci-corpus/**'
+      - 'scripts/ci-oci-corpus-*.lisp'
+      - 'cl-stack.asd'
+      - '.github/workflows/oci-corpus.yml'
+  pull_request:
+    paths:
+      - 'tests/corpus/**'
+      - 'tests/oci-corpus/**'
+      - 'scripts/ci-oci-corpus-*.lisp'
+      - 'cl-stack.asd'
+      - '.github/workflows/oci-corpus.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: cl-stack-oci-corpus-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SBCL_VERSION: 2.4.11
+  CL_REPOSITORY_REF: "main"
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  consumer:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: egao1980/cl-repository
+          ref: ${{ env.CL_REPOSITORY_REF }}
+          path: .cl-repository
+
+      - name: Install Roswell
+        run: |
+          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
+          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
+
+      - name: Install SBCL
+        run: |
+          ros install "sbcl-bin/$SBCL_VERSION"
+          ros use "sbcl-bin/$SBCL_VERSION"
+
+      - name: Bootstrap cl-repository-client (QL deps for client only)
+        run: |
+          ros -e '(ql:quickload (quote ("yason" "ironclad" "babel" "dexador" "quri" "chipz" "flexi-streams" "cl-ppcre" "cl-base64" "trivial-features" "salza2" "archive")) :silent t)' -q
+
+      - name: Install HTTP stack from GHCR
+        run: |
+          export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/.cl-repository//:"
+          ros -l scripts/ci-oci-corpus-install.lisp -q
+
+      - name: Run oci-corpus (CE + redirect vectors)
+        run: |
+          export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/.cl-repository//:"
+          ros -l scripts/ci-oci-corpus-test.lisp -q

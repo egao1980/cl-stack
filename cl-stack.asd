@@ -18,3 +18,18 @@
   :perform (test-op (o c)
              (unless (symbol-call :rove :run c)
                (error "corpus-smoke failed"))))
+
+(defsystem "cl-stack/oci-corpus"
+  :description "OCI consumer: decode/redirect corpus via GHCR-installed HTTP stack"
+  :depends-on ("rove" "uiop" "alexandria" "babel" "ironclad"
+               "usocket" "bordeaux-threads"
+               "http-protocol" "http-encoding-chipz" "http-backend-dexador"
+               "cl-repository-client")
+  :pathname "tests/oci-corpus"
+  :serial t
+  :components ((:file "package")
+               (:file "fixture")
+               (:file "oci-test"))
+  :perform (test-op (o c)
+             (unless (symbol-call :rove :run c)
+               (error "oci-corpus failed"))))

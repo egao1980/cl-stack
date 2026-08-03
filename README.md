@@ -30,6 +30,15 @@ qlot install
 qlot exec ros -e '(asdf:test-system "cl-stack/corpus-smoke")'
 ```
 
+License allowlist: `python3 scripts/check-corpus-license.py`.
+
+## OCI corpus consumer
+
+GHA workflow `OCI corpus consumer` installs `http-protocol` / `http-encoding-chipz` /
+`http-backend-dexador` from `ghcr.io/egao1980/cl-systems` and runs `cl-stack/oci-corpus`
+(CE decode + redirect-policy vectors against a local fixture). Cleartext only (no
+`cl-stack-ssl` overlay).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
