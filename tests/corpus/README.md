@@ -24,6 +24,8 @@ Rules:
 4. Keep slices small and purposeful; one behavioral area per directory.
 5. Name files so a reader test can discover them without a registry
    (`vectors.lisp`, `manifest.json`, stable extensions).
+6. CI: `python3 scripts/check-corpus-license.py` (provenance + license markers).
+   False-positive process: [docs/LICENSE-POLICY.md](../../docs/LICENSE-POLICY.md).
 
 ## Adding a slice
 
@@ -31,4 +33,4 @@ Rules:
 2. Drop vectors + a one-line note in that directory if non-obvious.
 3. Update `PROVENANCE.md` (use `original MIT` for synthetic data).
 4. Extend `cl-stack/corpus-smoke` (or the owning lib’s Rove suite) to read them.
-5. PR links `Refs egao1980/cl-stack#23` / `#26` / `#32` as appropriate.
+5. PR links `Refs egao1980/cl-stack#32` (or parent epic) as appropriate.

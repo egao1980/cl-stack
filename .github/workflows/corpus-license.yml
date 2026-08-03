@@ -1,0 +1,28 @@
+name: Corpus license
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/corpus/**'
+      - 'scripts/check-corpus-license.py'
+      - 'docs/LICENSE-POLICY.md'
+      - '.github/workflows/corpus-license.yml'
+  pull_request:
+    paths:
+      - 'tests/corpus/**'
+      - 'scripts/check-corpus-license.py'
+      - 'docs/LICENSE-POLICY.md'
+      - '.github/workflows/corpus-license.yml'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Self-test (deliberate bad fixtures must fail)
+        run: python3 scripts/check-corpus-license.py --self-test
+
+      - name: Scan live corpus
+        run: python3 scripts/check-corpus-license.py
