@@ -22,7 +22,7 @@ Related: [overlays.md](overlays.md), [LICENSE-POLICY.md](LICENSE-POLICY.md).
   :event-backend "event-backend-libuv"      ; Windows-primary default
   :http-backend "http-backend-dexador"      ; sync default
   :http-async-backend "http-backend-async"
-  :ws-backend "ws-backend-websocket-driver") ; when #34 lands
+  :ws-backend "ws-backend-websocket-driver")
  (:systems
   ;; name version &optional :digest "sha256:…"
   ("alexandria" "1.0.1")
