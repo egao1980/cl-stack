@@ -25,7 +25,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Sockets / DNS | De-facto converged | P1 | Pin usocket |
 | HTTP client | Fragmented | P0 | `http-protocol` + facade (dexador sync + async on protocol) |
 | HTTP server | Fragmented | P1 | Pin Clack shape |
-| WebSocket | Fragmented | P0 | `ws-protocol` + websocket-driver |
+| WebSocket | Fragmented | P0 | `ws-protocol` + websocket-driver — **wave-1 done** (#4) |
 | TLS / SSL | Wrong-shape | P0 | OpenSSL OCI overlays; pin cl+ssl |
 | Crypto / secrets | De-facto converged | P2 | Pin Ironclad |
 | Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first |
@@ -50,7 +50,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 1. Platform overlays (OpenSSL, event natives, CFFI-friendly)
 2. `event-protocol` + default loop + second backend
 3. `http-protocol` facade (sync + async)
-4. `ws-protocol` + websocket-driver
+4. `ws-protocol` + websocket-driver — **done** (#4 / #33–#35 + corpus)
 5. cl-repository locks / cl-stack pins
 6. Rove + license-clean corpus pipeline + Rove gap PRs
 
