@@ -1,9 +1,11 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams; `#73` `http-file` CLOS + multipart `:data`/`:files` (FS-free wire; pathlib facade later)
+**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams (sync + async `:want-stream`); `#73` `http-file` CLOS + multipart `:data`/`:files` (**FS-free**; path open/download → requests-like layer later)
 
-httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
+**Layering (Python analogy):** `http-protocol` + backends ≈ **urllib3 / httpx** (wire client: streams, CE, cookies, redirects, async on `event-protocol`). A **requests-like** library comes later (path/`download` helpers, Session sugar, MIME guess — UIOP/CL or pathlib; does not fork core).
+
+Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`. TLS via `cl-stack-ssl`.
 
 Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). Event DX: [event-protocol.md](event-protocol.md).
 
@@ -13,15 +15,21 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **DX target** | **httpx** (requests-compatible) | Issue #3; sync+async one API shape |
+| **This layer** | **urllib3 / httpx** | Wire + client protocol; sync (dexador) + async (libuv/libev via `event-protocol`) |
+| **Later layer** | **requests-like** | Path open/`download`, Session sugar, MIME guess — wraps `http-protocol`, no core FS |
 | **Parity refs** | **Java `java.net.http`** + **Boost.Beast verbs/messages** + RFCs below | Java = high-level client bar; Beast = wire vocabulary (not a full client) |
 | **Sync backend** | **dexador** | De-facto CL client; pooling, multipart, cookies, proxy |
-| **Async** | On **event-protocol** (≥2 backends) | Not hard-wired to libuv/libev; promises at facade |
+| **Async** | On **event-protocol** (≥2 backends: libuv default, libev Unix) | Not hard-wired to one loop; promises at facade |
 | **TLS** | **cl+ssl** + `cl-stack-ssl` overlay | #12 done; HTTPS/WSS consumers share OpenSSL |
 | **WebSocket** | **Out of this protocol** → `ws-protocol` (#4) | Java puts WS on `HttpClient`; we keep separate per API.md |
 | **HTTP versions** | Wave-1: **HTTP/1.1**; prefer/negotiate **HTTP/2** when backend can; **HTTP/3** = P2 | Java SE 26: 1.1/2/3; httpx: 1.1+2; Beast: HTTP/1 wire only |
 | **Method surface** | All RFC 9110 methods + **PATCH** (RFC 5789); extension methods via string/keyword escape | Match Beast `http::verb` core + Java `method(...)` |
-| **Bodies** | Streams / octets / strings + `http-file` CLOS; httpx `:content` / `:data` / `:files` | Stream large payloads; **no pathnames in protocol** (pathlib+MIME higher layer) |
+| **Bodies** | Streams / octets / strings + `http-file` CLOS; `:content` / `:data` / `:files` | Stream large payloads; **no pathnames in this layer** |
+| **Filesystem** | **Out of this layer** | No `*http-filesystem*` / path coerce / `download` here — requests-like later (UIOP/CL default or pathlib) |
+| **Timeout** | `http-timeout` CLOS (`:connect` / `:read` / `:total`) | Protocol value; backends interpret. Number/plist coerce. |
+| **Retry** | `http-retry` CLOS (total/connect/read/status + backoff + Retry-After) | Protocol policy; backends loop attempts. |
+| **Proxy** | `http-proxy-config` CLOS | Env/`NO_PROXY`/scheme·host alist (from dexador#202); `resolve-proxy`. |
+| **Pool** | `http-connection-pool` + `lru-connection-pool` + `pooled-body-stream` | Acquire/release/discard; stream EOF → `pool-release` (urllib3 release_conn). |
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
 | **URI** | **quri** (`egao1980/quri`) | Host/query/IPv6; IDNA via `cl-idna` |
@@ -116,16 +124,16 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | All RFC methods + PATCH | 9110, 5789 | Y (+ generic) | Y (enum) | Y | P | **Y** |
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
 | Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray stream / chunked (`*http-stream-buffer-size*`, default 64KiB); `#71` |
-| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync (`:want-stream` / `http:stream` + CE wrap); async `:want-stream` **pending** (`unsupported-operation`) |
-| Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** — `:data`+`:files` as `http-file`/streams; pull Gray multipart (`#73`); **no pathnames in protocol** |
-| File upload/download value | — | P | N | Y | P | **Y** — CLOS `http-file` (filename, content-type, length, content stream/octets); `response-as-http-file`; FS open/save → higher lib (pathlib+MIME) |
+| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync + async (`:want-stream` / `http:stream` / `http:stream-async` + CE Gray wrap); async delivers on headers, body fed from socket with backpressure (`#71`) |
+| Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** — `:data`+`:files` as `http-file`/streams/octets; pull Gray multipart (`#73`); **no pathnames in protocol** |
+| File upload/download value | — | P | N | Y | P | **Y** — CLOS `http-file` (filename, content-type, length, content stream/octets); `response-as-http-file`; path open/`download` → **requests-like layer** (not this package) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
 | Form urlencoded | — | P | N | Y | Y | **Y** |
 | Cookies | 6265 | Y (`CookieHandler`) | N | Y | Y (cl-cookie) | **Y** |
 | Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y** basic/bearer (`:auth`); Digest **P2** |
 | Redirects | 9110 §15.4 | Y (policy) | N | Y | Y (`max-redirects`) | **Y** (NEVER/ALWAYS/NORMAL policy like Java) |
-| Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** (connect / read / total; cancel token async) |
-| Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y**; SOCKS **P2** unless dexador already covers |
+| Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** — `http-timeout` in protocol; backends apply |
+| Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y** — `http-proxy-config` + `resolve-proxy` (env/NO_PROXY/IPv6); CONNECT/SOCKS in backends |
 | TLS verify / client cert | 2818 | Y | via Asio SSL | Y | Y | **Y** via cl-stack-ssl |
 | HTTP/2 | 9113 | Y | N (msg model ready) | Y (opt) | N | **prefer** when backend can; else 1.1 |
 | HTTP/3 | 9114 | Y (SE 26) | N | N | N | **P2** |
@@ -135,7 +143,8 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Content negotiation | 9110 §12 | P (headers) | app | P | P | **Y** helpers (`:accept` / `:accept-encoding` / `:accept-language`) |
 | Auto decompress | Content-Encoding | Y | N | Y | Y (gzip/deflate) | **Y** (gzip/deflate/**br**/**zstd**) |
 | Request compress | Content-Encoding | P | N | P | N | **Y** (opt-in `:content-encoding`) |
-| Connection pool / keep-alive | 9112 | Y | app | Y | Y | **Y** (client object) |
+| Connection pool / keep-alive | 9112 | Y | app | Y | Y | **Y** — protocol `http-connection-pool` / `pooled-body-stream`; async backend wires sockets |
+| Retry / backoff | — | P | N | Y | N | **Y** — `http-retry` CLOS in protocol |
 | Trailers | 9110 §6.5 | P | Y | P | N | **P** wave-1 (expose if backend gives); full **P2** |
 | Push promise (H2) | 9113 | Y (`PushPromiseHandler`) | N | N | N | **P2** |
 | Client-side cache | 9111 | N | N | N | N | **P2** |
@@ -298,17 +307,17 @@ Package `http` (later `cl-stack/http`):
 (http:connect url &key …)                ; tunnel; expert
 
 (http:stream method url &key …)         ; forces :want-stream t (sync)
-(http:stream-async method url &key …)   ; async; may signal unsupported-operation
+(http:stream-async method url &key …)   ; async; promise resolves on headers; keep loop alive while reading body
 (http:body-stream response)             ; binary input stream over body
 (http:make-http-file content &key filename content-type content-length field-name)
 (http:response-as-http-file response &key filename content-type)
-;; FS open/save of http-file → higher lib (cl-stack-pathlib + MIME), not protocol
+;; No path open/download here — requests-like library later (UIOP/CL or pathlib+MIME)
 ;; *http-stream-buffer-size* — default 65536; peak body memory ≈ buffer, not body
 
 (http:with-client (client &key …) …)
 ```
 
-Async variants: either `*-async` siblings (httpx) **or** same names under an async client — pick **`*-async` + promises** to match event brief.
+Async: `*-async` + Blackbird promises (urllib3/httpx layer; requests-like Session sugar later).
 
 ```lisp
 (bb:attach (http:get-async "https://example.com" :accept "application/json")
@@ -384,6 +393,7 @@ Provenance file required (same pattern as `event-protocol` conformance).
 
 ## Out of scope (wave-1)
 
+- **requests-like** convenience library (path/`download`, Session sugar, MIME guess) — separate later package wrapping this layer
 - HTTP **server** (Clack/Woo — separate)
 - WebSocket (`ws-protocol`)
 - Full RFC 9111 client cache
@@ -402,5 +412,6 @@ Provenance file required (same pattern as `event-protocol` conformance).
 - RFC 9110–9114, 5789, 6265, 6750, 7616/7617, 2818, 7301  
 - [Java SE `java.net.http`](https://docs.oracle.com/en/java/javase/26/docs/api/java.net.http/java/net/http/package-summary.html) (`HttpClient`, `HttpRequest.Builder`, BodyPublisher/Handler)  
 - [Boost.Beast HTTP](https://www.boost.org/doc/libs/latest/libs/beast/doc/html/beast/using_http.html) + [`http::verb`](https://www.boost.org/doc/libs/latest/libs/beast/doc/html/beast/ref/boost__beast__http__verb.html) + [FAQ](https://www.boost.org/doc/libs/develop/libs/beast/doc/html/beast/design_choices/faq.html) (not a full client)  
-- [HTTPX](https://www.python-httpx.org/)  
+- [urllib3](https://urllib3.readthedocs.io/) / [HTTPX](https://www.python-httpx.org/) — analogy for this layer  
+- [Requests](https://requests.readthedocs.io/) — analogy for the later convenience library  
 - [dexador](https://github.com/fukamachi/dexador)
