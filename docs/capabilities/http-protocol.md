@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped** — `http:stream*` + `:expect-continue` + Digest **P2**
+**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams (sync download + stream upload; async chunked upload; async `:want-stream` pending)
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -113,8 +113,8 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Async send | — | Y (`CompletableFuture`) | Y (Asio) | Y | N | **Y** (promises on event-protocol) |
 | All RFC methods + PATCH | 9110, 5789 | Y (+ generic) | Y (enum) | Y | P | **Y** |
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
-| Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** |
-| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** (`:want-stream`); `http:stream*` helpers **P2** |
+| Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray stream / chunked (`*http-stream-buffer-size*`, default 64KiB); `#71` |
+| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync (`:want-stream` / `http:stream` + CE wrap); async `:want-stream` **pending** (`unsupported-operation`) |
 | Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** (facade) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
 | Form urlencoded | — | P | N | Y | Y | **Y** |
@@ -292,7 +292,10 @@ Package `http` (later `cl-stack/http`):
 (http:delete url &key …)
 (http:connect url &key …)                ; tunnel; expert
 
-;; P2: http:stream / http:stream-async — use :want-stream t on request for now
+(http:stream method url &key …)         ; forces :want-stream t (sync)
+(http:stream-async method url &key …)   ; async; may signal unsupported-operation
+(http:body-stream response)             ; binary input stream over body
+;; *http-stream-buffer-size* — default 65536; peak body memory ≈ buffer, not body
 
 (http:with-client (client &key …) …)
 ```
