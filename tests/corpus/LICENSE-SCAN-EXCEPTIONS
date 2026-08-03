@@ -1,0 +1,4 @@
+# Paths (relative to tests/corpus/) exempt from content license-marker scan.
+# One path per line. Use when a fixture legitimately embeds the string "GPL"
+# (e.g. a reject-policy vector). PROVENANCE.md row is still required.
+# See docs/LICENSE-POLICY.md § False positives.
