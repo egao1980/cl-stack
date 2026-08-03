@@ -21,6 +21,14 @@ MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for m
 | [docs/overlay-ci.md](docs/overlay-ci.md) | Multi-arch publish CI prior art + Windows runners |
 | [docs/LICENSE-POLICY.md](docs/LICENSE-POLICY.md) | MIT + inbound allowlist |
 | [docs/ROVE-GAPS.md](docs/ROVE-GAPS.md) | Test-runner dogfood vs pytest/JUnit |
+| [tests/corpus/README.md](tests/corpus/README.md) | Corpus layout + PROVENANCE rules |
+
+## Corpus smoke
+
+```bash
+qlot install
+qlot exec ros -e '(asdf:test-system "cl-stack/corpus-smoke")'
+```
 
 ## License
 

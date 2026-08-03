@@ -15,6 +15,9 @@
 
 Any vendored or ported foreign test material needs an entry in [`tests/corpus/PROVENANCE.md`](../tests/corpus/PROVENANCE.md): source URL, commit/tag, SPDX.
 
+Layout conventions: [`tests/corpus/README.md`](../tests/corpus/README.md).
+Smoke suite: `asdf:test-system "cl-stack/corpus-smoke"`.
+
 Prefer **regenerate / re-express under MIT** over copying copyrighted test sources.
 
 ## Forks
