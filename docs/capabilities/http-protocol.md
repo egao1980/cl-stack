@@ -29,7 +29,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **Timeout** | `http-timeout` CLOS (`:connect` / `:read` / `:total`) | Protocol value; backends interpret. Number/plist coerce. |
 | **Retry** | `http-retry` CLOS (total/connect/read/status + backoff + Retry-After) | Protocol policy; backends loop attempts. |
 | **Proxy** | `http-proxy-config` CLOS | (1) `configure-proxy` manual URL/alist (2) `configure-proxy-script` manual PAC (3) `load-proxy-system` = env + Win registry + OS PAC/WPAD; schemes `http(s)` + `socks5`/`socks5h`; **one proxy per request** (no multi-hop); methods `resolve-proxy` → URL / NIL / `:system`, `proxy-next-hop` → `(scheme . host)`. |
-| **Pool** | `http-connection-pool` + `lru-connection-pool` + `pooled-body-stream` | Acquire/release/discard; stream EOF → `pool-release` (urllib3 release_conn). |
+| **Pool** | `http-connection-pool` CLOS protocol + `pooled-body-stream` | Generics `pool-acquire`/`release`/`discard`/`clear`; concrete LRU (BT) in backends via `*connection-pool-constructor*`. |
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
 | **URI** | **quri** (`egao1980/quri`) | Host/query/IPv6; IDNA via `cl-idna` |
