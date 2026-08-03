@@ -1,7 +1,7 @@
 # http-protocol (wave-1)
 
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
-**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer (`cl-stack/oci-corpus`); facade gaps in [#54](https://github.com/egao1980/cl-stack/issues/54)
+**Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped** — `http:stream*` + `:expect-continue` + Digest **P2**
 
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
@@ -114,21 +114,21 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | All RFC methods + PATCH | 9110, 5789 | Y (+ generic) | Y (enum) | Y | P | **Y** |
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
 | Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** |
-| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** |
+| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** (`:want-stream`); `http:stream*` helpers **P2** |
 | Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** (facade) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
 | Form urlencoded | — | P | N | Y | Y | **Y** |
 | Cookies | 6265 | Y (`CookieHandler`) | N | Y | Y (cl-cookie) | **Y** |
-| Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y**; Digest **wave-1 if cheap else P2** |
+| Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y** basic/bearer (`:auth`); Digest **P2** |
 | Redirects | 9110 §15.4 | Y (policy) | N | Y | Y (`max-redirects`) | **Y** (NEVER/ALWAYS/NORMAL policy like Java) |
 | Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** (connect / read / total; cancel token async) |
 | Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y**; SOCKS **P2** unless dexador already covers |
 | TLS verify / client cert | 2818 | Y | via Asio SSL | Y | Y | **Y** via cl-stack-ssl |
 | HTTP/2 | 9113 | Y | N (msg model ready) | Y (opt) | N | **prefer** when backend can; else 1.1 |
 | HTTP/3 | 9114 | Y (SE 26) | N | N | N | **P2** |
-| Expect: 100-continue | 9110 | Y | app | P | N | **Y** (protocol flag) |
-| Range requests | 9110 §14 | P (headers) | app | P | P | **Y** helpers (`:range`) + 206 handling |
-| Conditional reqs | 9110 §13 | P (headers) | app | P | P | **Y** helpers (`:if-match` / `:if-none-match` / `:if-modified-since` / …) |
+| Expect: 100-continue | 9110 | Y | app | P | N | **P2** |
+| Range requests | 9110 §14 | P (headers) | app | P | P | **Y** helpers (`:range`) |
+| Conditional reqs | 9110 §13 | P (headers) | app | P | P | **P** via raw headers wave-1; named helpers **P2** |
 | Content negotiation | 9110 §12 | P (headers) | app | P | P | **Y** helpers (`:accept` / `:accept-encoding` / `:accept-language`) |
 | Auto decompress | Content-Encoding | Y | N | Y | Y (gzip/deflate) | **Y** (gzip/deflate/**br**/**zstd**) |
 | Request compress | Content-Encoding | P | N | P | N | **Y** (opt-in `:content-encoding`) |
@@ -260,12 +260,12 @@ Tiny ASDF system `http-protocol`: generics, conditions, value types. Sync backen
   :json <lisp-data>       ; encode via pinned JSON lib; sets Content-Type
   :data <alist>           ; application/x-www-form-urlencoded
   :files <alist>          ; multipart/form-data (pathnames / streams / octets)
-  :auth '(:basic "u" "p") ; or :bearer / :digest / custom fn
+  :auth '(:basic "u" "p") ; or :bearer (Digest = P2)
   :cookies …
   :timeout 5.0            ; or (:connect 2 :read 5 :total 10)
   :follow-redirects :normal  ; :never | :always | :normal (Java-like)
   :http-version :http/2   ; preference; actual on response
-  :expect-continue t
+  ;; :expect-continue — P2
   :range '(0 1023)        ; → Range: bytes=0-1023
   :if-none-match "\"abc\""
   :accept "application/json"
@@ -285,15 +285,14 @@ Package `http` (later `cl-stack/http`):
 (http:get url &key …)
 (http:head url &key …)
 (http:options url &key …)
-(http:trace url &key …)                  ; default: signal unless :allow-trace t
+(http:trace url &key …)                  ; thin method helper (servers often 405/501)
 (http:post url &key …)
 (http:put url &key …)
 (http:patch url &key …)
 (http:delete url &key …)
 (http:connect url &key …)                ; tunnel; expert
 
-(http:stream method url &key …)          ; response body as stream (sync)
-(http:stream-async method url &key …)
+;; P2: http:stream / http:stream-async — use :want-stream t on request for now
 
 (http:with-client (client &key …) …)
 ```
