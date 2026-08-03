@@ -1,7 +1,7 @@
 # ws-protocol (wave-1)
 
 **Issues:** [#4](https://github.com/egao1980/cl-stack/issues/4) · [#33](https://github.com/egao1980/cl-stack/issues/33) · [#34](https://github.com/egao1980/cl-stack/issues/34) · [#35](https://github.com/egao1980/cl-stack/issues/35)  
-**Status:** brief **locked** (#33); `#34` protocol + websocket-driver backend in [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) (cleartext `ws://` Rove + Clack echo); WSS `#35` open
+**Status:** brief **locked** (#33); `#34` protocol + websocket-driver backend in [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) (cleartext `ws://` Rove + Clack echo); `#35` WSS via `cl-stack-ssl` (linux/amd64 CI job + clean-container smoke script)
 
 WebSocket **client** facade (RFC 6455). Separate from `http-protocol` (API.md) — Java puts WS on `HttpClient`; we keep a dedicated protocol so HTTP backends stay thin.
 
@@ -128,7 +128,7 @@ Wave-1 ships the thin backend **in-repo** (pure Lisp + cl+ssl via driver). Split
 
 1. `#33` — this brief — **done**
 2. `#34` — `ws-protocol` + websocket-driver backend + cleartext `ws://` Rove tests — **done**
-3. `#35` — `wss://` via `cl-stack-ssl` overlay (matrix includes **windows/amd64**)
+3. `#35` — `wss://` via `cl-stack-ssl` overlay — **done** (linux/amd64 `wss-openssl` CI; `scripts/smoke-wss-clean-container.sh`; windows matrix P2)
 4. Corpus slice under `tests/corpus/ws/` (MIT synthetic echo vectors) + PROVENANCE
 
 ---
