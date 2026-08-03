@@ -127,7 +127,7 @@ Wave-1 ships the thin backend **in-repo** (pure Lisp + cl+ssl via driver). Split
 ## Implementation order
 
 1. `#33` — this brief — **done**
-2. `#34` — `ws-protocol` + websocket-driver backend + cleartext `ws://` Rove tests — **in PR**
+2. `#34` — `ws-protocol` + websocket-driver backend + cleartext `ws://` Rove tests — **done**
 3. `#35` — `wss://` via `cl-stack-ssl` overlay (matrix includes **windows/amd64**)
 4. Corpus slice under `tests/corpus/ws/` (MIT synthetic echo vectors) + PROVENANCE
 
