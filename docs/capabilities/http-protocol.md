@@ -365,8 +365,9 @@ Provenance file required (same pattern as `event-protocol` conformance).
 3. `#47` + `#30` — encoding pipeline in facade + sync dexador backend + all method helpers
 4. `#31` — async `send-async` on event-protocol; green on libuv **and** libev — **done** (cleartext + HTTPS; requests-shaped CE live tests; PR [#6](https://github.com/egao1980/http-backend-async/pull/6) merged)
 5. Cookie jar / sessions (`cl-cookie`) on `http-client` + both backends — **done** (protocol + sync/async wire-up)
-6. `#23`/`#26` — hub `tests/corpus/` layout + first MIT HTTP slice (`redirect-policy`, `ce-roundtrip`) + `cl-stack/corpus-smoke` — **in progress**
-7. `#32` — HTTP corpus consumed by backends + OCI consumer test — **open** (depends on `#26`)
+6. `#23`/`#26` — hub `tests/corpus/` layout + first MIT HTTP slice + `cl-stack/corpus-smoke` — **done**
+7. `#32` — OCI consumer (`cl-stack/oci-corpus`) — **done**
+8. `#54` — facade `:auth` / `:range` / `trace`+`connect` — **done** (stream/expect/Digest → P2)
 
 ---
 

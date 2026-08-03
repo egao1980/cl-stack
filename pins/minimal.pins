@@ -1,0 +1,9 @@
+;;; Minimal edge pin — event stack smoke only (see docs/pins.md).
+((:pin-format 1)
+ (:channel :edge)
+ (:registry "https://ghcr.io" :namespace "egao1980/cl-systems")
+ (:defaults :event-backend "event-backend-libuv")
+ (:systems
+  ("alexandria" "1.0.1")
+  ("event-protocol" "0.1.0")
+  ("event-backend-libuv" "0.1.0")))
