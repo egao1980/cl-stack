@@ -1,7 +1,7 @@
 # ws-protocol (wave-1)
 
 **Issues:** [#4](https://github.com/egao1980/cl-stack/issues/4) · [#33](https://github.com/egao1980/cl-stack/issues/33) · [#34](https://github.com/egao1980/cl-stack/issues/34) · [#35](https://github.com/egao1980/cl-stack/issues/35)  
-**Status:** brief **locked** (#33); `#34`/`#35` done in [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) (cleartext + WSS/`cl-stack-ssl`); hub corpus `tests/corpus/ws/echo-frames/`
+**Status:** wave-1 **complete** ([#4](https://github.com/egao1980/cl-stack/issues/4) closed) — brief `#33`; [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) cleartext `#34` + WSS/`cl-stack-ssl` `#35`; hub corpus `tests/corpus/ws/echo-frames/`
 
 WebSocket **client** facade (RFC 6455). Separate from `http-protocol` (API.md) — Java puts WS on `HttpClient`; we keep a dedicated protocol so HTTP backends stay thin.
 
