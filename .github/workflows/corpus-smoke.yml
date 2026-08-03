@@ -1,0 +1,38 @@
+name: Corpus smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tests/corpus/**'
+      - 'tests/corpus-smoke/**'
+      - 'cl-stack.asd'
+      - 'qlfile'
+      - '.github/workflows/corpus-smoke.yml'
+  pull_request:
+    paths:
+      - 'tests/corpus/**'
+      - 'tests/corpus-smoke/**'
+      - 'cl-stack.asd'
+      - 'qlfile'
+      - '.github/workflows/corpus-smoke.yml'
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Roswell
+        run: curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
+
+      - name: Install qlot + deps
+        run: |
+          ros install qlot
+          export PATH="$HOME/.roswell/bin:$PATH"
+          qlot install
+
+      - name: Run corpus-smoke
+        run: |
+          export PATH="$HOME/.roswell/bin:$PATH"
+          qlot exec ros -e '(asdf:test-system "cl-stack/corpus-smoke")'
