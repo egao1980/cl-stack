@@ -79,3 +79,19 @@
           (when (eq (getf vec :coding) :gzip)
             (ok (= #x1f (aref octets 0)))
             (ok (= #x8b (aref octets 1)))))))))
+
+(deftest ws-echo-frames-vectors
+  "Synthetic WS echo/framing table is well-formed (#4 wave-1 corpus)."
+  (let ((rows (%read-form (%corpus-file "ws/echo-frames/vectors.lisp"))))
+    (ok (consp rows))
+    (ok (>= (length rows) 6))
+    (dolist (row rows)
+      (testing (princ-to-string (getf row :id))
+        (ok (or (stringp (getf row :id)) (keywordp (getf row :id))))
+        (ok (member (getf row :opcode)
+                    '(:text :binary :close :ping :pong) :test #'eq))
+        (let ((payload (getf row :payload)))
+          (ok (or (stringp payload) (listp payload))))
+        (when (eq (getf row :opcode) :close)
+          (ok (integerp (getf row :close-code)))
+          (ok (stringp (getf row :close-reason))))))))
