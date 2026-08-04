@@ -79,10 +79,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `cl-stack-jwt` | **0.1.0** | JWT facade over jose (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
-| `http-backend-async` | **0.2.3** | async + HTTP/2 + **RFC 8441 WS** (Extended CONNECT) |
+| `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
-| `ws-protocol` | **0.2.1** | CLOS `:transport` + `feature-or-env-enabled-p` |
+| `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
 | `event-protocol` | **0.1.1** | event-loop generics |
 | `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
 | `event-backend-libev` | **0.1.2** | Unix second backend |
@@ -137,11 +137,11 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 
 CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends own wire (or WinHTTP). Brief: [capabilities/http-protocol.md](capabilities/http-protocol.md). Recipes: [cookbooks/http-client.md](cookbooks/http-client.md).
 
-### WebSocket (`ws-protocol` 0.2.1+)
+### WebSocket (`ws-protocol` 0.2.2+)
 
 ```lisp
-(cl-repo:load-system "ws-protocol" :version "0.2.1")
-(cl-repo:load-system "http-backend-async" :version "0.2.3") ; :http/2 Extended CONNECT
+(cl-repo:load-system "ws-protocol" :version "0.2.2")
+(cl-repo:load-system "http-backend-async" :version "0.2.4") ; :http/2 Extended CONNECT
 ;; Windows H1 Upgrade:
 ;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
 
@@ -159,7 +159,7 @@ CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends
 | `:http/1.1` | RFC 6455 Upgrade (websocket-driver / WinHTTP) |
 | `:http/2` | RFC 8441 Extended CONNECT (async; needs peer `ENABLE_CONNECT_PROTOCOL`) |
 
-Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-enabled-p`). Brief: [capabilities/ws-protocol.md](capabilities/ws-protocol.md).
+Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-enabled-p`). Brief: [capabilities/ws-protocol.md](capabilities/ws-protocol.md). Recipes + demos: [cookbooks/websocket.md](cookbooks/websocket.md).
 
 ### OAuth2 / JWT (optional packages)
 
@@ -226,6 +226,7 @@ Rules (non-negotiable):
 | Want | Go |
 |------|----|
 | requests/httpx recipes | [cookbooks/http-client.md](cookbooks/http-client.md) |
+| WebSocket recipes / demos | [cookbooks/websocket.md](cookbooks/websocket.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |
