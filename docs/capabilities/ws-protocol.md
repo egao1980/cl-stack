@@ -31,9 +31,33 @@ Selection DX: ASDF + `*ws-backend*` (no plugin registry) — same as http/event.
 
 | RFC | Role |
 |-----|------|
-| **[RFC 6455](https://www.rfc-editor.org/rfc/rfc6455.html)** | WebSocket protocol |
+| **[RFC 6455](https://www.rfc-editor.org/rfc/rfc6455.html)** | WebSocket protocol (HTTP/1.1 Upgrade) |
+| **[RFC 8441](https://www.rfc-editor.org/rfc/rfc8441.html)** | Bootstrapping WebSockets with HTTP/2 (Extended CONNECT) |
 | **[RFC 7692](https://www.rfc-editor.org/rfc/rfc7692.html)** | permessage-deflate — **P2** |
 | **[RFC 2818](https://www.rfc-editor.org/rfc/rfc2818.html)** | TLS for `wss://` |
+
+---
+
+## Transport preference (0.2.0+)
+
+CLOS split (mirrors `http-protocol` HTTP version):
+
+| Layer | Owns |
+|-------|------|
+| **ws-protocol** | `:transport` preference (`:auto` / `:http/1.1` / `:http/2`), `backend-ws-transports` / `backend-supports-ws-transport-p`, RFC 8441 header policy (`make-http2-websocket-connect-headers`) |
+| **backends** | Wire: RFC 6455 Upgrade **or** H2 Extended CONNECT + RFC 6455 framing on the stream |
+
+| Keyword | Meaning |
+|---------|---------|
+| `:http/1.1` | RFC 6455 Upgrade (`websocket-driver`, WinHTTP `WinHttpWebSocket*`) |
+| `:http/2` | RFC 8441 Extended CONNECT (`:method CONNECT`, `:protocol websocket`) |
+| `:auto` | Prefer `:http/2` when backend lists it, else `:http/1.1` |
+
+| Backend | Transports | Notes |
+|---------|------------|-------|
+| `ws-backend-websocket-driver` | `:http/1.1` | Wave-1 driver |
+| `http-backend-winhttp` | `:http/1.1` | Native WinHTTP WebSocket upgrade |
+| `http-backend-async` | *(none yet)* | Tracks peer `SETTINGS_ENABLE_CONNECT_PROTOCOL`; Extended CONNECT wire = next |
 
 ---
 
@@ -136,7 +160,11 @@ Wave-1 ships the thin backend **in-repo** (pure Lisp + cl+ssl via driver). Split
 ## Out of scope (wave-1)
 
 - WebSocket **server**
-- HTTP/2 Extended CONNECT / WS over H2
 - Multiplexed subprotocol frameworks (JSON-RPC, STOMP, …) — app layer
 - Browser cookie ITP edge cases
 - permessage-deflate (unless free with driver)
+
+## Next (Extended CONNECT)
+
+- `http-backend-async`: open CONNECT stream after peer `ENABLE_CONNECT_PROTOCOL=1`, RFC 6455 framing on DATA
+- Optional: WinHTTP path stays Upgrade-only (OS API); H2 WS = async backend
