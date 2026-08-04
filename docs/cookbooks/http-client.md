@@ -15,7 +15,7 @@ Capability brief (decisions, RFCs): [http-protocol.md](../capabilities/http-prot
 Pins below use current OCI tags; bump with hub releases.
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.6")
+(cl-repo:load-system "cl-stack-http" :version "0.1.7")
 ;; soft CE codecs (optional):
 ;;   http-encoding-chipz / http-encoding-brotli / http-encoding-zstd
 ;; OAuth2 / JWT (optional):
@@ -51,7 +51,7 @@ Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in h
 | `HTTPDigestAuth` | `:auth (digest-auth u p)` | have (sync retry) |
 | `timeout=` | `:timeout 5.0` or `make-http-timeout` | have |
 | `proxies=` / `trust_env` | `:proxy` / `:trust-env t` | have |
-| download to path | `download` (CD filename + MIME ext) | have |
+| download to path | `download` / `download-many` (CD filename + MIME ext; streamed) | have |
 | upload path | `upload` / `:files` | have |
 | `AsyncClient` | `*-async` + blackbird; prefer `:async` backend | have |
 | `http2=True` | `:http-version :http/2` / `:auto` on client+request | **have** (http-protocol **0.3.0+** + async/winhttp backends; see [QUICKSTART](../QUICKSTART.md#http2-preference-http-protocol-030)) |
@@ -177,6 +177,12 @@ Raw body: `:content #(…)` or string (set `Content-Type` yourself if needed).
 (http:download url #p"/tmp/dl/" :filename :content-disposition :overwrite t)
 
 (http:upload #p"/tmp/out.bin" url :as :files)   ; or :as :content
+
+;; sequential multi-download (wave-1)
+(http:download-many
+ `(("https://example.com/a.bin" . ,#p"/tmp/a.bin")
+   ("https://example.com/b.bin" . ,#p"/tmp/b.bin"))
+ :overwrite t)
 ```
 
 Live CE + CD exercise: `http-parity` `ros -l scripts/finance-demo.lisp`.
