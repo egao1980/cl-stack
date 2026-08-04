@@ -15,7 +15,7 @@ Capability brief (decisions, RFCs): [http-protocol.md](../capabilities/http-prot
 Pins below use current OCI tags; bump with hub releases.
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.4")
+(cl-repo:load-system "cl-stack-http" :version "0.1.5")
 ;; soft CE codecs (optional):
 ;;   http-encoding-chipz / http-encoding-brotli / http-encoding-zstd
 ```
@@ -52,7 +52,7 @@ Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in h
 | upload path | `upload` / `:files` | have |
 | `AsyncClient` | `*-async` + blackbird; prefer `:async` backend | have |
 | `http2=True` | — | **missing** (wave-1 = HTTP/1.1) |
-| `hooks=` / `event_hooks=` | CLOS `:around` on `send` + client mixins | **pattern** (see [§12](#12-hooks-via-clos-around)) — no Python-style fn list |
+| `hooks=` / `event_hooks=` | `prepare-request` / `handle-response` + `:client-class` | **have** (cl-stack-http **0.1.5+**; see [§12](#12-hooks-via-clos-around)) |
 | `r.elapsed` | — | **missing** |
 | `PreparedRequest` / `build_request` mutability | build `http-request` + `send` | partial (CLOS, no httpx merge DSL) |
 | OAuth2 / JWT | — | **sep** [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) |
@@ -257,83 +257,49 @@ Exact condition names: `http-protocol` package (`http-error`, `http-status-error
 
 ---
 
-## 12. Hooks via CLOS `:around`
+## 12. Hooks via CLOS (`prepare-request` / `handle-response`)
 
-requests `hooks=` / httpx `event_hooks=` are callback lists. On this stack prefer **generic functions + client mixins** — same idea as auth (`prepare-auth` / `handle-auth-response`).
+requests `hooks=` / httpx `event_hooks=` are callback lists. Stack equivalent (**cl-stack-http 0.1.5+**): specialize **generic functions on a client mixin**. Loading stack-http installs `send` / `send-async` `:around` that always call:
 
-Already on the wire path: `send` / `send-async` `:before` (URL/`params` finalize). Auth is a specialized pre/post protocol, not a generic hook bag.
+1. `prepare-request` — before protocol `:before` (base-url + params finalize)
+2. backend send
+3. `handle-response` — after a successful response (not transport errors)
+
+Auth stays on `prepare-auth` / `handle-auth-response`.
 
 ### Pattern
 
 ```lisp
-;;; Optional thin protocol (app or future stack-http export)
-(defgeneric prepare-request (client request)
-  (:method ((client t) request) request))
-
-(defgeneric handle-response (client request response)
-  (:method ((client t) request response) response))
-
-;;; Middleware-style onion — specialize on your client subclass
 (defclass logging-client (http-client) ())
 
-(defmethod prepare-request ((client logging-client) request)
-  ;; mutate / replace request before wire send
+(defmethod http:prepare-request ((client logging-client) request)
+  ;; mutate / replace request (headers, params, …)
   request)
 
-(defmethod handle-response ((client logging-client) request response)
+(defmethod http:handle-response ((client logging-client) request response)
   (format *trace-output* "~&~A ~A → ~A~%"
           (http-request-method request)
           (or (response-url response) (http-request-url request))
           (response-status response))
   response)
 
-(defmethod http-protocol:send :around
-    ((backend http-backend) (client logging-client) request &key)
-  (let* ((req (prepare-request client request))
-         (res (call-next-method backend client req)))
-    (handle-response client req res)))
-
-;; Same idea for async — wrap the promise / callback:
-(defmethod http-protocol:send-async :around
-    ((backend http-backend) (client logging-client) request
-     &key callback error-callback)
-  (let ((req (prepare-request client request)))
-    (call-next-method
-     backend client req
-     :callback (lambda (res)
-                 (funcall (or callback #'identity)
-                          (handle-response client req res)))
-     :error-callback error-callback)))
+(http:with-session (s :preferred :async
+                      :client-class 'logging-client
+                      :base-url "https://httpbingo.org/"
+                      :trust-env nil
+                      :timeout 15.0)
+  (http:session-get s "get"))
 ```
 
-Use with a session by building a mixin client (today `make-session` always allocates a plain `http-client`):
-
-```lisp
-(let* ((backend (http:ensure-http-backend :async))
-       (client (make-instance 'logging-client
-                              :backend backend
-                              :base-url "https://httpbingo.org/"
-                              :timeout 15.0))
-       (s (make-instance 'http:http-session
-                         :backend backend
-                         :client client)))
-  (unwind-protect
-      (http:session-get s "get" :trust-env nil)
-    (http:close-session s)))
-```
-
-Promote later: `:client-class` on `make-session` / exported `prepare-request` + `handle-response`.
+Extra `:around` methods on `send` for your mixin still compose via `call-next-method` if you need onion middleware beyond the two hooks.
 
 ### Rules of thumb
 
 | Do | Don't |
 |----|-------|
-| Specialize on **client** (or session) mixins | Dynamic `add-method` as public API |
-| `:around` + `call-next-method` for ordered middleware | Recreate Python `hooks=[fn, …]` unless you need a thin adapter |
-| Keep auth on `prepare-auth` / `handle-auth-response` | Stuff 401 challenge/retry into a generic response hook |
-| One concern per mixin (`logging-client`, `metrics-client`, …) | Giant `:around` that does logging+retry+metrics |
-
-Custom method combinations (`progn` / `append`) are optional if many independent plugins need a fixed order; usually `:around` onions are enough.
+| Specialize on **client** mixins + `:client-class` | Dynamic `add-method` as public API |
+| Keep auth on `prepare-auth` / `handle-auth-response` | Stuff 401 challenge/retry into `handle-response` |
+| One concern per mixin (`logging-client`, `metrics-client`, …) | Recreate Python `hooks=[fn, …]` unless you need a thin adapter |
 
 ---
 
@@ -364,7 +330,7 @@ Prioritized from quickstart/cookbooks vs current stack:
 | P1 | Streaming download progress (`num_bytes_downloaded`) | optional DX on stream body |
 | P2 | Mutable `response` encoding setter | low value — `:encoding` kwarg covers it |
 | P2 | `r.elapsed` / timing | useful for demos; store on response |
-| P2 | First-class `prepare-request` / `handle-response` + `:client-class` on `make-session` | cookbook §12 pattern today; promote into stack-http |
+| P2 | ~~First-class `prepare-request` / `handle-response` + `:client-class`~~ | **Done** in cl-stack-http **0.1.5** |
 | P3 | HTTP/2 | wave-2 |
 | P3 | httpx `build_request` merge DSL | CLOS already flexible |
 
