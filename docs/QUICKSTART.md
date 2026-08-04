@@ -75,7 +75,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 |--------|---------|--------|
 | `cl-repository-client` | **0.10.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
-| `cl-stack-http` | **0.1.6** | requests-like facade (`stack-http`) |
+| `cl-stack-http` | **0.1.6** | requests-like facade (`stack-http`); CLOS auth + hooks |
+| `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
+| `cl-stack-jwt` | **0.1.0** | JWT facade over jose (`stack-jwt`) |
+| `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.0** | async + **HTTP/2** (ALPN + framing) |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.2** | Windows; HTTP/2 via WinHTTP |
@@ -132,6 +135,25 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 | `:http/2` | Require H2 or signal `http-version-not-available` |
 
 CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends own wire (or WinHTTP). Brief: [capabilities/http-protocol.md](capabilities/http-protocol.md). Recipes: [cookbooks/http-client.md](cookbooks/http-client.md).
+
+### OAuth2 / JWT (optional packages)
+
+```lisp
+(cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
+(cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
+
+;; OAuth2 client-credentials → pass as :auth to stack-http
+(defvar *auth*
+  (stack-oauth2:make-oauth2-auth
+   :token-url "https://as.example/oauth/token"
+   :client-id "cid" :client-secret "sec"
+   :scope '("api.read") :grant :client-credentials))
+(http:get "https://api.example/v1/me" :auth *auth*)
+
+;; JWT crypto (not HTTP) — jose under the hood
+(stack-jwt:encode :hs256 key '(("sub" . "u")))
+(stack-jwt:decode :hs256 key token)
+```
 
 ---
 

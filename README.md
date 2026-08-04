@@ -19,7 +19,7 @@ MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for m
 | [docs/API.md](docs/API.md) | Protocol / facade / backend conventions |
 | [docs/capabilities/event-protocol.md](docs/capabilities/event-protocol.md) | Event loop protocol brief + backend picks (libuv/libev) |
 | [docs/capabilities/http-protocol.md](docs/capabilities/http-protocol.md) | HTTP client facade brief |
-| [docs/cookbooks/http-client.md](docs/cookbooks/http-client.md) | requests/httpx → `cl-stack-http` cookbook |
+| [docs/cookbooks/http-client.md](docs/cookbooks/http-client.md) | requests/httpx → `cl-stack-http` cookbook (+ OAuth2/JWT packages) |
 | [docs/capabilities/ws-protocol.md](docs/capabilities/ws-protocol.md) | WebSocket client brief (websocket-driver) |
 | [docs/pins.md](docs/pins.md) | Pin file format + stable/edge channels |
 | [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix + GHCR overlay naming |
