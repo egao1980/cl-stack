@@ -5,6 +5,8 @@
 
 **Layering (Python analogy):** `http-protocol` + backends ≈ **urllib3 / httpx** (wire client). **requests-like** DX → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) (pathlib upload/download, Session, JSON/sexp, MIME, backend select).
 
+**Cookbook (quickstart recipes):** [cookbooks/http-client.md](../cookbooks/http-client.md).
+
 httpx-shaped HTTP **client** facade: sync + async over `event-protocol`, TLS via `cl-stack-ssl`. Protocol is method-complete (RFC 9110 + PATCH); backends may stub rare verbs with `unsupported-operation`.
 
 Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). Event DX: [event-protocol.md](event-protocol.md).
