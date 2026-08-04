@@ -52,7 +52,7 @@ Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in h
 | upload path | `upload` / `:files` | have |
 | `AsyncClient` | `*-async` + blackbird; prefer `:async` backend | have |
 | `http2=True` | — | **missing** (wave-1 = HTTP/1.1) |
-| request hooks | — | **missing** |
+| `hooks=` / `event_hooks=` | CLOS `:around` on `send` + client mixins | **pattern** (see [§12](#12-hooks-via-clos-around)) — no Python-style fn list |
 | `r.elapsed` | — | **missing** |
 | `PreparedRequest` / `build_request` mutability | build `http-request` + `send` | partial (CLOS, no httpx merge DSL) |
 | OAuth2 / JWT | — | **sep** [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) |
@@ -257,6 +257,86 @@ Exact condition names: `http-protocol` package (`http-error`, `http-status-error
 
 ---
 
+## 12. Hooks via CLOS `:around`
+
+requests `hooks=` / httpx `event_hooks=` are callback lists. On this stack prefer **generic functions + client mixins** — same idea as auth (`prepare-auth` / `handle-auth-response`).
+
+Already on the wire path: `send` / `send-async` `:before` (URL/`params` finalize). Auth is a specialized pre/post protocol, not a generic hook bag.
+
+### Pattern
+
+```lisp
+;;; Optional thin protocol (app or future stack-http export)
+(defgeneric prepare-request (client request)
+  (:method ((client t) request) request))
+
+(defgeneric handle-response (client request response)
+  (:method ((client t) request response) response))
+
+;;; Middleware-style onion — specialize on your client subclass
+(defclass logging-client (http-client) ())
+
+(defmethod prepare-request ((client logging-client) request)
+  ;; mutate / replace request before wire send
+  request)
+
+(defmethod handle-response ((client logging-client) request response)
+  (format *trace-output* "~&~A ~A → ~A~%"
+          (http-request-method request)
+          (or (response-url response) (http-request-url request))
+          (response-status response))
+  response)
+
+(defmethod http-protocol:send :around
+    ((backend http-backend) (client logging-client) request &key)
+  (let* ((req (prepare-request client request))
+         (res (call-next-method backend client req)))
+    (handle-response client req res)))
+
+;; Same idea for async — wrap the promise / callback:
+(defmethod http-protocol:send-async :around
+    ((backend http-backend) (client logging-client) request
+     &key callback error-callback)
+  (let ((req (prepare-request client request)))
+    (call-next-method
+     backend client req
+     :callback (lambda (res)
+                 (funcall (or callback #'identity)
+                          (handle-response client req res)))
+     :error-callback error-callback)))
+```
+
+Use with a session by building a mixin client (today `make-session` always allocates a plain `http-client`):
+
+```lisp
+(let* ((backend (http:ensure-http-backend :async))
+       (client (make-instance 'logging-client
+                              :backend backend
+                              :base-url "https://httpbingo.org/"
+                              :timeout 15.0))
+       (s (make-instance 'http:http-session
+                         :backend backend
+                         :client client)))
+  (unwind-protect
+      (http:session-get s "get" :trust-env nil)
+    (http:close-session s)))
+```
+
+Promote later: `:client-class` on `make-session` / exported `prepare-request` + `handle-response`.
+
+### Rules of thumb
+
+| Do | Don't |
+|----|-------|
+| Specialize on **client** (or session) mixins | Dynamic `add-method` as public API |
+| `:around` + `call-next-method` for ordered middleware | Recreate Python `hooks=[fn, …]` unless you need a thin adapter |
+| Keep auth on `prepare-auth` / `handle-auth-response` | Stuff 401 challenge/retry into a generic response hook |
+| One concern per mixin (`logging-client`, `metrics-client`, …) | Giant `:around` that does logging+retry+metrics |
+
+Custom method combinations (`progn` / `append`) are optional if many independent plugins need a fixed order; usually `:around` onions are enough.
+
+---
+
 ## Recipe: small JSON API client
 
 ```lisp
@@ -284,7 +364,7 @@ Prioritized from quickstart/cookbooks vs current stack:
 | P1 | Streaming download progress (`num_bytes_downloaded`) | optional DX on stream body |
 | P2 | Mutable `response` encoding setter | low value — `:encoding` kwarg covers it |
 | P2 | `r.elapsed` / timing | useful for demos; store on response |
-| P2 | Request hooks (`response` / `request` hooks) | requests advanced |
+| P2 | First-class `prepare-request` / `handle-response` + `:client-class` on `make-session` | cookbook §12 pattern today; promote into stack-http |
 | P3 | HTTP/2 | wave-2 |
 | P3 | httpx `build_request` merge DSL | CLOS already flexible |
 
