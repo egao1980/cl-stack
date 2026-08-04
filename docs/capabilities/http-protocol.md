@@ -24,7 +24,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **Async** | On **event-protocol** (≥2 backends) | Not hard-wired to libuv/libev; promises at facade |
 | **TLS** | **cl+ssl** + `cl-stack-ssl` overlay | #12 done; HTTPS/WSS consumers share OpenSSL |
 | **WebSocket** | **Out of this protocol** → `ws-protocol` (#4) | Java puts WS on `HttpClient`; we keep separate per API.md |
-| **HTTP versions** | Wave-1: **HTTP/1.1**; prefer/negotiate **HTTP/2** when backend can; **HTTP/3** = P2 | Java SE 26: 1.1/2/3; httpx: 1.1+2; Beast: HTTP/1 wire only |
+| **HTTP versions** | **HTTP/1.1** + prefer/negotiate **HTTP/2** (wave-2); **HTTP/3** = P2 | Protocol = preference + ALPN/header policy (RFC 7301 / 9113 §8); backends = wire (see [HTTP version split](#http-version-clos-split)) |
 | **Method surface** | All RFC 9110 methods + **PATCH** (RFC 5789); extension methods via string/keyword escape | Match Beast `http::verb` core + Java `method(...)` |
 | **Bodies** | Streams / octets / strings + `http-file` CLOS; httpx `:content` / `:data` / `:files` | Stream large payloads; **no pathnames in protocol** (pathlib+MIME higher layer) |
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
@@ -132,7 +132,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** (connect / read / total; cancel token async) |
 | Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y**; SOCKS **P2** unless dexador already covers |
 | TLS verify / client cert | 2818 | Y | via Asio SSL | Y | Y | **Y** via cl-stack-ssl |
-| HTTP/2 | 9113 | Y | N (msg model ready) | Y (opt) | N | **prefer** when backend can; else 1.1 |
+| HTTP/2 | 9113 | Y | N (msg model ready) | Y (opt) | N | **Y** prefer/negotiate — see [HTTP version split](#http-version-clos-split) |
 | HTTP/3 | 9114 | Y (SE 26) | N | N | N | **P2** |
 | Expect: 100-continue | 9110 | Y | app | P | N | **P2** |
 | Range requests | 9110 §14 | P (headers) | app | P | P | **Y** helpers (`:range`) |
@@ -146,6 +146,37 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Client-side cache | 9111 | N | N | N | N | **P2** |
 | WebSocket | 6455 | Y (on HttpClient) | Y | N (other libs) | N | **sep** → `ws-protocol` |
 | CONNECT tunnel | 9110 §9.3.6 | restricted | app | P | P | **Y** (proxy path) |
+
+---
+
+## HTTP version (CLOS split)
+
+**RFCs:** [9112](https://www.rfc-editor.org/rfc/rfc9112.html) (HTTP/1.1 messaging) · [9113](https://www.rfc-editor.org/rfc/rfc9113.html) (HTTP/2) · [7301](https://www.rfc-editor.org/rfc/rfc7301.html) (ALPN) · [7541](https://www.rfc-editor.org/rfc/rfc7541.html) (HPACK — backend).
+
+| Concern | Owns it | Symbols / notes |
+|---------|---------|-----------------|
+| Preference on client/request | **protocol** | `:http-version` → `:auto` \| `:http/1.1` \| `:http/2` |
+| Capability query | **protocol** generic, **backend** methods | `backend-http-versions` / `backend-supports-http-version-p` |
+| ALPN offer / map | **protocol** policy | `alpn-protocols-for-version` / `http-version-from-alpn` |
+| Enforce preference | **protocol** | `ensure-http-version-available` / `http-version-not-available`; `send`/`send-async` `:before` |
+| H2 header field rules §8.2–8.3 | **protocol** | `make-http2-request-headers`, `filter-headers-for-http-version` (no `Connection`/`Host`/…) |
+| TLS ALPN + framing/HPACK/streams | **backend** | async: `http2` + event-protocol pump; winhttp: `WINHTTP_PROTOCOL_FLAG_HTTP2`; dexador: 1.1 only |
+| Negotiated result | **backend** → response | `response-http-version` → `:http/1.1` \| `:http/2` |
+
+```lisp
+;; protocol — preference only
+(make-http-client backend :http-version :auto)   ; prefer 2 when backend can
+(make-http-request :url "https://…" :http-version :http/2)
+
+;; backend reports what it can speak
+(backend-http-versions async-backend)   ; → (:http/1.1 :http/2)
+(backend-http-versions dexador-backend) ; → (:http/1.1)
+
+;; after send
+(response-http-version res)             ; negotiated keyword
+```
+
+**Out of protocol:** client preface bytes, SETTINGS, stream IDs, flow control, HPACK tables, push promise (P2), h2c prior-knowledge (P2).
 
 ---
 
