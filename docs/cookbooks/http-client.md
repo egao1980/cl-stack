@@ -15,9 +15,12 @@ Capability brief (decisions, RFCs): [http-protocol.md](../capabilities/http-prot
 Pins below use current OCI tags; bump with hub releases.
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.5")
+(cl-repo:load-system "cl-stack-http" :version "0.1.6")
 ;; soft CE codecs (optional):
 ;;   http-encoding-chipz / http-encoding-brotli / http-encoding-zstd
+;; OAuth2 / JWT (optional):
+;;   (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
+;;   (cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
 ```
 
 Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in http-parity).
@@ -51,11 +54,11 @@ Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in h
 | download to path | `download` (CD filename + MIME ext) | have |
 | upload path | `upload` / `:files` | have |
 | `AsyncClient` | `*-async` + blackbird; prefer `:async` backend | have |
-| `http2=True` | — | **missing** (wave-1 = HTTP/1.1) |
+| `http2=True` | `:http-version :http/2` / `:auto` on client+request | **have** (http-protocol **0.3.0+** + async/winhttp backends; see [QUICKSTART](../QUICKSTART.md#http2-preference-http-protocol-030)) |
 | `hooks=` / `event_hooks=` | `prepare-request` / `handle-response` + `:client-class` | **have** (cl-stack-http **0.1.5+**; see [§12](#12-hooks-via-clos-around)) |
 | `r.elapsed` / `num_bytes_downloaded` | `response-elapsed` / `response-bytes-downloaded` | **have** (cl-stack-http **0.1.6+** / http-protocol **0.2.3+**; see [§13](#13-timing--byte-stats)) |
 | `PreparedRequest` / `build_request` mutability | build `http-request` + `send` | partial (CLOS, no httpx merge DSL) |
-| OAuth2 / JWT | — | **sep** [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) |
+| OAuth2 / JWT | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | **sep** packages **0.1.0** (see [§8](#8-auth)) |
 
 ---
 
@@ -205,7 +208,39 @@ Async: `stream-async` / `session-stream-async` → promise of response with body
 (http:get url :trust-env t)
 ```
 
-OAuth2 / JWT: separate packages (CLOS `prepare-auth` / `handle-auth-response`).
+OAuth2 / JWT are **separate packages** (Python: `requests-oauthlib` / PyJWT).
+They plug into stack-http via CLOS `prepare-auth` / `handle-auth-response`.
+
+```lisp
+(cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
+
+(defvar *oauth*
+  (stack-oauth2:make-oauth2-auth
+   :token-url "https://as.example/oauth/token"
+   :client-id "cid" :client-secret "sec"
+   :scope '("api.read" "api.write")
+   :grant :client-credentials))
+
+(http:get "https://api.example/v1/me" :auth *oauth*)
+;; auto-fetches token, refreshes on expiry / 401
+
+;; Auth code + PKCE
+(stack-oauth2:oauth2-authorization-uri *oauth* :pkce t)
+(stack-oauth2:oauth2-exchange-code! *oauth* :code "…")
+```
+
+```lisp
+(cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
+(stack-jwt:encode :hs256 key '(("sub" . "u") ("exp" . 9999999999)))
+(stack-jwt:decode :hs256 key token)
+(stack-jwt:inspect-token token)   ; unverified
+(stack-jwt:expired-p token :leeway 60)
+```
+
+| Package | OCI | Role |
+|---------|-----|------|
+| [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) | `0.1.0` | scopes, grants, PKCE, 401 refresh |
+| [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | `0.1.0` | encode/decode/inspect (jose) |
 
 ---
 
@@ -363,7 +398,8 @@ Prioritized from quickstart/cookbooks vs current stack:
 | P2 | Mutable `response` encoding setter | low value — `:encoding` kwarg covers it |
 | P2 | ~~`r.elapsed` / timing~~ | **Done** — `response-elapsed` (http-protocol **0.2.3** / stack-http **0.1.6**) |
 | P2 | ~~First-class `prepare-request` / `handle-response` + `:client-class`~~ | **Done** in cl-stack-http **0.1.5** |
-| P3 | HTTP/2 | wave-2 |
+| P2 | ~~OAuth2 / JWT packages~~ | **Done** — [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) **0.1.0** |
+| P3 | ~~HTTP/2~~ | **Done** — http-protocol **0.3.0** + async/winhttp backends (see QUICKSTART) |
 | P3 | httpx `build_request` merge DSL | CLOS already flexible |
 
 Track regressions in [`http-parity`](https://github.com/egao1980/http-parity) (`MATRIX.md`, fixture suite, finance CE demo).
@@ -373,6 +409,7 @@ Track regressions in [`http-parity`](https://github.com/egao1980/http-parity) (`
 ## See also
 
 - [cl-stack-http README](https://github.com/egao1980/cl-stack-http#readme)
+- [cl-stack-oauth2](https://github.com/egao1980/cl-stack-oauth2) · [cl-stack-jwt](https://github.com/egao1980/cl-stack-jwt)
 - [http-protocol capability brief](../capabilities/http-protocol.md)
 - Requests: [Quickstart](https://requests.readthedocs.io/en/latest/user/quickstart/) · [Advanced](https://requests.readthedocs.io/en/latest/user/advanced/)
 - HTTPX: [QuickStart](https://www.python-httpx.org/quickstart/) · [Clients](https://www.python-httpx.org/advanced/clients/)

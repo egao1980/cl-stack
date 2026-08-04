@@ -3,7 +3,7 @@
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
 **Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams; `#73` `http-file` CLOS + multipart `:data`/`:files` (FS-free wire; pathlib facade → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http))
 
-**Layering (Python analogy):** `http-protocol` + backends ≈ **urllib3 / httpx** (wire client). **requests-like** DX → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) (pathlib upload/download, Session, JSON/sexp, MIME, backend select).
+**Layering (Python analogy):** `http-protocol` + backends ≈ **urllib3 / httpx** (wire client). **requests-like** DX → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) (pathlib upload/download, Session, JSON/sexp, MIME, backend select, Digest/netrc, CLOS auth protocol). OAuth2 → [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2); JWT crypto → [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) (jose).
 
 **Cookbook (quickstart recipes):** [cookbooks/http-client.md](../cookbooks/http-client.md).
 
@@ -18,7 +18,8 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **DX target** | **httpx** (requests-compatible) | Issue #3; sync+async one API shape |
-| **requests-like layer** | [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) | Path/`download`/`upload`, Session, JSON/sexp, MIME — wraps protocol (no core FS) |
+| **requests-like layer** | [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) | Path/`download`/`upload`, Session, JSON/sexp, MIME, Digest/netrc, CLOS auth — wraps protocol (no core FS) |
+| **OAuth2 / JWT** | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | Token flows + jose JWT (separate packages) |
 | **Parity refs** | **Java `java.net.http`** + **Boost.Beast verbs/messages** + RFCs below | Java = high-level client bar; Beast = wire vocabulary (not a full client) |
 | **Sync backend** | **dexador** | De-facto CL client; pooling, multipart, cookies, proxy |
 | **Async** | On **event-protocol** (≥2 backends) | Not hard-wired to libuv/libev; promises at facade |
@@ -127,7 +128,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
 | Form urlencoded | — | P | N | Y | Y | **Y** |
 | Cookies | 6265 | Y (`CookieHandler`) | N | Y | Y (cl-cookie) | **Y** |
-| Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y** basic/bearer (`:auth`); Digest **P2** |
+| Basic / Digest / Bearer | 7617/7616/6750 | Y (Authenticator / headers) | N | Y | Y (basic/bearer) | **Y** basic/bearer (`:auth`); Digest in [`cl-stack-http`](https://github.com/egao1980/cl-stack-http); OAuth2/JWT sep packages |
 | Redirects | 9110 §15.4 | Y (policy) | N | Y | Y (`max-redirects`) | **Y** (NEVER/ALWAYS/NORMAL policy like Java) |
 | Timeouts | — | Y (connect + request) | examples | Y (strict) | Y (connect/read) | **Y** (connect / read / total; cancel token async) |
 | Proxy HTTP(S) | — | Y | N | Y | Y (env; Win gaps) | **Y**; SOCKS **P2** unless dexador already covers |
@@ -270,7 +271,7 @@ Tiny ASDF system `http-protocol`: generics, conditions, value types. Sync backen
   :files <alist|list>     ; multipart; value = http-file | stream | octets | plist
                           ; or list of http-file (field-name from slot)
   :want-stream t          ; response body as buffered binary input stream
-  :auth '(:basic "u" "p") ; or :bearer (Digest = P2)
+  :auth '(:basic "u" "p") ; or :bearer (Digest / OAuth2 → cl-stack-http / cl-stack-oauth2)
   :cookies …
   :timeout 5.0            ; or (:connect 2 :read 5 :total 10)
   :follow-redirects :normal  ; :never | :always | :normal (Java-like)
