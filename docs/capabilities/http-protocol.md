@@ -122,7 +122,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | All RFC methods + PATCH | 9110, 5789 | Y (+ generic) | Y (enum) | Y | P | **Y** |
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
 | Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray stream / chunked (`*http-stream-buffer-size*`, default 64KiB); `#71` |
-| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync (`:want-stream` / `http:stream` + CE wrap); async `:want-stream` **pending** (`unsupported-operation`) |
+| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync + async H1 (`:want-stream` / `http:stream` / `http:stream-async` + CE Gray wrap); async = socket-fed bounded queue (`http-backend-async`); H2 stream body **P2** |
 | Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** — `:data`+`:files` as `http-file`/streams; pull Gray multipart (`#73`); **no pathnames in protocol** |
 | File upload/download value | — | P | N | Y | P | **Y** — CLOS `http-file` (filename, content-type, length, content stream/octets); `response-as-http-file`; FS open/save → higher lib (pathlib+MIME) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
@@ -304,7 +304,7 @@ Package `http` (later `cl-stack/http`):
 (http:connect url &key …)                ; tunnel; expert
 
 (http:stream method url &key …)         ; forces :want-stream t (sync)
-(http:stream-async method url &key …)   ; async; may signal unsupported-operation
+(http:stream-async method url &key …)   ; async H1 → socket-fed Gray stream (promise)
 (http:body-stream response)             ; binary input stream over body
 (http:make-http-file content &key filename content-type content-length field-name)
 (http:response-as-http-file response &key filename content-type)

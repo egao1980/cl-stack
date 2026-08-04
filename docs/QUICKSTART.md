@@ -75,7 +75,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 |--------|---------|--------|
 | `cl-repository-client` | **0.10.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
-| `cl-stack-http` | **0.1.6** | requests-like facade (`stack-http`); CLOS auth + hooks |
+| `cl-stack-http` | **0.1.7** | requests-like facade (`stack-http`); `download-many` + streamed download |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `cl-stack-jwt` | **0.1.0** | JWT facade over jose (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
@@ -95,7 +95,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ## 3. Minimal HTTP (facade)
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.6")
+(cl-repo:load-system "cl-stack-http" :version "0.1.7")
 ;; optional CE codecs: http-encoding-chipz / -brotli / -zstd
 
 (defpackage #:demo (:use #:cl) (:local-nicknames (#:http #:cl-stack-http)))
