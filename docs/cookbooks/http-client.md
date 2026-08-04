@@ -53,7 +53,7 @@ Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in h
 | `AsyncClient` | `*-async` + blackbird; prefer `:async` backend | have |
 | `http2=True` | — | **missing** (wave-1 = HTTP/1.1) |
 | `hooks=` / `event_hooks=` | `prepare-request` / `handle-response` + `:client-class` | **have** (cl-stack-http **0.1.5+**; see [§12](#12-hooks-via-clos-around)) |
-| `r.elapsed` | — | **missing** |
+| `r.elapsed` / `num_bytes_downloaded` | `response-elapsed` / `response-bytes-downloaded` | **have** (cl-stack-http **0.1.6+** / http-protocol **0.2.3+**; see [§13](#13-timing--byte-stats)) |
 | `PreparedRequest` / `build_request` mutability | build `http-request` + `send` | partial (CLOS, no httpx merge DSL) |
 | OAuth2 / JWT | — | **sep** [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) |
 
@@ -186,7 +186,8 @@ Live CE + CD exercise: `http-parity` `ros -l scripts/finance-demo.lisp`.
 (http:with-stream (r :get url :timeout 30.0)
   (http:map-response-bytes r (lambda (chunk) …))
   ;; or
-  (http:map-response-lines r #'print))
+  (http:map-response-lines r #'print)
+  (response-bytes-downloaded r))   ; octets observed while mapping
 ```
 
 Async: `stream-async` / `session-stream-async` → promise of response with body stream.
@@ -303,6 +304,37 @@ Extra `:around` methods on `send` for your mixin still compose via `call-next-me
 
 ---
 
+## 13. Timing / byte stats
+
+`http-response` carries:
+
+| Field | Accessor | Meaning |
+|-------|----------|---------|
+| `elapsed` | `response-elapsed` | Wall seconds for the transfer (`requests` `r.elapsed`) |
+| `bytes-downloaded` | `response-bytes-downloaded` | Decoded body octets (`httpx` `num_bytes_downloaded`) |
+
+Filled by cl-stack-http `send` / `send-async` hooks after `handle-response`:
+
+- **Eager bodies** — `bytes-downloaded` = body size immediately; `elapsed` always set.
+- **Streams** — `bytes-downloaded` starts at `0`; `map-response-bytes` / `iter-bytes` recounts as chunks are read (resets then accumulates — safe if annotate already set an eager size).
+
+```lisp
+(let ((r (http:get url)))
+  (format t "~,3f s, ~a bytes~%"
+          (response-elapsed r)
+          (response-bytes-downloaded r)))
+
+(http:with-stream (r :get big-url)
+  (http:map-response-bytes r (lambda (chunk)
+                               (format t "~a / ~a~%"
+                                       (length chunk)
+                                       (response-bytes-downloaded r)))))
+```
+
+No progress-bar / callback API yet — poll `response-bytes-downloaded` inside your mapper (or specialize `handle-response` for metrics).
+
+---
+
 ## Recipe: small JSON API client
 
 ```lisp
@@ -327,9 +359,9 @@ Prioritized from quickstart/cookbooks vs current stack:
 |----------|-----|-------|
 | P0 | ~~Multi-value `params` / `form-data`~~ | **Done** in http-protocol **0.2.2** |
 | P1 | Cookbook / parity cases for multi-value + `response-url` after params | add to http-parity |
-| P1 | Streaming download progress (`num_bytes_downloaded`) | optional DX on stream body |
+| P1 | ~~Streaming download progress (`num_bytes_downloaded`)~~ | **Done** — `response-bytes-downloaded` + `map-response-bytes` (0.1.6); no UI progress bar |
 | P2 | Mutable `response` encoding setter | low value — `:encoding` kwarg covers it |
-| P2 | `r.elapsed` / timing | useful for demos; store on response |
+| P2 | ~~`r.elapsed` / timing~~ | **Done** — `response-elapsed` (http-protocol **0.2.3** / stack-http **0.1.6**) |
 | P2 | ~~First-class `prepare-request` / `handle-response` + `:client-class`~~ | **Done** in cl-stack-http **0.1.5** |
 | P3 | HTTP/2 | wave-2 |
 | P3 | httpx `build_request` merge DSL | CLOS already flexible |
