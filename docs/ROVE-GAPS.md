@@ -6,7 +6,7 @@ Design note: [ROVE-PARAMETRIZE.md](ROVE-PARAMETRIZE.md).
 
 | Gap (vs Py/Java) | Status | Issue / PR |
 |------------------|--------|------------|
-| Parametrize / data-driven | **implemented on fork** (`deftest-parametrize`, 0.11.0) | #7 · #27 · #28 · [egao1980/rove#1](https://github.com/egao1980/rove/pull/1) · [upstream#76](https://github.com/fukamachi/rove/pull/76) |
+| Parametrize / data-driven | **upstream PR** (`deftest-parametrize`) | #7 · #27 · #28 · [fukamachi/rove#76](https://github.com/fukamachi/rove/pull/76) · [fork#1](https://github.com/egao1980/rove/pull/1) |
 | Fixtures / scoped setup | backlog | |
 | Markers / subset select | backlog | |
 | JUnit XML / structured report | backlog | |
