@@ -56,8 +56,10 @@ CLOS split (mirrors `http-protocol` HTTP version):
 | Backend | Transports | Notes |
 |---------|------------|-------|
 | `ws-backend-websocket-driver` | `:http/1.1` | Wave-1 driver |
-| `http-backend-winhttp` | `:http/1.1` | Native WinHTTP WebSocket upgrade |
-| `http-backend-async` | *(none yet)* | Tracks peer `SETTINGS_ENABLE_CONNECT_PROTOCOL`; Extended CONNECT wire = next |
+| `http-backend-winhttp` **0.1.3+** | `:http/1.1` | Native WinHTTP WebSocket upgrade; live `WINHTTP_WS_LIVE` |
+| `http-backend-async` **0.2.2+** | `:http/2` | RFC 8441 Extended CONNECT + `fast-websocket` framing; live `HTTP_ASYNC_WS_H2_LIVE` |
+
+`ws-protocol` **0.2.1+**: `feature-or-env-enabled-p` for live/smoke gates (`*features*` ∪ truthy env).
 
 ---
 
@@ -164,7 +166,7 @@ Wave-1 ships the thin backend **in-repo** (pure Lisp + cl+ssl via driver). Split
 - Browser cookie ITP edge cases
 - permessage-deflate (unless free with driver)
 
-## Next (Extended CONNECT)
+## Extended CONNECT status
 
-- `http-backend-async`: open CONNECT stream after peer `ENABLE_CONNECT_PROTOCOL=1`, RFC 6455 framing on DATA
-- Optional: WinHTTP path stays Upgrade-only (OS API); H2 WS = async backend
+- **Done** in `http-backend-async` **0.2.2** (blocking TLS + `http2/client` CONNECT; BT reader; event-loop-native WS = follow-up).
+- WinHTTP stays Upgrade-only (OS API); H2 WS = async backend.

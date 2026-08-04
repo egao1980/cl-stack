@@ -79,9 +79,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `cl-stack-jwt` | **0.1.0** | JWT facade over jose (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
-| `http-backend-async` | **0.2.0** | async + **HTTP/2** (ALPN + framing) |
+| `http-backend-async` | **0.2.2** | async + HTTP/2 + **RFC 8441 WS** (Extended CONNECT) |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
-| `http-backend-winhttp` | **0.1.2** | Windows; HTTP/2 via WinHTTP |
+| `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
+| `ws-protocol` | **0.2.1** | CLOS `:transport` + `feature-or-env-enabled-p` |
 | `event-protocol` | **0.1.1** | event-loop generics |
 | `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
 | `event-backend-libev` | **0.1.2** | Unix second backend |
@@ -112,7 +113,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 
 ```lisp
 (cl-repo:load-system "http-protocol" :version "0.3.0")
-(cl-repo:load-system "http-backend-async" :version "0.2.0")
+(cl-repo:load-system "http-backend-async" :version "0.2.2")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.1")
 
 (setf http-backend-async:*event-backend-maker*
@@ -135,6 +136,30 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 | `:http/2` | Require H2 or signal `http-version-not-available` |
 
 CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends own wire (or WinHTTP). Brief: [capabilities/http-protocol.md](capabilities/http-protocol.md). Recipes: [cookbooks/http-client.md](cookbooks/http-client.md).
+
+### WebSocket (`ws-protocol` 0.2.1+)
+
+```lisp
+(cl-repo:load-system "ws-protocol" :version "0.2.1")
+(cl-repo:load-system "http-backend-async" :version "0.2.2") ; :http/2 Extended CONNECT
+;; Windows H1 Upgrade:
+;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
+
+(let* ((backend (http-backend-async:make-async-backend))
+       (client (ws-protocol:make-ws-client backend :transport :http/2))
+       (conn (ws-protocol:connect backend client "wss://example.com/ws")))
+  (ws-protocol:on-event conn :message (lambda (msg) (print msg)))
+  (ws-protocol:send-text conn "hi")
+  (ws-protocol:close-connection conn))
+```
+
+| Preference | Meaning |
+|------------|---------|
+| `:auto` | Prefer `:http/2` when backend lists it, else `:http/1.1` |
+| `:http/1.1` | RFC 6455 Upgrade (websocket-driver / WinHTTP) |
+| `:http/2` | RFC 8441 Extended CONNECT (async; needs peer `ENABLE_CONNECT_PROTOCOL`) |
+
+Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-enabled-p`). Brief: [capabilities/ws-protocol.md](capabilities/ws-protocol.md).
 
 ### OAuth2 / JWT (optional packages)
 
