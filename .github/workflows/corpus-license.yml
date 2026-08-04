@@ -19,7 +19,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Self-test (deliberate bad fixtures must fail)
         run: python3 scripts/check-corpus-license.py --self-test
