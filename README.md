@@ -14,6 +14,7 @@ MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for m
 
 | Doc | Role |
 |-----|------|
+| **[docs/QUICKSTART.md](docs/QUICKSTART.md)** | **Start here** — cl-repository bootstrap + current pins + minimal HTTP/event |
 | [docs/STDLIB-GAP.md](docs/STDLIB-GAP.md) | ANSI/CDR/CL21 vs Python/Java structural matrix |
 | [docs/API.md](docs/API.md) | Protocol / facade / backend conventions |
 | [docs/capabilities/event-protocol.md](docs/capabilities/event-protocol.md) | Event loop protocol brief + backend picks (libuv/libev) |

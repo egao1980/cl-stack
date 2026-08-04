@@ -1,5 +1,7 @@
 # cl-stack API conventions
 
+**Install / first load:** [QUICKSTART.md](QUICKSTART.md).
+
 **Style:** CLOS protocols + Python-grade DX. Not Java SPI, not Boost policies.
 
 ## Layers
