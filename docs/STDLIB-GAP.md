@@ -34,9 +34,9 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
 | Subprocess | De-facto converged | P2 | Pin UIOP |
 | JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** — **done** ([#91](https://github.com/egao1980/cl-stack/issues/91), [json.md](cookbooks/json.md)); CSV/XML later |
-| SQL | Fragmented | P2 | cl-dbi/Mito after I/O |
-| Logging | Fragmented | P2 | Pin one |
-| CLI | Fragmented | P2 | Pin clingon or adopt |
+| SQL | Fragmented | P2 | `sql-protocol` + cl-dbi drivers + Mito — brief [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](capabilities/sql.md) |
+| Logging | Fragmented | P2 | `log-protocol` + log4cl / vom — brief [#102](https://github.com/egao1980/cl-stack/issues/102) · [logging.md](capabilities/logging.md) |
+| CLI | Fragmented | P2 | `cli-protocol` + clingon / adopt — brief [#103](https://github.com/egao1980/cl-stack/issues/103) · [cli.md](capabilities/cli.md) |
 | Config | Fragmented | P1 | env + **TOML** (tomlet) — brief [#98](https://github.com/egao1980/cl-stack/issues/98); impl [#99](https://github.com/egao1980/cl-stack/issues/99) |
 | Packaging | Fragmented | P0 | **cl-repository** product path |
 | FFI | De-facto converged | P0 | CFFI + overlays |

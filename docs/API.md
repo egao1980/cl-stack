@@ -38,4 +38,14 @@
 - `http-server-protocol` — CLOS server lifecycle; **Clack env** app contract; Hunchentoot default / Woo Unix  
   **Brief:** [capabilities/http-server.md](capabilities/http-server.md) · cookbook [http-server.md](cookbooks/http-server.md)
 
-Capability issues must include a **Protocol surface** section before coding backends.
+## Wave-2 app tooling (briefs locked)
+
+- `cli-protocol` — command tree / parse / run; default **clingon**, alternate **adopt**  
+  **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
+- `log-protocol` — leveled + **structured** fields (SLF4J/structlog shape); default **log4cl**, alternate **vom**  
+  **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
+- `sql-protocol` — DBI lifecycle over **cl-dbi**; drivers **sqlite3** / **postgres**; ORM facade **Mito** + SxQL  
+  **Brief:** [capabilities/sql.md](capabilities/sql.md) (#101)
+
+Capability issues must include a **Protocol surface** section before coding backends.  
+Impl order for this set: **CLI → logging → SQL**.
