@@ -34,5 +34,6 @@
   **Brief:** [capabilities/json-protocol.md](capabilities/json-protocol.md) · cookbook [json.md](cookbooks/json.md) — streaming = P2
 - `babel` — UTF-8 octets ↔ string — [text-unicode.md](capabilities/text-unicode.md)
 - `bordeaux-threads` (bt2) — portable threads — [concurrency.md](capabilities/concurrency.md)
+- `cl-stack-config` — env + **TOML** (tomlet) — [config.md](capabilities/config.md) (#98 locked; #99 impl)
 
 Capability issues must include a **Protocol surface** section before coding backends.
