@@ -48,8 +48,10 @@
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
-- `sql-protocol` — DBI lifecycle over **cl-dbi**; drivers **sqlite3** / **postgres**; ORM facade **Mito** + SxQL  
-  **Brief:** [capabilities/sql.md](capabilities/sql.md) (#101)
+- SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
+  - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
+  - `sql-query` — SQL generation (**SxQL**, SQLAlchemy Core–shaped)  
+  - `sql-orm` — ORM facade (**Mito**)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
-Impl order for this set: **CLI → logging → SQL**.
+Impl order for this set: **CLI → logging → SQL** (connectivity → query → ORM).
