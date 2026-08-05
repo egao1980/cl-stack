@@ -199,9 +199,9 @@ Same command, three wires (all succeed on Windows):
 ## Implementation tasks
 
 - [x] Brief lock — [#118](https://github.com/egao1980/cl-stack/issues/118)
-- [ ] Import clingon + adopt — [#119](https://github.com/egao1980/cl-stack/issues/119)
-- [ ] `cli-protocol` + **`normalize-argv`** + clingon backend + **Windows dialect Rove fixtures** — [#120](https://github.com/egao1980/cl-stack/issues/120)
-- [ ] adopt backend + cookbook (show all three wires) — [#121](https://github.com/egao1980/cl-stack/issues/121)
+- [x] Import clingon + adopt — [#119](https://github.com/egao1980/cl-stack/issues/119) (PR [cl-stack-systems#15](https://github.com/egao1980/cl-stack-systems/pull/15))
+- [x] `cli-protocol` + **`normalize-argv`** + clingon backend + dialect Rove fixtures — [#120](https://github.com/egao1980/cl-stack/issues/120) ([egao1980/cli-protocol](https://github.com/egao1980/cli-protocol) `0.1.0`)
+- [x] adopt backend + cookbook — [#121](https://github.com/egao1980/cl-stack/issues/121) · [cookbooks/cli.md](../cookbooks/cli.md)
 
 **#120 Done-when addendum:** green on `windows-latest` with PowerShell-style and CMD-style argv fixtures (not only `--posix`).
 

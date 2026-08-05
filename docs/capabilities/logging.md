@@ -183,9 +183,9 @@ No signal on hot path. `log-error` only for misconfiguration (missing backend/se
 ## Implementation tasks
 
 - [x] Brief lock (logging) — [#122](https://github.com/egao1980/cl-stack/issues/122)
-- [ ] **`serdes-protocol` + json/sexp backends** — [#132](https://github.com/egao1980/cl-stack/issues/132) / [#133](https://github.com/egao1980/cl-stack/issues/133) (blocks structured layout)
-- [ ] Import log4cl (+ pin vom) — [#123](https://github.com/egao1980/cl-stack/issues/123)
-- [ ] `log-protocol` + log4cl: **text + structured** — [#124](https://github.com/egao1980/cl-stack/issues/124)
-- [ ] vom backend + cookbook (both layouts) — [#125](https://github.com/egao1980/cl-stack/issues/125)
+- [x] **`serdes-protocol` + sexp** (minimal whole-value; Gray stubs) — [#133](https://github.com/egao1980/cl-stack/issues/133) ([egao1980/serdes-protocol](https://github.com/egao1980/serdes-protocol) `0.1.0`; json hard-wire follow-on)
+- [x] Import log4cl (+ pin vom) — [#123](https://github.com/egao1980/cl-stack/issues/123) (PR [cl-stack-systems#15](https://github.com/egao1980/cl-stack-systems/pull/15))
+- [x] `log-protocol` + log4cl: **text + structured** — [#124](https://github.com/egao1980/cl-stack/issues/124) ([egao1980/log-protocol](https://github.com/egao1980/log-protocol) `0.1.0`)
+- [x] vom backend + cookbook — [#125](https://github.com/egao1980/cl-stack/issues/125) · [cookbooks/logging.md](../cookbooks/logging.md)
 
 **Order:** serdes → log imports → log-protocol. Still after CLI (#119–#121) unless serdes is pulled earlier for http sexp — prefer **serdes just before logging**.

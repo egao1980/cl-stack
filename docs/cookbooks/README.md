@@ -11,3 +11,5 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [Config](config.md) | `cl-stack-config` (TOML + env) |
 | [WebSocket](websocket.md) | `ws-protocol` / async · winhttp · websocket-driver |
 | [HTTP server](http-server.md) | `http-server-protocol` / Hunchentoot · Woo · Clack env |
+| [CLI](cli.md) | `cli-protocol` / clingon · adopt · Windows dialects |
+| [Logging](logging.md) | `log-protocol` / log4cl · vom · text + structured |

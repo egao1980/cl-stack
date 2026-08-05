@@ -27,6 +27,15 @@
   ("json-backend-jzon" "0.1.1")
   ("json-backend-yason" "0.1.1")
   ("cl-stack-config" "0.1.0")
+  ;; CLI / logging / serdes
+  ("cli-protocol" "0.1.0")
+  ("cli-backend-clingon" "0.1.0")
+  ("cli-backend-adopt" "0.1.0")
+  ("serdes-protocol" "0.1.0")
+  ("sexp-protocol" "0.1.0")
+  ("log-protocol" "0.1.0")
+  ("log-backend-log4cl" "0.1.0")
+  ("log-backend-vom" "0.1.0")
   ;; Paths
   ("cl-stack-pathlib" "0.1.1")
   ;; Event
