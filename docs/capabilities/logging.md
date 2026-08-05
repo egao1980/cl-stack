@@ -181,7 +181,7 @@ No signal on hot path. `log-error` only for misconfiguration (missing backend/se
 ## Implementation tasks
 
 - [x] Brief lock (logging) — [#122](https://github.com/egao1980/cl-stack/issues/122)
-- [ ] **`serdes-protocol` + json/sexp backends** — [#132](https://github.com/egao1980/cl-stack/issues/132) (blocks structured layout)
+- [ ] **`serdes-protocol` + json/sexp backends** — [#132](https://github.com/egao1980/cl-stack/issues/132) / [#133](https://github.com/egao1980/cl-stack/issues/133) (blocks structured layout)
 - [ ] Import log4cl (+ pin vom) — [#123](https://github.com/egao1980/cl-stack/issues/123)
 - [ ] `log-protocol` + log4cl: **text + structured** — [#124](https://github.com/egao1980/cl-stack/issues/124)
 - [ ] vom backend + cookbook (both layouts) — [#125](https://github.com/egao1980/cl-stack/issues/125)
