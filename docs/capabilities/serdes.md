@@ -9,11 +9,13 @@ Generic **ser**ialize / **des**erialize of Lisp values ↔ string or octets.
 
 ```text
 serdes-protocol              ← generics + format dispatch + conditions
-    ▲ implemented by
-json-protocol (+ jzon/yason) ← RFC 8259; provides serdes methods for :json
-sexp-protocol (or system)    ← prin1/read policies; provides serdes methods for :sexp
+    ▲ implemented by (wave-1)
+json-protocol (+ jzon/yason) ← :json
+sexp-protocol                ← :sexp
+    ▲ later implementors (same pattern — not shims)
+xml-protocol / protobuf-… / arrow-… / msgpack-… / …
     ▲ used by
-log-protocol / cl-stack-http
+log-protocol / cl-stack-http / …
 ```
 
 Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol.md). Logging: [logging.md](logging.md).
@@ -28,9 +30,10 @@ Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol
 | JSON value rules stay coherent | Owned by **`json-protocol`** (still); it **implements** serdes |
 | SEXP without bloating json-* | Separate implementor of serdes |
 | Logging structured layouts | Depend on **serdes-protocol** only; load json/sexp implementors |
+| Later XML / protobuf / Arrow / … | New **implementors** of serdes (`register-format`); no protocol rewrite |
 
 **Reject:** `serdes-backend-json` as a thin shim *over* json-protocol (extra ASDF hop, wrong ownership).  
-**Accept:** json-protocol (when loaded) **is** the JSON serdes implementor.
+**Accept:** json-protocol (when loaded) **is** the JSON serdes implementor. Same for every future format.
 
 ---
 
@@ -142,11 +145,26 @@ cl-stack-http    → migrate :json / :sexp onto serdes (optional follow-on)
 
 ---
 
-## Non-goals
+## Future implementors (explicitly in scope later)
+
+Same contract as json/sexp — **implement** serdes, don’t wrap it:
+
+| Format | Notes (when we get there) |
+|--------|---------------------------|
+| **XML** | After CSV/XML gap work; value mapping TBD (DOM vs event vs map-shaped) |
+| **Protobuf** | Likely ties to `cl-protobufs` / overlays; binary octets path first-class |
+| **Apache Arrow** | Columnar IPC/flight; may need stream-oriented GFs later (`encode-stream`) without breaking wave-1 |
+| MessagePack / EDN / CBOR | Compact / Lisp-adjacent text-or-binary |
+| Avro / Cap’n Proto | Only if demand; same registration pattern |
+
+Wave-1 keeps `backend-encode` / `backend-decode` whole-value. If Arrow/protobuf need chunked IPC, **extend** serdes with optional stream GFs — don’t fork a second façade.
+
+## Non-goals (wave-1)
 
 - Replacing json-protocol’s public API  
+- Shipping XML / protobuf / Arrow implementors in this wave  
 - cl-store object graphs  
-- Config TOML/YAML as serdes formats (stays [`cl-stack-config`](config.md))  
+- Config TOML as a serdes format (stays [`cl-stack-config`](config.md))  
 
 ---
 
