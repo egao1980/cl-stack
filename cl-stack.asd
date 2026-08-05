@@ -32,6 +32,8 @@
                "event-protocol"
                "event-backend-libuv"
                "cl-stack-ssl"
+               "json-protocol"
+               "json-backend-jzon"
                "http-protocol"
                "http-encoding-chipz"
                "http-encoding-brotli"
