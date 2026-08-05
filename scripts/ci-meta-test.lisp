@@ -5,6 +5,10 @@
 (setf *debugger-hook*
       (lambda (c h)
         (declare (ignore h))
+        #+sbcl
+        (when (typep c 'sb-ext:defconstant-uneql)
+          (let ((r (find-restart 'continue c)))
+            (when r (invoke-restart r))))
         (format *error-output* "~&UNHANDLED: ~A~%" c)
         (uiop:quit 1)))
 
@@ -14,8 +18,7 @@
   #+sbcl
   (handler-bind ((sb-ext:defconstant-uneql
                   (lambda (c)
-                    (declare (ignore c))
-                    (let ((r (find-restart 'continue)))
+                    (let ((r (find-restart 'continue c)))
                       (when r (invoke-restart r))))))
     (funcall fn))
   #-sbcl
@@ -24,7 +27,9 @@
 (call-with-ci-muffles (lambda () (asdf:load-system "cl-repository-client")))
 
 (cl-repository-client/asdf-integration:configure-asdf-source-registry)
-(cl-repository-client/asdf-integration:load-system-init-files)
+(call-with-ci-muffles
+ (lambda ()
+   (cl-repository-client/asdf-integration:load-system-init-files)))
 
 (call-with-ci-muffles
  (lambda ()

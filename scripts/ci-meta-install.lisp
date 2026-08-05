@@ -12,12 +12,19 @@
   #+sbcl
   (handler-bind ((sb-ext:defconstant-uneql
                   (lambda (c)
-                    (declare (ignore c))
-                    (let ((r (find-restart 'continue)))
+                    (let ((r (find-restart 'continue c)))
                       (when r (invoke-restart r))))))
     (funcall fn))
   #-sbcl
   (funcall fn))
+
+(defun ci-record-installed-version (system env-var)
+  (let ((ver (uiop:symbol-call :cl-repo :installed-system-version system))
+        (env (uiop:getenv "GITHUB_ENV")))
+    (when (and ver env)
+      (with-open-file (out env :direction :output :if-exists :append :if-does-not-exist :create)
+        (format out "~a=~a~%" env-var ver))
+      (format t "~&; ci: ~a=~a~%" env-var ver))))
 
 (call-with-ci-muffles (lambda () (asdf:load-system "cl-repository-client")))
 (call-with-ci-muffles (lambda () (asdf:load-system "cl-stack/pins")))
@@ -29,7 +36,8 @@
   (format t "~&; ci: apply-pins ~a~%" pins)
   (call-with-ci-muffles
    (lambda ()
-     (cl-stack:apply-pins pins))))
+     (cl-stack:apply-pins pins)
+     (ci-record-installed-version "cl-stack-ssl" "CL_STACK_SSL_VERSION"))))
 
 (format t "~&; ci: meta install done~%")
 (uiop:quit 0)

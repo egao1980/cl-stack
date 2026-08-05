@@ -1,11 +1,16 @@
 (in-package #:cl-stack)
 
-(defun apply-pins (path &key (load nil) force)
+(defun apply-pins (path &key (load nil) force
+                           (sources '(("babel" :ql)
+                                      ("trivial-features" :ql)
+                                      ("cl-unicode" :ql))))
   "Install every applicable (:systems) entry from PATH via cl-repository.
 
    Requires CL-REPOSITORY-CLIENT loaded (system cl-stack/pins). Registry/namespace
    come from the pin file. Skips entries whose :platforms filter excludes this host.
    When LOAD is true, ASDF-loads each system after install.
+   SOURCES defaults force babel/cl-unicode via Quicklisp (avoids OCI dual-load
+   defconstant clashes with the client bootstrap).
 
    Returns the list of (name . version) pairs processed."
   (unless (find-package :cl-repo)
@@ -25,7 +30,10 @@
             (when (platforms-match-p platforms)
               (format t "~&; cl-stack: pin ~a:~a~%" name version)
               (uiop:symbol-call :cl-repo :ensure-systems
-                                (list name) :version version :force force)
+                                (list name)
+                                :version version
+                                :force force
+                                :sources sources)
               (when load
                 (asdf:load-system name))
               (push (cons name version) installed))))

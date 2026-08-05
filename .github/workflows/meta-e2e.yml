@@ -124,6 +124,49 @@ jobs:
           export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/${CL_REPOSITORY_CLIENT_DIR}//:"
           ros -l scripts/ci-meta-install.lisp -q
 
+      # Overlay libssl needs matching libcrypto on the loader path (Linux ignores
+      # mid-process setenv; stage before the test lisp process starts).
+      - name: Stage OpenSSL overlay for test process
+        shell: bash
+        run: |
+          case "${RUNNER_OS}" in
+            Linux)   plat=linux/amd64 ;;
+            macOS)
+              case "${RUNNER_ARCH}" in
+                ARM64) plat=darwin/arm64 ;;
+                X64)   plat=darwin/amd64 ;;
+                *) echo "unsupported arch ${RUNNER_ARCH}" >&2; exit 1 ;;
+              esac ;;
+            Windows) plat=windows/amd64 ;;
+            *) echo "unsupported OS ${RUNNER_OS}" >&2; exit 1 ;;
+          esac
+          echo "${GITHUB_TOKEN}" | oras login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          mkdir -p /tmp/ssl-pull /tmp/ssl-native
+          : "${CL_STACK_SSL_VERSION:=3.4.1}"
+          REF="ghcr.io/egao1980/cl-systems/cl-stack-ssl:${CL_STACK_SSL_VERSION}"
+          ok=0
+          for attempt in 1 2 3 4 5; do
+            rm -rf /tmp/ssl-pull/* /tmp/ssl-native/*
+            if oras pull "${REF}" --platform "${plat}" -o /tmp/ssl-pull; then
+              ok=1
+              break
+            fi
+            echo "oras pull attempt ${attempt} failed; sleep $((attempt * 4))s" >&2
+            sleep $((attempt * 4))
+          done
+          [ "$ok" = 1 ] || { echo "oras pull failed for ${REF} platform=${plat}" >&2; exit 1; }
+          tar -xzf /tmp/ssl-pull/native-library.tar.gz -C /tmp/ssl-native
+          NAT="$(find /tmp/ssl-native -type d -name native | head -1)"
+          : "${NAT:?native/ not found in cl-stack-ssl overlay}"
+          echo "OPENSSL_NATIVE=${NAT}" >> "$GITHUB_ENV"
+          if [ "${RUNNER_OS}" = "Windows" ]; then
+            echo "${NAT}" >> "$GITHUB_PATH"
+          else
+            echo "LD_LIBRARY_PATH=${NAT}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+            echo "DYLD_LIBRARY_PATH=${NAT}${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          fi
+          ls -la "${NAT}"
+
       - name: Load cl-stack/meta + e2e tests
         shell: bash
         run: |
