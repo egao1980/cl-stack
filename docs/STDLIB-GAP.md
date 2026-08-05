@@ -33,7 +33,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Regex | De-facto converged | P2 | Pin cl-ppcre |
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
 | Subprocess | De-facto converged | P2 | Pin UIOP |
-| JSON / CSV / XML | Fragmented | P1 | `json-protocol` + pin |
+| JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** pin (brief [#96](https://github.com/egao1980/cl-stack/issues/96)); CSV/XML later |
 | SQL | Fragmented | P2 | cl-dbi/Mito after I/O |
 | Logging | Fragmented | P2 | Pin one |
 | CLI | Fragmented | P2 | Pin clingon or adopt |
