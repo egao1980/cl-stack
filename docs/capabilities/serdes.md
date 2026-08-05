@@ -31,7 +31,7 @@ Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol
 | SEXP without bloating json-* | Separate implementor of serdes |
 | Logging structured layouts | Depend on **serdes-protocol** only; load json/sexp implementors |
 | Later XML / protobuf / Arrow / … | New **implementors**; reuse wave-1 Gray GFs |
-| Streaming / pipes / JSONL | **Gray streams in protocol from day one** (`trivial-gray-streams`) — same as http-protocol |
+| Streaming / pipes | **Gray streams from day one** + **JSONL** + **event/pull JSON** (large files) |
 
 **Reject:** `serdes-backend-json` shim; deferring streams “until Arrow.”  
 **Accept:** json-protocol **implements** serdes (value + character Gray + JSONL).
@@ -132,21 +132,50 @@ Protocol owns base classes + factory / value-stream GFs. Implementors specialize
 
 ;;; Value-at-a-time (JSONL / one-sexp-per-line / framed records)
 (defgeneric stream-encode-value (stream value &key)
-  (:documentation "Write one VALUE to a serdes output stream (e.g. one JSON line)."))
+  (:documentation "Write one VALUE (e.g. one JSON line + newline)."))
 (defgeneric stream-decode-value (stream &key)
-  (:documentation "Read one value from a serdes input stream, or :eof."))
+  (:documentation "Read one complete value, or :eof. JSONL = one JSON value per line."))
 
 ;; Façade
 (defun make-input-stream (underlying &key (format *serdes-format*) element-type) …)
 (defun make-output-stream (underlying &key (format *serdes-format*) element-type) …)
+
+;;; JSONL convenience (format :json — required for json implementor)
+(defun map-jsonl (function source &key (format :json))
+  "Call FUNCTION with each decoded top-level value from a JSONL SOURCE (stream/path/string).")
+(defmacro do-jsonl ((var source &key format) &body body) …)
 ```
 
-**Wave-1 implementor bar:**
+### Event / pull parse (large single documents) — protocol GFs, json implements
 
-| Format | Whole-value | Gray wrap | `stream-*-value` |
-|--------|-------------|-----------|------------------|
-| `:json` | required | character streams required | required (JSONL) |
-| `:sexp` | required | character streams required | required (one form / line or `read` framing) |
+For multi‑GB **one** JSON value (array/object), whole-value `decode` is wrong. Protocol owns a SAX-like pull API; **json-protocol** implements via jzon `parse-next` (already streaming).
+
+```lisp
+(defclass serdes-event-parser () ())
+
+(defgeneric backend-make-event-parser (backend source &key max-depth max-string-length)
+  (:documentation "SOURCE = stream | pathname | octets | string."))
+(defgeneric parse-next-event (parser)
+  (:documentation "→ (values event value). EVENT nil at EOF.
+Events (JSON, jzon-aligned): :begin-array :end-array :begin-object :end-object
+  :object-key :value  (value carries string/number/bool/null for scalars)."))
+(defgeneric parse-next-element (parser &key)
+  (:documentation "Optional: consume next complete sub-value as one Lisp object (jzon:parse-next-element)."))
+
+(defun make-event-parser (source &key (format *serdes-format*) &allow-other-keys) …)
+(defmacro with-event-parser ((var source &key format) &body body) …)
+(defun map-events (function source &key format) …)
+```
+
+**Wave-1 vs follow-on:**
+
+| Capability | Wave-1 (#133) | Follow-on (event JSON / large files) |
+|------------|---------------|--------------------------------------|
+| Whole-value encode/decode | required | — |
+| Gray character streams | required | — |
+| **JSONL** `stream-*-value` + `map-jsonl` / `do-jsonl` | **required** (json) | harden pathnames, backpressure notes |
+| **Event/pull** `parse-next-event` | GFs **in protocol** (stubs OK) | **json implementor required** — jzon parser |
+| Event writer (streaming encode) | optional | jzon writer / symmetric API |
 
 Binary Gray classes ship in protocol even if json/sexp only use character streams — protobuf/Arrow plug in without relocating base classes.
 
@@ -211,8 +240,8 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Non-goals (wave-1)
 
 - Replacing json-protocol’s public API  
-- Shipping XML / protobuf / Arrow implementors in this wave  
-- Full pull-parser / SAX event APIs (XML implementor may add later)  
+- Shipping XML / protobuf / Arrow implementors  
+- Building a full in-memory DOM for huge files (use events / JSONL instead)  
 - cl-store object graphs  
 - Config TOML as a serdes format (stays [`cl-stack-config`](config.md))  
 
@@ -221,9 +250,10 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Implementation tasks
 
 - [x] Brief lock — [#132](https://github.com/egao1980/cl-stack/issues/132)
-- [ ] `serdes-protocol` interface: whole-value GFs + **Gray stream classes/GFs** — [#133](https://github.com/egao1980/cl-stack/issues/133)
-- [ ] **`json-protocol` implements serdes** (value + character streams + JSONL) — part of #133 / json bump
+- [ ] `serdes-protocol`: whole-value + Gray streams + **JSONL helpers** + **event-parser GFs** — [#133](https://github.com/egao1980/cl-stack/issues/133)
+- [ ] **`json-protocol` implements serdes**: value + character streams + **JSONL** — part of #133
+- [ ] **json event/pull parser** (jzon `parse-next`) for large files — [#138](https://github.com/egao1980/cl-stack/issues/138)
 - [ ] SEXP implementor (value + character streams) — part of #133
 - [ ] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)
 
-Ship serdes interface (incl. Gray streams) + json implementor **before** structured logging.
+Ship serdes interface (Gray + JSONL GFs) + json implementor **before** structured logging; event parser can land in the same json bump or immediately after.
