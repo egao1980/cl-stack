@@ -5,7 +5,9 @@
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
-**Layering (locked):** `serdes-protocol` is the **interface** (whole-value + Gray streams). Format stacks **implement** it — not wrapped *by* a `serdes-backend-*` shim.
+**Layering (locked):** `serdes-protocol` is the **format** interface (whole-value + Gray/JSONL/events). Format stacks **implement** it — not wrapped *by* a `serdes-backend-*` shim.
+
+**Not ObjectInput/Output:** Java-like object streams live in [`io-protocol`](io.md) — a **CLOS shell with no serdes reference**. Adapters that bridge the two are optional and out of both cores.
 
 ```text
 serdes-protocol              ← GFs + Gray stream classes + format registry

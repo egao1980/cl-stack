@@ -42,7 +42,9 @@
 
 - `cli-protocol` — command tree / parse / run; default **clingon**, alternate **adopt**  
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
-- `serdes-protocol` — encode/decode + **Gray stream** GFs; **implemented by** `json-protocol` + sexp; later XML / protobuf / Arrow / …  
+- `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**  
+  **Brief:** [capabilities/io.md](capabilities/io.md)
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp; later XML / protobuf / Arrow / …  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
