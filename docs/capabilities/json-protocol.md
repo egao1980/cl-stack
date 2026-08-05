@@ -140,7 +140,7 @@ Restarts: `use-value` where cheap; otherwise signal and let callers handle.
 ## Implementation tasks
 
 - [x] #96 Brief + bakeoff (this doc)
-- [ ] #97 Implement protocol + jzon backend + GHCR pin (+ yason alternate stub or system)
+- [x] #97 Implement protocol + jzon backend + GHCR pin (+ yason alternate)
 
 ## Cookbook (follow-on)
 
