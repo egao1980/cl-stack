@@ -92,6 +92,12 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-server-protocol` | **0.1.0** | CLOS server; Clack env; load `http-server-backend-hunchentoot` (default) or `…-woo` ([cookbook](cookbooks/http-server.md)) |
 | `http-server-backend-hunchentoot` | **0.1.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
+| `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
+| `cli-backend-clingon` | **0.1.0** | default CLI backend |
+| `serdes-protocol` | **0.1.0** | format encode/decode registry |
+| `sexp-protocol` | **0.1.0** | serdes `:sexp` implementor |
+| `log-protocol` | **0.1.0** | text + structured logging ([cookbook](cookbooks/logging.md)) |
+| `log-backend-log4cl` | **0.1.0** | default log backend |
 | `event-protocol` | **0.1.1** | event-loop generics |
 | `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
 | `event-backend-libev` | **0.1.2** | Unix second backend |

@@ -252,10 +252,11 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Implementation tasks
 
 - [x] Brief lock — [#132](https://github.com/egao1980/cl-stack/issues/132)
-- [ ] `serdes-protocol`: whole-value + Gray streams + **JSONL helpers** + **event-parser GFs** — [#133](https://github.com/egao1980/cl-stack/issues/133)
-- [ ] **`json-protocol` implements serdes**: value + character streams + **JSONL** — part of #133
+- [x] `serdes-protocol` whole-value + format registry + Gray **stubs** — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) `0.1.0`)
+- [ ] **JSONL helpers** + **event-parser GFs** (full Gray value streams) — remaining #133
+- [ ] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — soft `install-serdes-json-hooks` shipped; hard-dep after OCI
 - [ ] **json event/pull parser** (jzon `parse-next`) for large files — [#138](https://github.com/egao1980/cl-stack/issues/138)
-- [ ] SEXP implementor (value + character streams) — part of #133
-- [ ] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)
+- [x] SEXP implementor (whole-value) — part of #133 (`sexp-protocol` in serdes repo)
+- [x] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)
 
 Ship serdes interface (Gray + JSONL GFs) + json implementor **before** structured logging; event parser can land in the same json bump or immediately after.
