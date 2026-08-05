@@ -72,7 +72,29 @@ Load a JSON implementor that registers serdes `:json` (jzon backend after soft/h
 
 ---
 
-## 5. Alternate vom backend
+## 5. Level + filters + async (protocol)
+
+```lisp
+(stack-log:set-level :info)
+(stack-log:level-enabled-p :debug) ; => NIL
+
+(stack-log:add-filter
+ (lambda (level logger msg fields)
+   (declare (ignore level logger fields))
+   (not (search "password" msg)))
+ :name :no-secrets)
+
+(stack-log:configure :async t)   ; protocol mailbox + worker
+(stack-log:info "queued")
+(stack-log:flush)                ; drain before exit / tests
+(stack-log:shutdown-async)
+```
+
+Appenders / multi-sink / log4cl hierarchy = **backend config**, not protocol.
+
+---
+
+## 6. Alternate vom backend
 
 ```lisp
 (asdf:load-system "log-backend-vom")
