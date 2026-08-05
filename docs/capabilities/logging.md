@@ -1,11 +1,16 @@
 # log-protocol (P2)
 
 **Issues:** [#102](https://github.com/egao1980/cl-stack/issues/102)  
-**Status:** brief **locked** — CLOS protocol + backends (SLF4J-shaped; not “pin log4cl alone”)
+**Status:** brief **locked** — CLOS protocol + backends; **text (log4j) + structured (JSON/SEXP via serdes)**
 
-One app DX for **leveled + structured** logging. Stack libraries depend on the protocol only; apps pick a backend. Mirrors Java **SLF4J** (API) + Logback/Log4j (impl) and Python **logging** / **structlog**.
+One app DX for leveled logging with **two first-class layouts**:
 
-Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (Logging → protocol + pin).
+1. **Text** — Log4j/Logback-style pattern lines (human / REPL / classic ops)  
+2. **Structured** — one event record encoded as **JSON** or **SEXP** (machines / aggregators)
+
+Libs depend on the protocol only; apps pick logger backend + layout/format. Mirrors **SLF4J** + Logback layouts and **structlog** processors.
+
+Conventions: [API.md](../API.md). Serdes: [serdes.md](serdes.md). JSON values: [json-protocol.md](json-protocol.md).
 
 ---
 
@@ -13,12 +18,11 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (Lo
 
 | Ecosystem | Library | What we steal |
 |-----------|---------|---------------|
-| **Java** | [SLF4J](https://www.slf4j.org/) + Logback/Log4j2 | Stable API; swappable impl; MDC/context map |
-| **Python** | [`logging`](https://docs.python.org/3/library/logging.html) | Levels, hierarchical loggers, handlers/formatters |
-| **Python** | [structlog](https://www.structlog.org/) | **Key-value fields** first-class; bind context |
-| **Go** | zap / zerolog | Structured fields + low alloc (aspirational; not wave-1 bar) |
-
-ANSI has `*standard-output*` and conditions — not a logging framework. Stack needs one dependency surface for `http-*`, `event-*`, cookbooks.
+| **Java** | Log4j2 / Logback | **PatternLayout** (text); JSON layout / encoder for structured |
+| **Java** | SLF4J | Stable API; MDC → our `with-context` |
+| **Python** | `logging` + formatters | Handlers / formatters split |
+| **Python** | structlog | KV fields + renderers (JSON) |
+| **Go** | zap | Structured fields (aspirational perf — not wave-1 bar) |
 
 ---
 
@@ -26,80 +30,90 @@ ANSI has `*standard-output*` and conditions — not a logging framework. Stack n
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Shape** | **CLOS protocol + backends** | #102 “pin one after bakeoff” → pin is the **default backend**; API is protocol so libs don’t hard-depend on log4cl |
-| **DX target** | structlog/SLF4J: `(log:info "msg" :k v …)` + context bind | Cookbooks + HTTP middleware need fields (`:request-id`, `:status`), not only `format` strings |
-| **Default backend (A)** | **[log4cl](https://github.com/sharplispers/log4cl)** (Sharplispers) | De-facto CL logger; hierarchical categories; appenders/layouts; Slime/Sly; Apache-2.0; CLOS-native internals |
-| **Alternate (B)** | **[vom](https://github.com/orthecreedence/vom)** | Tiny, fast, already imported (`cl-stack-systems` / blackbird); good for constrained binaries |
-| **Watchlist** | **[cl-llog](https://github.com/atgreen/cl-llog)** (llog) | Structured-native (zap-shaped); young (≤0.1.x); revisit when versioned + CI-proven — **not** wave-1 default |
-| **Also considered** | **Verbose** (Shinmera) | Powerful pipeline model; heavier mental model / deps for stack default |
-| **Also considered** | **cl-grip** | Pluggable journals; smaller ecosystem than log4cl |
-| **Not default** | Fluentd-only (`cl-fluent-logger`) | Sink, not app API — optional appender later |
-| **Levels** | `:trace :debug :info :warn :error :fatal` | Map onto backend levels (vom’s syslog-ish set collapses as needed) |
-| **Fields** | Keyword plist after message; values = printable / json-protocol-friendly | Backend A: pattern layout + kv suffix or JSON layout opt-in; B: format into message |
-| **Context** | `log:with-context ((&key …) &body)` dynamic bind | SLF4J MDC / structlog `bind_contextvars` |
-| **Logger name** | Package / explicit string category | log4cl hierarchy; vom per-package levels |
-| **Selection DX** | ASDF + `*log-backend*` | Load `log-backend-log4cl` (default) or `log-backend-vom` |
-| **Libs vs apps** | Stack libs call **protocol only** | Never `ql:quickload :log4cl` from `http-protocol` et al. |
-| **Windows** | A/B pure Lisp | Primary target |
+| **Shape** | CLOS protocol + logger backends + **layout** axis | Backend = how/where (log4cl/vom); layout = text vs structured |
+| **Text layout** | Log4j-style **pattern** (default for REPL/dev) | `%d %p %c — %m` + optional kv; familiar ops |
+| **Structured layout** | Event record → **[`serdes-protocol`](serdes.md)** | One encoder path for JSON **and** SEXP; no private log JSON |
+| **Structured formats** | `:json` (default for structured) and `:sexp` | JSON for ELK/fluentd; SEXP for Lisp-native pipes / `cl-stack-http` kinship |
+| **Serdes dependency** | **Yes — generic serdes**, not “log embeds json-protocol only” | Avoid second sexp encoder; reuse json-protocol via `serdes-backend-json` |
+| **Default logger backend (A)** | **[log4cl](https://github.com/sharplispers/log4cl)** | Hierarchy, appenders, Slime; text patterns native; structured via protocol layout wrapper |
+| **Alternate logger (B)** | **[vom](https://github.com/orthecreedence/vom)** | Tiny; already imported |
+| **Watchlist** | **cl-llog** | Structured-native; young |
+| **App call shape** | `(log:info "msg" :k v …)` same for both layouts | Layout chosen at configure time, not per call |
+| **Levels** | `:trace :debug :info :warn :error :fatal` | Map to backend |
+| **Fields / context** | plist after message; `with-context` | Merged into event record / MDC |
+| **Event record (structured)** | Normative keys below | Stable for aggregators |
+| **Selection DX** | ASDF + `*log-backend*` + `log:configure :layout …` | |
+| **Libs vs apps** | Libs → protocol only | |
+| **Windows** | Pure Lisp; text + JSON/SEXP all required on `windows-latest` | |
 
-**Supersedes** #102 “pin one.” Winner of the pin bakeoff is **log4cl as backend A**; structured DX lives in the protocol.
+### Event record (structured, normative)
+
+Encoded via serdes as object/hash (JSON) or property list / alist (SEXP policy in serdes brief):
+
+| Key | Type | Notes |
+|-----|------|-------|
+| `ts` | string (ISO-8601) or unix ms | UTC |
+| `level` | string or keyword | `info` / `:info` — JSON uses string |
+| `logger` | string | category / package |
+| `msg` | string | |
+| `fields` | object | merged context + call-site kv (no reserved-key clashes) |
+
+Optional later: `thread`, `file`, `condition` — not wave-1 required.
+
+### Text pattern (wave-1 minimum)
+
+Default pattern (log4j-ish):
+
+```text
+%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %p %c - %m%n
+```
+
+When fields non-empty, append ` %k` style or ` {k=v, …}` — exact pattern token TBD in impl; must be readable on consoles. Full Log4j pattern language = **not** required; subset is fine.
 
 ---
 
 ## Bakeoff scorecard (#102)
 
-Scores: **1** … **5** for cl-stack needs.
-
 | Criterion | log4cl | vom | Verbose | cl-llog |
 |-----------|--------|-----|---------|---------|
-| Ecosystem / de-facto | **5** | **3** | **3** | **2** |
-| Structured fields (native) | **3**† | **2** | **3** | **5** |
-| Hierarchy / categories | **5** | **3** | **4** | **4** |
-| REPL / Slime UX | **5** | **3** | **3** | **4** |
+| Text / pattern (log4j-like) | **5** | **2** | **3** | **3** |
+| Structured via serdes (stack) | **4**† | **4**† | **3** | **5** |
+| Ecosystem / hierarchy / Slime | **5** | **3** | **3** | **2** |
 | Dep weight | **3** | **5** | **2** | **4** |
-| Already in stack | **1** | **5** (import) | **1** | **1** |
-| Maintenance / liveliness | **3** | **3** | **4** | **3** (young) |
-| Windows / pure Lisp | **5** | **5** | **5** | **5** |
-| **Wave role** | **Default (A)** | **Alternate (B)** | reject as pin | **watchlist** |
+| Already in stack | **1** | **5** | **1** | **1** |
+| **Wave role** | **Default (A)** | **Alternate (B)** | reject | watchlist |
 
-† Protocol supplies structured DX; log4cl backend adapts fields → layout/format.
+† Layout implemented in `log-protocol`; backend supplies appenders/streams.
 
-**Verdict:** protocol + **log4cl default**, **vom second**. Track **cl-llog** for a future structured-native backend if it stabilizes.
+**Verdict:** log4cl default for text heritage; **structured always goes through serdes** (`:json` / `:sexp`).
 
 ---
 
-## Repo layout (locked)
+## Repo layout
 
-| Layer | Repo / system |
-|-------|----------------|
-| Protocol + shared tests | `egao1980/log-protocol` (nick `stack-log`) |
-| Default backend A | `log-backend-log4cl` |
-| Alternate backend B | `log-backend-vom` |
-| Optional facade | only if pattern-config DSL needed beyond protocol |
+| Layer | System |
+|-------|--------|
+| Serdes (dep) | `serdes-protocol` + `serdes-backend-json` + `serdes-backend-sexp` — [serdes.md](serdes.md) |
+| Log protocol | `egao1980/log-protocol` (`stack-log`) |
+| Logger A/B | `log-backend-log4cl`, `log-backend-vom` |
 
-**Third-party imports:** `log4cl` (+ deps). `vom` already imported — ensure pin/version in `stable.pins`.
+**Imports:** `log4cl`; `vom` pin. Serdes pulls `json-protocol` transitively for JSON.
 
 ---
 
 ## Protocol surface
 
-Package nick: `stack-log` (system `log-protocol`).
-
-### Value types
+Package nick: `stack-log`.
 
 ```lisp
 (defclass log-backend () ())
 (defvar *log-backend* nil)
-(defvar *log-context* nil)   ; plist or equal hash-table of bound fields
-```
+(defvar *log-context* nil)
+(defvar *log-layout* :text)          ; :text | :structured
+(defvar *log-serdes-format* :json)   ; when structured: :json | :sexp
 
-### Generics / DX
+(defgeneric backend-log (backend level logger-name message &key fields))
 
-```lisp
-(defgeneric backend-log (backend level logger-name message &key fields)
-  (:documentation "LEVEL keyword; FIELDS plist. Message = string."))
-
-;; Facade (functions — what cookbooks + libs call)
 (defun log:trace (message &rest fields))
 (defun log:debug (message &rest fields))
 (defun log:info  (message &rest fields))
@@ -107,54 +121,69 @@ Package nick: `stack-log` (system `log-protocol`).
 (defun log:error (message &rest fields))
 (defun log:fatal (message &rest fields))
 
-(defmacro log:with-context ((&rest field-plist) &body body)
-  "Bind fields for dynamic extent; merged into each log call.")
+(defmacro log:with-context ((&rest field-plist) &body body))
 
-(defun log:set-level (level &key logger)
-  "Process/backend minimum level.")
-
-(defun log:configure (&key backend level json stream file)
-  "App bootstrap helper — optional sugar over backend config.")
+(defun log:configure (&key backend level
+                          (layout :text)          ; :text | :structured
+                          (format :json)          ; serdes format when structured
+                          stream file pattern)
+  "LAYOUT :text → pattern (log4j-ish). :structured → serdes encode of event record.")
 ```
 
-Logger name default: `(package-name *package*)`.
+Implementation sketch: protocol builds the event (text line **or** record), then backend writes to appenders; for structured, `(serdes:encode record :format *log-serdes-format*)` then write line (JSONL / one sexp per line).
 
 ### Conditions
 
-Logging must **not** signal on normal paths. Optional `log-error` only for misconfiguration (missing backend, bad file appender).
+No signal on hot path. `log-error` only for misconfiguration (missing backend/serdes format).
 
 ---
 
 ## Cookbook (with impl)
 
+**Text (dev):**
+
 ```lisp
-(asdf:load-system "log-backend-log4cl")   ; sets *log-backend*
-
-(stack-log:configure :level :info)
+(asdf:load-system "log-backend-log4cl")
+(stack-log:configure :level :info :layout :text)
 (stack-log:info "boot" :version "0.1.0")
-
-(stack-log:with-context (:request-id "abc" :path "/health")
-  (stack-log:info "handled" :status 200))
+;; 2026-08-05T18:00:00.123Z INFO common-lisp-user - boot version=0.1.0
 ```
 
-JSON lines (ops): backend config flag or `log:configure :json t` → layout that encodes fields via `json-protocol`.
+**Structured JSONL:**
+
+```lisp
+(asdf:load-system "serdes-backend-json")
+(asdf:load-system "log-backend-log4cl")
+(stack-log:configure :level :info :layout :structured :format :json)
+(stack-log:with-context (:request-id "abc")
+  (stack-log:info "handled" :status 200))
+;; {"ts":"…","level":"info","logger":"…","msg":"handled","fields":{"request-id":"abc","status":200}}
+```
+
+**Structured SEXP:**
+
+```lisp
+(asdf:load-system "serdes-backend-sexp")
+(stack-log:configure :layout :structured :format :sexp)
+```
 
 ---
 
 ## Non-goals (this wave)
 
-- Full OpenTelemetry export  
-- Shipping a log aggregation SaaS client as default  
-- Replacing log4cl’s properties-file configurator in wave-1 (escape hatch OK)  
-- Making cl-llog the default before it has a clear release + Windows CI story  
+- OpenTelemetry export  
+- Full Log4j pattern language compatibility  
+- cl-llog as default  
+- Binary log formats (protobuf)  
 
 ---
 
 ## Implementation tasks
 
-- [x] Brief lock (this doc) — [#122](https://github.com/egao1980/cl-stack/issues/122)
+- [x] Brief lock (logging) — [#122](https://github.com/egao1980/cl-stack/issues/122)
+- [ ] **`serdes-protocol` + json/sexp backends** — [#132](https://github.com/egao1980/cl-stack/issues/132) / [#133](https://github.com/egao1980/cl-stack/issues/133) (blocks structured layout)
 - [ ] Import log4cl (+ pin vom) — [#123](https://github.com/egao1980/cl-stack/issues/123)
-- [ ] `log-protocol` + log4cl backend — [#124](https://github.com/egao1980/cl-stack/issues/124)
-- [ ] vom backend + cookbook — [#125](https://github.com/egao1980/cl-stack/issues/125)
+- [ ] `log-protocol` + log4cl: **text + structured** — [#124](https://github.com/egao1980/cl-stack/issues/124)
+- [ ] vom backend + cookbook (both layouts) — [#125](https://github.com/egao1980/cl-stack/issues/125)
 
-Child issues under #102. Start after CLI wave (#119–#121).
+**Order:** serdes → log imports → log-protocol. Still after CLI (#119–#121) unless serdes is pulled earlier for http sexp — prefer **serdes just before logging**.

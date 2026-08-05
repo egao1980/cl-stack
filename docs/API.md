@@ -42,7 +42,9 @@
 
 - `cli-protocol` — command tree / parse / run; default **clingon**, alternate **adopt**  
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
-- `log-protocol` — leveled + **structured** fields (SLF4J/structlog shape); default **log4cl**, alternate **vom**  
+- `serdes-protocol` — format-dispatch encode/decode; backends **json** (→ `json-protocol`) + **sexp**  
+  **Brief:** [capabilities/serdes.md](capabilities/serdes.md)
+- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
 - `sql-protocol` — DBI lifecycle over **cl-dbi**; drivers **sqlite3** / **postgres**; ORM facade **Mito** + SxQL  
   **Brief:** [capabilities/sql.md](capabilities/sql.md) (#101)
