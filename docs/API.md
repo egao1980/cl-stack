@@ -42,7 +42,7 @@
 
 - `cli-protocol` — command tree / parse / run; default **clingon**, alternate **adopt**  
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
-- `serdes-protocol` — format-dispatch encode/decode; backends **json** (→ `json-protocol`) + **sexp**  
+- `serdes-protocol` — encode/decode interface; **implemented by** `json-protocol` + sexp (not a wrapper over them)  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)

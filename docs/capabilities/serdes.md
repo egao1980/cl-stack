@@ -1,25 +1,36 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** brief **locked** — CLOS protocol + format backends
+**Status:** brief **locked** — CLOS protocol; **implemented by** format protocols (`json-protocol`, sexp, …)
 
-Generic **ser**ialize / **des**erialize of Lisp values ↔ string or octets. **Not** a replacement for [`json-protocol`](json-protocol.md) — JSON keeps its RFC 8259 value mapping (`:null`, string keys, …). Serdes is the **format-dispatch** layer used by logging layouts, HTTP body helpers, and cookbooks that need “encode this plist as JSON **or** SEXP.”
+Generic **ser**ialize / **des**erialize of Lisp values ↔ string or octets.
 
-Conventions: [API.md](../API.md).
+**Layering (locked):** `serdes-protocol` is the **interface**. Format stacks **implement** it — they are not wrapped *by* a separate `serdes-backend-json` that calls down into them.
+
+```text
+serdes-protocol              ← generics + format dispatch + conditions
+    ▲ implemented by
+json-protocol (+ jzon/yason) ← RFC 8259; provides serdes methods for :json
+sexp-protocol (or system)    ← prin1/read policies; provides serdes methods for :sexp
+    ▲ used by
+log-protocol / cl-stack-http
+```
+
+Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol.md). Logging: [logging.md](logging.md).
 
 ---
 
-## Why (not just json-protocol)
+## Why
 
-| Need | json-protocol alone? | serdes-protocol |
-|------|----------------------|-----------------|
-| HTTP JSON bodies | ✅ already | thin `serdes-backend-json` → json-protocol |
-| Structured logs as **JSON lines** | possible but couples log→json | ✅ `:format :json` |
-| Structured logs as **SEXP** | ❌ wrong layer | ✅ `:format :sexp` |
-| `cl-stack-http` `:data-type :sexp` | ad-hoc today | converge on serdes |
-| Future msgpack / edn / CBOR | would bloat json-* | new backend |
+| Need | Approach |
+|------|----------|
+| One call site for “encode as JSON or SEXP” | `(serdes:encode v :format :json|:sexp)` |
+| JSON value rules stay coherent | Owned by **`json-protocol`** (still); it **implements** serdes |
+| SEXP without bloating json-* | Separate implementor of serdes |
+| Logging structured layouts | Depend on **serdes-protocol** only; load json/sexp implementors |
 
-**Verdict:** yes — ship a small serdes protocol. Keep `json-protocol` as the JSON specialist; add `serdes-backend-sexp` for Lisp-native wire.
+**Reject:** `serdes-backend-json` as a thin shim *over* json-protocol (extra ASDF hop, wrong ownership).  
+**Accept:** json-protocol (when loaded) **is** the JSON serdes implementor.
 
 ---
 
@@ -27,10 +38,10 @@ Conventions: [API.md](../API.md).
 
 | Ecosystem | Analogue |
 |-----------|----------|
-| **Java** | Jackson `ObjectMapper` + format modules; Java serialization (we do **not** copy Java native ser) |
-| **Python** | `json` / `pickle` / `msgpack` behind one app helper; pydantic serdes |
-| **Rust** | `serde` (format backends) — closest naming/shape |
-| **CL** | `cl:print`/`read`; json-protocol; cl-store (binary object graph — **out of scope**) |
+| **Rust** | `serde` traits; `serde_json` / other crates **implement** them |
+| **Java** | Jackson `JsonSerializer` modules implement a shared API |
+| **Python** | codecs / format plugins behind one encode/decode surface |
+| **CL stack** | Same as `http-protocol` ← backends; here format protocols **are** the backends |
 
 ---
 
@@ -38,50 +49,75 @@ Conventions: [API.md](../API.md).
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Shape** | CLOS protocol + format backends | Same stack rule as json/log |
-| **DX** | `(serdes:encode value :format :json)` / `(serdes:decode source :format :sexp)` | Keyword format; optional `*serdes-format*` |
-| **JSON backend** | Delegates to **`json-protocol`** (default jzon) | No second JSON stack |
-| **SEXP backend** | CL `prin1` / `read` with **locked policies** | Lisp-native structured logs + HTTP sexp |
-| **SEXP policies** | `*package*` = `CL-USER` (or dedicated `STACK-SEXP`) on encode; `*read-eval* nil` on decode; circularity = error | Safe-ish logs/IPC; not a security boundary alone |
-| **SEXP value subset** | Prefer json-protocol-shaped data: hash-tables / vectors / numbers / strings / `t`/`nil`/`:null` | Round-trip parity with JSON logs |
-| **Octets** | UTF-8 via Babel for string formats | Align with json-protocol |
-| **Not wave-1** | msgpack, edn, yaml, cl-store, protobuf | Watchlist |
-| **Not in serdes** | Schema validation, migrations | App layer |
-| **Selection** | ASDF + `*serdes-backend*` **or** `:format` keyword selecting backend | Load `serdes-backend-json` / `serdes-backend-sexp` |
+| **Shape** | Tiny **serdes-protocol** + **implementors** | Interface ≠ wrapper layer |
+| **JSON implementor** | **[`json-protocol`](json-protocol.md)** (+ existing jzon/yason backends) | Already shipped; owns `:null` / string keys; adds `defmethod`s on serdes GFs |
+| **SEXP implementor** | **`sexp-protocol`** (new, small) or colocated `serdes` sexp system that still **implements** the GFs | Lisp-native wire; not a child of json |
+| **No** | Separate `serdes-backend-json` package that depends on json-protocol and re-exports | Wrong direction of dependency |
+| **DX** | `(serdes:encode value :format :json)` / `:sexp` | Format keyword resolves to implementor backend object |
+| **Registration** | Load implementor ASDF → installs into format table / sets methods on backend class | Same “load backend” DX as http/json |
+| **json-protocol public API** | **Keep** `stack-json:encode` / `decode` | Serdes is the generic façade; json API remains for JSON-only call sites |
+| **Dependency direction** | `json-protocol` **depends on** `serdes-protocol` (implements it) | Not the reverse |
+| **SEXP policies** | `*read-eval* nil` on decode; package policy on encode; circularity → error | Safe-ish logs/IPC |
+| **SEXP value subset** | Prefer json-shaped data (hash-tables, vectors, … `:null`) | Round-trip parity with JSON logs |
+| **Octets** | UTF-8 via Babel for text formats | |
+| **Not wave-1** | msgpack, edn, yaml, cl-store, protobuf | Future **implementors** of serdes |
+| **Selection** | `:format` keyword and/or `*serdes-backend*` | Load `json-backend-jzon` (via json-protocol) or sexp implementor |
 
 ---
 
 ## Repo layout
 
-| Layer | System / repo |
-|-------|----------------|
-| Protocol | `egao1980/serdes-protocol` (nick `stack-serdes`) |
-| JSON backend | `serdes-backend-json` → depends on `json-protocol` |
-| SEXP backend | `serdes-backend-sexp` |
+| Layer | Repo / system | Role |
+|-------|----------------|------|
+| Interface | `egao1980/serdes-protocol` (`stack-serdes`) | GFs, conditions, format registry, `encode`/`decode` |
+| JSON implementor | existing `egao1980/json-protocol` | `depends-on` serdes-protocol; `defmethod backend-encode/decode` for JSON backend class |
+| SEXP implementor | `egao1980/sexp-protocol` (or system inside serdes repo **named** as implementor, not “backend wrapper over json”) | same pattern |
 
-Colocate in one repo for MVP OK (json-protocol precedent).
+Bump `json-protocol` minor when it grows the serdes dependency + methods.
 
 ---
 
-## Protocol surface
+## Protocol surface (`serdes-protocol`)
 
 ```lisp
-(defvar *serdes-format* :json)          ; default format keyword
-(defvar *serdes-backend* nil)           ; optional explicit backend object
+(defclass serdes-backend () ())
+(defvar *serdes-format* :json)
+(defvar *serdes-backend* nil)
 
 (defgeneric backend-encode (backend value &key stream))
 (defgeneric backend-decode (backend source &key))
 
-(defun encode (value &key (format *serdes-format*) stream backend)
-  "→ string, or write to STREAM.")
-(defun decode (source &key (format *serdes-format*) backend)
-  "SOURCE = string | octets | stream → Lisp value.")
+;; Format registry — implementors register on load
+(defun register-format (format backend) …)
+(defun find-backend (format) …)
 
-(defun encode-to-octets (value &key format))
-(defun decode-octets (octets &key format))
+(defun encode (value &key (format *serdes-format*) stream (backend (find-backend format)))
+  …)
+(defun decode (source &key (format *serdes-format*) (backend (find-backend format)))
+  …)
 ```
 
-Format → backend map (protocol table): `:json` → json backend; `:sexp` → sexp backend.
+### JSON implementor (in `json-protocol`)
+
+```lisp
+;; json-protocol.asd :depends-on ("serdes-protocol" …)
+(defclass json-serdes-backend (serdes:serdes-backend) ())
+(defmethod serdes:backend-encode ((b json-serdes-backend) value &key stream)
+  (json:encode value :stream stream))   ; existing json API
+(defmethod serdes:backend-decode ((b json-serdes-backend) source &key)
+  (json:decode source))
+(serdes:register-format :json (make-instance 'json-serdes-backend))
+;; still set by loading json-backend-jzon / yason as today for *json-backend*
+```
+
+### SEXP implementor (sketch)
+
+```lisp
+(defclass sexp-serdes-backend (serdes:serdes-backend) ())
+(defmethod serdes:backend-encode …)  ; prin1 policies
+(defmethod serdes:backend-decode …)  ; read, *read-eval* nil
+(serdes:register-format :sexp …)
+```
 
 ### Conditions
 
@@ -92,36 +128,34 @@ serdes-error
 └── serdes-unsupported-format
 ```
 
+JSON implementor may wrap/resignal `json-error` as `serdes-*-error` or allow both to be visible — prefer **wrap with cause** for log/http callers that only handle serdes.
+
 ---
 
-## Relationship to other protocols
+## Consumers
 
 ```text
-json-protocol          ← RFC 8259 value rules (owned there)
-    ↑
-serdes-backend-json
-    ↑
-serdes-protocol        ← format dispatch
-    ↑
-log-protocol           ← :text layout | :structured → serdes
-cl-stack-http          ← :json / :sexp body helpers (migrate)
+log-protocol     → serdes:encode event :format :json|:sexp
+                   (asdf depends on serdes-protocol; app loads json-protocol and/or sexp)
+cl-stack-http    → migrate :json / :sexp onto serdes (optional follow-on)
 ```
 
 ---
 
 ## Non-goals
 
-- Binary object graphs (cl-store)  
-- Pretty-printer as API (use `encode` + optional `:pretty` later)  
-- Absorbing TOML/YAML config — stays [`cl-stack-config`](config.md)  
+- Replacing json-protocol’s public API  
+- cl-store object graphs  
+- Config TOML/YAML as serdes formats (stays [`cl-stack-config`](config.md))  
 
 ---
 
 ## Implementation tasks
 
-- [ ] Brief lock (this doc)
-- [ ] `serdes-protocol` + json + sexp backends + OCI + pins
-- [ ] Wire `log-protocol` structured layouts through serdes
-- [ ] Optional: migrate `cl-stack-http` sexp path onto serdes
+- [x] Brief lock — [#132](https://github.com/egao1980/cl-stack/issues/132)
+- [ ] `serdes-protocol` interface package — [#133](https://github.com/egao1980/cl-stack/issues/133)
+- [ ] **`json-protocol` implements serdes** (depend + methods + register `:json`) — part of #133 / json-protocol bump
+- [ ] SEXP implementor registers `:sexp` — part of #133
+- [ ] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)
 
-Ship **with or just before** logging structured layouts (#124) so log doesn’t invent a private encoder.
+Ship serdes interface + json implementor **before** structured logging.

@@ -34,7 +34,7 @@ Conventions: [API.md](../API.md). Serdes: [serdes.md](serdes.md). JSON values: [
 | **Text layout** | Log4j-style **pattern** (default for REPL/dev) | `%d %p %c — %m` + optional kv; familiar ops |
 | **Structured layout** | Event record → **[`serdes-protocol`](serdes.md)** | One encoder path for JSON **and** SEXP; no private log JSON |
 | **Structured formats** | `:json` (default for structured) and `:sexp` | JSON for ELK/fluentd; SEXP for Lisp-native pipes / `cl-stack-http` kinship |
-| **Serdes dependency** | **Yes — generic serdes**, not “log embeds json-protocol only” | Avoid second sexp encoder; reuse json-protocol via `serdes-backend-json` |
+| **Serdes dependency** | Depend on **`serdes-protocol`**; load **`json-protocol`** / sexp **implementors** | json-protocol *implements* serdes (not wrapped by a serdes-backend-json shim) |
 | **Default logger backend (A)** | **[log4cl](https://github.com/sharplispers/log4cl)** | Hierarchy, appenders, Slime; text patterns native; structured via protocol layout wrapper |
 | **Alternate logger (B)** | **[vom](https://github.com/orthecreedence/vom)** | Tiny; already imported |
 | **Watchlist** | **cl-llog** | Structured-native; young |
@@ -93,11 +93,13 @@ When fields non-empty, append ` %k` style or ` {k=v, …}` — exact pattern tok
 
 | Layer | System |
 |-------|--------|
-| Serdes (dep) | `serdes-protocol` + `serdes-backend-json` + `serdes-backend-sexp` — [serdes.md](serdes.md) |
+| Serdes interface | `serdes-protocol` — [serdes.md](serdes.md) |
+| JSON implementor | `json-protocol` (implements serdes `:json`) |
+| SEXP implementor | `sexp-protocol` (implements serdes `:sexp`) |
 | Log protocol | `egao1980/log-protocol` (`stack-log`) |
 | Logger A/B | `log-backend-log4cl`, `log-backend-vom` |
 
-**Imports:** `log4cl`; `vom` pin. Serdes pulls `json-protocol` transitively for JSON.
+**Imports:** `log4cl`; `vom` pin. App loads `json-protocol` / sexp to register serdes formats.
 
 ---
 
@@ -152,7 +154,7 @@ No signal on hot path. `log-error` only for misconfiguration (missing backend/se
 **Structured JSONL:**
 
 ```lisp
-(asdf:load-system "serdes-backend-json")
+(asdf:load-system "json-backend-jzon")   ; json-protocol implements serdes :json
 (asdf:load-system "log-backend-log4cl")
 (stack-log:configure :level :info :layout :structured :format :json)
 (stack-log:with-context (:request-id "abc")
@@ -163,7 +165,7 @@ No signal on hot path. `log-error` only for misconfiguration (missing backend/se
 **Structured SEXP:**
 
 ```lisp
-(asdf:load-system "serdes-backend-sexp")
+(asdf:load-system "sexp-protocol")       ; implements serdes :sexp
 (stack-log:configure :layout :structured :format :sexp)
 ```
 
