@@ -15,6 +15,7 @@
   ("cl-idna" "0.1.0")
   ("quri" "0.7.1")
   ("cl-mime" "0.5.1")
+  ("com.inuoe.jzon" "1.1.4")
   ("json-protocol" "0.1.0")
   ("json-backend-jzon" "0.1.0")
   ("json-backend-yason" "0.1.0")
