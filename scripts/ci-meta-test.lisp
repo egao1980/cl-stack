@@ -19,15 +19,11 @@
   #-sbcl
   (funcall fn))
 
-;; Overlays (ssl/brotli/zstd) already installed by apply-pins; load init if present.
 (call-with-ci-muffles
  (lambda ()
-   (when (asdf:find-system "cl-repository-client" nil)
-     (uiop:symbol-call :cl-repository-client/asdf-integration
-                       :configure-asdf-source-registry)
-     (ignore-errors
-       (uiop:symbol-call :cl-repository-client/asdf-integration
-                         :load-system-init-files)))))
+   (asdf:load-system "cl-repository-client")
+   (cl-repository-client/asdf-integration:configure-asdf-source-registry)
+   (cl-repository-client/asdf-integration:load-system-init-files)))
 
 (call-with-ci-muffles
  (lambda ()
