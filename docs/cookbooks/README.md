@@ -8,4 +8,5 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 |----------|------------|
 | [HTTP client](http-client.md) | `cl-stack-http` / `http-protocol` (requests · httpx) |
 | [JSON](json.md) | `json-protocol` / jzon · yason · `cl-stack-http` |
+| [Config](config.md) | `cl-stack-config` (TOML + env) |
 | [WebSocket](websocket.md) | `ws-protocol` / async · winhttp · websocket-driver |
