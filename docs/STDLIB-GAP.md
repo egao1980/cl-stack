@@ -20,7 +20,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Conditions / restarts | Kernel-strong | P2 | Cookbooks; map IO errors → conditions |
 | CLOS / MOP | Kernel-strong | P0 | GF protocols; pin closer-mop |
 | Numbers / sequences | Kernel-strong | P2–P3 | Pin Alexandria+Serapeum |
-| Concurrency | De-facto converged | P1 | Pin bt2 |
+| Concurrency | De-facto converged | P1 | Pin bt2 — **done** ([#95](https://github.com/egao1980/cl-stack/issues/95), [concurrency.md](capabilities/concurrency.md)) |
 | Async I/O / event loop | Wrong-shape | P0 | `event-protocol` + **multi-backend**; overlays; one app DX |
 | Sockets / DNS | De-facto converged | P1 | Pin usocket |
 | HTTP client | Fragmented | P0 | `http-protocol` + facade (dexador sync + async on protocol) |
@@ -28,12 +28,12 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | WebSocket | Fragmented | P0 | `ws-protocol` + websocket-driver — **wave-1 done** (#4) |
 | TLS / SSL | Wrong-shape | P0 | OpenSSL OCI overlays; pin cl+ssl |
 | Crypto / secrets | De-facto converged | P2 | Pin Ironclad |
-| Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first |
+| Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first — **done** ([#94](https://github.com/egao1980/cl-stack/issues/94), [text-unicode.md](capabilities/text-unicode.md)) |
 | i18n / gettext | Absent | P3 | Later |
 | Regex | De-facto converged | P2 | Pin cl-ppcre |
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
 | Subprocess | De-facto converged | P2 | Pin UIOP |
-| JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** pin (brief [#96](https://github.com/egao1980/cl-stack/issues/96)); CSV/XML later |
+| JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** — **done** ([#91](https://github.com/egao1980/cl-stack/issues/91), [json.md](cookbooks/json.md)); CSV/XML later |
 | SQL | Fragmented | P2 | cl-dbi/Mito after I/O |
 | Logging | Fragmented | P2 | Pin one |
 | CLI | Fragmented | P2 | Pin clingon or adopt |

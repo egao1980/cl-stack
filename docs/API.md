@@ -31,6 +31,8 @@
 ## Wave-2 data protocol set
 
 - `json-protocol` — encode/decode (RFC 8259); default **jzon**, alternate **yason**  
-  **Brief:** [capabilities/json-protocol.md](capabilities/json-protocol.md) — streaming = P2
+  **Brief:** [capabilities/json-protocol.md](capabilities/json-protocol.md) · cookbook [json.md](cookbooks/json.md) — streaming = P2
+- `babel` — UTF-8 octets ↔ string — [text-unicode.md](capabilities/text-unicode.md)
+- `bordeaux-threads` (bt2) — portable threads — [concurrency.md](capabilities/concurrency.md)
 
 Capability issues must include a **Protocol surface** section before coding backends.
