@@ -1,4 +1,6 @@
 ;;;; #22: load cl-stack/meta after pins; run meta-e2e Rove suite.
+;;;; Top-level forms only after client load — package-qualified symbols need
+;;;; CL-REPOSITORY-CLIENT/ASDF-INTEGRATION to exist at READ time (ros -l).
 
 (setf *debugger-hook*
       (lambda (c h)
@@ -19,11 +21,10 @@
   #-sbcl
   (funcall fn))
 
-(call-with-ci-muffles
- (lambda ()
-   (asdf:load-system "cl-repository-client")
-   (cl-repository-client/asdf-integration:configure-asdf-source-registry)
-   (cl-repository-client/asdf-integration:load-system-init-files)))
+(call-with-ci-muffles (lambda () (asdf:load-system "cl-repository-client")))
+
+(cl-repository-client/asdf-integration:configure-asdf-source-registry)
+(cl-repository-client/asdf-integration:load-system-init-files)
 
 (call-with-ci-muffles
  (lambda ()
