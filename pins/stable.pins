@@ -1,0 +1,45 @@
+;;; cl-stack stable channel — curated GHCR pins (bump via PR; see docs/pins.md).
+((:pin-format 1)
+ (:channel :stable)
+ (:registry "https://ghcr.io" :namespace "egao1980/cl-systems")
+ (:defaults
+  :event-backend "event-backend-libuv"
+  :http-backend "http-backend-dexador"
+  :http-async-backend "http-backend-async"
+  :ws-backend "ws-protocol")
+ (:systems
+  ;; Core / FFI
+  ("alexandria" "1.0.1")
+  ("cffi" "0.24.1")
+  ;; Identity / URI / MIME
+  ("cl-idna" "0.1.0")
+  ("quri" "0.7.1")
+  ("cl-mime" "0.5.1")
+  ;; Paths
+  ("cl-stack-pathlib" "0.1.1")
+  ;; Event
+  ("event-protocol" "0.1.1")
+  ("event-backend-libuv" "0.1.1")
+  ("event-backend-libev" "0.1.2" :platforms (:unix))
+  ;; TLS + CE natives
+  ("cl-stack-ssl" "3.4.1")
+  ("cl-plus-ssl" "latest")
+  ("chipz" "0.8")
+  ("salza2" "2.1")
+  ("cl-stack-brotli" "1.2.0")
+  ("cl-stack-zstd" "1.5.7")
+  ;; HTTP
+  ("http-protocol" "0.3.0")
+  ("http-encoding-chipz" "0.1.0")
+  ("http-encoding-brotli" "0.1.0")
+  ("http-encoding-zstd" "0.1.0")
+  ("http-backend-dexador" "0.1.2")
+  ("http-backend-async" "0.2.4")
+  ("http-backend-winhttp" "0.1.3" :platforms (:windows))
+  ("cl-stack-http" "0.1.7")
+  ;; Auth
+  ("jose" "0.1.0")
+  ("cl-stack-jwt" "0.1.0")
+  ("cl-stack-oauth2" "0.1.0")
+  ;; WebSocket
+  ("ws-protocol" "0.2.2")))

@@ -2,7 +2,21 @@
 
 MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for modern personal and small-business apps across SBCL / ECL / ABCL.
 
-**This repo is the backlog and docs hub.** Implementation lives in sibling libraries under `egao1980`. Distribution: [`egao1980/cl-repository`](https://github.com/egao1980/cl-repository) (OCI + platform overlays). TLS natives: [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) (OpenSSL overlays + stock cl+ssl).
+**This repo is the backlog, docs hub, pin files, and metapackage.** Implementation lives in sibling libraries under `egao1980`. Distribution: [`egao1980/cl-repository`](https://github.com/egao1980/cl-repository) (OCI + platform overlays). TLS natives: [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl).
+
+## Metapackage (`cl-stack/meta`)
+
+ASDF umbrella over the stable channel roots (HTTP facade + backends, event, WS, encodings, pathlib, OAuth2/JWT). Versions come from [`pins/stable.pins`](pins/stable.pins).
+
+```bash
+# after bootstrapping cl-repository-client (see docs/QUICKSTART.md)
+export CL_SOURCE_REGISTRY="$PWD//:$CLIENT_DIR//:"
+ros -e '(asdf:load-system "cl-stack/pins")' \
+    -e '(cl-stack:apply-pins #p"pins/stable.pins")' \
+    -e '(asdf:load-system "cl-stack/meta")' -q
+```
+
+E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, oras client, apply pins, load meta (no grovel).
 
 ## Tracking
 
@@ -39,10 +53,8 @@ License allowlist: `python3 scripts/check-corpus-license.py`.
 
 ## OCI corpus consumer
 
-GHA workflow `OCI corpus consumer` installs `http-protocol` / `http-encoding-chipz` /
-`http-backend-dexador` from `ghcr.io/egao1980/cl-systems` and runs `cl-stack/oci-corpus`
-(CE decode + redirect-policy vectors against a local fixture). Cleartext only (no
-`cl-stack-ssl` overlay).
+GHA workflow `OCI corpus consumer` installs a cleartext HTTP slice from GHCR and runs
+`cl-stack/oci-corpus`. Full-stack install = **Metapackage E2E**.
 
 ## License
 

@@ -1,0 +1,131 @@
+name: Metapackage E2E
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cl-stack.asd'
+      - 'src/**'
+      - 'pins/**'
+      - 'scripts/ci-meta-*.lisp'
+      - 'tests/meta-e2e/**'
+      - 'tests/pins/**'
+      - '.github/workflows/meta-e2e.yml'
+  pull_request:
+    paths:
+      - 'cl-stack.asd'
+      - 'src/**'
+      - 'pins/**'
+      - 'scripts/ci-meta-*.lisp'
+      - 'tests/meta-e2e/**'
+      - 'tests/pins/**'
+      - '.github/workflows/meta-e2e.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: cl-stack-meta-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SBCL_VERSION: 2.6.7
+  ROSWELL_VERSION: "26.02.116"
+  CL_REPOSITORY_CLIENT_IMAGE: "ghcr.io/egao1980/cl-repository/cl-repository-client"
+  CL_REPOSITORY_CLIENT_VERSION: "0.11.0"
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  pins-unit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Roswell
+        run: |
+          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
+          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
+
+      - name: Install SBCL
+        run: |
+          ros install "sbcl-bin/$SBCL_VERSION"
+          ros use "sbcl-bin/$SBCL_VERSION"
+
+      - name: Pin parse tests (no network / no client)
+        run: |
+          export CL_SOURCE_REGISTRY="$(pwd)//:"
+          ros -e '(ql:quickload (quote ("rove" "uiop")) :silent t)' \
+              -e '(asdf:test-system "cl-stack/pins-test")' -q
+
+  meta-e2e:
+    needs: pins-unit
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oras-project/setup-oras@v2
+        with:
+          version: 1.2.3
+
+      - name: Install Roswell (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
+          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
+
+      - name: Install Roswell (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          curl -sL "https://github.com/roswell/roswell/releases/download/v${ROSWELL_VERSION}/roswell_${ROSWELL_VERSION}_amd64.zip" \
+            -o /tmp/roswell.zip
+          rm -rf /c/roswell && mkdir -p /c/roswell
+          unzip -qo /tmp/roswell.zip -d /c/roswell
+          echo "/c/roswell/roswell" >> "$GITHUB_PATH"
+          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
+
+      - name: Install SBCL
+        shell: bash
+        run: |
+          ros install "sbcl-bin/$SBCL_VERSION"
+          ros use "sbcl-bin/$SBCL_VERSION"
+
+      - name: Pull cl-repository-client (OCI)
+        shell: bash
+        run: |
+          echo "${GITHUB_TOKEN}" | oras login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+          rm -rf /tmp/cl-repo-pull .cl-repository
+          mkdir -p /tmp/cl-repo-pull .cl-repository
+          oras pull "${CL_REPOSITORY_CLIENT_IMAGE}:${CL_REPOSITORY_CLIENT_VERSION}" -o /tmp/cl-repo-pull
+          for f in /tmp/cl-repo-pull/*.tar.gz; do
+            tar -xzf "$f" -C .cl-repository
+          done
+          CLIENT_DIR="$(find .cl-repository -maxdepth 1 -type d -name 'cl-oci-*' | head -1)"
+          : "${CLIENT_DIR:?cl-oci-* not found after oras pull}"
+          echo "CL_REPOSITORY_CLIENT_DIR=${CLIENT_DIR}" >> "$GITHUB_ENV"
+          ls -la "${CLIENT_DIR}"
+
+      - name: Bootstrap cl-repository-client (QL deps for client only)
+        shell: bash
+        run: |
+          ros -e '(ql:quickload (quote ("yason" "ironclad" "babel" "dexador" "quri" "chipz" "flexi-streams" "cl-ppcre" "cl-base64" "trivial-features" "salza2" "archive")) :silent t)' -q
+
+      - name: Apply stable pins from GHCR
+        shell: bash
+        run: |
+          export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/${CL_REPOSITORY_CLIENT_DIR}//:"
+          ros -l scripts/ci-meta-install.lisp -q
+
+      - name: Load cl-stack/meta + e2e tests
+        shell: bash
+        run: |
+          export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/${CL_REPOSITORY_CLIENT_DIR}//:"
+          ros -l scripts/ci-meta-test.lisp -q

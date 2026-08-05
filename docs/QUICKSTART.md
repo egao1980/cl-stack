@@ -29,7 +29,7 @@ No C toolchain needed for consumer installs — natives ship in overlays.
 Prefer the **`cl-repository/`** GHCR namespace (not the old `cl-systems/cl-repository-client` mirror).
 
 ```bash
-CLIENT_VER=0.10.0   # or: latest
+CLIENT_VER=0.11.0   # or: latest
 DEST="${HOME}/.local/share/cl-repository-client"
 rm -rf /tmp/cl-repo-pull "$DEST"
 mkdir -p /tmp/cl-repo-pull "$DEST"
@@ -73,7 +73,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 
 | System | OCI tag | Notes |
 |--------|---------|--------|
-| `cl-repository-client` | **0.10.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
+| `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
+| `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
 | `cl-stack-http` | **0.1.7** | requests-like facade (`stack-http`); `download-many` + streamed download |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |

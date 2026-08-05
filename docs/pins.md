@@ -1,7 +1,7 @@
 # cl-stack pins + channels
 
-**Issues:** [#5](https://github.com/egao1980/cl-stack/issues/5) · [#19](https://github.com/egao1980/cl-stack/issues/19) · [#20](https://github.com/egao1980/cl-stack/issues/20) · [#21](https://github.com/egao1980/cl-stack/issues/21)  
-**Status:** pin format + channel policy **locked** (#19/#20); metapackage `#21` open
+**Issues:** [#5](https://github.com/egao1980/cl-stack/issues/5) · [#19](https://github.com/egao1980/cl-stack/issues/19) · [#20](https://github.com/egao1980/cl-stack/issues/20) · [#21](https://github.com/egao1980/cl-stack/issues/21) · [#22](https://github.com/egao1980/cl-stack/issues/22)  
+**Status:** pin format + channel policy **locked** (#19/#20); metapackage + E2E = `cl-stack/meta` + `pins/stable.pins` + workflow **Metapackage E2E**
 
 Anaconda-style **curated set** of systems on `ghcr.io/egao1980/cl-systems`, installed via [`cl-repository`](https://github.com/egao1980/cl-repository). This hub documents the pin file; runtime resolution is `cl-repository-client`.
 
@@ -64,7 +64,7 @@ Related: [overlays.md](overlays.md), [LICENSE-POLICY.md](LICENSE-POLICY.md).
   ("event-backend-libuv" "0.1.0")))
 ```
 
-Ship real release pins under `pins/stable.pins` / `pins/edge.pins` when `#21` metapackage lands.
+Release pins: [`pins/stable.pins`](../pins/stable.pins) · [`pins/edge.pins`](../pins/edge.pins) · smoke [`pins/minimal.pins`](../pins/minimal.pins).
 
 ---
 
@@ -119,10 +119,11 @@ Never both fork **and** `cl-stack-systems` import for the same lib.
 ## Install sketch
 
 ```lisp
-(cl-repo:add-registry "https://ghcr.io" :namespace "egao1980/cl-systems" :priority :prepend)
-;; future: (cl-stack:apply-pins #p"pins/stable.pins")
-;; today: install each (:systems) entry via install-system / load-system
-(asdf:load-system "http-backend-dexador")
+(asdf:load-system "cl-stack/pins")   ; hub checkout + cl-repository-client
+(cl-stack:apply-pins #p"pins/stable.pins")
+(asdf:load-system "cl-stack/meta")   ; umbrella over curated roots
 ```
 
-Clean-container E2E = `#22`.
+Or install a single root: `(cl-repo:load-system "cl-stack-http" :version "0.1.7")`.
+
+Clean-container E2E = workflow **Metapackage E2E** (`scripts/ci-meta-*.lisp`).
