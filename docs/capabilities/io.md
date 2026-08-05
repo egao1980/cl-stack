@@ -16,8 +16,8 @@ Conventions: [API.md](../API.md). Gray streams: `trivial-gray-streams`.
 | Ecosystem | Analogue |
 |-----------|----------|
 | **Java** | `ObjectInput` / `ObjectOutput` |
-| **Python** | `repr` / `ast.literal_eval` (safe-ish) — CL analogue is `prin1` / `read` |
-| **CL** | `prin1` + `read` (readable print); Gray streams |
+| **Python** | `repr` / `eval` — CL analogue is `prin1` / `read` (REPL) |
+| **CL** | `prin1` + `read` as in the REPL; Gray streams |
 
 ---
 
@@ -27,9 +27,9 @@ Conventions: [API.md](../API.md). Gray streams: `trivial-gray-streams`.
 |----------|--------|-----------|
 | **Shape** | Protocol — classes + GFs | No format registry; no serdes dep |
 | **DX** | `(read-object stream)` / `(write-object stream value)` | Java ObjectInput/Output |
-| **Default `write-object`** | **`prin1`** to stream (+ trailing whitespace separator) | Usable out of the box; Lisp-native repr |
-| **Default `read-object`** | **`read`** with `*read-eval* nil`; EOF → `:eof` | Safe-ish; mirrors print |
-| **Package on print** | Bind `*package*` to a fixed package (e.g. `CL-USER`) or leave ambient — **prefer bind `CL-USER`** for stable wire | Avoid package-prefix thrash |
+| **Default `write-object`** | **`prin1`** to stream (+ trailing whitespace separator) | Usable out of the box; Lisp-native print |
+| **Default `read-object`** | Plain **`read`** (same as REPL) — ambient `*package*` / `*read-eval*`; EOF → `:eof` | No sanitizing; caller owns dynamics |
+| **Package / reader dynamics** | **Leave ambient** (whatever the REPL/caller has bound) | Matches `read` / `prin1` at the REPL |
 | **Circularity / unreadable** | `prin1` signals / fails as today; no custom printer protocol in wave-1 | Keep shell thin |
 | **Character streams** | Default print/read on underlying character stream | Primary path |
 | **Binary streams** | Default = UTF-8 encode/decode of the same printed text (Babel) then prin1/read | One default story on both element-types; still not serdes |
@@ -88,19 +88,16 @@ Deps: `trivial-gray-streams`, **`babel`** (UTF-8 for binary default only).
   (:documentation "Default on object-output-stream: prin1 + space."))
 
 (defgeneric read-object (stream &key)
-  (:documentation "Default on object-input-stream: read with *read-eval* nil; :eof at end."))
+  (:documentation "Default on object-input-stream: plain read (REPL); :eof at end."))
 
 (defmethod write-object ((s character-object-output-stream) object &key)
-  (let ((*package* (find-package :cl-user)))
-    (prin1 object (underlying-stream s))
-    (write-char #\Space (underlying-stream s)))
+  (prin1 object (underlying-stream s))
+  (write-char #\Space (underlying-stream s))
   object)
 
 (defmethod read-object ((s character-object-input-stream) &key)
-  (let ((*read-eval* nil)
-        (*package* (find-package :cl-user)))
-    (handler-case (read (underlying-stream s))
-      (end-of-file () :eof))))
+  (handler-case (read (underlying-stream s))
+    (end-of-file () :eof)))
 
 ;; binary-*-stream defaults: same via Babel UTF-8 bridge to a string stream
 ;; (or flexi-streams if already loaded — prefer Babel-only to match stack pins)
