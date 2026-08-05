@@ -30,7 +30,11 @@ Conventions: [API.md](../API.md). Serdes: [serdes.md](serdes.md). JSON values: [
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Shape** | CLOS protocol + logger backends + **layout** axis | Backend = how/where (log4cl/vom); layout = text vs structured |
+| **Shape** | CLOS protocol + logger backends + **layout** axis | Backend = how/where (sinks); layout = text vs structured |
+| **Appenders / sinks / writers** | **Backend configuration only** | Not protocol surface; stream/file helpers are convenience only |
+| **Level** | Protocol gate (`*log-level*`, `level-enabled-p`, `set-level`) | Before filters / async / backend |
+| **Filters** | Protocol chain (`add-filter` / `remove-filter` / `*log-filters*`) | All must accept; runs after level |
+| **Async** | Protocol mailbox (`:async t` / `:mailbox`, `flush`, `shutdown-async`) | Decouple call site from sink I/O; BT worker |
 | **Text layout** | Log4j-style **pattern** (default for REPL/dev) | `%d %p %c — %m` + optional kv; familiar ops |
 | **Structured layout** | Event record → **[`serdes-protocol`](serdes.md)** | One encoder path for JSON **and** SEXP; no private log JSON |
 | **Structured formats** | `:json` (default for structured) and `:sexp` | JSON for ELK/fluentd; SEXP for Lisp-native pipes / `cl-stack-http` kinship |
@@ -113,26 +117,31 @@ Package nick: `stack-log`.
 (defvar *log-context* nil)
 (defvar *log-layout* :text)          ; :text | :structured
 (defvar *log-serdes-format* :json)   ; when structured: :json | :sexp
+(defvar *log-level* :info)
+(defvar *log-filters* nil)           ; list of fn or (name . fn)
+(defvar *log-async* nil)             ; nil | t | :mailbox
 
-(defgeneric backend-log (backend level logger-name message &key fields))
+(defgeneric backend-log (backend level logger-name message &key fields layout format))
 
-(defun log:trace (message &rest fields))
-(defun log:debug (message &rest fields))
-(defun log:info  (message &rest fields))
-(defun log:warn  (message &rest fields))
-(defun log:error (message &rest fields))
-(defun log:fatal (message &rest fields))
+(defun level-enabled-p (level &optional (min *log-level*)))
+(defun set-level (level))
+(defun add-filter (fn &key name))
+(defun remove-filter (name))
+(defun clear-filters ())
+(defun flush (&key timeout))
+(defun shutdown-async ())
 
+(defun log:trace / debug / info / warn / log-error / fatal …)
 (defmacro log:with-context ((&rest field-plist) &body body))
 
-(defun log:configure (&key backend level
-                          (layout :text)          ; :text | :structured
-                          (format :json)          ; serdes format when structured
-                          stream file pattern)
-  "LAYOUT :text → pattern (log4j-ish). :structured → serdes encode of event record.")
+(defun log:configure (&key backend level layout format stream file pattern
+                          async filters)
+  "Emit path: level → filters → sync|async → backend-log.
+   STREAM/FILE = convenience sinks only; appenders live on the backend.")
 ```
 
-Implementation sketch: protocol builds the event (text line **or** record), then backend writes to appenders; for structured, `(serdes:encode record :format *log-serdes-format*)` then write line (JSONL / one sexp per line).
+Emit path (locked): **`level-enabled-p` → `*log-filters*` → sync or async queue → `backend-log`**.  
+Structured: `(serdes:encode record :format *log-serdes-format*)` then write line.
 
 ### Conditions
 

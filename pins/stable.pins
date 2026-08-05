@@ -34,9 +34,9 @@
   ("adopt" "1.2.0")
   ("serdes-protocol" "0.1.0")
   ("sexp-protocol" "0.1.0")
-  ("log-protocol" "0.1.0")
-  ("log-backend-log4cl" "0.1.0")
-  ("log-backend-vom" "0.1.0")
+  ("log-protocol" "0.1.1")
+  ("log-backend-log4cl" "0.1.1")
+  ("log-backend-vom" "0.1.1")
   ("log4cl" "1.1.4")
   ("vom" "latest")
   ;; Paths
