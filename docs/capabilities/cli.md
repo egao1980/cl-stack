@@ -1,11 +1,11 @@
 # cli-protocol (P2)
 
 **Issues:** [#103](https://github.com/egao1980/cl-stack/issues/103)  
-**Status:** brief **locked** — CLOS protocol + backends (not “pin clingon alone”)
+**Status:** brief **locked** — CLOS protocol + backends; **Windows / PowerShell option styles required**
 
-One app DX for command-line tools: define commands/options, parse `argv`, run handlers, emit help/version. Multiple parser backends; cookbooks teach the protocol.
+One app DX for command-line tools: define commands/options, parse `argv`, run handlers, emit help/version. Multiple parser backends; cookbooks teach the protocol. **Windows is a primary target** — not “POSIX argv only, works if you pass `--flags`.”
 
-Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (CLI → protocol + pin).
+Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (CLI → protocol + pin). Platform: [overlays.md](../overlays.md) (Windows primary).
 
 ---
 
@@ -13,12 +13,13 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (CL
 
 | Ecosystem | Library | What we steal |
 |-----------|---------|---------------|
-| **Python** | [`argparse`](https://docs.python.org/3/library/argparse.html) | Option/arg typing, help text, exit codes |
-| **Python** | [`click`](https://click.palletsprojects.com/) / Typer | Nested **subcommands**, decorator-ish composition, context object |
-| **Java** | [picocli](https://picocli.info/) | Subcommands + types + auto-help; annotation → our CLOS defs |
-| **Go** | Cobra / urfave/cli | Subcommand trees (same as clingon’s mental model) |
+| **Python** | [`argparse`](https://docs.python.org/3/library/argparse.html) / Click | Option/arg typing, help, exit codes; Click subcommands |
+| **Java** | [picocli](https://picocli.info/) | Subcommands + types; picocli’s case-insensitive / Windows-ish modes |
+| **PowerShell** | [Command-line syntax](https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines) | **Single-dash long names** (`-Verbose`, `-Count 3`), switches, case-insensitive |
+| **Windows CMD** | Classic utilities (`ipconfig /all`) | **Slash** options `/Help`, `/Out:file` — still what many Windows users type |
+| **Go** | Cobra | Subcommand trees (clingon mental model) |
 
-**Not** inventing a second argv grammar. Protocol owns **command tree + run lifecycle**; backends own parse tables / help renderers.
+Upstream **clingon / adopt are POSIX-prefixed** (`-s`, `--long`). Stack rule: **protocol owns dialect normalization** so backends stay stock — do **not** wait for clingon to grow `/flags`.
 
 ---
 
@@ -26,39 +27,86 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (CL
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Shape** | **CLOS protocol + backends** | Issue #103 said “pin clingon or adopt”; stack rule is protocol → backend when ≥2 real options |
-| **DX target** | click/picocli **subcommand tree** + argparse-grade option kinds | Most stack tools will grow `serve` / `migrate` / `version` subcommands |
-| **Default backend (A)** | **[clingon](https://github.com/dnaeon/clingon)** | Native subcommands, option kinds, env init, bash/zsh completion, man pages; active; MIT-ish; REPL-friendly `parse-command-line` |
-| **Alternate (B)** | **[adopt](https://github.com/sjl/adopt)** | Small argparse/optparse-shaped escape hatch; man pages; MIT; no nested subcommands as first-class |
-| **Not default** | **unix-opts** | Fine for tiny scripts; weak subcommand/help story vs clingon |
-| **Also considered** | **CLON** (Didier Verna) | Powerful but heavier / less cookbook-friendly; skip wave-1 |
-| **Selection DX** | ASDF + `*cli-backend*` | Load `cli-backend-clingon` (default) or `cli-backend-adopt` |
-| **Argv source** | Explicit list **or** `uiop:command-line-arguments` | Tests pass unquoted lists; binaries use UIOP |
-| **Exit** | Conditions → exit codes via `cli:exit` / `uiop:quit` | Map parse errors → 2; handler errors → 1; success → 0 (sysexits-ish) |
-| **Config / logging** | Out of protocol — compose with `cl-stack-config` + `log-protocol` in cookbooks | CLI parses; config loads; logger configures |
-| **Windows** | Both A/B are pure Lisp | Primary target; no native overlay |
+| **Shape** | **CLOS protocol + backends** | #103 upgraded from pin-only |
+| **DX target** | click/picocli **subcommand tree** + argparse-grade option kinds | Tools grow `serve` / `migrate` / `version` |
+| **Default backend (A)** | **[clingon](https://github.com/dnaeon/clingon)** | Subcommands, option kinds, env init, man/completions (Unix); REPL `parse-command-line` |
+| **Alternate (B)** | **[adopt](https://github.com/sjl/adopt)** | Small argparse escape hatch |
+| **Windows primary** | **Required** | Same bar as http-server / event: `windows-latest` CI + idiomatic Windows argv |
+| **Option dialects** | Protocol accepts **POSIX ∪ PowerShell ∪ CMD** (see below) | Backends stay POSIX; protocol normalizes argv **before** `backend-parse` |
+| **Default dialect policy** | `:auto` — on Windows enable all three; on Unix enable POSIX (+ PowerShell single-dash long for consistency) | CMD `/` stays Windows-on by default (path ambiguity on Unix) |
+| **Case folding** | **Case-insensitive** option name match on Windows; sensitive on Unix (POSIX) | PowerShell habit; Unix scripts rely on case |
+| **Help text** | Usage lists **platform-relevant** spellings | Windows help shows `-Name` / `/Name` / `--name`; Unix shows `-n` / `--name` |
+| **Completions** | Wave-1: clingon bash/zsh on Unix; **PowerShell completer = follow-on** | Don’t block MVP; document as #121+ |
+| **Selection DX** | ASDF + `*cli-backend*` | `cli-backend-clingon` default |
+| **Argv source** | Explicit list **or** `uiop:command-line-arguments` | Fixture tests for all dialects; binaries use UIOP (SBCL Windows OK) |
+| **Exit** | Conditions → exit codes | Parse → 2; handler → 1; success → 0 |
+| **Config / logging** | Compose with `cl-stack-config` + `log-protocol` | Out of CLI protocol |
 
-**Supersedes** #103 disposition “pin only.” We **pin clingon as default backend**, not as the sole app API.
+**Supersedes** “Windows = pure Lisp only.” Pure Lisp is necessary but **not sufficient** — dialect support is part of Done-when.
+
+---
+
+## Option dialects (normative)
+
+Canonical option identity in the protocol = **long name** (string, kebab or as defined) + optional **short** char. Wire spellings accepted:
+
+### POSIX (always)
+
+| Wire | Maps to |
+|------|---------|
+| `-v` | short `v` |
+| `--verbose` | long `verbose` |
+| `--count=3` / `--count 3` | long `count` + value |
+| `--` | end-of-options |
+
+### PowerShell-style (Windows default; Unix optional)
+
+| Wire | Maps to |
+|------|---------|
+| `-Verbose` / `-verbose` | long `verbose` (case-fold on Windows) |
+| `-Count 3` / `-Count:3` | long `count` + value |
+| `-Flag` / `-Flag:$true` / `-Flag:$false` | flag/boolean |
+| Single-dash **multi-char** token | treated as long name, **not** clustered shorts |
+
+Clustered shorts (`-xyz` = `-x -y -z`) remain POSIX-only. A token matching `-[A-Za-z][A-Za-z0-9_-]+` is **long**, never a cluster.
+
+### CMD slash-style (Windows default; off on Unix unless `:styles` includes `:cmd`)
+
+| Wire | Maps to |
+|------|---------|
+| `/v` | short `v` if defined, else long |
+| `/Verbose` / `/verbose` | long `verbose` |
+| `/Count:3` / `/Count 3` | long `count` + value |
+
+### Normalization
+
+```lisp
+(defun normalize-argv (argv &key (styles :auto))
+  "→ argv in POSIX form for the backend. STYLES = :auto | list of :posix :powershell :cmd")
+```
+
+`parse` / `run` / `main` call `normalize-argv` first. Escape hatch: `:styles '(:posix)` for strict GNU-only tools.
 
 ---
 
 ## Bakeoff scorecard (#103)
 
-Scores: **1** … **5** for cl-stack needs.
+Scores: **1** … **5** for cl-stack needs. **Windows dialect** column = stock library without protocol normalizer.
 
 | Criterion | clingon | adopt | unix-opts |
 |-----------|---------|-------|-----------|
 | Subcommands / nesting | **5** | **2** | **1** |
-| Option kinds (int/bool/enum/list) | **5** | **3** | **3** |
-| Help / man / completions | **5** | **4** (man) | **2** |
-| argparse/click familiarity | **4** | **5** | **3** |
-| Pure Lisp / Windows | **5** | **5** | **5** |
-| Extensibility (CLOS) | **5** (`make-option` GF) | **4** | **2** |
+| Option kinds | **5** | **3** | **3** |
+| Help / man / completions | **5** | **4** | **2** |
+| **Windows / PowerShell / CMD dialects** | **2**† | **2**† | **1** |
+| Pure Lisp (runs on Windows) | **5** | **5** | **5** |
+| Extensibility (CLOS) | **5** | **4** | **2** |
 | Docs / liveliness | **5** | **4** | **3** |
-| Size / dep weight | **3** | **5** | **5** |
-| **Wave role** | **Default (A)** | **Alternate (B)** | reject as pin |
+| **Wave role** | **Default (A)** | **Alternate (B)** | reject |
 
-**Verdict:** protocol + **clingon default**, **adopt second**. unix-opts = scripts outside the pin set.
+† Raised to **5** for the **stack** by protocol `normalize-argv` + dual help — not by forking clingon.
+
+**Verdict:** clingon default + adopt second; **protocol owns Windows/PowerShell/CMD wire formats**.
 
 ---
 
@@ -66,12 +114,11 @@ Scores: **1** … **5** for cl-stack needs.
 
 | Layer | Repo / system |
 |-------|----------------|
-| Protocol + shared tests | `egao1980/cli-protocol` (nick `stack-cli`) |
-| Default backend A | `cli-backend-clingon` (colocated ASDF OK for MVP) |
+| Protocol + dialect normalizer + tests | `egao1980/cli-protocol` (nick `stack-cli`) |
+| Default backend A | `cli-backend-clingon` |
 | Alternate backend B | `cli-backend-adopt` |
-| Optional facade | only if cookbooks need sugar beyond protocol |
 
-**Third-party imports** (`cl-stack-systems`): `clingon` (+ deps), `adopt` (+ bobbin / split-sequence as needed).
+**Third-party imports:** `clingon`, `adopt` (+ deps) via `cl-stack-systems`.
 
 ---
 
@@ -84,89 +131,78 @@ Package nick: `stack-cli` (system `cli-protocol`).
 ```lisp
 (defclass cli-backend () ())
 (defvar *cli-backend* nil)
-
-;; Command = name + options + optional subcommands + handler
-;; Option  = name/short/long + kind + default + required + env + help
-;; Result  = parsed options (plist or hash-table) + free arguments (list of string)
+(defvar *cli-option-styles* :auto
+  ":auto | (:posix) | (:posix :powershell) | (:posix :powershell :cmd) | …")
 ```
-
-Backends may wrap native objects (`clingon:command`, adopt interface) behind protocol types — escape hatch: `cli:raw-command`.
 
 ### Generics / DX
 
 ```lisp
 (defgeneric backend-make-command (backend &key name description version
-                                      options subcommands handler)
-  (:documentation "Build a COMMAND value."))
-
+                                      options subcommands handler))
 (defgeneric backend-make-option (backend &key name short long kind
                                      default required env help key)
-  (:documentation "KIND ∈ :flag :string :integer :boolean :enum :list :counter …"))
+  (:documentation "LONG = canonical name without -- or / prefix.
+KIND ∈ :flag :string :integer :boolean :enum :list :counter …"))
 
-(defgeneric parse (command argv &key)
-  (:documentation "→ (values options free-args). Signals cli-parse-error."))
+(defun normalize-argv (argv &key (styles *cli-option-styles*))
+  "Dialect → POSIX tokens for backends.")
 
-(defgeneric run (command &key argv)
-  (:documentation "Parse + invoke handler. Returns handler values."))
+(defgeneric parse (command argv &key styles)
+  (:documentation "Normalize then backend-parse → (values options free-args)."))
 
-(defun main (command &key (argv (uiop:command-line-arguments)))
-  "Binary entry: RUN + map conditions to exit codes.")
+(defgeneric run (command &key argv styles))
+(defun main (command &key (argv (uiop:command-line-arguments))
+                       (styles *cli-option-styles*))
+  "Binary entry + exit codes.")
 
-(defmacro define-command (name-and-options &body body) …)  ; optional sugar later
+(defgeneric format-usage (command &key stream styles)
+  (:documentation "Help listing spellings for STYLES / platform."))
 ```
-
-Handler contract: `(lambda (options free-args) …)` or backend-native with protocol adapter.
 
 ### Conditions
 
 ```lisp
 cli-error
 ├── cli-parse-error          ; unknown option, missing required, bad type
-├── cli-usage-error          ; handler rejected args
-└── cli-exit                 ; :code slot — intentional exit
+├── cli-usage-error
+└── cli-exit                 ; :code slot
 ```
 
 ---
 
 ## Cookbook (with impl)
 
-Minimal tool with subcommands:
+Same command, three wires (all succeed on Windows):
 
 ```lisp
 (asdf:load-system "cli-backend-clingon")
+;; define *app* with option long-name "count", short #\c …
 
-(defvar *app*
-  (stack-cli:backend-make-command
-   stack-cli:*cli-backend*
-   :name "demo"
-   :version "0.1.0"
-   :subcommands
-   (list (stack-cli:backend-make-command
-          … :name "greet"
-            :options (list (stack-cli:backend-make-option … :name :count :kind :integer :default 1))
-            :handler (lambda (opts args)
-                       (dotimes (i (getf opts :count))
-                         (format t "hi ~a~%" (or (first args) "world"))))))))
-
-(stack-cli:main *app*)
+(stack-cli:run *app* :argv '("greet" "--count" "2" "ada"))     ; POSIX
+(stack-cli:run *app* :argv '("greet" "-Count" "2" "ada"))      ; PowerShell
+(stack-cli:run *app* :argv '("greet" "/Count:2" "ada"))        ; CMD
 ```
 
 ---
 
 ## Non-goals (this wave)
 
-- GUI / TUI frameworks  
-- REPL command systems (Lem, etc.)  
-- Replacing clingon/adopt option DSLs wholesale inside the protocol  
+- GUI / TUI  
+- Full **PowerShell tab-completion** module (follow-on; document stub)  
+- Forking clingon/adopt for dialect support  
 - i18n of help strings  
+- Treating `/` options as default on Unix (path collision)  
 
 ---
 
 ## Implementation tasks
 
-- [x] Brief lock (this doc) — [#118](https://github.com/egao1980/cl-stack/issues/118)
+- [x] Brief lock — [#118](https://github.com/egao1980/cl-stack/issues/118)
 - [ ] Import clingon + adopt — [#119](https://github.com/egao1980/cl-stack/issues/119)
-- [ ] `cli-protocol` + clingon backend — [#120](https://github.com/egao1980/cl-stack/issues/120)
-- [ ] adopt backend + cookbook — [#121](https://github.com/egao1980/cl-stack/issues/121)
+- [ ] `cli-protocol` + **`normalize-argv`** + clingon backend + **Windows dialect Rove fixtures** — [#120](https://github.com/egao1980/cl-stack/issues/120)
+- [ ] adopt backend + cookbook (show all three wires) — [#121](https://github.com/egao1980/cl-stack/issues/121)
 
-Child issues under #103. Impl order vs siblings: **CLI → logging → SQL**.
+**#120 Done-when addendum:** green on `windows-latest` with PowerShell-style and CMD-style argv fixtures (not only `--posix`).
+
+Child issues under #103. Impl order: **CLI → logging → SQL**.
