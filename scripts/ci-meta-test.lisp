@@ -33,8 +33,9 @@
 
 (call-with-ci-muffles
  (lambda ()
-   (unless (asdf:find-system "rove" nil)
-     (ql:quickload "rove" :silent t))
+   (dolist (n '("rove" "com.inuoe.jzon" "yason"))
+     (unless (asdf:find-system n nil)
+       (ql:quickload n :silent t)))
    (asdf:load-system "cl-stack/meta")
    (asdf:test-system "cl-stack/meta-e2e")))
 
