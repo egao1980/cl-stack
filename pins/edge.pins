@@ -22,9 +22,11 @@
   ("cl-mime" "0.5.1")
   ("com.inuoe.jzon" "1.1.4")
   ("yason" "0.8.3")
+  ("tomlet" "0.1.0")
   ("json-protocol" "0.1.1")
   ("json-backend-jzon" "0.1.1")
   ("json-backend-yason" "0.1.1")
+  ("cl-stack-config" "0.1.0")
   ;; Paths
   ("cl-stack-pathlib" "0.1.1")
   ;; Event

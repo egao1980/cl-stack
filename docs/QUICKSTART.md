@@ -78,6 +78,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `json-protocol` | **0.1.1** | encode/decode; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
+| `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
+| `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
