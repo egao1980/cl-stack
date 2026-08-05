@@ -5,6 +5,8 @@
 
 CLOS encode/decode contract for JSON (RFC 8259). One app DX; swappable backends. CSV/XML stay out of scope.
 
+**Serdes:** `json-protocol` **implements** [`serdes-protocol`](serdes.md) for `:format :json` (depends on serdes interface; registers methods — not wrapped by a separate serdes-backend-json). Follow-on bump when serdes ships (#133).
+
 Conventions: [API.md](../API.md). Pins: [pins.md](../pins.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (JSON / CSV / XML → protocol + pin).
 
 ---
