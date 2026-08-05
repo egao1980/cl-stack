@@ -1,7 +1,7 @@
 # json-protocol (wave-2 data)
 
 **Issues:** [#91](https://github.com/egao1980/cl-stack/issues/91) · [#96](https://github.com/egao1980/cl-stack/issues/96) · [#97](https://github.com/egao1980/cl-stack/issues/97)  
-**Status:** brief **locked** (#96); implementation `#97` open
+**Status:** brief **locked** (#96); implementation `#97` **done** — [`egao1980/json-protocol`](https://github.com/egao1980/json-protocol) `0.1.0` + backends on GHCR
 
 CLOS encode/decode contract for JSON (RFC 8259). One app DX; swappable backends. CSV/XML stay out of scope.
 
@@ -14,7 +14,7 @@ Conventions: [API.md](../API.md). Pins: [pins.md](../pins.md). Gap row: [STDLIB-
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **DX target** | Python `json` / httpx `r.json()` shape | `encode` / `decode`; cookbooks teach one API |
-| **Default pin (backend A)** | **[com.inuoe.jzon](https://github.com/Zulu-Inuoe/jzon)** (ASDF `com.inuoe.jzon`, nick often `jzon`) | RFC 8259-first, MIT, call-site options (no ambient specials), parse depth limits, strong JSONTestSuite / review scores |
+| **Default pin (backend A)** | **[com.inuoe.jzon](https://github.com/Zulu-Inuoe/jzon)** (ASDF `com.inuoe.jzon`) — OCI `1.1.4` via [`cl-stack-systems`](https://github.com/egao1980/cl-stack-systems) | RFC 8259-first, MIT, call-site options (no ambient specials), parse depth limits, strong JSONTestSuite / review scores |
 | **Alternate (backend B)** | **[yason](https://github.com/phmarek/yason)** | Already wired in [`cl-stack-http`](https://github.com/egao1980/cl-stack-http); keep as escape hatch + migration path |
 | **Not default** | **jonathan** | Fast on tiny payloads; weak on large JSON + safety-0 history — unsuitable as stack default |
 | **Also considered** | **shasht** | Strong modern contender (symmetry); revisit if jzon pin friction appears — not wave-2 dual-default |
@@ -68,7 +68,7 @@ Prefer **separate repos per layer** (event/http precedent) once A ships. Wave-2 
 
 ## Protocol surface
 
-Package nick: `json` (system `json-protocol`).
+Package nick: `stack-json` (system `json-protocol`) — not `json` (clashes with other libs).
 
 ### Value mapping (normative)
 
@@ -140,7 +140,7 @@ Restarts: `use-value` where cheap; otherwise signal and let callers handle.
 ## Implementation tasks
 
 - [x] #96 Brief + bakeoff (this doc)
-- [ ] #97 Implement protocol + jzon backend + GHCR pin (+ yason alternate stub or system)
+- [x] #97 Implement protocol + jzon backend + GHCR pin (+ yason alternate)
 
 ## Cookbook (follow-on)
 

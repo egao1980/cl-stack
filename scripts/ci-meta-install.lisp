@@ -37,6 +37,19 @@
   (call-with-ci-muffles
    (lambda ()
      (cl-stack:apply-pins pins)
+     ;; Fill QL-only transitive deps of pinned systems (e.g. com.inuoe.jzon).
+     ;; cl-repo :sources QL policy still fails dotted names not on GHCR — force QL.
+     (dolist (n '("com.inuoe.jzon" "yason"))
+       (unless (asdf:find-system n nil)
+         (format t "~&; ci: ql:quickload ~a~%" n)
+         (ql:quickload n :silent t)))
+     (cl-repo:ensure-system-dependencies "cl-stack/meta"
+       :also-tests nil
+       :sources '(("babel" :ql)
+                  ("com.inuoe.jzon" :ql)
+                  ("yason" :ql)
+                  ("trivial-features" :ql)
+                  ("cl-unicode" :ql)))
      (ci-record-installed-version "cl-stack-ssl" "CL_STACK_SSL_VERSION"))))
 
 (format t "~&; ci: meta install done~%")
