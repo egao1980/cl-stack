@@ -75,7 +75,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 |--------|---------|--------|
 | `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
-| `json-protocol` | **0.1.0** | encode/decode; load `json-backend-jzon` (default) or `json-backend-yason` |
+| `json-protocol` | **0.1.1** | encode/decode; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` |
 | `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
 | `cl-stack-http` | **0.1.7** | requests-like facade (`stack-http`); `download-many` + streamed download |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |

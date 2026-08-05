@@ -68,7 +68,7 @@ Prefer **separate repos per layer** (event/http precedent) once A ships. Wave-2 
 
 ## Protocol surface
 
-Package nick: `json` (system `json-protocol`).
+Package nick: `stack-json` (system `json-protocol`) — not `json` (clashes with other libs).
 
 ### Value mapping (normative)
 
