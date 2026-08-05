@@ -28,4 +28,9 @@
 - `ws-protocol` — connect, send, on-message, ping, close  
   **Brief:** [capabilities/ws-protocol.md](capabilities/ws-protocol.md)
 
+## Wave-2 data protocol set
+
+- `json-protocol` — encode/decode (RFC 8259); default **jzon**, alternate **yason**  
+  **Brief:** [capabilities/json-protocol.md](capabilities/json-protocol.md) — streaming = P2
+
 Capability issues must include a **Protocol surface** section before coding backends.
