@@ -37,7 +37,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | SQL | Fragmented | P2 | cl-dbi/Mito after I/O |
 | Logging | Fragmented | P2 | Pin one |
 | CLI | Fragmented | P2 | Pin clingon or adopt |
-| Config | Fragmented | P1 | env + one file format |
+| Config | Fragmented | P1 | env + **TOML** (tomlet) — brief [#98](https://github.com/egao1980/cl-stack/issues/98); impl [#99](https://github.com/egao1980/cl-stack/issues/99) |
 | Packaging | Fragmented | P0 | **cl-repository** product path |
 | FFI | De-facto converged | P0 | CFFI + overlays |
 | Time / TZ | De-facto converged | P2 | local-time + tzdata overlay |
