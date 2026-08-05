@@ -37,6 +37,14 @@
   (call-with-ci-muffles
    (lambda ()
      (cl-stack:apply-pins pins)
+     ;; Fill QL-only transitive deps of pinned systems (e.g. com.inuoe.jzon).
+     (cl-repo:ensure-system-dependencies "cl-stack/meta"
+       :also-tests nil
+       :sources '(("babel" :ql)
+                  ("com.inuoe.jzon" :ql)
+                  ("yason" :ql)
+                  ("trivial-features" :ql)
+                  ("cl-unicode" :ql)))
      (ci-record-installed-version "cl-stack-ssl" "CL_STACK_SSL_VERSION"))))
 
 (format t "~&; ci: meta install done~%")
