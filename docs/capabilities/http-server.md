@@ -185,9 +185,9 @@ Minimal JSON API:
 ## Implementation tasks
 
 - [x] #100 Brief + bakeoff (this doc)
-- [ ] Import Clack/Lack/Hunchentoot/(Woo) into `cl-stack-systems` as needed
-- [ ] `http-server-protocol` + Hunchentoot backend + GHCR + pins
-- [ ] Woo backend (Unix) + skip-on-Windows CI
-- [ ] Cookbook + smoke (SBCL × Hunchentoot; Woo optional job)
+- [x] Import Clack/Lack/Hunchentoot/(Woo) into `cl-stack-systems` (#114)
+- [x] `http-server-protocol` + Hunchentoot backend + GHCR + pins (#115)
+- [x] Woo backend (Unix) + skip-on-Windows CI (#116)
+- [x] Cookbook + smoke (SBCL × Hunchentoot; Woo Ubuntu job) — [http-server.md](../cookbooks/http-server.md)
 
-File child issues under #93 when impl starts.
+Child issues: #114 / #115 / #116 under #93.

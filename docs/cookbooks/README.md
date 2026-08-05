@@ -10,3 +10,4 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [JSON](json.md) | `json-protocol` / jzon · yason · `cl-stack-http` |
 | [Config](config.md) | `cl-stack-config` (TOML + env) |
 | [WebSocket](websocket.md) | `ws-protocol` / async · winhttp · websocket-driver |
+| [HTTP server](http-server.md) | `http-server-protocol` / Hunchentoot · Woo · Clack env |

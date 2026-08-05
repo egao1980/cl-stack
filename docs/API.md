@@ -36,6 +36,6 @@
 - `bordeaux-threads` (bt2) — portable threads — [concurrency.md](capabilities/concurrency.md)
 - `cl-stack-config` — env + **TOML** (tomlet) — [config.md](capabilities/config.md)
 - `http-server-protocol` — CLOS server lifecycle; **Clack env** app contract; Hunchentoot default / Woo Unix  
-  **Brief:** [capabilities/http-server.md](capabilities/http-server.md) (#100 locked)
+  **Brief:** [capabilities/http-server.md](capabilities/http-server.md) · cookbook [http-server.md](cookbooks/http-server.md)
 
 Capability issues must include a **Protocol surface** section before coding backends.
