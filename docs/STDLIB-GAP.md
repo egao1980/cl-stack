@@ -24,7 +24,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Async I/O / event loop | Wrong-shape | P0 | `event-protocol` + **multi-backend**; overlays; one app DX |
 | Sockets / DNS | De-facto converged | P1 | Pin usocket |
 | HTTP client | Fragmented | P0 | `http-protocol` + facade (dexador sync + async on protocol) |
-| HTTP server | Fragmented | P1 | `http-server-protocol` + Clack env; Hunchentoot / Woo — brief [#100](https://github.com/egao1980/cl-stack/issues/100) |
+| HTTP server | Fragmented | P1 | `http-server-protocol` + Clack env; Hunchentoot / Woo — **done** ([#93](https://github.com/egao1980/cl-stack/issues/93), [http-server.md](cookbooks/http-server.md)) |
 | WebSocket | Fragmented | P0 | `ws-protocol` + websocket-driver — **wave-1 done** (#4) |
 | TLS / SSL | Wrong-shape | P0 | OpenSSL OCI overlays; pin cl+ssl |
 | Crypto / secrets | De-facto converged | P2 | Pin Ironclad |
