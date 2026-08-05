@@ -1,13 +1,13 @@
 # io-protocol (P2)
 
 **Issues:** [#140](https://github.com/egao1980/cl-stack/issues/140)  
-**Status:** brief **locked** — **CLOS shell only** (ObjectInput / ObjectOutput–like streams)
+**Status:** brief **locked** — **CLOS shell** + default **print/read** (ObjectInput / ObjectOutput–like)
 
-Portable **object streams**: read/write Lisp values on Gray streams. **No format, no serdes, no JSON.** Pure protocol classes + generics. Apps (or later adapters) choose how `read-object` / `write-object` are implemented.
+Portable **object streams**: `read-object` / `write-object` on Gray streams. **No serdes, no JSON.** Default = CL readable **print** / **read** (repr-like). Specialize when you need another wire form.
 
-[`serdes-protocol`](serdes.md) stays a **separate** capability (format encode/decode, JSONL, event parse). **io-protocol does not reference serdes.**
+[`serdes-protocol`](serdes.md) stays **separate**. **io-protocol does not reference serdes.**
 
-Conventions: [API.md](../API.md). Gray streams: `trivial-gray-streams` (stack pin).
+Conventions: [API.md](../API.md). Gray streams: `trivial-gray-streams`.
 
 ---
 
@@ -15,9 +15,9 @@ Conventions: [API.md](../API.md). Gray streams: `trivial-gray-streams` (stack pi
 
 | Ecosystem | Analogue |
 |-----------|----------|
-| **Java** | `ObjectInput` / `ObjectOutput` (+ `ObjectInputStream` / `ObjectOutputStream`) — typed object I/O over a byte stream |
-| **Java** | `DataInput` / `DataOutput` — primitives (optional later on same shell) |
-| **CL** | Gray streams (`trivial-gray-streams`); no std ObjectInput |
+| **Java** | `ObjectInput` / `ObjectOutput` |
+| **Python** | `repr` / `ast.literal_eval` (safe-ish) — CL analogue is `prin1` / `read` |
+| **CL** | `prin1` + `read` (readable print); Gray streams |
 
 ---
 
@@ -25,33 +25,31 @@ Conventions: [API.md](../API.md). Gray streams: `trivial-gray-streams` (stack pi
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Shape** | **Protocol only** — classes + GFs | No backends, no format registry, no serdes dep |
-| **DX** | `(read-object stream)` / `(write-object stream value)` | Java ObjectInput/Output shape |
-| **Stream classes** | CLOS subclasses of Gray fundamental streams | Portable; Windows-primary |
-| **Serdes** | **Out of scope for this protocol** | Wiring format codecs is app/adapter layer, not io-protocol |
-| **Default methods** | None that encode JSON/sexp | Empty shell — signal `io-unimplemented` if not specialized |
-| **Element types** | Binary and character object-stream variants | Match Gray split; both expose `read-object` / `write-object` |
-| **Underlying stream** | Slot / constructor arg | Wrap file/socket/memory stream |
-| **Not in wave-1** | DataInput primitives, Java serialization semantics, cl-store | Optional follow-ons |
+| **Shape** | Protocol — classes + GFs | No format registry; no serdes dep |
+| **DX** | `(read-object stream)` / `(write-object stream value)` | Java ObjectInput/Output |
+| **Default `write-object`** | **`prin1`** to stream (+ trailing whitespace separator) | Usable out of the box; Lisp-native repr |
+| **Default `read-object`** | **`read`** with `*read-eval* nil`; EOF → `:eof` | Safe-ish; mirrors print |
+| **Package on print** | Bind `*package*` to a fixed package (e.g. `CL-USER`) or leave ambient — **prefer bind `CL-USER`** for stable wire | Avoid package-prefix thrash |
+| **Circularity / unreadable** | `prin1` signals / fails as today; no custom printer protocol in wave-1 | Keep shell thin |
+| **Character streams** | Default print/read on underlying character stream | Primary path |
+| **Binary streams** | Default = UTF-8 encode/decode of the same printed text (Babel) then prin1/read | One default story on both element-types; still not serdes |
+| **Serdes** | Out of scope | Optional external specialization later |
+| **`io-unimplemented`** | Reserved for subclasses that **disable** default print/read | Not the base default anymore |
+| **Not wave-1** | DataInput primitives, Java serialization, cl-store | Follow-on |
 
 ---
 
 ## Layering (locked)
 
 ```text
-io-protocol          ← ObjectInput/Output-like CLOS shell (THIS)
-                       NO dependency on serdes-protocol
+io-protocol          ← object streams + default prin1/read
+                       NO serdes-protocol dependency
 
-serdes-protocol      ← format codecs (JSON/sexp/…); separate track
-json-protocol        ← implements serdes
-
-;; Optional later (NOT part of io-protocol):
-;;   adapter lib that specializes read-object/write-object using serdes
+serdes-protocol      ← separate format track
 ```
 
-**Reject:** io-protocol `:depends-on serdes-protocol`.  
-**Reject:** baking `:format :json` into `make-object-input-stream`.  
-**Accept:** thin shell; specialization elsewhere when needed.
+**Reject:** io → serdes.  
+**Accept:** default printable Lisp; specialize `read-object`/`write-object` elsewhere when needed.
 
 ---
 
@@ -59,21 +57,19 @@ json-protocol        ← implements serdes
 
 | Layer | Repo |
 |-------|------|
-| Protocol only | `egao1980/io-protocol` (nick `stack-io`) |
+| Protocol | `egao1980/io-protocol` (nick `stack-io`) |
 
-No `io-backend-*` in this wave.
+Deps: `trivial-gray-streams`, **`babel`** (UTF-8 for binary default only).
 
 ---
 
 ## Protocol surface
 
-Dep: **`trivial-gray-streams`** only (plus ASDF).
-
 ```lisp
 (defpackage #:io-protocol
   (:nicknames #:stack-io)
   (:use #:cl)
-  (:export #:io-error #:io-unimplemented
+  (:export #:io-error #:io-read-error #:io-unimplemented
            #:object-input-stream #:object-output-stream
            #:binary-object-input-stream #:binary-object-output-stream
            #:character-object-input-stream #:character-object-output-stream
@@ -81,74 +77,80 @@ Dep: **`trivial-gray-streams`** only (plus ASDF).
            #:make-object-input-stream #:make-object-output-stream
            #:underlying-stream))
 
-(define-condition io-error (error) …)
-(define-condition io-unimplemented (io-error) …)
-
-;;; Shell classes — wrap an underlying Gray/CL stream
 (defclass object-input-stream ()
   ((underlying :initarg :underlying :reader underlying-stream)))
 (defclass object-output-stream ()
   ((underlying :initarg :underlying :reader underlying-stream)))
 
-(defclass binary-object-input-stream
-    (object-input-stream
-     trivial-gray-streams:fundamental-binary-input-stream) …)
-(defclass binary-object-output-stream
-    (object-output-stream
-     trivial-gray-streams:fundamental-binary-output-stream) …)
-(defclass character-object-input-stream
-    (object-input-stream
-     trivial-gray-streams:fundamental-character-input-stream) …)
-(defclass character-object-output-stream
-    (object-output-stream
-     trivial-gray-streams:fundamental-character-output-stream) …)
+;; + Gray binary/character subclasses (delegate byte/char I/O to underlying)
+
+(defgeneric write-object (stream object &key)
+  (:documentation "Default on object-output-stream: prin1 + space."))
 
 (defgeneric read-object (stream &key)
-  (:documentation "→ next Lisp object, or :eof. Default: signal io-unimplemented."))
-(defgeneric write-object (stream object &key)
-  (:documentation "Write OBJECT. Default: signal io-unimplemented."))
+  (:documentation "Default on object-input-stream: read with *read-eval* nil; :eof at end."))
 
-(defun make-object-input-stream (underlying &key (element-type 'character))
-  "Return an unspecialized shell stream. Callers subclass or mixin methods.")
-(defun make-object-output-stream (underlying &key (element-type 'character)) …)
+(defmethod write-object ((s character-object-output-stream) object &key)
+  (let ((*package* (find-package :cl-user)))
+    (prin1 object (underlying-stream s))
+    (write-char #\Space (underlying-stream s)))
+  object)
+
+(defmethod read-object ((s character-object-input-stream) &key)
+  (let ((*read-eval* nil)
+        (*package* (find-package :cl-user)))
+    (handler-case (read (underlying-stream s))
+      (end-of-file () :eof))))
+
+;; binary-*-stream defaults: same via Babel UTF-8 bridge to a string stream
+;; (or flexi-streams if already loaded — prefer Babel-only to match stack pins)
 ```
 
-Gray byte/char methods on the shell may **delegate** to `underlying-stream` (pass-through) so the object stream *is* a usable stream; `read-object` / `write-object` stay unimplemented until something specializes them.
+Gray pass-through for `stream-read-byte` / `stream-write-char` / … onto `underlying-stream` unchanged.
 
 ### Conditions
 
 ```text
 io-error
-└── io-unimplemented     ; read-object/write-object not specialized
+├── io-read-error          ; unreadable / reader error
+└── io-unimplemented       ; explicit opt-out / abstract subclass
 ```
 
 ---
 
 ## Non-goals
 
-- Format selection (`:json`, `:sexp`, …)  
-- Any import of / mention of serdes in `.asd` or API  
-- Java `Serializable` / handle tables / class descriptors  
-- Replacing http-protocol body Gray streams  
+- Format selection (`:json`, …) inside io-protocol  
+- serdes in `.asd` or exports  
+- Guaranteeing round-trip for all CLOS instances (only what `prin1`/`read` already do)  
+- Replacing http-protocol body streams  
 
 ---
 
 ## Implementation tasks
 
-- [x] Brief lock (this doc) — [#140](https://github.com/egao1980/cl-stack/issues/140)
-- [ ] Repo `io-protocol`: classes + GFs + pass-through Gray delegation + Rove (unimplemented signals; wrap memory stream)
+- [x] Brief lock — [#140](https://github.com/egao1980/cl-stack/issues/140)
+- [ ] Repo `io-protocol`: classes + **default prin1/read** + binary UTF-8 bridge + Rove round-trip
 - [ ] OCI + pin
-- [ ] Optional later: external adapter (separate system) that specializes via serdes — **not** required for io Done-when
 
 ---
 
-## Cookbook (later)
+## Cookbook
 
 ```lisp
 (asdf:load-system "io-protocol")
-;; Shell only — read-object signals until an adapter specializes:
 
-(with-open-file (raw "data.bin" :element-type '(unsigned-byte 8))
-  (let ((in (stack-io:make-object-input-stream raw :element-type '(unsigned-byte 8))))
-    (stack-io:read-object in)))  ; → io-unimplemented unless specialized
+(with-output-to-string (raw)
+  (let ((out (stack-io:make-object-output-stream raw)))
+    (stack-io:write-object out '(:a 1))
+    (stack-io:write-object out "hi"))
+  ;; raw => "(:A 1) \"hi\" "
+  )
+
+(with-input-from-string (raw "(:A 1) \"hi\"")
+  (let ((in (stack-io:make-object-input-stream raw)))
+    (list (stack-io:read-object in)
+          (stack-io:read-object in)
+          (stack-io:read-object in))))
+;; => ((:A 1) "hi" :EOF)
 ```
