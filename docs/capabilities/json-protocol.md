@@ -26,7 +26,7 @@ Conventions: [API.md](../API.md). Pins: [pins.md](../pins.md). Gap row: [STDLIB-
 | **`false` / `true`** | **`nil` / `t`** | JSON boolean false ≠ empty list; encoders must not emit `null` for boolean false |
 | **Numbers** | CL reals; prefer **double-float** for JSON floats | Set `*read-default-float-format*` to `double-float` in backend decode path where relevant |
 | **Symbols on encode** | Object keys: symbol-name **downcase**; values: error unless backend documents coercion | Avoid silent keyword/`null` footguns |
-| **Streaming** | **Wave-2 optional / P2** | Push/pull parsers later; wave-2 ships whole-value encode/decode only |
+| **Streaming** | Via [`serdes-protocol`](serdes.md): **JSONL** (`stream-*-value` / `map-jsonl`) + **event/pull** (`parse-next-event`, jzon-aligned) for large files | Whole-value remains default DX; streaming is first-class, not an afterthought |
 | **Errors** | Conditions (`json-error` tree), not bare `error` | Parse / encode / type / limit |
 | **HTTP integration** | Protocol owns codecs; `http-protocol` `*json-encoder*` / `*json-decoder*` bind to them | `cl-stack-http` migrates off direct yason calls |
 
