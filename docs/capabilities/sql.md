@@ -213,7 +213,14 @@ Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-r
 (ensure-expr '(:->> :payload "name"))
 ```
 
-**Literals vs params:** bare values / `lit` always emit SQL literal text (with type mapping when typed). `?` / `$n` only from `bindparam` or `sql-fragment` placeholders. `sql-query-postgres` seeds `:json`/`:jsonb`/`:array` and common JSONB ops.
+**Literals vs params:** bare values / `lit` always emit SQL literal text (with type mapping when typed). `?` / `$n` only from `bindparam` or `sql-fragment` placeholders.
+
+**Dialect seeds** (`register-sql-type` / `register-sql-op` / `register-sql-func`):
+
+- **postgres:** jsonb/json/bson(bytea)/uuid/inet/timestamptz/date/arrays; ops `->` `->>` `#>` `@>` `||` `~` `@@` `&&`; funcs `date_trunc` `jsonb_set` `array_agg` `EXTRACT` `to_timestamp` `gen_random_uuid` … + helpers (`jsonb-text`, `date-trunc`, `now`, …)
+- **sqlite3:** json/bson(blob)/datetime as TEXT; ops `->` `->>` `||`; JSON1 funcs `json_extract` `json_object` `strftime` `unixepoch` … + helpers
+
+Encode/decode hooks are overridable (no hard JSON/BSON library dep). `array-lit` → `ARRAY[…]`.
 
 **Raw fragments:**
 
