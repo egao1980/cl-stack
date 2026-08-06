@@ -1,7 +1,7 @@
 # io-protocol (P2)
 
 **Issues:** [#140](https://github.com/egao1980/cl-stack/issues/140)  
-**Status:** brief **locked** — **CLOS shell** + default **print/read** (ObjectInput / ObjectOutput–like)
+**Status:** wave-1 **shipped** — OCI **0.1.0** · **CLOS shell** + default **print/read** (ObjectInput / ObjectOutput–like)
 
 Portable **object streams**: `read-object` / `write-object` on Gray streams. **No serdes, no JSON.** Default = CL readable **print** / **read** (repr-like). Specialize when you need another wire form.
 
@@ -127,8 +127,8 @@ io-error
 ## Implementation tasks
 
 - [x] Brief lock — [#140](https://github.com/egao1980/cl-stack/issues/140)
-- [ ] Repo `io-protocol`: classes + **default prin1/read** + binary UTF-8 bridge + Rove round-trip
-- [ ] OCI + pin
+- [x] Repo `io-protocol`: classes + **default prin1/read** + binary UTF-8 bridge + Rove round-trip
+- [x] OCI + pin — `ghcr.io/egao1980/cl-systems/io-protocol:0.1.0`
 
 ---
 
