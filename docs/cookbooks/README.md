@@ -13,3 +13,4 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [HTTP server](http-server.md) | `http-server-protocol` / Hunchentoot · Woo · Clack env |
 | [CLI](cli.md) | `cli-protocol` / clingon · adopt · Windows dialects |
 | [Logging](logging.md) | `log-protocol` / log4cl · vom · text + structured |
+| [SQL](sql.md) | `sql-protocol` / `sql-query` / `sql-orm` (Engine · Core · ORM) |

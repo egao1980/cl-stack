@@ -1,7 +1,7 @@
 # SQL stack (P2) — three layers
 
 **Issues:** [#101](https://github.com/egao1980/cl-stack/issues/101)  
-**Status:** three layers locked — **`sql-query` wave-1 shipped on `main`** (OCI **0.2.0** for query + postgres/sqlite3 dialects); **`sql-orm` = first-party CLOS** (no Mito)
+**Status:** three layers **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** (first-party CLOS; no Mito). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
 
 ```text
 sql-orm              ← first-party CLOS ORM           ~ SQLAlchemy ORM (checklist only)
@@ -227,9 +227,10 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM). Fe
 
 ## Layer 3 — `sql-orm` (first-party CLOS ORM)
 
-**Repo:** [`egao1980/sql-orm`](https://github.com/egao1980/sql-orm) · nick **`stack-sql-orm`**  
+**Repo:** [`egao1980/sql-orm`](https://github.com/egao1980/sql-orm) · nick **`stack-sql-orm`** · OCI **0.1.0**  
 **Depends on:** `sql-protocol`, `sql-query` (+ dialect backend for live DB)  
-**Issue:** [#149](https://github.com/egao1980/cl-stack/issues/149) · PR [#1](https://github.com/egao1980/sql-orm/pull/1)
+**Issue:** [#149](https://github.com/egao1980/cl-stack/issues/149) · merged PR [#1](https://github.com/egao1980/sql-orm/pull/1)  
+**Cookbook:** [cookbooks/sql.md](../cookbooks/sql.md)
 
 Owns: `defmodel`, relations, `:compute`, persistence generics, schema snapshot/diff → reversible `schema-op` → sql-query DDL.  
 Does **not** wrap Mito. Filters are **sql-query** expressions.
@@ -261,7 +262,7 @@ Does **not** wrap Mito. Filters are **sql-query** expressions.
 |-------|----------------|---------|
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` | OCI **0.1.0** |
 | Core / query | `egao1980/sql-query` · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` | OCI **0.2.0** (query + sqlite/pg; csv separate) |
-| ORM | `egao1980/sql-orm` | PR #1 (not on `main` yet) |
+| ORM | `egao1980/sql-orm` | OCI **0.1.0** |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, … as needed. SxQL/Mito are **not** required by the first-party SQL stack.
 
@@ -276,6 +277,8 @@ SxQL/Mito = prior art only — not the public façade.
 ---
 
 ## Cookbooks (with impl)
+
+See [cookbooks/sql.md](../cookbooks/sql.md).
 
 1. Connectivity: SQLite connect / execute / txn / pool — **done** with `sql-protocol`  
 2. Core: composable select/insert + DDL + `sql-fragment` on protocol connection  
@@ -300,6 +303,6 @@ SxQL/Mito = prior art only — not the public façade.
 - [x] `sql-protocol` + pool + sqlite3/postgres — [#147](https://github.com/egao1980/cl-stack/issues/147)  
 - [x] `sql-query` ANSI Core DSL + dialect backends (wave-1 on `main`) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
 - [x] OCI publish `sql-query{,-sqlite3,-postgres}` **0.2.0**  
-- [ ] `sql-orm` merge + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
+- [x] `sql-orm` merge + OCI **0.1.0** + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
 
-**Impl order:** ~~imports → connectivity → query~~ → **ORM**.
+**Impl order:** ~~imports → connectivity → query → ORM~~ — **wave-1 complete**.
