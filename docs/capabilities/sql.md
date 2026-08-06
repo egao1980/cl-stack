@@ -9,6 +9,7 @@ sql-orm              ← ORM (Mito facade)              ~ SQLAlchemy ORM
 sql-query            ← CLOS DSL + ANSI dialect        ~ SQLAlchemy Core
 sql-query-sqlite3    ← dialect backend (own repo)     ~ sqlite+pysqlite dialect
 sql-query-postgres   ← dialect backend (own repo)     ~ postgresql dialect
+sql-query-csv        ← AST→Lisp over CSV (own repo)    ~ in-process tabular
     │
 sql-protocol         ← connectivity + pooling         ~ Engine / Connection / Pool / DB-API
 sql-backend-*        ← driver backends                ~ DBAPI drivers
@@ -301,7 +302,7 @@ Later: prefer `sql-query` for ad-hoc reports; Mito for DAO lifecycle.
 | Layer | Repo / systems |
 |-------|----------------|
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` (**shipped 0.1.0**) |
-| Core / query | `egao1980/sql-query` (ANSI) · `egao1980/sql-query-sqlite3` · `egao1980/sql-query-postgres` |
+| Core / query | `egao1980/sql-query` (ANSI) · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` (AST→Lisp) |
 | ORM | `egao1980/sql-orm` |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, `sxql`, `mito`, … (already published).
