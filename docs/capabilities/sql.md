@@ -1,7 +1,7 @@
 # SQL stack (P2) — three layers
 
 **Issues:** [#101](https://github.com/egao1980/cl-stack/issues/101)  
-**Status:** three layers locked — **`sql-query` wave-1 shipped on `main`** (OCI **0.2.0** publish pending Actions minutes); **`sql-orm` = first-party CLOS** (no Mito)
+**Status:** three layers locked — **`sql-query` wave-1 shipped on `main`** (OCI **0.2.0** for query + postgres/sqlite3 dialects); **`sql-orm` = first-party CLOS** (no Mito)
 
 ```text
 sql-orm              ← first-party CLOS ORM           ~ SQLAlchemy ORM (checklist only)
@@ -95,7 +95,7 @@ Does **not** own query DSL or DAO macros.
 
 ## Layer 2 — `sql-query` (CLOS SQL DSL / Core)
 
-**Repo:** [`egao1980/sql-query`](https://github.com/egao1980/sql-query) · nick **`stack-sql-query`** · asd **0.2.0** (OCI publish pending)  
+**Repo:** [`egao1980/sql-query`](https://github.com/egao1980/sql-query) · nick **`stack-sql-query`** · OCI **0.2.0**  
 **Dialects:** [`sql-query-sqlite3`](https://github.com/egao1980/sql-query-sqlite3) · [`sql-query-postgres`](https://github.com/egao1980/sql-query-postgres) · [`sql-query-csv`](https://github.com/egao1980/sql-query-csv)  
 **Depends on:** `sql-protocol` (execute helpers; compile path has **no** hard driver dep)  
 **Issue:** [#148](https://github.com/egao1980/cl-stack/issues/148)
@@ -213,7 +213,7 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM). Fe
 | Compile / execute | `compile-sql`; `execute-query` `fetch-*-query` | Result typing, async |
 | Inspector / reflection | — | follow-on (`sql-orm` schema-ops cover model-side) |
 
-**Done-when for #148:** wave-1 Core rows green + ANSI/backends split + Rove/CI — **met on `main`**. OCI **0.2.0** tags when Actions minutes allow.
+**Done-when for #148:** wave-1 Core rows green + ANSI/backends split + Rove/CI — **met on `main`**. OCI **0.2.0** published (`sql-query`, `sql-query-postgres`, `sql-query-sqlite3`).
 
 ### Non-goals (`sql-query`)
 
@@ -260,7 +260,7 @@ Does **not** wrap Mito. Filters are **sql-query** expressions.
 | Layer | Repo / systems | Version |
 |-------|----------------|---------|
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` | OCI **0.1.0** |
-| Core / query | `egao1980/sql-query` · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` | asd **0.2.0** (query + sqlite/pg dialects; OCI pending) |
+| Core / query | `egao1980/sql-query` · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` | OCI **0.2.0** (query + sqlite/pg; csv separate) |
 | ORM | `egao1980/sql-orm` | PR #1 (not on `main` yet) |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, … as needed. SxQL/Mito are **not** required by the first-party SQL stack.
@@ -299,7 +299,7 @@ SxQL/Mito = prior art only — not the public façade.
 - [x] Import cl-dbi / dbd-* — [#146](https://github.com/egao1980/cl-stack/issues/146)  
 - [x] `sql-protocol` + pool + sqlite3/postgres — [#147](https://github.com/egao1980/cl-stack/issues/147)  
 - [x] `sql-query` ANSI Core DSL + dialect backends (wave-1 on `main`) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
-- [ ] OCI publish `sql-query{,-sqlite3,-postgres}` **0.2.0** (blocked on Actions minutes)  
+- [x] OCI publish `sql-query{,-sqlite3,-postgres}` **0.2.0**  
 - [ ] `sql-orm` merge + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
 
 **Impl order:** ~~imports → connectivity → query~~ → **ORM**.
