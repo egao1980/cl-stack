@@ -147,12 +147,18 @@ expression / clause / statement   ← CLOS classes (immutable-ish value objects 
 (alter-table :users (add-column :created-at :type :timestamptz))
 (drop-table :users :if-exists t)
 
-;; Procedures (dialect-gated)
+;; Procedures — two layers: SQL-shaped PROC-* + lispy BODY macros
 (create-procedure :bump_counter
-  (params (in :by :integer))
-  (body (sql-fragment "UPDATE counters SET n = n + ?" :by)))
+  (params (in :by :integer) (inout :n :integer))
+  (body
+   (if (:= :n 0)
+       (setf :n :by)
+       (setf :n (:+ :n :by)))
+   (loop :while (:< :n 100) :do (setf :n (:+ :n 1)))))
+;; layer 1 (programmatic): (make-body (proc-if …) (proc-setf …))
+;; emit: ANSI SQL/PSM · postgres plpgsql · sqlite unsupported
 
-(call :bump_counter :by 1)
+(sql-call :bump_counter :by 1)
 
 ;; Raw escape hatch — first-class, composable
 (where (:and
@@ -235,7 +241,7 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
 | `text()` | `sql-fragment` / `sql-raw` | bindparam expanding |
 | Schema | `make-sql-table` `table-column` `create-table-from` + DDL stmts | MetaData registry, reflection, FK/CHECK/UNIQUE table constraints, sequences |
 | DDL | CREATE/DROP TABLE, INDEX, basic ALTER ADD/DROP COLUMN | partitions, complex ALTER |
-| Procedures | backend-gated (`sql-query-postgres`); ANSI/SQLite → `sql-dialect-unsupported` | functions, triggers |
+| Procedures | `proc-*` (SQL-shaped) + lispy `body`; ANSI SQL/PSM + postgres plpgsql | functions, triggers, handlers |
 | Dialects | **ANSI builtin**; **sqlite3** + **postgres** backends | mysql backend |
 | Compile / execute | `compile-sql` → `(values string params)`; `execute-query` `fetch-*-query` | Result typing, async |
 | Upsert / ON CONFLICT | — | dialect backends |
