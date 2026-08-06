@@ -203,7 +203,8 @@ Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-r
   :to-expr (lambda (d v) …)      ; Lisp → sql-node (preferred write)
   :emit-value (lambda (d v s ctx) …)) ; or full emit
 
-(typed obj :jsonb)                 ; or (lit obj :jsonb) / (bindparam :x obj :type :jsonb)
+(typed obj :jsonb)                 ; or (lit obj :jsonb) — inlined via type encode
+(bindparam :x obj :type :jsonb)    ; explicit placeholder
 (sql-type-write dialect :jsonb obj) ; → expression
 (sql-type-read dialect :jsonb db)   ; → Lisp
 
@@ -211,7 +212,7 @@ Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-r
 (ensure-expr '(:->> :payload "name"))
 ```
 
-Default write without `:to-expr`/`:emit-value` = `CAST(? AS <sql>)` + `:encode`. `sql-query-postgres` seeds `:json`/`:jsonb`/`:array` and common JSONB ops.
+**Literals vs params:** bare values / `lit` always emit SQL literal text (with type mapping when typed). `?` / `$n` only from `bindparam` or `sql-fragment` placeholders. `sql-query-postgres` seeds `:json`/`:jsonb`/`:array` and common JSONB ops.
 
 **Raw fragments:**
 
