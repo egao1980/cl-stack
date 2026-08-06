@@ -230,7 +230,8 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
 | Distinct / locking | `distinct` `for-update` | `FOR SHARE`, dialect lock strength |
 | Set ops | `union` `union-all` `intersect*` `except*` | — |
 | CTE / subquery | `cte` `with-cte` `as-cte` `subquery` `exists` | recursive CTE sugar, `LATERAL` |
-| Column elements | `:=`… comparisons, `sql-and/or/not`, `sql-in` `sql-between` `sql-like` `sql-is-null`, arithmetic `:+`…, `sql-case` `sql-cast` `sql-func` `count` `coalesce` `label` `bindparam` `lit` `col` | window `over`, `within-group`, custom ops |
+| Column elements | `:=`… comparisons, `sql-and/or/not`, `sql-in` `sql-between` `sql-like` `sql-is-null`, arithmetic `:+`…, `sql-case` `sql-cast` `sql-func` `count` `coalesce` `label` `bindparam` `lit` `col` `typed` | `within-group`; richer type codecs |
+| Extensibility | `register-sql-type` / `register-sql-op` (Lisp↔expr encode/decode/to-expr) | first-party JSON/BSON helper systems |
 | `text()` | `sql-fragment` / `sql-raw` | bindparam expanding |
 | Schema | `make-sql-table` `table-column` `create-table-from` + DDL stmts | MetaData registry, reflection, FK/CHECK/UNIQUE table constraints, sequences |
 | DDL | CREATE/DROP TABLE, INDEX, basic ALTER ADD/DROP COLUMN | partitions, complex ALTER |
