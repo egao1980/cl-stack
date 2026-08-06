@@ -242,8 +242,9 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
 | Column elements | `:=`… comparisons, `sql-and/or/not`, `sql-in` `sql-between` `sql-like` `sql-is-null`, arithmetic `:+`…, `sql-case` `sql-cast` `sql-func` `count` `coalesce` `label` `bindparam` `lit` `col` `typed` | `within-group`; richer type codecs |
 | Extensibility | `register-sql-type` / `register-sql-op` (Lisp↔expr encode/decode/to-expr) | first-party JSON/BSON helper systems |
 | `text()` | `sql-fragment` / `sql-raw` | bindparam expanding |
-| Schema | `make-sql-table` `table-column` `create-table-from` + DDL stmts | MetaData registry, reflection, FK/CHECK/UNIQUE table constraints, sequences |
-| DDL | CREATE/DROP TABLE, INDEX, basic ALTER ADD/DROP COLUMN | partitions, complex ALTER |
+| Schema | `make-sql-table` `table-column` `create-table-from` + DDL stmts | MetaData registry, reflection, FK/CHECK/UNIQUE table constraints |
+| Types / domains | `create-type` / `drop-type` / `alter-type` (distinct + structured); `create-domain` / `drop-domain`; PG `AS ENUM` + `ADD VALUE` in `sql-query-postgres` | `CREATE CAST`, typed tables (`OF`), base-type UDTs with INPUT/OUTPUT |
+| DDL | CREATE/DROP TABLE, INDEX, VIEW, SCHEMA, SEQUENCE, TYPE, DOMAIN; basic ALTER | partitions, complex ALTER COLUMN TYPE |
 | Procedures | `proc-*` (SQL-shaped) + lispy `body`; ANSI SQL/PSM + postgres plpgsql | functions, triggers, handlers |
 | Dialects | **ANSI builtin**; **sqlite3** + **postgres** backends | mysql backend |
 | Compile / execute | `compile-sql` → `(values string params)`; `execute-query` `fetch-*-query` | Result typing, async |
