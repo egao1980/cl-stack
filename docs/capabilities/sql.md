@@ -187,6 +187,26 @@ expression / clause / statement   ← CLOS classes (immutable-ish value objects 
 
 Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-registry*` from the connection driver when a backend is loaded. Explicit `:dialect` always allowed.
 
+**Extension registry (types & operators):** SQL types potentially know how to **read/write Lisp values as SQL expressions** — not just DDL names. JSON/BSON/arrays stay out of core; backends register adapters.
+
+```lisp
+(register-sql-type :jsonb dialect
+  :sql "JSONB"
+  :encode #'json-encode          ; Lisp → wire / bind
+  :decode #'json-decode          ; wire → Lisp  (sql-type-read)
+  :to-expr (lambda (d v) …)      ; Lisp → sql-node (preferred write)
+  :emit-value (lambda (d v s ctx) …)) ; or full emit
+
+(typed obj :jsonb)                 ; or (lit obj :jsonb) / (bindparam :x obj :type :jsonb)
+(sql-type-write dialect :jsonb obj) ; → expression
+(sql-type-read dialect :jsonb db)   ; → Lisp
+
+(register-sql-op :->> :binary dialect :sql "->>")
+(ensure-expr '(:->> :payload "name"))
+```
+
+Default write without `:to-expr`/`:emit-value` = `CAST(? AS <sql>)` + `:encode`. `sql-query-postgres` seeds `:json`/`:jsonb`/`:array` and common JSONB ops.
+
 **Raw fragments:**
 
 ```lisp
