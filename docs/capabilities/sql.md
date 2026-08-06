@@ -4,13 +4,14 @@
 **Status:** brief **re-locked** — three layers; **`sql-query` = first-party CLOS DSL** (not a thin SxQL wrapper)
 
 ```text
-sql-orm          ← ORM (Mito facade)                 ~ SQLAlchemy ORM
+sql-orm              ← ORM (Mito facade)              ~ SQLAlchemy ORM
     │
-sql-query        ← CLOS lispy SQL DSL + dialects     ~ SQLAlchemy Core / jOOQ
+sql-query            ← CLOS DSL + ANSI dialect        ~ SQLAlchemy Core
+sql-query-sqlite3    ← dialect backend                ~ sqlite+pysqlite dialect
+sql-query-postgres   ← dialect backend                ~ postgresql dialect
     │
-sql-protocol     ← connectivity + pooling            ~ Engine / Connection / Pool / DB-API
-    │
-driver backends  ← sqlite3 / postgres                ~ DBAPI drivers
+sql-protocol         ← connectivity + pooling         ~ Engine / Connection / Pool / DB-API
+sql-backend-*        ← driver backends                ~ DBAPI drivers
 ```
 
 Apps pick the layer they need. Libs that only execute SQL depend on **`sql-protocol`**. Query builders depend on protocol (+ optionally emit via it). ORM depends on query + protocol (Mito may still speak SxQL internally for wave-1).
@@ -94,10 +95,12 @@ Does **not** own query DSL or DAO macros.
 ## Layer 2 — `sql-query` (CLOS SQL DSL / Core)
 
 **Repo:** `egao1980/sql-query` · nick **`stack-sql-query`**  
+**Systems:** `sql-query` (ANSI builtin) · `sql-query-sqlite3` · `sql-query-postgres`  
 **Depends on:** `sql-protocol` (for execute helpers; compile path has **no** hard driver dep)  
 **Issue:** [#148](https://github.com/egao1980/cl-stack/issues/148)
 
-Owns: **composable CLOS AST**, **dialect emitters**, compile → `(sql-string . params)`, DX to run on a connection.  
+Owns: **composable CLOS AST** with **SQLAlchemy Core feature parity**, **ANSI dialect** (only builtin), compile → `(sql-string . params)`, DX to run on a connection.  
+Vendor SQL → **dialect backend systems** (same protocol/backend pattern as `sql-protocol` / `sql-backend-*`).  
 Does **not** own connections/pools or ORM.
 
 ### Shape (locked)
@@ -162,20 +165,27 @@ expression / clause / statement   ← CLOS classes (immutable-ish value objects 
 
 **Composition:** statements/clauses are objects; `merge-query` / `and-where` / appending clauses via generics — no string concat as the public model.
 
-**Dialects:**
+**Dialects (protocol / backend):**
 
 ```lisp
+;; sql-query — protocol + ANSI only
 (defclass sql-dialect () ())
-(defclass sqlite3-dialect (sql-dialect) ())
-(defclass postgres-dialect (sql-dialect) ())
-;; mysql-dialect — watchlist
+(defclass ansi-dialect (sql-dialect) ())   ; builtin default
+(register-sql-dialect :ansi (make-ansi-dialect))
 
-(defgeneric dialect-for-connection (connection) → sql-dialect)
+;; sql-query-sqlite3 / sql-query-postgres — separate ASDF systems
+(defclass sqlite3-dialect (ansi-dialect) ())
+(defclass postgres-dialect (ansi-dialect) ())
+(register-sql-dialect :sqlite3 …)
+(register-sql-dialect :postgres …)
+;; mysql — watchlist backend
+
+(defgeneric dialect-for-connection (connection) → sql-dialect)  ; registry by driver
 (defgeneric compile-sql (statement &key dialect) → (values string params))
-(defgeneric emit (dialect node params-acc) …)   ; internal walk
+(defgeneric emit-sql (dialect node stream ctx) …)
 ```
 
-Default dialect from `sql-protocol` connection/backend when using `execute-query`. Explicit `:dialect` always allowed for compile-only use.
+Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-registry*` from the connection driver when a backend is loaded. Explicit `:dialect` always allowed.
 
 **Raw fragments:**
 
@@ -190,16 +200,27 @@ Fragments are nodes — nestable inside WHERE/SELECT lists/DDL body. **No** sile
 
 **Parameter style:** dialect chooses `?` vs `$1` vs `:name` at emit time; public AST stays positional/named-agnostic (internal binder).
 
-### Wave-1 scope (Done-when for #148)
+### SQLAlchemy Core parity (target)
 
-| Area | Wave-1 | Later |
-|------|--------|-------|
-| DML | SELECT / INSERT / UPDATE / DELETE (+ JOIN, GROUP BY, HAVING, ORDER, LIMIT/OFFSET) | CTE / WINDOW / UPSERT completeness per dialect |
-| DDL | CREATE/DROP TABLE, COLUMN constraints, CREATE/DROP INDEX, basic ALTER TABLE | partitions, fancy PG types |
-| Procedures | `CREATE PROCEDURE` / `CALL` where dialect supports (Postgres); SQLite → signal `sql-dialect-unsupported` or no-op skip in tests | functions, triggers, packages |
-| Dialects | **sqlite3** + **postgres** emitters | mysql |
-| Raw | `sql-fragment` everywhere a node is accepted | — |
-| Execute | `compile-sql`, `execute-query`, `fetch-query`, `fetch-all-query` | async via event-protocol |
+Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
+
+| Core area | Wave-1 (`sql-query`) | Later |
+|-----------|----------------------|-------|
+| `select` / DML | `select` `insert-into` `update` `delete-from` + join/group/having/order/limit/offset/returning | `VALUES` selectable as FROM, multi-table UPDATE completeness |
+| Distinct / locking | `distinct` `for-update` | `FOR SHARE`, dialect lock strength |
+| Set ops | `union` `union-all` `intersect*` `except*` | — |
+| CTE / subquery | `cte` `with-cte` `as-cte` `subquery` `exists` | recursive CTE sugar, `LATERAL` |
+| Column elements | `:=`… comparisons, `sql-and/or/not`, `sql-in` `sql-between` `sql-like` `sql-is-null`, arithmetic `:+`…, `sql-case` `sql-cast` `sql-func` `count` `coalesce` `label` `bindparam` `lit` `col` | window `over`, `within-group`, custom ops |
+| `text()` | `sql-fragment` / `sql-raw` | bindparam expanding |
+| Schema | `make-sql-table` `table-column` `create-table-from` + DDL stmts | MetaData registry, reflection, FK/CHECK/UNIQUE table constraints, sequences |
+| DDL | CREATE/DROP TABLE, INDEX, basic ALTER ADD/DROP COLUMN | partitions, complex ALTER |
+| Procedures | backend-gated (`sql-query-postgres`); ANSI/SQLite → `sql-dialect-unsupported` | functions, triggers |
+| Dialects | **ANSI builtin**; **sqlite3** + **postgres** backends | mysql backend |
+| Compile / execute | `compile-sql` → `(values string params)`; `execute-query` `fetch-*-query` | Result typing, async |
+| Upsert / ON CONFLICT | — | dialect backends |
+| Inspector / reflection | — | follow-on |
+
+**Done-when for #148:** wave-1 Core rows green + ANSI/backends split + Rove/CI + OCI publish of the three systems.
 
 ### Non-goals (`sql-query`)
 
@@ -243,8 +264,8 @@ Later: prefer `sql-query` for ad-hoc reports; Mito for DAO lifecycle.
 
 | Layer | Repo / systems |
 |-------|----------------|
-| Connectivity | `egao1980/sql-protocol` + backends (**shipped 0.1.0**) |
-| Core / query | `egao1980/sql-query` |
+| Connectivity | `egao1980/sql-protocol` + `sql-backend-*` (**shipped 0.1.0**) |
+| Core / query | `egao1980/sql-query` + `sql-query-sqlite3` + `sql-query-postgres` |
 | ORM | `egao1980/sql-orm` |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, `sxql`, `mito`, … (already published).
@@ -282,7 +303,7 @@ SxQL remains available under the hood for Mito — not the Core façade.
 - [x] Brief lock (three-layer) — #101  
 - [x] Import cl-dbi / dbd-* / sxql / mito — [#146](https://github.com/egao1980/cl-stack/issues/146)  
 - [x] `sql-protocol` + pool + sqlite3/postgres — [#147](https://github.com/egao1980/cl-stack/issues/147)  
-- [ ] `sql-query` CLOS DSL + dialects (DML/DDL/proc/raw) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
+- [ ] `sql-query` ANSI Core DSL + dialect backends (SQLAlchemy Core parity wave-1) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
 - [ ] `sql-orm` over Mito + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
 
 **Impl order:** ~~imports → connectivity~~ → **query** → **ORM**.
