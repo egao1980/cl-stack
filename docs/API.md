@@ -50,8 +50,8 @@
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
-  - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core parity); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends  
-  - `sql-orm` — ORM facade (**Mito**)
+  - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core checklist); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends (asd **0.2.0**)  
+  - `sql-orm` — first-party lispy CLOS ORM (`defmodel`; **not** Mito)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
 Impl order for this set: **CLI → logging → SQL** (connectivity → query → ORM).
