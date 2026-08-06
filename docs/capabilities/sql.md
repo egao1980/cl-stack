@@ -1,19 +1,20 @@
 # SQL stack (P2) — three layers
 
 **Issues:** [#101](https://github.com/egao1980/cl-stack/issues/101)  
-**Status:** brief **re-locked** — **three separate layers** (SQLAlchemy-shaped)
+**Status:** brief **re-locked** — three layers; **`sql-query` = first-party CLOS DSL** (not a thin SxQL wrapper)
 
 ```text
-sql-orm          ← ORM (Mito facade)          ~ SQLAlchemy ORM
+sql-orm              ← ORM (Mito facade)              ~ SQLAlchemy ORM
     │
-sql-query        ← SQL generation (SxQL)      ~ SQLAlchemy Core
+sql-query            ← CLOS DSL + ANSI dialect        ~ SQLAlchemy Core
+sql-query-sqlite3    ← dialect backend                ~ sqlite+pysqlite dialect
+sql-query-postgres   ← dialect backend                ~ postgresql dialect
     │
-sql-protocol     ← connectivity + pooling     ~ Engine / Connection / Pool / DB-API
-    │
-driver backends  ← sqlite3 / postgres         ~ DBAPI drivers / dialect
+sql-protocol         ← connectivity + pooling         ~ Engine / Connection / Pool / DB-API
+sql-backend-*        ← driver backends                ~ DBAPI drivers
 ```
 
-Apps pick the layer they need. Libs that only execute SQL depend on **`sql-protocol`**. Query builders depend on protocol (+ optionally emit via it). ORM depends on query + protocol.
+Apps pick the layer they need. Libs that only execute SQL depend on **`sql-protocol`**. Query builders depend on protocol (+ optionally emit via it). ORM depends on query + protocol (Mito may still speak SxQL internally for wave-1).
 
 Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md).
 
@@ -21,10 +22,10 @@ Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-G
 
 ## Prior art
 
-| Layer | Java | Python | CL pin |
-|-------|------|--------|--------|
+| Layer | Java | Python | CL |
+|-------|------|--------|-----|
 | **Connectivity** | JDBC `DataSource` / pool | DB-API + SQLAlchemy Engine/Pool | **cl-dbi** + drivers |
-| **SQL generation** | jOOQ / QueryDSL | **SQLAlchemy Core** | **SxQL** |
+| **SQL generation** | **jOOQ** / QueryDSL | **SQLAlchemy Core** | **first-party CLOS DSL** (SxQL = prior art / Mito bridge) |
 | **ORM** | JPA / Hibernate | **SQLAlchemy ORM** | **Mito** |
 
 ---
@@ -33,14 +34,15 @@ Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-G
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Separation** | **Three first-party systems** (separate repos preferred) | Clear deps; no “Mito in the protocol” |
+| **Separation** | **Three first-party systems** (separate repos) | Clear deps; no “Mito in the protocol” |
 | **Connectivity pin** | **[cl-dbi](https://github.com/fukamachi/cl-dbi)** | Portable DBI; do not reimplement drivers |
 | **Default driver (A)** | **SQLite3** (`dbd-sqlite3`) | Windows-primary + CI zero-ops |
 | **Second driver (B)** | **PostgreSQL** (`dbd-postgres`) | Prod services |
-| **MySQL** | Watchlist | cl-dbi/Mito support; not wave-1 |
+| **MySQL** | Watchlist dialect | cl-dbi/Mito support; not wave-1 emit target |
 | **Postmodern** | Escape hatch only | Postgres-native; not portable default |
-| **Query pin** | **[SxQL](https://github.com/fukamachi/sxql)** | Shared AST; Core analogue — **not** reimplemented |
-| **ORM pin** | **[Mito](https://github.com/fukamachi/mito)** | AR-shaped; migrations; uses SxQL |
+| **Query layer** | **First-party CLOS lispy DSL** in `sql-query` | Composable AST, dialects, DDL + DML + procedures, raw fragments — SxQL is too narrow / not CLOS |
+| **SxQL** | Prior art + **Mito interop** (imported) | Not the public `sql-query` API; optional bridge helpers OK |
+| **ORM pin** | **[Mito](https://github.com/fukamachi/mito)** | AR-shaped; migrations; uses SxQL internally for now |
 | **Pooling** | **In `sql-protocol` wave-1** (simple pool) | User-required; not deferred |
 | **Row shape** | plist default; optional alist/hash | json-protocol kinship |
 | **Config** | DSN-ish keys via `cl-stack-config` | `database.driver`, `database.url`, … |
@@ -50,8 +52,8 @@ Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-G
 
 ## Layer 1 — `sql-protocol` (connectivity)
 
-**Repo:** `egao1980/sql-protocol` · nick **`stack-sql`**  
-**Backends:** `sql-backend-sqlite3`, `sql-backend-postgres` (colocated ASD systems OK)
+**Repo:** [`egao1980/sql-protocol`](https://github.com/egao1980/sql-protocol) · nick **`stack-sql`** · OCI **0.1.0**  
+**Backends:** `sql-backend-sqlite3`, `sql-backend-postgres`
 
 Owns: connect / disconnect / ping / execute / fetch* / transactions / **pool**.  
 Does **not** own query DSL or DAO macros.
@@ -85,57 +87,193 @@ Does **not** own query DSL or DAO macros.
 (defun raw-connection (connection) …)  ; underlying dbi connection for Mito
 ```
 
-**Pooling (wave-1 minimum):** fixed max size, checkout/release, wait or error when exhausted, disconnect-on-release optional. Not a full PgBouncer; good enough for HTTP workers.
-
-**Conditions:**
-
-```text
-sql-error
-├── sql-connection-error
-├── sql-programming-error
-├── sql-integrity-error
-├── sql-operational-error
-└── sql-pool-timeout
-```
+**Pooling (wave-1 minimum):** fixed max size, checkout/release, wait or error when exhausted.  
+**Conditions:** `sql-error` → connection / programming / integrity / operational / `sql-pool-timeout`.
 
 ---
 
-## Layer 2 — `sql-query` (SQL generation / Core)
+## Layer 2 — `sql-query` (CLOS SQL DSL / Core)
 
 **Repo:** `egao1980/sql-query` · nick **`stack-sql-query`**  
-**Depends on:** `sql-protocol`, **sxql**
+**Systems:** `sql-query` (ANSI builtin) · `sql-query-sqlite3` · `sql-query-postgres`  
+**Depends on:** `sql-protocol` (for execute helpers; compile path has **no** hard driver dep)  
+**Issue:** [#148](https://github.com/egao1980/cl-stack/issues/148)
 
-Owns: building portable SQL ASTs and compiling them to `(sql-string . params)`, plus DX to run them on a connection.  
+Owns: **composable CLOS AST** with **SQLAlchemy Core feature parity**, **ANSI dialect** (only builtin), compile → `(sql-string . params)`, DX to run on a connection.  
+Vendor SQL → **dialect backend systems** (same protocol/backend pattern as `sql-protocol` / `sql-backend-*`).  
 Does **not** own connections/pools or ORM.
 
-```lisp
-;; Thin stack DX over SxQL — do not fork SxQL
-(defun select (&rest clauses) …)     ; → sxql statement
-(defun insert-into …)
-(defun update …)
-(defun delete-from …)
+### Shape (locked)
 
-(defun compile-sql (query &key (type :mysql/:postgres/:sqlite3))
-  "→ (values sql-string params) via sxql:yield")
-
-(defun execute-query (connection query &key)
-  "compile-sql + sql-protocol:execute")
-(defun fetch-query / fetch-all-query …)
+```text
+expression / clause / statement   ← CLOS classes (immutable-ish value objects OK)
+        │
+   compose (generics + constructors)
+        │
+   sql-dialect                    ← CLOS; methods specialize emission
+        │
+   compile-sql → (values string params)
+        │
+   execute-query / fetch-*-query  ← sql-protocol
 ```
 
-Dialect for `yield` comes from the connection/backend (sqlite vs postgres). Raw strings still go straight to `sql-protocol:execute`.
+**Lispy DX** — constructors that return objects (not a giant `macrolet` DSL that hides composition):
 
-**Non-goals:** inventing a second AST; LINQ-style deferred ORM queries (that's Mito).
+```lisp
+;; DML
+(select (columns :id :name)
+        (from :users)
+        (where (:= :active t))
+        (order-by :name)
+        (limit 10))
+
+(insert-into :users
+  (columns :name :email)
+  (values "ada" "ada@example.com"))
+
+(update :users
+  (set (:= :name "grace"))
+  (where (:= :id 1)))
+
+(delete-from :users (where (:= :id 1)))
+
+;; DDL
+(create-table :users
+  (column :id :type :integer :primary-key t :autoincrement t)
+  (column :name :type '(:varchar 255) :not-null t)
+  (column :email :type '(:varchar 255) :unique t))
+
+(create-index :users-email (on :users) (columns :email))
+(alter-table :users (add-column :created-at :type :timestamptz))
+(drop-table :users :if-exists t)
+
+;; Procedures — two layers: SQL-shaped PROC-* + lispy BODY macros
+(create-procedure :bump_counter
+  (params (in :by :integer) (inout :n :integer))
+  (body
+   (if (:= :n 0)
+       (setf :n :by)
+       (setf :n (:+ :n :by)))
+   (loop :while (:< :n 100) :do (setf :n (:+ :n 1)))))
+;; layer 1 (programmatic): (make-body (proc-if …) (proc-setf …))
+;; emit: ANSI SQL/PSM · postgres plpgsql · sqlite unsupported
+
+(sql-call :bump_counter :by 1)
+
+;; Raw escape hatch — first-class, composable
+(where (:and
+        (:= :tenant-id tid)
+        (sql-fragment "created_at > now() - interval '? days'" days)))
+
+(select (columns (sql-fragment "count(*) AS c"))
+        (from :users))
+```
+
+**Composition:** statements/clauses are objects; `merge-query` / `and-where` / appending clauses via generics — no string concat as the public model.
+
+**Dialects (protocol / backend):**
+
+```lisp
+;; sql-query — protocol + ANSI only
+(defclass sql-dialect () ())
+(defclass ansi-dialect (sql-dialect) ())   ; builtin default
+(register-sql-dialect :ansi (make-ansi-dialect))
+
+;; sql-query-sqlite3 / sql-query-postgres — separate ASDF systems
+(defclass sqlite3-dialect (ansi-dialect) ())
+(defclass postgres-dialect (ansi-dialect) ())
+(register-sql-dialect :sqlite3 …)
+(register-sql-dialect :postgres …)
+;; mysql — watchlist backend
+
+(defgeneric dialect-for-connection (connection) → sql-dialect)  ; registry by driver
+(defgeneric compile-sql (statement &key dialect) → (values string params))
+(defgeneric emit-sql (dialect node stream ctx) …)
+```
+
+Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-registry*` from the connection driver when a backend is loaded. Explicit `:dialect` always allowed.
+
+**Extension registry (types & operators):** SQL types potentially know how to **read/write Lisp values as SQL expressions** — not just DDL names. JSON/BSON/arrays stay out of core; backends register adapters.
+
+```lisp
+(register-sql-type :jsonb dialect
+  :sql "JSONB"
+  :encode #'json-encode          ; Lisp → wire / bind
+  :decode #'json-decode          ; wire → Lisp  (sql-type-read)
+  :to-expr (lambda (d v) …)      ; Lisp → sql-node (preferred write)
+  :emit-value (lambda (d v s ctx) …)) ; or full emit
+
+(typed obj :jsonb)                 ; or (lit obj :jsonb) — inlined via type encode
+(bindparam :x obj :type :jsonb)    ; explicit placeholder
+(bindparam :lim :default 10)       ; ? ; params get 10 at prepare/execute if no :value
+(sql-type-write dialect :jsonb obj) ; → expression
+(sql-type-read dialect :jsonb db)   ; → Lisp
+
+(register-sql-op :->> :binary dialect :sql "->>")
+(ensure-expr '(:->> :payload "name"))
+```
+
+**Literals vs params:** bare values / `lit` always emit SQL literal text (with type mapping when typed). `?` / `$n` only from `bindparam` or `sql-fragment` placeholders. `sql-query-postgres` seeds `:json`/`:jsonb`/`:array` and common JSONB ops.
+
+**Raw fragments:**
+
+```lisp
+(defclass sql-fragment (sql-node)
+  ((template :initarg :template)    ; string with ? placeholders
+   (args :initarg :args)))          ; bound params, inlined into param vector in order
+(defun sql-fragment (template &rest args) …)
+```
+
+Fragments are nodes — nestable inside WHERE/SELECT lists/DDL body. **No** silent string interpolation of user values (params only).
+
+**Parameter style:** dialect chooses `?` vs `$1` vs `:name` at emit time; public AST stays positional/named-agnostic (internal binder).
+
+### SQLAlchemy Core parity (target)
+
+Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
+
+| Core area | Wave-1 (`sql-query`) | Later |
+|-----------|----------------------|-------|
+| `select` / DML | `select` `insert-into` `update` `delete-from` + join/group/having/order/limit/offset/returning | `VALUES` selectable as FROM, multi-table UPDATE completeness |
+| Distinct / locking | `distinct` `for-update` | `FOR SHARE`, dialect lock strength |
+| Set ops | `union` `union-all` `intersect*` `except*` | — |
+| CTE / subquery | `cte` `with-cte` `as-cte` `subquery` `exists` | recursive CTE sugar, `LATERAL` |
+| Column elements | `:=`… comparisons, `sql-and/or/not`, `sql-in` `sql-between` `sql-like` `sql-is-null`, arithmetic `:+`…, `sql-case` `sql-cast` `sql-func` `count` `coalesce` `label` `bindparam` `lit` `col` `typed` | `within-group`; richer type codecs |
+| Extensibility | `register-sql-type` / `register-sql-op` (Lisp↔expr encode/decode/to-expr) | first-party JSON/BSON helper systems |
+| `text()` | `sql-fragment` / `sql-raw` | bindparam expanding |
+| Schema | `make-sql-table` `table-column` `create-table-from` + DDL stmts | MetaData registry, reflection, FK/CHECK/UNIQUE table constraints, sequences |
+| DDL | CREATE/DROP TABLE, INDEX, basic ALTER ADD/DROP COLUMN | partitions, complex ALTER |
+| Procedures | `proc-*` (SQL-shaped) + lispy `body`; ANSI SQL/PSM + postgres plpgsql | functions, triggers, handlers |
+| Dialects | **ANSI builtin**; **sqlite3** + **postgres** backends | mysql backend |
+| Compile / execute | `compile-sql` → `(values string params)`; `execute-query` `fetch-*-query` | Result typing, async |
+| Upsert / ON CONFLICT | — | dialect backends |
+| Inspector / reflection | — | follow-on |
+
+**Done-when for #148:** wave-1 Core rows green + ANSI/backends split + Rove/CI + OCI publish of the three systems.
+
+### Non-goals (`sql-query`)
+
+- Re-hosting SxQL’s public API as ours  
+- LINQ-style deferred ORM identity map (→ `sql-orm` / Mito)  
+- Parsing arbitrary SQL → AST  
+- Schema migration versioning product (Mito / later tool)
+
+### SxQL relationship
+
+- **Imported** for Mito / migration interop.  
+- Optional `sql-query/sxql` helpers may convert *subset* SxQL → our AST or yield-through — **not** required for wave-1 Done-when.  
+- Cookbook shows first-party DSL, not SxQL macros.
 
 ---
 
 ## Layer 3 — `sql-orm` (ORM facade)
 
-**Repo:** `egao1980/sql-orm` · nick **`stack-sql-orm`** (or `cl-stack-sql` if we prefer facade naming)  
-**Depends on:** `sql-protocol`, `sql-query`, **mito**
+**Repo:** `egao1980/sql-orm` · nick **`stack-sql-orm`**  
+**Depends on:** `sql-protocol`, `sql-query` (for app-level queries), **mito**  
+**Issue:** [#149](https://github.com/egao1980/cl-stack/issues/149)
 
 Owns: model / DAO DX, migrations sketch, wiring `mito:*connection*` to protocol connections.  
-Does **not** reimplement `deftable` — Mito keeps macros.
+Does **not** reimplement `deftable` — Mito keeps macros for wave-1.
 
 ```lisp
 (asdf:load-system "sql-backend-sqlite3")
@@ -147,7 +285,7 @@ Does **not** reimplement `deftable` — Mito keeps macros.
   (mito:insert-dao (make-instance 'user :name "ada")))
 ```
 
-Migrations: Mito tooling in cookbook; protocol stays execution-only.
+Later: prefer `sql-query` for ad-hoc reports; Mito for DAO lifecycle.
 
 ---
 
@@ -155,25 +293,26 @@ Migrations: Mito tooling in cookbook; protocol stays execution-only.
 
 | Layer | Repo / systems |
 |-------|----------------|
-| Connectivity | `egao1980/sql-protocol` + `sql-backend-sqlite3` + `sql-backend-postgres` |
-| Core / query | `egao1980/sql-query` |
+| Connectivity | `egao1980/sql-protocol` + `sql-backend-*` (**shipped 0.1.0**) |
+| Core / query | `egao1980/sql-query` + `sql-query-sqlite3` + `sql-query-postgres` |
 | ORM | `egao1980/sql-orm` |
 
-**Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-sqlite3`, `dbd-postgres`, `sxql`, `mito` (+ transitive).
+**Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, `sxql`, `mito`, … (already published).
 
 ---
 
-## Bakeoff (unchanged verdict)
+## Bakeoff
 
-**cl-dbi + SxQL + Mito** default; Postmodern escape hatch; CLSQL reject.  
-Difference from prior brief: **pooling in protocol**, and **SxQL/Mito are not stuffed into `sql-protocol`**.
+**cl-dbi** for connectivity; **first-party CLOS DSL** for generation; **Mito** for ORM.  
+Postmodern escape hatch; CLSQL reject.  
+SxQL remains available under the hood for Mito — not the Core façade.
 
 ---
 
 ## Cookbooks (with impl)
 
-1. Connectivity: SQLite connect / execute / txn / pool checkout  
-2. Core: SxQL select/insert via `sql-query` on protocol connection  
+1. Connectivity: SQLite connect / execute / txn / pool — **done** with `sql-protocol`  
+2. Core: composable select/insert + DDL + `sql-fragment` on protocol connection  
 3. ORM: Mito CRUD + migration sketch (SQLite CI; Postgres Ubuntu job)
 
 ---
@@ -183,19 +322,17 @@ Difference from prior brief: **pooling in protocol**, and **SxQL/Mito are not st
 - Postmodern as default  
 - Full PgBouncer-grade pool product  
 - NoSQL  
-- Replacing SxQL  
 - Multi-tenant routers  
+- Full SQL:2003 / every PG extension  
 
 ---
 
 ## Implementation tasks
 
-- [x] Brief lock (three-layer) — this doc / #101  
-- [ ] Import cl-dbi / dbd-* / sxql / mito — [#146](https://github.com/egao1980/cl-stack/issues/146) (supersedes #127)  
-- [ ] `sql-protocol` + pool + sqlite3/postgres — [#147](https://github.com/egao1980/cl-stack/issues/147) (supersedes #128/#129 connectivity)  
-- [ ] `sql-query` over SxQL — [#148](https://github.com/egao1980/cl-stack/issues/148)  
+- [x] Brief lock (three-layer) — #101  
+- [x] Import cl-dbi / dbd-* / sxql / mito — [#146](https://github.com/egao1980/cl-stack/issues/146)  
+- [x] `sql-protocol` + pool + sqlite3/postgres — [#147](https://github.com/egao1980/cl-stack/issues/147)  
+- [ ] `sql-query` ANSI Core DSL + dialect backends (SQLAlchemy Core parity wave-1) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
 - [ ] `sql-orm` over Mito + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
 
-**Impl order:** imports → **connectivity** → **query** → **ORM**.
-
-Old children #127–#129 superseded by the above.
+**Impl order:** ~~imports → connectivity~~ → **query** → **ORM**.

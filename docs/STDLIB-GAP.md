@@ -34,7 +34,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
 | Subprocess | De-facto converged | P2 | Pin UIOP |
 | JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** — **done** ([#91](https://github.com/egao1980/cl-stack/issues/91), [json.md](cookbooks/json.md)); CSV/XML later |
-| SQL | Fragmented | P2 | three layers: `sql-protocol` (pool/connect) · `sql-query` (SxQL/Core) · `sql-orm` (Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](capabilities/sql.md) |
+| SQL | Fragmented | P2 | three layers: `sql-protocol` · `sql-query` (ANSI Core + dialect backends) · `sql-orm` (Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](capabilities/sql.md) |
 | I/O object streams | Absent | P2 | `io-protocol` — ObjectInput/Output CLOS shell (no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |
 | Serdes | Fragmented | P2 | `serdes-protocol` + Gray/JSONL/events; impl by json/sexp — [#132](https://github.com/egao1980/cl-stack/issues/132) · [serdes.md](capabilities/serdes.md) |
 | Logging | Fragmented | P2 | `log-protocol` text (log4j) + structured (JSON/SEXP via serdes) — [#102](https://github.com/egao1980/cl-stack/issues/102) · [logging.md](capabilities/logging.md) |
