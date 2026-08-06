@@ -50,7 +50,7 @@
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
-  - `sql-query` — SQL generation (**SxQL**, SQLAlchemy Core–shaped)  
+  - `sql-query` — composable **CLOS DSL** + dialects (DML/DDL/proc, `sql-fragment`)  
   - `sql-orm` — ORM facade (**Mito**)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
