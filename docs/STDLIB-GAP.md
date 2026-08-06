@@ -29,7 +29,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | TLS / SSL | Wrong-shape | P0 | OpenSSL OCI overlays; pin cl+ssl |
 | Crypto / secrets | De-facto converged | P2 | Pin Ironclad |
 | Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first — **done** ([#94](https://github.com/egao1980/cl-stack/issues/94), [text-unicode.md](capabilities/text-unicode.md)) |
-| i18n / gettext | Absent | P3 | Later |
+| i18n / gettext | Absent | P3 | **Needs planning** — [#151](https://github.com/egao1980/cl-stack/issues/151); not gettext-only |
 | Regex | De-facto converged | P2 | Pin cl-ppcre |
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
 | Subprocess | De-facto converged | P2 | Pin UIOP |
