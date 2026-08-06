@@ -3,7 +3,7 @@
 **Issues:** [#94](https://github.com/egao1980/cl-stack/issues/94)  
 **Status:** policy **locked**; Babel on GHCR via [`cl-stack-systems`](https://github.com/egao1980/cl-stack-systems)
 
-Stack policy for octets ↔ string. **Not** ICU / locale / gettext (P3).
+Stack policy for octets ↔ string. **Not** ICU / locale / gettext — those need a separate **i18n planning** pass ([#151](https://github.com/egao1980/cl-stack/issues/151)).
 
 ---
 
@@ -15,7 +15,13 @@ Stack policy for octets ↔ string. **Not** ICU / locale / gettext (P3).
 | Encode/decode pin | **[Babel](https://github.com/cl-babel/babel)** — OCI `babel:0.5.0` |
 | Unicode properties / IDNA | **cl-unicode** (already used by `cl-idna`) — not a second encode/decode path |
 | Streams | flexi-streams where needed; prefer Babel for whole-buffer conversion |
-| Non-goal | ICU4C wrap, collation, gettext |
+| Non-goal (this brief) | ICU4C wrap, collation, gettext / message catalogs, locale-aware formatting |
+
+---
+
+## Follow-on: i18n planning
+
+Text/Unicode (#94) locked UTF-8 + Babel only. Full **i18n** (locales, message catalogs, plural rules, collation, date/number formats, CLDR) is a different capability — do **not** bolt gettext onto Babel ad hoc. Track: [#151](https://github.com/egao1980/cl-stack/issues/151).
 
 ---
 
