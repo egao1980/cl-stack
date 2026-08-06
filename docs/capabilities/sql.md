@@ -292,11 +292,11 @@ Does **not** wrap Mito. Filters are **sql-query** expressions (`:=`, `sql-and`, 
   (persist (make-instance 'user :name "ada"))
   (select-instances 'user :where (:= :name "ada")))
 
-;; migrations surface (inspectable DDL, not a runner product)
+;; migrations surface — model snapshot diff → sql-query DDL AST (not SQL text)
 (diff-schema old-snapshot (schema-snapshot '(user post)))
 ```
 
-**Wave-1 Done-when:** CRUD + relations + `:compute` + `diff-schema`/`ensure-schema` on SQLite; Rove/CI; OCI publish.
+**Wave-1 Done-when:** CRUD + relations + `:compute` + structural `diff-schema`/`ensure-schema` on SQLite; Rove/CI; OCI publish.
 
 ---
 
