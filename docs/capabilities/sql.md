@@ -205,6 +205,7 @@ Default compile dialect = **ANSI**. `execute-query` resolves via `*sql-dialect-r
 
 (typed obj :jsonb)                 ; or (lit obj :jsonb) — inlined via type encode
 (bindparam :x obj :type :jsonb)    ; explicit placeholder
+(bindparam :lim :default 10)       ; COALESCE(?, 10) — literal default
 (sql-type-write dialect :jsonb obj) ; → expression
 (sql-type-read dialect :jsonb db)   ; → Lisp
 
