@@ -272,8 +272,9 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
 **Depends on:** `sql-protocol`, `sql-query` (+ dialect backend for live DB)  
 **Issue:** [#149](https://github.com/egao1980/cl-stack/issues/149)
 
-Owns: `defmodel` (defclass-shaped), relationships, calculated fields, persistence generics, schema snapshot / diff → sql-query DDL.  
-Does **not** wrap Mito. Filters are **sql-query** expressions (`:=`, `sql-and`, …).
+Owns: `defmodel` (defclass-shaped), relationships, calculated fields, persistence generics, **reversible schema ops** (upgrade/downgrade) for an Alembic-style runner to version later.  
+Does **not** wrap Mito. Filters are **sql-query** expressions (`:=`, `sql-and`, …).  
+Does **not** ship a versioned migration product — only the op algebra.
 
 ```lisp
 (asdf:load-system "sql-backend-sqlite3")
@@ -292,11 +293,14 @@ Does **not** wrap Mito. Filters are **sql-query** expressions (`:=`, `sql-and`, 
   (persist (make-instance 'user :name "ada"))
   (select-instances 'user :where (:= :name "ada")))
 
-;; migrations surface — model snapshot diff → sql-query DDL AST (not SQL text)
-(diff-schema old-snapshot (schema-snapshot '(user post)))
+;; migrations foundation — model diff → schema-op → DDL AST; upgrade / downgrade
+(let ((mig (make-migration old-snap (schema-snapshot '(user post))
+                           :revision "0002" :down-revision "0001")))
+  (upgrade-schema c mig)
+  (downgrade-schema c mig))
 ```
 
-**Wave-1 Done-when:** CRUD + relations + `:compute` + structural `diff-schema`/`ensure-schema` on SQLite; Rove/CI; OCI publish.
+**Wave-1 Done-when:** CRUD + relations + `:compute` + reversible `diff-schema`/`upgrade-schema`/`downgrade-schema` on SQLite; Rove/CI; OCI publish.
 
 ---
 
