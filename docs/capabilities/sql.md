@@ -4,17 +4,18 @@
 **Status:** brief **re-locked** — three layers; **`sql-query` = first-party CLOS DSL** (not a thin SxQL wrapper)
 
 ```text
-sql-orm              ← ORM (Mito facade)              ~ SQLAlchemy ORM
+sql-orm              ← lispy CLOS ORM (first-party)   ~ models / relations / schema diff
     │
-sql-query            ← CLOS DSL + ANSI dialect        ~ SQLAlchemy Core
-sql-query-sqlite3    ← dialect backend                ~ sqlite+pysqlite dialect
-sql-query-postgres   ← dialect backend                ~ postgresql dialect
+sql-query            ← CLOS DSL + ANSI dialect        ~ composable SQL AST (Core-shaped)
+sql-query-sqlite3    ← dialect backend (own repo)     ~ sqlite dialect
+sql-query-postgres   ← dialect backend (own repo)     ~ postgresql dialect
+sql-query-csv        ← AST→Lisp over CSV (own repo)    ~ in-process tabular
     │
 sql-protocol         ← connectivity + pooling         ~ Engine / Connection / Pool / DB-API
 sql-backend-*        ← driver backends                ~ DBAPI drivers
 ```
 
-Apps pick the layer they need. Libs that only execute SQL depend on **`sql-protocol`**. Query builders depend on protocol (+ optionally emit via it). ORM depends on query + protocol (Mito may still speak SxQL internally for wave-1).
+Apps pick the layer they need. Libs that only execute SQL depend on **`sql-protocol`**. Query builders depend on protocol (+ optionally emit via it). ORM depends on query + protocol — **no Mito**.
 
 Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md).
 
@@ -25,8 +26,8 @@ Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-G
 | Layer | Java | Python | CL |
 |-------|------|--------|-----|
 | **Connectivity** | JDBC `DataSource` / pool | DB-API + SQLAlchemy Engine/Pool | **cl-dbi** + drivers |
-| **SQL generation** | **jOOQ** / QueryDSL | **SQLAlchemy Core** | **first-party CLOS DSL** (SxQL = prior art / Mito bridge) |
-| **ORM** | JPA / Hibernate | **SQLAlchemy ORM** | **Mito** |
+| **SQL generation** | **jOOQ** / QueryDSL | **SQLAlchemy Core** (feature checklist) | **first-party CLOS DSL** (SxQL = prior art only) |
+| **ORM** | JPA / Hibernate | **SQLAlchemy ORM** (feature checklist) | **first-party lispy CLOS** (`sql-orm`) |
 
 ---
 
@@ -38,11 +39,11 @@ Conventions: [API.md](../API.md). Config: [config.md](config.md). Gap: [STDLIB-G
 | **Connectivity pin** | **[cl-dbi](https://github.com/fukamachi/cl-dbi)** | Portable DBI; do not reimplement drivers |
 | **Default driver (A)** | **SQLite3** (`dbd-sqlite3`) | Windows-primary + CI zero-ops |
 | **Second driver (B)** | **PostgreSQL** (`dbd-postgres`) | Prod services |
-| **MySQL** | Watchlist dialect | cl-dbi/Mito support; not wave-1 emit target |
+| **MySQL** | Watchlist dialect | cl-dbi support; not wave-1 emit target |
 | **Postmodern** | Escape hatch only | Postgres-native; not portable default |
 | **Query layer** | **First-party CLOS lispy DSL** in `sql-query` | Composable AST, dialects, DDL + DML + procedures, raw fragments — SxQL is too narrow / not CLOS |
-| **SxQL** | Prior art + **Mito interop** (imported) | Not the public `sql-query` API; optional bridge helpers OK |
-| **ORM pin** | **[Mito](https://github.com/fukamachi/mito)** | AR-shaped; migrations; uses SxQL internally for now |
+| **SxQL** | Prior art only (imported if needed elsewhere) | Not the public `sql-query` / `sql-orm` API |
+| **ORM** | **First-party lispy CLOS** in `sql-orm` | Models, relations, calc fields, schema diff → DDL; no Mito |
 | **Pooling** | **In `sql-protocol` wave-1** (simple pool) | User-required; not deferred |
 | **Row shape** | plist default; optional alist/hash | json-protocol kinship |
 | **Config** | DSN-ish keys via `cl-stack-config` | `database.driver`, `database.url`, … |
@@ -84,7 +85,7 @@ Does **not** own query DSL or DAO macros.
 (defmacro with-transaction ((connection) &body body) …)
 
 (defun connect (&key (driver :sqlite3) &allow-other-keys) …)
-(defun raw-connection (connection) …)  ; underlying dbi connection for Mito
+(defun raw-connection (connection) …)  ; underlying dbi connection (escape hatch)
 ```
 
 **Pooling (wave-1 minimum):** fixed max size, checkout/release, wait or error when exhausted.  
@@ -254,38 +255,48 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
 ### Non-goals (`sql-query`)
 
 - Re-hosting SxQL’s public API as ours  
-- LINQ-style deferred ORM identity map (→ `sql-orm` / Mito)  
+- LINQ-style deferred ORM identity map (→ `sql-orm`)  
 - Parsing arbitrary SQL → AST  
-- Schema migration versioning product (Mito / later tool)
+- Schema migration versioning product (→ `sql-orm` model diff / later tool)
 
 ### SxQL relationship
 
-- **Imported** for Mito / migration interop.  
-- Optional `sql-query/sxql` helpers may convert *subset* SxQL → our AST or yield-through — **not** required for wave-1 Done-when.  
-- Cookbook shows first-party DSL, not SxQL macros.
+- Prior art only. Optional bridge helpers are **not** required for Done-when.  
+- Cookbook shows first-party DSL.
 
 ---
 
-## Layer 3 — `sql-orm` (ORM facade)
+## Layer 3 — `sql-orm` (lispy CLOS ORM)
 
-**Repo:** `egao1980/sql-orm` · nick **`stack-sql-orm`**  
-**Depends on:** `sql-protocol`, `sql-query` (for app-level queries), **mito**  
+**Repo:** [`egao1980/sql-orm`](https://github.com/egao1980/sql-orm) · nick **`stack-sql-orm`**  
+**Depends on:** `sql-protocol`, `sql-query` (+ dialect backend for live DB)  
 **Issue:** [#149](https://github.com/egao1980/cl-stack/issues/149)
 
-Owns: model / DAO DX, migrations sketch, wiring `mito:*connection*` to protocol connections.  
-Does **not** reimplement `deftable` — Mito keeps macros for wave-1.
+Owns: `defmodel` (defclass-shaped), relationships, calculated fields, persistence generics, schema snapshot / diff → sql-query DDL.  
+Does **not** wrap Mito. Filters are **sql-query** expressions (`:=`, `sql-and`, …).
 
 ```lisp
 (asdf:load-system "sql-backend-sqlite3")
+(asdf:load-system "sql-query-sqlite3")
 (asdf:load-system "sql-orm")
 
-(stack-sql:with-connection (c :driver :sqlite3 :database-name ":memory:")
-  (sql-orm:use-connection c)           ; sets mito:*connection*
-  (mito:ensure-table-exists 'user)
-  (mito:insert-dao (make-instance 'user :name "ada")))
+(defmodel user ()
+  (id :integer :primary-key t :autoincrement t)
+  (name :text :not-null t)
+  (:table users)
+  (:has-many posts post :key user-id)
+  (:compute label (self) (format nil "~A" (name self))))
+
+(with-orm-connection (c :driver :sqlite3 :database-name ":memory:")
+  (ensure-schema c 'user)
+  (persist (make-instance 'user :name "ada"))
+  (select-instances 'user :where (:= :name "ada")))
+
+;; migrations surface (inspectable DDL, not a runner product)
+(diff-schema old-snapshot (schema-snapshot '(user post)))
 ```
 
-Later: prefer `sql-query` for ad-hoc reports; Mito for DAO lifecycle.
+**Wave-1 Done-when:** CRUD + relations + `:compute` + `diff-schema`/`ensure-schema` on SQLite; Rove/CI; OCI publish.
 
 ---
 
@@ -294,18 +305,18 @@ Later: prefer `sql-query` for ad-hoc reports; Mito for DAO lifecycle.
 | Layer | Repo / systems |
 |-------|----------------|
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` (**shipped 0.1.0**) |
-| Core / query | `egao1980/sql-query` + `sql-query-sqlite3` + `sql-query-postgres` |
+| Core / query | `egao1980/sql-query` · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` |
 | ORM | `egao1980/sql-orm` |
 
-**Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, `sxql`, `mito`, … (already published).
+**Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, … (SxQL/Mito imports optional legacy; not required by first-party stack).
 
 ---
 
 ## Bakeoff
 
-**cl-dbi** for connectivity; **first-party CLOS DSL** for generation; **Mito** for ORM.  
-Postmodern escape hatch; CLSQL reject.  
-SxQL remains available under the hood for Mito — not the Core façade.
+**cl-dbi** for connectivity; **first-party CLOS DSL** for generation; **first-party lispy CLOS** for ORM.  
+Postmodern escape hatch; CLSQL reject; **Mito not used**.  
+SxQL is prior art only — not the Core or ORM façade.
 
 ---
 
@@ -313,7 +324,7 @@ SxQL remains available under the hood for Mito — not the Core façade.
 
 1. Connectivity: SQLite connect / execute / txn / pool — **done** with `sql-protocol`  
 2. Core: composable select/insert + DDL + `sql-fragment` on protocol connection  
-3. ORM: Mito CRUD + migration sketch (SQLite CI; Postgres Ubuntu job)
+3. ORM: `defmodel` CRUD + relations + schema diff (SQLite CI; Postgres later)
 
 ---
 
@@ -333,6 +344,6 @@ SxQL remains available under the hood for Mito — not the Core façade.
 - [x] Import cl-dbi / dbd-* / sxql / mito — [#146](https://github.com/egao1980/cl-stack/issues/146)  
 - [x] `sql-protocol` + pool + sqlite3/postgres — [#147](https://github.com/egao1980/cl-stack/issues/147)  
 - [ ] `sql-query` ANSI Core DSL + dialect backends (SQLAlchemy Core parity wave-1) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
-- [ ] `sql-orm` over Mito + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
+- [ ] `sql-orm` lispy CLOS + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
 
 **Impl order:** ~~imports → connectivity~~ → **query** → **ORM**.
