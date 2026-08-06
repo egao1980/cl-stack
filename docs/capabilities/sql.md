@@ -7,8 +7,8 @@
 sql-orm              ← ORM (Mito facade)              ~ SQLAlchemy ORM
     │
 sql-query            ← CLOS DSL + ANSI dialect        ~ SQLAlchemy Core
-sql-query-sqlite3    ← dialect backend                ~ sqlite+pysqlite dialect
-sql-query-postgres   ← dialect backend                ~ postgresql dialect
+sql-query-sqlite3    ← dialect backend (own repo)     ~ sqlite+pysqlite dialect
+sql-query-postgres   ← dialect backend (own repo)     ~ postgresql dialect
     │
 sql-protocol         ← connectivity + pooling         ~ Engine / Connection / Pool / DB-API
 sql-backend-*        ← driver backends                ~ DBAPI drivers
@@ -94,13 +94,13 @@ Does **not** own query DSL or DAO macros.
 
 ## Layer 2 — `sql-query` (CLOS SQL DSL / Core)
 
-**Repo:** `egao1980/sql-query` · nick **`stack-sql-query`**  
-**Systems:** `sql-query` (ANSI builtin) · `sql-query-sqlite3` · `sql-query-postgres`  
+**Repo:** [`egao1980/sql-query`](https://github.com/egao1980/sql-query) · nick **`stack-sql-query`**  
+**Dialect backends (separate repos):** [`sql-query-sqlite3`](https://github.com/egao1980/sql-query-sqlite3) · [`sql-query-postgres`](https://github.com/egao1980/sql-query-postgres)  
 **Depends on:** `sql-protocol` (for execute helpers; compile path has **no** hard driver dep)  
 **Issue:** [#148](https://github.com/egao1980/cl-stack/issues/148)
 
 Owns: **composable CLOS AST** with **SQLAlchemy Core feature parity**, **ANSI dialect** (only builtin), compile → `(sql-string . params)`, DX to run on a connection.  
-Vendor SQL → **dialect backend systems** (same protocol/backend pattern as `sql-protocol` / `sql-backend-*`).  
+Vendor SQL → **separate dialect backend projects** (same protocol/backend pattern as `sql-protocol` / `sql-backend-*`).  
 Does **not** own connections/pools or ORM.
 
 ### Shape (locked)
@@ -179,7 +179,7 @@ expression / clause / statement   ← CLOS classes (immutable-ish value objects 
 (defclass ansi-dialect (sql-dialect) ())   ; builtin default
 (register-sql-dialect :ansi (make-ansi-dialect))
 
-;; sql-query-sqlite3 / sql-query-postgres — separate ASDF systems
+;; sql-query-sqlite3 / sql-query-postgres — separate repos / ASDF systems
 (defclass sqlite3-dialect (ansi-dialect) ())
 (defclass postgres-dialect (ansi-dialect) ())
 (register-sql-dialect :sqlite3 …)
@@ -256,7 +256,7 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM).
 | Upsert / ON CONFLICT | — | dialect backends |
 | Inspector / reflection | — | follow-on |
 
-**Done-when for #148:** wave-1 Core rows green + ANSI/backends split + Rove/CI + OCI publish of the three systems.
+**Done-when for #148:** wave-1 Core rows green + ANSI/backends as **separate repos** + Rove/CI + OCI publish of each project.
 
 ### Non-goals (`sql-query`)
 
@@ -301,7 +301,7 @@ Later: prefer `sql-query` for ad-hoc reports; Mito for DAO lifecycle.
 | Layer | Repo / systems |
 |-------|----------------|
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` (**shipped 0.1.0**) |
-| Core / query | `egao1980/sql-query` + `sql-query-sqlite3` + `sql-query-postgres` |
+| Core / query | `egao1980/sql-query` (ANSI) · `egao1980/sql-query-sqlite3` · `egao1980/sql-query-postgres` |
 | ORM | `egao1980/sql-orm` |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, `sxql`, `mito`, … (already published).
