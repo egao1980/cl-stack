@@ -85,8 +85,8 @@ Policy while ramping: ECL smoke is a **merge signal** for crypto/secrets once th
 ## Done-when (from #42)
 
 - [x] Documented impl matrix (this file) + link from overlays / README
-- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64
-- [ ] CCL job present or explicitly deferred in this doc
+- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64 — PRs: secrets#2, crypto-protocol#4, crypto-backend-ironclad#2
+- [ ] CCL job present or explicitly deferred in this doc (deferred: prefer `ros install ccl`; Homebrew formula deprecated)
 - [ ] Known impl-specific failures tracked with issue links
-- [ ] Sibling-lib guidance copyable (fragment above)
+- [x] Sibling-lib guidance copyable (fragment above)
 - [ ] README claim matches CI reality
