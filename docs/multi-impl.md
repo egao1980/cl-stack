@@ -64,7 +64,7 @@ Configure flag is **`--with-threads=POSIX_THREADS`** (not `POSIX`). Upstream mar
 3. **Quit arity:** `(quit)` takes **no** arguments on ABCL 1.9.2 — `(quit 0)` → `PROGRAM-ERROR`. Prefer `uiop:quit` (status OK) in CI scripts; bare `(quit)` has no status arg.
 4. **Non-interactive:** `abcl --batch --noinform --load script.lisp` (or `ros -l … -q` after `ros use abcl-bin`).
 5. **Java 21+ noise:** `Failed to introspect virtual threading methods: InaccessibleObjectException` — cosmetic; covered by `--add-opens` above.
-6. **chipz Gray streams:** upstream chipz does **not** enable `chipz-system:gray-streams` on ABCL → `make-decompressing-stream` errors. cl-repository-client must gunzip via `chipz:decompress` (buffer API). Fixed on `cursor/abcl-chipz-decompress-20ce`; overlay that `installer.lisp` in ABCL CI until a client release ships it.
+6. **chipz Gray streams:** upstream chipz does **not** enable `chipz-system:gray-streams` on ABCL → `make-decompressing-stream` errors. cl-repository-client **≥0.14.0** gunzips via `chipz:decompress` (buffer API).
 7. **PBKDF2 cost:** ~55–60s per verify on ABCL 1.9.2 (local + Linux). Keep `timeout-minutes: 60` on `test-abcl`.
 
 ## Proven green (local)
@@ -106,7 +106,7 @@ Keep the existing **SBCL × OS** job. Add **separate** linux/amd64 smoke jobs:
 |-----|---------|--------|
 | `test-ecl` | `ros install ecl` | Needs C toolchain (`build-essential`, libffi/gc/gmp). |
 | `test-ccl` | `ros install ccl-bin` && `ros use ccl-bin` | Prebuilt; **ubuntu-latest (amd64) only**. |
-| `test-abcl` | `setup-java` + JNA jars on `CLASSPATH` + `ros install abcl-bin` | JDK + JNA required; PBKDF2 slow — 60m timeout. Overlay client `installer.lisp` until buffer-gunzip client ships. |
+| `test-abcl` | `setup-java` + JNA jars on `CLASSPATH` + `ros install abcl-bin` | JDK + JNA required; needs client **≥0.14.0** for OCI extract; PBKDF2 slow — 60m timeout. |
 
 Both reuse the same oras client pull + `scripts/ci-install.lisp` + `scripts/ci-test.lisp`.
 
@@ -204,13 +204,13 @@ Policy while ramping: ECL + CCL + ABCL smoke are merge signals for crypto/secret
             echo "JAVA_TOOL_OPTIONS=--enable-native-access=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED ${JAVA_TOOL_OPTIONS:-}"
           } >> "$GITHUB_ENV"
       # … same oras pull / QL client bootstrap / ci-install / ci-test as SBCL job …
-      # If client < buffer-gunzip fix: overlay installer.lisp from cl-repository ABCL PR.
+      # Requires cl-repository-client ≥0.14.0 (buffer gunzip for ABCL).
 ```
 
 ## Done-when (from #42)
 
 - [x] Documented impl matrix (this file) + link from overlays / README
-- [ ] Hub or sibling CI runs Rove on **SBCL + ECL + ABCL** on linux/amd64 — ECL: crypto-protocol#4 merged; ABCL: local+container green, GHA `test-abcl` PRs on `cursor/multi-impl-abcl-20ce`; CCL PRs in flight
+- [x] Hub or sibling CI runs Rove on **SBCL + ECL + ABCL** on linux/amd64 — ECL: crypto-protocol#4; ABCL: crypto-protocol#8 / secrets#6 / backend#6 merged; client **0.14.0** published; CCL PRs in flight
 - [x] CCL job present (strongly recommended; linux/`ccl-bin`) — local Rosetta green; GHA fragment above
 - [x] Known impl-specific failures tracked — **CLISP**: clean Ubuntu MT bootstrap hang (arm64) / SIGSEGV (amd64); packaged `MT=NIL`
 - [x] Sibling-lib guidance copyable (fragments above)
