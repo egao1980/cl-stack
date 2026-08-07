@@ -26,7 +26,7 @@ Prefer **Homebrew bottles** for a fast local probe when native; use **Roswell** 
 | **ECL** | `brew install ecl` → **26.5.5** | Ships ASDF **3.1.8.11**; `require :asdf` before any `asdf:…` at read time. Non-interactive: `ecl --norc --nodebug -q --load script.lisp`. |
 | **CCL** | **No native arm64.** Official 1.13 = x86_64 only. | Local: download `ccl-1.13-darwinx86.tar.gz`, run `arch -x86_64 ./dx86cl64 --no-init --batch -l script.lisp`. Roswell `ccl-bin` **refuses arm64**. Homebrew `clozure-cl` deprecated (disable 2026-09-25). CI: `ros install ccl-bin` on **linux/amd64**. |
 | **CLISP** | Brew + clean Ubuntu both fail Ironclad path | See **CLISP blocker** below (linux container results). |
-| **ABCL** | `brew install abcl` (needs OpenJDK) | Not probed yet here (no JRE on this host). Next. |
+| **ABCL** | `brew install abcl` → **1.9.2** (pulls OpenJDK) | Green locally + clean Ubuntu. Roswell: `abcl-bin`. `(quit)` takes **no** status arg. |
 
 ### ECL pitfalls (agents / CI)
 
@@ -57,6 +57,14 @@ Configure flag is **`--with-threads=POSIX_THREADS`** (not `POSIX`). Upstream mar
 
 **Decision:** no `test-clisp` CI row. Not a `continue-on-error` red job — known upstream/bootstrap failure, not our code. Revisit only if a maintained MT-capable CLISP binary appears (or Ironclad drops the hard BT dep).
 
+### ABCL pitfalls (agents / CI)
+
+1. **Needs a JDK.** Homebrew `abcl` pulls OpenJDK; CI: `actions/setup-java` (Temurin 21) then `ros install abcl-bin` / `ros use abcl-bin`.
+2. **Quit arity:** `(quit)` takes **no** arguments on ABCL 1.9.2 — `(quit 0)` → `PROGRAM-ERROR`. Use `(quit)` in scripts / `*debugger-hook*`.
+3. **Non-interactive:** `abcl --batch --noinform --load script.lisp` (or `ros -l … -q` after `ros use abcl-bin`).
+4. **Java 21+ noise:** `Failed to introspect virtual threading methods: InaccessibleObjectException` — cosmetic; ignore or add `--add-opens java.base/java.lang=ALL-UNNAMED` if it ever becomes fatal.
+5. **PBKDF2 cost:** ~55–60s per verify on ABCL 1.9.2 (local + Linux). Keep `timeout-minutes: 60` on `test-abcl`.
+
 ## Proven green (local)
 
 ### ECL 26.5.5 (Homebrew, native arm64) — 2026-08-07
@@ -79,6 +87,15 @@ Method: Homebrew ECL + `~/quicklisp/setup.lisp` + `asdf:load-asd`.
 
 Method: Clozure release tarball + `arch -x86_64 ./dx86cl64 --no-init --batch`. Same QL + `load-asd` path. Duplicate-definition compile warnings seen on re-load; tests still green.
 
+### ABCL 1.9.2 — 2026-08-07
+
+| Host | Result |
+|------|--------|
+| Homebrew + OpenJDK 26 (darwin/arm64) | crypto-protocol + crypto-backend-ironclad + secrets-protocol **pass** |
+| Clean `ubuntu:24.04` linux/arm64 (Temurin-style OpenJDK 21, abcl-bin 1.9.2 tarball) | same suites **pass** |
+
+Method: QL + `asdf:load-asd`. Virtual-thread introspection warning on modern JDKs; harmless.
+
 ## CI recipe (sibling libs)
 
 Keep the existing **SBCL × OS** job. Add **separate** linux/amd64 smoke jobs:
@@ -87,6 +104,7 @@ Keep the existing **SBCL × OS** job. Add **separate** linux/amd64 smoke jobs:
 |-----|---------|--------|
 | `test-ecl` | `ros install ecl` | Needs C toolchain (`build-essential`, libffi/gc/gmp). |
 | `test-ccl` | `ros install ccl-bin` && `ros use ccl-bin` | Prebuilt; **ubuntu-latest (amd64) only**. |
+| `test-abcl` | `setup-java` + `ros install abcl-bin` | JDK required; PBKDF2 slow — 60m timeout. |
 
 Both reuse the same oras client pull + `scripts/ci-install.lisp` + `scripts/ci-test.lisp`.
 
@@ -144,12 +162,39 @@ Policy while ramping: ECL + CCL smoke are merge signals for crypto/secrets once 
           ros install ccl-bin
           ros use ccl-bin
       # … same oras pull / QL client bootstrap / ci-install / ci-test as SBCL job …
+
+  test-abcl:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: oras-project/setup-oras@v2
+        with:
+          version: 1.2.3
+      - name: Install Roswell
+        shell: bash
+        run: |
+          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
+          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
+      - name: Install ABCL
+        shell: bash
+        run: |
+          ros install abcl-bin
+          ros use abcl-bin
+      # … same oras pull / QL client bootstrap / ci-install / ci-test as SBCL job …
 ```
 
 ## Done-when (from #42)
 
 - [x] Documented impl matrix (this file) + link from overlays / README
-- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64 — ECL: crypto-protocol#4 merged; secrets/CCL PRs in flight
+- [ ] Hub or sibling CI runs Rove on **SBCL + ECL + ABCL** on linux/amd64 — ECL: crypto-protocol#4 merged; ABCL PRs on `cursor/multi-impl-abcl-20ce`; CCL PRs in flight
 - [x] CCL job present (strongly recommended; linux/`ccl-bin`) — local Rosetta green; GHA fragment above
 - [x] Known impl-specific failures tracked — **CLISP**: clean Ubuntu MT bootstrap hang (arm64) / SIGSEGV (amd64); packaged `MT=NIL`
 - [x] Sibling-lib guidance copyable (fragments above)
