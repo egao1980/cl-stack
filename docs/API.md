@@ -33,6 +33,9 @@
 - `json-protocol` — encode/decode (RFC 8259); default **jzon**, alternate **yason**  
   **Brief:** [capabilities/json-protocol.md](capabilities/json-protocol.md) · cookbook [json.md](cookbooks/json.md) — streaming = P2
 - `babel` — UTF-8 octets ↔ string — [text-unicode.md](capabilities/text-unicode.md)
+- `unicode-protocol` — UCD / normalize / IDNA / breaks — [unicode-protocol.md](capabilities/unicode-protocol.md)
+- `i18n-protocol` — locale / MF2 templating / catalogs — [i18n.md](capabilities/i18n.md)
+- `l10n-protocol` — collation / number·date format — [l10n.md](capabilities/l10n.md)
 - `bordeaux-threads` (bt2) — portable threads — [concurrency.md](capabilities/concurrency.md)
 - `cl-stack-config` — env + **TOML** (tomlet) — [config.md](capabilities/config.md)
 - `http-server-protocol` — CLOS server lifecycle; **Clack env** app contract; Hunchentoot default / Woo Unix  
