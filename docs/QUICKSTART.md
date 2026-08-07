@@ -29,14 +29,18 @@ No C toolchain needed for consumer installs — natives ship in overlays.
 Prefer the **`cl-repository/`** GHCR namespace (not the old `cl-systems/cl-repository-client` mirror).
 
 ```bash
-CLIENT_VER=0.11.0   # or: latest
+# :latest is a system-name *anchor* (not a package). Resolve the semver, then pull.
+IMG=ghcr.io/egao1980/cl-repository/cl-repository-client
+CLIENT_VER=$(oras manifest fetch "${IMG}:latest" \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["annotations"]["org.opencontainers.image.version"])')
+# Or pin explicitly: CLIENT_VER=0.13.0
 DEST="${HOME}/.local/share/cl-repository-client"
 rm -rf /tmp/cl-repo-pull "$DEST"
 mkdir -p /tmp/cl-repo-pull "$DEST"
-oras pull "ghcr.io/egao1980/cl-repository/cl-repository-client:${CLIENT_VER}" -o /tmp/cl-repo-pull
+oras pull "${IMG}:${CLIENT_VER}" -o /tmp/cl-repo-pull
 for f in /tmp/cl-repo-pull/*.tar.gz; do tar -xzf "$f" -C "$DEST"; done
 CLIENT_DIR="$(find "$DEST" -maxdepth 1 -type d -name 'cl-oci-*' | head -1)"
-echo "Client tree: $CLIENT_DIR"
+echo "Client tree: $CLIENT_DIR (resolved ${CLIENT_VER})"
 ```
 
 One-time QL deps for the **client only** (not your app):
