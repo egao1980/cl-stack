@@ -88,7 +88,11 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
-| `cl-stack-jwt` | **0.1.0** | JWT facade over jose (`stack-jwt`) |
+| `crypto-backend-ironclad` | **0.1.1** | digest/HMAC/AEAD + secrets (Ironclad) |
+| `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
+| `process-backend-uiop` | **0.1.0** | subprocess `run`/`launch` |
+| `rpc-backend-inprocess` | **0.1.0** | JSON-RPC–shaped in-process RPC |
+| `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
