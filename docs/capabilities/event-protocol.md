@@ -17,6 +17,7 @@ Conventions: [API.md](../API.md). Overlay shipping: [overlays.md](../overlays.md
 | **Protocol primitive** | Callbacks + cancel tokens | Backends stay thin; promises wrap protocol ops in the facade |
 | **Default backend (A)** | **libuv** | **Windows is primary** (IOCP, same as Node); also linux/darwin; matches OpenSSL overlay story |
 | **Second backend (B)** | **libev** | Woo/Clack server stack; **Unix-only** (libev has no Windows) |
+| **ABCL backend (C)** | **NIO `Selector`** | JVM-native; no JNA/libuv. Repo: `event-backend-nio`. Pair with `http-backend-java` |
 | **Not wave-1 second** | iolib | Unix/epoll-strong, weaker Windows + less Woo reuse; revisit P2 |
 | **CFFI grovel** | Overlay build time | Grovel on CI/builder per os/arch; ship `cffi-grovel-output` → `grovel-cache/`. Consumers need no C toolchain (incl. Windows). |
 | **Loop affinity** | One loop per thread; ops on “current” loop | Cross-thread schedule via notifier/wake (backend-specific) |
@@ -49,6 +50,7 @@ Scores: **1** (poor) … **5** (excellent) for wave-1 cl-stack needs.
 | Protocol + shared conformance suite | [`egao1980/event-protocol`](https://github.com/egao1980/event-protocol) |
 | Default backend A | [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) |
 | Second backend B (Unix) | [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) |
+| ABCL / JVM (C) | [`egao1980/event-backend-nio`](https://github.com/egao1980/event-backend-nio) |
 
 ---
 
