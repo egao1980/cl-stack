@@ -1,9 +1,11 @@
 # crypto-protocol (P2)
 
 **Issues:** [#104](https://github.com/egao1980/cl-stack/issues/104)  
-**Status:** brief **locked** — CLOS protocol + backends; **recipes first, hazmat second**
+**Status:** brief **locked** — CLOS protocol + **separate backend repos**; **recipes first, hazmat second**
 
 One app DX for digests, MACs, and authenticated encryption. Libs depend on the protocol; apps pick a crypto backend (default **Ironclad**). Mirrors **PyCA cryptography** (recipes + hazmat), **Java JCA** (MessageDigest / Mac / Cipher), and **OpenSSL 3 EVP** (high-level AEAD) — not Boost (no first-party Boost.Crypto).
+
+**Repos:** [`egao1980/crypto-protocol`](https://github.com/egao1980/crypto-protocol) · backend [`egao1980/crypto-backend-ironclad`](https://github.com/egao1980/crypto-backend-ironclad) (own project — same pattern as `sql-query-*` / `event-backend-*`).
 
 **Related:** [`secrets-protocol`](secrets.md) owns CSPRNG, tokens, constant-time compare, UUID, password hashing.
 
@@ -123,7 +125,8 @@ Package nick: `stack-crypto`.
 ## Implementation tasks
 
 - [x] Brief lock — this doc + #104 update
-- [x] `crypto-protocol` + `crypto-backend-ironclad` + Rove
+- [x] `crypto-protocol` (own repo) + Rove
+- [x] `crypto-backend-ironclad` **separate repo** + Rove
 - [x] Cookbook [crypto.md](../cookbooks/crypto.md)
-- [ ] OCI publish `crypto-protocol` / `crypto-backend-ironclad`
+- [ ] OCI publish `crypto-protocol` **0.1.1** + `crypto-backend-ironclad` **0.1.0**
 - [x] Pin Ironclad via `cl-stack-systems` (already imported)
