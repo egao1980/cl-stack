@@ -20,7 +20,8 @@ xml-protocol / protobuf-… / arrow-… / msgpack-… / …
 log-protocol / cl-stack-http / …
 ```
 
-Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol.md). Logging: [logging.md](logging.md).
+Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol.md). Logging: [logging.md](logging.md).  
+**Cookbook:** [cookbooks/serdes.md](../cookbooks/serdes.md).
 
 ---
 

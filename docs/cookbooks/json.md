@@ -14,8 +14,8 @@
 Brief: [json-protocol.md](../capabilities/json-protocol.md).
 
 ```lisp
-(cl-repo:load-system "json-backend-jzon" :version "0.1.1")
-;; nick: stack-json
+(cl-repo:load-system "json-backend-jzon" :version "0.2.0")
+;; nick: stack-json — also registers serdes :json (see [serdes cookbook](serdes.md))
 ```
 
 ---

@@ -134,6 +134,8 @@ io-error
 
 ## Cookbook
 
+Task recipes: [cookbooks/io.md](../cookbooks/io.md).
+
 ```lisp
 (asdf:load-system "io-protocol")
 

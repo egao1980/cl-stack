@@ -42,10 +42,10 @@
 
 - `cli-protocol` — command tree / parse / run; default **clingon**, alternate **adopt**  
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
-- `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**  
-  **Brief:** [capabilities/io.md](capabilities/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp; later XML / protobuf / Arrow / …  
-  **Brief:** [capabilities/serdes.md](capabilities/serdes.md)
+- `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
+  **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.0**); later XML / protobuf / Arrow / …  
+  **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  

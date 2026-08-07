@@ -75,7 +75,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 |--------|---------|--------|
 | `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
-| `json-protocol` | **0.1.1** | encode/decode; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` |
+| `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
+| `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
@@ -94,8 +95,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
-| `serdes-protocol` | **0.1.0** | format encode/decode registry |
-| `sexp-protocol` | **0.1.0** | serdes `:sexp` implementor |
+| `serdes-protocol` | **0.2.0** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
+| `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured ([cookbook](cookbooks/logging.md)) |
 | `log-backend-log4cl` | **0.1.1** | default log backend |
 | `event-protocol` | **0.1.1** | event-loop generics |
