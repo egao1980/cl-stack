@@ -1,6 +1,6 @@
 # rpc-protocol (P2)
 
-**Issues:** follow-on from [#106](https://github.com/egao1980/cl-stack/issues/106) (process) — open dedicated issue when implementing  
+**Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) · related [#106](https://github.com/egao1980/cl-stack/issues/106)  
 **Status:** brief **locked** — CLOS protocol + transports; **codecs via serdes**
 
 Request/response (and later notify) over a **transport**. Transports are pluggable: in-process, **subprocess stdio** ([process-protocol](process.md)), TCP, HTTP. Payloads encoded with [`serdes-protocol`](serdes.md) (`:sexp` / `:json`).
