@@ -77,7 +77,25 @@ Escape hatch — bind yason instead:
 
 ---
 
-## 3. Errors
+## 3. Via serdes (JSONL / events / `:format :json`)
+
+```lisp
+(asdf:load-system "json-backend-jzon")
+
+(stack-serdes:encode ht :format :json)
+(stack-serdes:map-jsonl #'print jsonl-source :format :json)
+
+(let ((p (stack-serdes:make-event-parser huge-json :format :json)))
+  (loop (multiple-value-bind (ev val) (stack-serdes:parse-next-event p)
+          (unless ev (return))
+          …)))
+```
+
+Full recipes: [serdes.md](serdes.md).
+
+---
+
+## 4. Errors
 
 ```lisp
 (handler-case (stack-json:decode "{")
