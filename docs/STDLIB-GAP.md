@@ -27,12 +27,12 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | HTTP server | Fragmented | P1 | `http-server-protocol` + Clack env; Hunchentoot / Woo — **done** ([#93](https://github.com/egao1980/cl-stack/issues/93), [http-server.md](cookbooks/http-server.md)) |
 | WebSocket | Fragmented | P0 | `ws-protocol` + websocket-driver — **wave-1 done** (#4) |
 | TLS / SSL | Wrong-shape | P0 | OpenSSL OCI overlays; pin cl+ssl |
-| Crypto / secrets | De-facto converged | P2 | Pin Ironclad |
+| Crypto / secrets | De-facto converged | P2 | `crypto-protocol` + `secrets-protocol` (Ironclad backends) — [#104](https://github.com/egao1980/cl-stack/issues/104) · [crypto.md](capabilities/crypto.md) · [secrets.md](capabilities/secrets.md) |
 | Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first — **done** ([#94](https://github.com/egao1980/cl-stack/issues/94), [text-unicode.md](capabilities/text-unicode.md)) |
 | i18n / gettext | Absent | P3 | **Needs planning** — [#151](https://github.com/egao1980/cl-stack/issues/151); not gettext-only |
 | Regex | De-facto converged | P2 | Pin cl-ppcre |
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
-| Subprocess | De-facto converged | P2 | Pin UIOP |
+| Subprocess | De-facto converged | P2 | `process-protocol` over UIOP — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](capabilities/process.md); RPC separate — [rpc.md](capabilities/rpc.md) |
 | JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** — **done** ([#91](https://github.com/egao1980/cl-stack/issues/91), [json.md](cookbooks/json.md)); CSV/XML later |
 | SQL | Fragmented | P2 | three layers **shipped**: `sql-protocol` 0.1.0 · `sql-query{,-pg,-sqlite3}` 0.2.0 · `sql-orm` 0.1.0 (first-party CLOS, not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](capabilities/sql.md) · [cookbook](cookbooks/sql.md) |
 | I/O object streams | Absent | P2 | `io-protocol` OCI **0.1.0** — ObjectInput/Output CLOS shell (no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |

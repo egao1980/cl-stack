@@ -16,3 +16,4 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [CLI](cli.md) | `cli-protocol` / clingon · adopt · Windows dialects |
 | [Logging](logging.md) | `log-protocol` / log4cl · vom · text + structured |
 | [SQL](sql.md) | `sql-protocol` / `sql-query` / `sql-orm` (Engine · Core · ORM) |
+| [Crypto & secrets](crypto.md) | `crypto-protocol` / `secrets-protocol` (seal · digest · tokens · Argon2) |
