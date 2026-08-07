@@ -12,7 +12,8 @@ README markets **SBCL / ECL / ABCL**. Wave-1 CI remains **SBCL-required**; this 
 | **Required smoke** (README) | **ECL** | Load + Rove core; catch `#+` / FFI / pathname gaps | linux/amd64 first |
 | **Required smoke** (README) | **ABCL** | Same; JVM pathname / classpath edges | linux/amd64 first |
 | **Strongly recommended** | **CCL** | Cheap binary via Roswell `ccl-bin` on linux/amd64 | linux/amd64 |
-| **Stretch** | CLISP, Clasp, … | Optional / `continue-on-error` until promoted | opportunistic |
+| **Stretch (blocked)** | **CLISP** | Distro CLISP = no `:mt`; MT source bootstrap broken on clean Ubuntu 24.04 | — |
+| **Stretch** | Clasp, … | Optional / `continue-on-error` until promoted | opportunistic |
 
 Overlay natives stay **OS/arch** keyed. Use `lisp` / `dev.common-lisp.implementation` only for impl-specific compiled artifacts ([overlays.md](overlays.md)).
 
@@ -24,7 +25,8 @@ Prefer **Homebrew bottles** for a fast local probe when native; use **Roswell** 
 |------|-------------------------------|--------|
 | **ECL** | `brew install ecl` → **26.5.5** | Ships ASDF **3.1.8.11**; `require :asdf` before any `asdf:…` at read time. Non-interactive: `ecl --norc --nodebug -q --load script.lisp`. |
 | **CCL** | **No native arm64.** Official 1.13 = x86_64 only. | Local: download `ccl-1.13-darwinx86.tar.gz`, run `arch -x86_64 ./dx86cl64 --no-init --batch -l script.lisp`. Roswell `ccl-bin` **refuses arm64**. Homebrew `clozure-cl` deprecated (disable 2026-09-25). CI: `ros install ccl-bin` on **linux/amd64**. |
-| **ABCL** | `brew install abcl` (needs OpenJDK) | Not probed yet here (no JRE on this host). Next after CCL. |
+| **CLISP** | Brew + clean Ubuntu both fail Ironclad path | See **CLISP blocker** below (linux container results). |
+| **ABCL** | `brew install abcl` (needs OpenJDK) | Not probed yet here (no JRE on this host). Next. |
 
 ### ECL pitfalls (agents / CI)
 
@@ -40,6 +42,20 @@ Prefer **Homebrew bottles** for a fast local probe when native; use **Roswell** 
 3. **Non-interactive:** `dx86cl64 --no-init --batch -l script.lisp`; quit with `(quit n)`. Use `*debugger-hook*` → `(quit 1)`.
 4. **Rosetta cost:** PBKDF2 verify ~2 min each under Rosetta on M-series; native linux/amd64 CI should be far cheaper. Keep a generous `timeout-minutes` anyway.
 5. ASDF on CCL 1.13 via QL path was **3.3.7** (healthier than brew ECL’s bundled 3.1.8).
+
+### CLISP blocker (clean Linux + Darwin) — 2026-08-07
+
+**Why Ironclad stacks care:** `ironclad` → `bordeaux-threads` → BT `.asd` errors `"This implementation is unsupported."` unless CLISP has feature **`:mt`** (`#+ (and clisp mt)`).
+
+Configure flag is **`--with-threads=POSIX_THREADS`** (not `POSIX`). Upstream marks this **“highly experimental”**.
+
+| Environment | Result |
+|-------------|--------|
+| Homebrew CLISP 2.49.92 (darwin/arm64) | Runs; **`MT=NIL`** → BT refuses |
+| **Clean `ubuntu:24.04` container, linux/arm64** | Distro `clisp` **`PACKAGED_MT=NIL`**. Source `POSIX_THREADS` + `-DNO_GENERATIONAL_GC` (aarch64 has no fast spinlocks): **`lisp.run` links**, then **`interpreted.mem` bootstrap hangs** (0% CPU; killed after 180s). |
+| **Clean `ubuntu:24.04` container, linux/amd64** | Distro **`PACKAGED_MT=NIL`**. Source `POSIX_THREADS` (x86 fast spinlocks): **`lisp.run` links**, bootstrap prints banner then **`SIGSEGV`** in GC (`handle_fault … Fault address = 0xa8`) while saving `interpreted.mem`. |
+
+**Decision:** no `test-clisp` CI row. Not a `continue-on-error` red job — known upstream/bootstrap failure, not our code. Revisit only if a maintained MT-capable CLISP binary appears (or Ironclad drops the hard BT dep).
 
 ## Proven green (local)
 
@@ -133,8 +149,8 @@ Policy while ramping: ECL + CCL smoke are merge signals for crypto/secrets once 
 ## Done-when (from #42)
 
 - [x] Documented impl matrix (this file) + link from overlays / README
-- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64 — ECL: crypto-protocol#4 merged; secrets#2 / backend#2 still open; CCL PRs on `cursor/multi-impl-ccl-20ce`
+- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64 — ECL: crypto-protocol#4 merged; secrets/CCL PRs in flight
 - [x] CCL job present (strongly recommended; linux/`ccl-bin`) — local Rosetta green; GHA fragment above
-- [ ] Known impl-specific failures tracked with issue links
+- [x] Known impl-specific failures tracked — **CLISP**: clean Ubuntu MT bootstrap hang (arm64) / SIGSEGV (amd64); packaged `MT=NIL`
 - [x] Sibling-lib guidance copyable (fragments above)
 - [ ] README claim matches CI reality
