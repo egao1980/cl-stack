@@ -60,10 +60,12 @@ Configure flag is **`--with-threads=POSIX_THREADS`** (not `POSIX`). Upstream mar
 ### ABCL pitfalls (agents / CI)
 
 1. **Needs a JDK.** Homebrew `abcl` pulls OpenJDK; CI: `actions/setup-java` (Temurin 21) then `ros install abcl-bin` / `ros use abcl-bin`.
-2. **Quit arity:** `(quit)` takes **no** arguments on ABCL 1.9.2 — `(quit 0)` → `PROGRAM-ERROR`. Use `(quit)` in scripts / `*debugger-hook*`.
-3. **Non-interactive:** `abcl --batch --noinform --load script.lisp` (or `ros -l … -q` after `ros use abcl-bin`).
-4. **Java 21+ noise:** `Failed to introspect virtual threading methods: InaccessibleObjectException` — cosmetic; ignore or add `--add-opens java.base/java.lang=ALL-UNNAMED` if it ever becomes fatal.
-5. **PBKDF2 cost:** ~55–60s per verify on ABCL 1.9.2 (local + Linux). Keep `timeout-minutes: 60` on `test-abcl`.
+2. **JNA for CFFI.** `cffi-abcl` needs `com.sun.jna.*` on the JVM classpath (`Class not found: com.sun.jna.Pointer` otherwise). Put `jna` + `jna-platform` jars on `CLASSPATH` (Maven Central 5.14.0 works). Optional JVM flags: `--enable-native-access=ALL-UNNAMED` and `--add-opens=java.base/java.io=ALL-UNNAMED` (quiets Java 21+ warnings from JNA / cl+ssl).
+3. **Quit arity:** `(quit)` takes **no** arguments on ABCL 1.9.2 — `(quit 0)` → `PROGRAM-ERROR`. Prefer `uiop:quit` (status OK) in CI scripts; bare `(quit)` has no status arg.
+4. **Non-interactive:** `abcl --batch --noinform --load script.lisp` (or `ros -l … -q` after `ros use abcl-bin`).
+5. **Java 21+ noise:** `Failed to introspect virtual threading methods: InaccessibleObjectException` — cosmetic; covered by `--add-opens` above.
+6. **chipz Gray streams:** upstream chipz does **not** enable `chipz-system:gray-streams` on ABCL → `make-decompressing-stream` errors. cl-repository-client must gunzip via `chipz:decompress` (buffer API). Fixed on `cursor/abcl-chipz-decompress-20ce`; overlay that `installer.lisp` in ABCL CI until a client release ships it.
+7. **PBKDF2 cost:** ~55–60s per verify on ABCL 1.9.2 (local + Linux). Keep `timeout-minutes: 60` on `test-abcl`.
 
 ## Proven green (local)
 
@@ -104,13 +106,13 @@ Keep the existing **SBCL × OS** job. Add **separate** linux/amd64 smoke jobs:
 |-----|---------|--------|
 | `test-ecl` | `ros install ecl` | Needs C toolchain (`build-essential`, libffi/gc/gmp). |
 | `test-ccl` | `ros install ccl-bin` && `ros use ccl-bin` | Prebuilt; **ubuntu-latest (amd64) only**. |
-| `test-abcl` | `setup-java` + `ros install abcl-bin` | JDK required; PBKDF2 slow — 60m timeout. |
+| `test-abcl` | `setup-java` + JNA jars on `CLASSPATH` + `ros install abcl-bin` | JDK + JNA required; PBKDF2 slow — 60m timeout. Overlay client `installer.lisp` until buffer-gunzip client ships. |
 
 Both reuse the same oras client pull + `scripts/ci-install.lisp` + `scripts/ci-test.lisp`.
 
 Do **not** fold ECL/CCL into the Windows/macOS SBCL matrix until those runners are known-good for that impl.
 
-Policy while ramping: ECL + CCL smoke are merge signals for crypto/secrets once green; other libs copy the fragment after their SBCL gate is solid. **ABCL next.** Track upstream-red separately (fail closed on *our* code only).
+Policy while ramping: ECL + CCL + ABCL smoke are merge signals for crypto/secrets once green; other libs copy the fragment after their SBCL gate is solid. Track upstream-red separately (fail closed on *our* code only).
 
 ## Copyable workflow fragments
 
@@ -188,13 +190,27 @@ Policy while ramping: ECL + CCL smoke are merge signals for crypto/secrets once 
         run: |
           ros install abcl-bin
           ros use abcl-bin
+      - name: Install JNA (CFFI on ABCL)
+        shell: bash
+        run: |
+          JNA_VER=5.14.0
+          mkdir -p "$HOME/jna"
+          curl -fsSL -o "$HOME/jna/jna-${JNA_VER}.jar" \
+            "https://repo1.maven.org/maven2/net/java/dev/jna/jna/${JNA_VER}/jna-${JNA_VER}.jar"
+          curl -fsSL -o "$HOME/jna/jna-platform-${JNA_VER}.jar" \
+            "https://repo1.maven.org/maven2/net/java/dev/jna/jna-platform/${JNA_VER}/jna-platform-${JNA_VER}.jar"
+          {
+            echo "CLASSPATH=$HOME/jna/jna-${JNA_VER}.jar:$HOME/jna/jna-platform-${JNA_VER}.jar${CLASSPATH:+:$CLASSPATH}"
+            echo "JAVA_TOOL_OPTIONS=--enable-native-access=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED ${JAVA_TOOL_OPTIONS:-}"
+          } >> "$GITHUB_ENV"
       # … same oras pull / QL client bootstrap / ci-install / ci-test as SBCL job …
+      # If client < buffer-gunzip fix: overlay installer.lisp from cl-repository ABCL PR.
 ```
 
 ## Done-when (from #42)
 
 - [x] Documented impl matrix (this file) + link from overlays / README
-- [ ] Hub or sibling CI runs Rove on **SBCL + ECL + ABCL** on linux/amd64 — ECL: crypto-protocol#4 merged; ABCL PRs on `cursor/multi-impl-abcl-20ce`; CCL PRs in flight
+- [ ] Hub or sibling CI runs Rove on **SBCL + ECL + ABCL** on linux/amd64 — ECL: crypto-protocol#4 merged; ABCL: local+container green, GHA `test-abcl` PRs on `cursor/multi-impl-abcl-20ce`; CCL PRs in flight
 - [x] CCL job present (strongly recommended; linux/`ccl-bin`) — local Rosetta green; GHA fragment above
 - [x] Known impl-specific failures tracked — **CLISP**: clean Ubuntu MT bootstrap hang (arm64) / SIGSEGV (amd64); packaged `MT=NIL`
 - [x] Sibling-lib guidance copyable (fragments above)
