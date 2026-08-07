@@ -385,6 +385,7 @@ Default: **do not** signal on 4xx/5xx (httpx/requests style — inspect `status`
 | Protocol | `egao1980/http-protocol` | generics + shared conformance |
 | Sync | [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) | wave-1 `#30` |
 | Async | [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` × libuv + libev | `#31` **done** (NB connect + async TLS WANT_*; cookies/redirects) |
+| ABCL / JVM | [`http-backend-java`](https://github.com/egao1980/http-backend-java) (`java.net.http` + WebSocket) + [`event-backend-nio`](https://github.com/egao1980/event-backend-nio) | wave-1 scaffold; HTTP/2 via HttpClient |
 | TLS natives | `egao1980/cl-stack-ssl` | async: socket-BIO + WANT_READ/WANT_WRITE on `register-io` (not run-to-completion) |
 
 Selection DX: ASDF + `*http-backend*` (same as event — no plugin registry).
