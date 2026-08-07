@@ -3,7 +3,7 @@
 **Issues:** [#94](https://github.com/egao1980/cl-stack/issues/94)  
 **Status:** policy **locked**; Babel on GHCR via [`cl-stack-systems`](https://github.com/egao1980/cl-stack-systems)
 
-Stack policy for octets ↔ string. **Not** ICU / locale / gettext — those need a separate **i18n planning** pass ([#151](https://github.com/egao1980/cl-stack/issues/151)).
+Stack policy for **octets ↔ string** only. Character properties / normalize / IDNA → [`unicode-protocol`](unicode-protocol.md). Locales / MF2 / catalogs → [`i18n`](i18n.md). Collation / numfmt → [`l10n`](l10n.md) ([#151](https://github.com/egao1980/cl-stack/issues/151)).
 
 ---
 
@@ -13,15 +13,19 @@ Stack policy for octets ↔ string. **Not** ICU / locale / gettext — those nee
 |----------|--------|
 | Default encoding | **UTF-8** |
 | Encode/decode pin | **[Babel](https://github.com/cl-babel/babel)** — OCI `babel:0.5.0` |
-| Unicode properties / IDNA | **cl-unicode** (already used by `cl-idna`) — not a second encode/decode path |
+| Unicode properties / IDNA | **[`unicode-protocol`](unicode-protocol.md)** (backends: ICU / cl-unicode / sb-unicode); transitional pin remains cl-unicode for `cl-idna` until rearrange |
 | Streams | flexi-streams where needed; prefer Babel for whole-buffer conversion |
-| Non-goal (this brief) | ICU4C wrap, collation, gettext / message catalogs, locale-aware formatting |
+| Non-goal (this brief) | ICU wrap, collation, gettext / MF2, locale-aware formatting — see unicode / i18n / l10n protocols |
 
 ---
 
-## Follow-on: i18n planning
+## Follow-on: i18n / l10n
 
-Text/Unicode (#94) locked UTF-8 + Babel only. Full **i18n** (locales, message catalogs, plural rules, collation, date/number formats, CLDR) is a different capability — do **not** bolt gettext onto Babel ad hoc. Track: [#151](https://github.com/egao1980/cl-stack/issues/151).
+Text/Unicode (#94) locked UTF-8 + Babel only. Protocol split under [#151](https://github.com/egao1980/cl-stack/issues/151):
+
+- [`unicode-protocol`](unicode-protocol.md) — UCD, normalize, case, IDNA, breaks, UnicodeSet  
+- [`i18n-protocol`](i18n.md) — locale, MessageFormat 2 templating, plural, catalogs  
+- [`l10n-protocol`](l10n.md) — collation, number/date/currency/list, locale case  
 
 ---
 
