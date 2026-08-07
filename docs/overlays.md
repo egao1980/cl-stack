@@ -14,7 +14,7 @@ Normative packager/client behavior: [cl-repository `docs/spec.md`](https://githu
 | **Required** | `windows` | `amd64` | Self-hosted Windows builder (maintainer machine / runner) |
 | Stretch | `darwin` | `amd64` | Intel Mac runner if available |
 
-CL implementation for wave-1 CI: **SBCL**. Overlays that are grovel/native-ABI only do **not** need a `:lisp` / `dev.common-lisp.implementation` pin (one overlay serves all impls on that OS/arch). Use `--lisp` only for impl-specific compiled artifacts.
+CL implementation for wave-1 CI: **SBCL** (required gate). **ECL / ABCL** = secondary smoke matrix — see [multi-impl.md](multi-impl.md) ([cl-stack#42](https://github.com/egao1980/cl-stack/issues/42)). Overlays that are grovel/native-ABI only do **not** need a `:lisp` / `dev.common-lisp.implementation` pin (one overlay serves all impls on that OS/arch). Use `--lisp` only for impl-specific compiled artifacts.
 
 ## Overlay keys (`os` / `arch` / `os-version`)
 

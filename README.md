@@ -38,6 +38,7 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 | [docs/capabilities/json-protocol.md](docs/capabilities/json-protocol.md) | JSON encode/decode — jzon default, yason alternate |
 | [docs/pins.md](docs/pins.md) | Pin file format + stable/edge channels |
 | [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix + GHCR overlay naming |
+| [docs/multi-impl.md](docs/multi-impl.md) | SBCL / ECL / ABCL CI matrix + local smoke notes (#42) |
 | [docs/overlay-ci.md](docs/overlay-ci.md) | Multi-arch publish CI prior art + Windows runners |
 | [docs/LICENSE-POLICY.md](docs/LICENSE-POLICY.md) | MIT + inbound allowlist |
 | [docs/ROVE-GAPS.md](docs/ROVE-GAPS.md) | Test-runner dogfood vs pytest/JUnit |
