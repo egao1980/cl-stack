@@ -128,5 +128,5 @@ Package nick: `stack-crypto`.
 - [x] `crypto-protocol` (own repo) + Rove
 - [x] `crypto-backend-ironclad` **separate repo** + Rove
 - [x] Cookbook [crypto.md](../cookbooks/crypto.md)
-- [ ] OCI publish `crypto-protocol` **0.1.1** + `crypto-backend-ironclad` **0.1.0**
+- [x] OCI publish `crypto-protocol` **0.1.1** + `crypto-backend-ironclad` **0.1.1** (crypto + secrets)
 - [x] Pin Ironclad via `cl-stack-systems` (already imported)

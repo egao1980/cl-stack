@@ -59,6 +59,7 @@ Conventions: [API.md](../API.md).
 
 ## Implementation tasks
 
-- [ ] Brief lock — this doc (#106)
-- [ ] `process-protocol` + `process-backend-uiop` + Rove + cookbook
+- [x] Brief lock — this doc (#106)
+- [x] `process-protocol` + `process-backend-uiop` + Rove
+- [ ] Cookbook
 - [ ] OCI publish

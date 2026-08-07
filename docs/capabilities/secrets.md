@@ -78,4 +78,4 @@ Package nick: `stack-secrets`.
 - [x] Brief lock — this doc
 - [x] `secrets-protocol` + `secrets-backend-os` (+ uuid) + Rove
 - [x] Cookbook section in [crypto.md](../cookbooks/crypto.md)
-- [ ] OCI publish
+- [x] OCI publish `secrets-protocol` **0.1.0**

@@ -69,9 +69,18 @@
   ("clack" "2.1.0")
   ("clack-handler-hunchentoot" "2.1.0")
   ("woo" "0.12.0" :platforms (:unix))
+  ;; Crypto / secrets
+  ("crypto-protocol" "0.1.1")
+  ("secrets-protocol" "0.1.0")
+  ("crypto-backend-ironclad" "0.1.1")
+  ;; Process / RPC
+  ("process-protocol" "0.1.0")
+  ("process-backend-uiop" "0.1.0")
+  ("rpc-protocol" "0.1.0")
+  ("rpc-backend-inprocess" "0.1.0")
   ;; Auth
   ("jose" "0.1.0")
-  ("cl-stack-jwt" "0.1.0")
+  ("cl-stack-jwt" "0.2.0")
   ("cl-stack-oauth2" "0.1.0")
   ;; WebSocket
   ("ws-protocol" "0.2.2")))
