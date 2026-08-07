@@ -2,7 +2,7 @@
 
 Track: [cl-stack#42](https://github.com/egao1980/cl-stack/issues/42).
 
-README markets **SBCL / ECL / ABCL**. Wave-1 CI remains **SBCL-required**; this doc is the matrix policy + local smoke notes as secondary impls land.
+README markets **SBCL / ECL / ABCL**. Wave-1 CI remains **SBCL-required**; this doc is the matrix policy + local smoke notes as secondary impls land. **CCL** is strongly recommended and now locally proven.
 
 ## Tiers
 
@@ -11,20 +11,20 @@ README markets **SBCL / ECL / ABCL**. Wave-1 CI remains **SBCL-required**; this 
 | **Required gate** | **SBCL** | Full suite; merge blocker | linux + darwin + windows (per package claim) |
 | **Required smoke** (README) | **ECL** | Load + Rove core; catch `#+` / FFI / pathname gaps | linux/amd64 first |
 | **Required smoke** (README) | **ABCL** | Same; JVM pathname / classpath edges | linux/amd64 first |
-| **Strongly recommended** | **CCL** | Cheap once Roswell matrix exists | linux/amd64 |
+| **Strongly recommended** | **CCL** | Cheap binary via Roswell `ccl-bin` on linux/amd64 | linux/amd64 |
 | **Stretch** | CLISP, Clasp, … | Optional / `continue-on-error` until promoted | opportunistic |
 
 Overlay natives stay **OS/arch** keyed. Use `lisp` / `dev.common-lisp.implementation` only for impl-specific compiled artifacts ([overlays.md](overlays.md)).
 
 ## Local smoke order (maintainer machine)
 
-Prefer **Homebrew bottles** for a fast local probe; use **Roswell** for CI-shaped installs.
+Prefer **Homebrew bottles** for a fast local probe when native; use **Roswell** for CI-shaped installs.
 
 | Impl | Local (darwin/arm64, 2026-08) | Notes |
 |------|-------------------------------|--------|
 | **ECL** | `brew install ecl` → **26.5.5** | Ships ASDF **3.1.8.11**; `require :asdf` before any `asdf:…` at read time. Non-interactive: `ecl --norc --nodebug -q --load script.lisp`. |
-| **ABCL** | `brew install abcl` (needs OpenJDK) | Not probed yet here (no JRE on this host). Next after ECL. |
-| **CCL** | Homebrew `clozure-cl` **deprecated** (disable 2026-09-25) | Prefer `ros install ccl` when adding CCL row. |
+| **CCL** | **No native arm64.** Official 1.13 = x86_64 only. | Local: download `ccl-1.13-darwinx86.tar.gz`, run `arch -x86_64 ./dx86cl64 --no-init --batch -l script.lisp`. Roswell `ccl-bin` **refuses arm64**. Homebrew `clozure-cl` deprecated (disable 2026-09-25). CI: `ros install ccl-bin` on **linux/amd64**. |
+| **ABCL** | `brew install abcl` (needs OpenJDK) | Not probed yet here (no JRE on this host). Next after CCL. |
 
 ### ECL pitfalls (agents / CI)
 
@@ -33,7 +33,17 @@ Prefer **Homebrew bottles** for a fast local probe; use **Roswell** for CI-shape
 3. **Compile cost:** Ironclad on ECL is slow (C backend). First smoke ~minutes; cache FASLs help locally. Budget long GHA timeouts for ECL jobs.
 4. **Comma in quoted lists:** `'(("x" :ql), ("y" :ql))` is a reader error (`Comma not inside a backquote`). Never paste JSON-style commas into `:sources`.
 
-## Proven green (local ECL 26.5.5, 2026-08-07)
+### CCL pitfalls (agents / CI)
+
+1. **Roswell name is `ccl-bin`**, not `ccl`. `ros install ccl` fails; `ros install ccl-bin` works on **linux/amd64** and **darwin/x86_64** only — install script hard-errors on `arm64`.
+2. **No Apple Silicon port** (upstream 1.13 release notes). Darwin local smoke = **Rosetta** (`arch -x86_64`) with Clozure’s `darwinx86` tarball (`dx86cl64`).
+3. **Non-interactive:** `dx86cl64 --no-init --batch -l script.lisp`; quit with `(quit n)`. Use `*debugger-hook*` → `(quit 1)`.
+4. **Rosetta cost:** PBKDF2 verify ~2 min each under Rosetta on M-series; native linux/amd64 CI should be far cheaper. Keep a generous `timeout-minutes` anyway.
+5. ASDF on CCL 1.13 via QL path was **3.3.7** (healthier than brew ECL’s bundled 3.1.8).
+
+## Proven green (local)
+
+### ECL 26.5.5 (Homebrew, native arm64) — 2026-08-07
 
 | System | Result |
 |--------|--------|
@@ -41,21 +51,34 @@ Prefer **Homebrew bottles** for a fast local probe; use **Roswell** for CI-shape
 | `crypto-backend-ironclad` (full recipe/hazmat suite) | pass |
 | `secrets-protocol` / `secrets-backend-os` | pass |
 
-Method: Homebrew ECL + `~/quicklisp/setup.lisp` + `asdf:load-asd` on checkout(s). Not yet the full cl-repository-client OCI path on ECL (follow-up: Roswell `ros install ecl` + same `ci-install`/`ci-test` scripts).
+Method: Homebrew ECL + `~/quicklisp/setup.lisp` + `asdf:load-asd`.
+
+### CCL 1.13 DarwinX8664 (Rosetta on arm64 host) — 2026-08-07
+
+| System | Result |
+|--------|--------|
+| `crypto-protocol` | pass |
+| `crypto-backend-ironclad` (incl. dual-backend / KDF) | pass |
+| `secrets-protocol` | pass |
+
+Method: Clozure release tarball + `arch -x86_64 ./dx86cl64 --no-init --batch`. Same QL + `load-asd` path. Duplicate-definition compile warnings seen on re-load; tests still green.
 
 ## CI recipe (sibling libs)
 
-Keep the existing **SBCL × OS** job. Add a **separate** `test-ecl` job (linux/amd64 only) that:
+Keep the existing **SBCL × OS** job. Add **separate** linux/amd64 smoke jobs:
 
-1. Installs Roswell (Unix CI script).
-2. `ros install ecl` && `ros use ecl` (needs C toolchain — present on `ubuntu-latest`).
-3. Reuses the same oras client pull + `scripts/ci-install.lisp` + `scripts/ci-test.lisp`.
+| Job | Install | Notes |
+|-----|---------|--------|
+| `test-ecl` | `ros install ecl` | Needs C toolchain (`build-essential`, libffi/gc/gmp). |
+| `test-ccl` | `ros install ccl-bin` && `ros use ccl-bin` | Prebuilt; **ubuntu-latest (amd64) only**. |
 
-Do **not** fold ECL into the Windows/macOS SBCL matrix until those runners are known-good for ECL.
+Both reuse the same oras client pull + `scripts/ci-install.lisp` + `scripts/ci-test.lisp`.
 
-Policy while ramping: ECL smoke is a **merge signal** for crypto/secrets once the job is green; other libs copy the fragment after their SBCL gate is solid. ABCL next; track upstream-red separately (fail closed on *our* code only).
+Do **not** fold ECL/CCL into the Windows/macOS SBCL matrix until those runners are known-good for that impl.
 
-## Copyable workflow fragment
+Policy while ramping: ECL + CCL smoke are merge signals for crypto/secrets once green; other libs copy the fragment after their SBCL gate is solid. **ABCL next.** Track upstream-red separately (fail closed on *our* code only).
+
+## Copyable workflow fragments
 
 ```yaml
   test-ecl:
@@ -77,16 +100,41 @@ Policy while ramping: ECL smoke is a **merge signal** for crypto/secrets once th
       - name: Install ECL
         shell: bash
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential libffi-dev libgc-dev libgmp-dev
           ros install ecl
           ros use ecl
+      # … same oras pull / QL client bootstrap / ci-install / ci-test as SBCL job …
+
+  test-ccl:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oras-project/setup-oras@v2
+        with:
+          version: 1.2.3
+      - name: Install Roswell
+        shell: bash
+        run: |
+          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
+          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
+      - name: Install CCL
+        shell: bash
+        run: |
+          ros install ccl-bin
+          ros use ccl-bin
       # … same oras pull / QL client bootstrap / ci-install / ci-test as SBCL job …
 ```
 
 ## Done-when (from #42)
 
 - [x] Documented impl matrix (this file) + link from overlays / README
-- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64 — PRs: secrets#2, crypto-protocol#4, crypto-backend-ironclad#2
-- [ ] CCL job present or explicitly deferred in this doc (deferred: prefer `ros install ccl`; Homebrew formula deprecated)
+- [ ] Hub or sibling CI runs Rove on **SBCL + ECL** (ABCL TBD) on linux/amd64 — ECL: crypto-protocol#4 merged; secrets#2 / backend#2 still open; CCL PRs on `cursor/multi-impl-ccl-20ce`
+- [x] CCL job present (strongly recommended; linux/`ccl-bin`) — local Rosetta green; GHA fragment above
 - [ ] Known impl-specific failures tracked with issue links
-- [x] Sibling-lib guidance copyable (fragment above)
+- [x] Sibling-lib guidance copyable (fragments above)
 - [ ] README claim matches CI reality
