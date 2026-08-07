@@ -42,7 +42,7 @@ Conventions: [API.md](../API.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md).
 | **RNG** | Via **secrets-protocol** | One CSPRNG story |
 | **Password hashing** | **secrets-protocol** | Not a Cipher |
 | **Signatures / PKI** | Follow-on | Ed25519/RSA-PSS later |
-| **Default backend (A)** | **Ironclad** | Already imported; pure Lisp |
+| **Default backend (A)** | **Ironclad** via `crypto-backend-ironclad` (also implements secrets-protocol) | Already imported; pure Lisp |
 | **Watchlist (B)** | OpenSSL via cl+ssl / custom EVP | When hardware AES or FIPS matters |
 | **Windows** | Required | Ironclad = no native overlay |
 

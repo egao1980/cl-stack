@@ -10,11 +10,12 @@
 Capability briefs: [crypto.md](../capabilities/crypto.md) · [secrets.md](../capabilities/secrets.md).
 
 ```lisp
-(cl-repo:load-system "crypto-backend-ironclad" :version "0.1.0")  ; pulls crypto-protocol
-(cl-repo:load-system "secrets-backend-os" :version "0.1.0")      ; pulls secrets-protocol
+;; One backend system implements both crypto-protocol and secrets-protocol
+(cl-repo:load-system "crypto-backend-ironclad" :version "0.1.1")
+;; binds *crypto-backend* and *secrets-backend*
 ```
 
-Backend systems live in **separate repos** (`egao1980/crypto-backend-ironclad`, …) — not colocated under the protocol.
+Backend lives in **`egao1980/crypto-backend-ironclad`** — not colocated under the protocol repos. Ironclad-backed secrets are **not** a separate `secrets-backend-os` project.
 
 ---
 

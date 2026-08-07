@@ -16,7 +16,7 @@ Conventions: [API.md](../API.md). Crypto: [crypto.md](crypto.md).
 | **Python** | `secrets` (`token_*`, `compare_digest`) | App-facing CSPRNG helpers; constant-time compare |
 | **Python** | `uuid` | v4 required; v7 if cheap |
 | **Java** | `SecureRandom`, `MessageDigest.isEqual` | Strong RNG; constant-time equality |
-| **CL** | Ironclad OS PRNG + `uuid` | Default backends |
+| **CL** | Ironclad OS PRNG + `uuid` | Default via `crypto-backend-ironclad` |
 
 ---
 
