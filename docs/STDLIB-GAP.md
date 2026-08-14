@@ -32,7 +32,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | i18n / gettext | Absent | P3 | **Needs planning** — [#151](https://github.com/egao1980/cl-stack/issues/151); not gettext-only |
 | Regex | De-facto converged | P2 | Pin cl-ppcre |
 | Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
-| Subprocess | De-facto converged | P2 | **wave-1** — `process-protocol` + `process-backend-uiop` 0.1.0 — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](capabilities/process.md); RPC — `rpc-protocol` + `rpc-backend-inprocess` 0.1.0 — [rpc.md](capabilities/rpc.md) |
+| Subprocess | De-facto converged | P2 | **done** — `process-protocol` + `process-backend-uiop` 0.1.0 — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](capabilities/process.md) · [cookbook](cookbooks/process.md); RPC — `rpc-protocol` + `rpc-backend-inprocess` 0.1.0 — [rpc.md](capabilities/rpc.md) |
 | JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** — **done** ([#91](https://github.com/egao1980/cl-stack/issues/91), [json.md](cookbooks/json.md)); CSV/XML later |
 | SQL | Fragmented | P2 | three layers **shipped**: `sql-protocol` 0.1.0 · `sql-query{,-pg,-sqlite3}` 0.2.0 · `sql-orm` 0.1.0 (first-party CLOS, not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](capabilities/sql.md) · [cookbook](cookbooks/sql.md) |
 | I/O object streams | Absent | P2 | `io-protocol` OCI **0.1.0** — ObjectInput/Output CLOS shell (no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |

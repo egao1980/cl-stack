@@ -1,7 +1,7 @@
 # process-protocol (P2) — subprocess
 
 **Issues:** [#106](https://github.com/egao1980/cl-stack/issues/106)  
-**Status:** brief **locked** — CLOS protocol + backends; **not** RPC
+**Status:** brief **locked** — CLOS protocol + UIOP backend **shipped** (OCI **0.1.0**) · cookbook [process.md](../cookbooks/process.md)
 
 Portable process spawn / pipes / wait / kill. Python `subprocess`, Java `ProcessBuilder`, UIOP `run-program` — one app DX; backends wrap UIOP (default) or impl-private escapes.
 
@@ -61,5 +61,5 @@ Conventions: [API.md](../API.md).
 
 - [x] Brief lock — this doc (#106)
 - [x] `process-protocol` + `process-backend-uiop` + Rove
-- [ ] Cookbook
-- [ ] OCI publish
+- [x] Cookbook — [cookbooks/process.md](../cookbooks/process.md)
+- [x] OCI publish — `process-protocol` / `process-backend-uiop` **0.1.0**
