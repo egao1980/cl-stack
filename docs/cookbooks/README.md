@@ -17,3 +17,4 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [Logging](logging.md) | `log-protocol` / log4cl · vom · text + structured |
 | [SQL](sql.md) | `sql-protocol` / `sql-query` / `sql-orm` (Engine · Core · ORM) |
 | [Crypto & secrets](crypto.md) | `crypto-protocol` / `secrets-protocol` (seal · digest · tokens · Argon2) |
+| [Unicode / i18n / l10n](unicode.md) | `unicode-protocol` / `i18n-protocol` / `l10n-protocol` (+ ICU · ICU4J · sb-unicode) |

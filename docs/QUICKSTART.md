@@ -82,6 +82,20 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
+| `unicode-protocol` | **0.1.2** | UCD/normalize/case/IDNA/breaks/uset (`stack-unicode`) · [cookbook](cookbooks/unicode.md) |
+| `unicode-backend-cl-unicode` | **0.1.0** | portable default unicode backend |
+| `unicode-backend-sbcl` | **0.1.0** | SBCL `sb-unicode` (no `:idna`) |
+| `unicode-backend-icu` | **0.1.0** | ICU4C CFFI backend |
+| `unicode-backend-icu4j` | **0.1.1** | ICU4J / ABCL (auto-bind `#+abcl`) |
+| `cl-stack-icu` | **78.1.2** | ICU4C overlays + CFFI (linux/darwin/windows) |
+| `cl-stack-icu4j` | **78.1.2** | ICU4J jar + ABCL bridge |
+| `i18n-protocol` | **0.1.0** | locale / MF2 / plural / catalogs (`stack-i18n`) |
+| `i18n-backend-icu` | **0.1.0** | ICU4C i18n |
+| `i18n-backend-icu4j` | **0.1.0** | ICU4J i18n (auto-bind `#+abcl`) |
+| `l10n-protocol` | **0.1.0** | collate / numfmt / date / locale case (`stack-l10n`) |
+| `l10n-backend-icu` | **0.1.0** | ICU4C l10n |
+| `l10n-backend-icu4j` | **0.1.1** | ICU4J l10n (auto-bind `#+abcl`) |
+| `cl-stack-idna` | **0.1.0** | `to-ascii` / `to-unicode` facade (`stack-idna`; publish if missing from GHCR) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
