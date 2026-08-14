@@ -95,7 +95,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `l10n-protocol` | **0.1.0** | collate / numfmt / date / locale case (`stack-l10n`) |
 | `l10n-backend-icu` | **0.1.0** | ICU4C l10n |
 | `l10n-backend-icu4j` | **0.1.1** | ICU4J l10n (auto-bind `#+abcl`) |
-| `cl-stack-idna` | **0.1.0** | `to-ascii` / `to-unicode` facade (`stack-idna`; publish if missing from GHCR) |
+| `cl-stack-idna` | **0.1.0** | `to-ascii` / `to-unicode` facade (`stack-idna`) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
