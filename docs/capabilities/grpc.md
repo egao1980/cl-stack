@@ -2,7 +2,7 @@
 
 **Status:** brief **locked** — CLOS channel/call/stream; Windows path = HTTP/2, not C-core
 
-gRPC is **not** an [`rpc-protocol`](rpc.md) transport. JSON-RPC 2.0 and gRPC do not share a message model. A2A’s protobuf binding is `a2a-backend-grpc` calling this protocol.
+gRPC **wire** (channel / status / connect). App-facing call shapes live on [`rpc-protocol`](rpc.md); the adapter is [`rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc). A2A’s protobuf binding is `a2a-backend-grpc` calling through that.
 
 ---
 
@@ -22,7 +22,8 @@ gRPC is **not** an [`rpc-protocol`](rpc.md) transport. JSON-RPC 2.0 and gRPC do 
 
 | Layer | Repo |
 |-------|------|
-| Protocol | [`egao1980/grpc-protocol`](https://github.com/egao1980/grpc-protocol) |
+| Wire protocol | [`egao1980/grpc-protocol`](https://github.com/egao1980/grpc-protocol) |
+| rpc-protocol binding | [`egao1980/rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) |
 | HTTP/2 backend | [`egao1980/grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) |
 | Native backend | [`egao1980/grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) |
 

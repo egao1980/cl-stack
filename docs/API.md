@@ -61,7 +61,7 @@
   **Brief:** [capabilities/secrets.md](capabilities/secrets.md) (#104)
 - `process-protocol` — subprocess spawn/pipes (UIOP); **not** RPC  
   **Brief:** [capabilities/process.md](capabilities/process.md) (#106)
-- `rpc-protocol` — JSON-RPC 2.0–shaped calls; transports are **separate repos**  
+- `rpc-protocol` — interaction modes (`:call-response` / `:notify` / `:call-stream` / `:client-stream` / `:bidi-stream`); JSON-RPC is `rpc-protocol-json`; gRPC binding is `rpc-protocol-grpc`  
   **Brief:** [capabilities/rpc.md](capabilities/rpc.md) (#170)
 
 ## Agent wire (P1 — MCP / A2A / AG-UI)
@@ -70,10 +70,11 @@ HTTP client + server are done. Next layer is **wire codecs + bindings**, each `*
 
 - `sse-protocol` — `text/event-stream` framing; backends http (client) / clack (server)  
   **Brief:** [capabilities/sse.md](capabilities/sse.md) (#184)
+- `rpc-protocol-json` / `rpc-protocol-grpc` — JSON-RPC codec and gRPC binding (separate repos)
 - `rpc-backend-stdio` / `rpc-backend-http` / `rpc-backend-sse` — JSON-RPC transports (#170)
 - `protobuf-protocol` — serdes `:protobuf`; backend cl-protobufs  
   **Brief:** [capabilities/protobuf.md](capabilities/protobuf.md)
-- `grpc-protocol` — channel / unary / stream; **not** an rpc-protocol transport  
+- `grpc-protocol` — gRPC wire (channel / status); call via `rpc-protocol-grpc`  
   **Brief:** [capabilities/grpc.md](capabilities/grpc.md)
 - `mcp-protocol` — MCP client/server; backends stdio + Streamable HTTP; canary [`mcp-parity`](https://github.com/egao1980/mcp-parity)  
   **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185)

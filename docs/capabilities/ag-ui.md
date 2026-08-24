@@ -14,7 +14,7 @@
 | **Shape** | CLOS events + `run-agent` GF; transports are backends |
 | **Default backend (A)** | `ag-ui-backend-sse` — sse-protocol over http-server-protocol |
 | **Second backend (B)** | `ag-ui-backend-protobuf` — protobuf-protocol payloads on SSE (or binary) |
-| **Not JSON-RPC** | Do not route through rpc-protocol |
+| **Not JSON-RPC** | Do not route through `rpc-protocol-json`. Official HTTP is `POST RunAgentInput` → SSE events — that is rpc-protocol `:call-stream` with a later AG-UI codec. |
 
 ## Repo layout
 

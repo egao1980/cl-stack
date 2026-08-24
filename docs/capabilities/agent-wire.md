@@ -8,10 +8,12 @@ HTTP **client** ([http-protocol](http-protocol.md)) and **server** ([http-server
 ```text
 MCP / A2A / AG-UI          ← agent protocols (domain CLOS)
         │
- rpc-protocol   sse-protocol   protobuf-protocol   grpc-protocol
-        │              │              │                  │
-   transports      HTTP/Clack     cl-protobufs      qitab/grpc
-        │              │
+ rpc-protocol              sse-protocol   protobuf-protocol
+    ├── rpc-protocol-json                         │
+    └── rpc-protocol-grpc ── grpc-protocol        │
+            │                    │                │
+      transports            http2/native     cl-protobufs
+            │
  http-protocol / http-server-protocol / process-protocol / event-protocol
 ```
 
@@ -23,8 +25,9 @@ MCP / A2A / AG-UI          ← agent protocols (domain CLOS)
 | **No colocated backends** | Unlike `json-protocol` (jzon/yason in-tree). Natives, HTTP attach, and agent bindings have different CI/deps. |
 | **Selection DX** | ASDF load + `*foo-backend*` / `*rpc-transport*`. No plugin registry. |
 | **Codecs** | JSON via [serdes](serdes.md) `:json`. Protobuf implements serdes `:protobuf`. SSE is **framing**, not a serdes format. |
-| **JSON-RPC** | Stays [`rpc-protocol`](rpc.md). New transports are **separate repos**. gRPC is **not** an rpc-protocol transport. |
-| **gRPC** | Own [`grpc-protocol`](grpc.md). A2A protobuf binding is a **backend** of `a2a-protocol`, not a second A2A API. |
+| **RPC modes** | [`rpc-protocol`](rpc.md) owns `:call-response` / `:notify` / `:call-stream` / `:client-stream` / `:bidi-stream`. |
+| **JSON-RPC** | Separate repo [`rpc-protocol-json`](https://github.com/egao1980/rpc-protocol-json). Transports stay `rpc-backend-*`. Do not wrap AG-UI. |
+| **gRPC** | Binding [`rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc). Wire/channel stays [`grpc-protocol`](grpc.md) + `grpc-backend-*`. A2A protobuf is a **backend** of `a2a-protocol`. |
 | **cl-mcp** | Lisp-tools *product*. Does **not** become `mcp-protocol`. May consume it later. |
 
 ## Repo matrix
@@ -36,12 +39,14 @@ MCP / A2A / AG-UI          ← agent protocols (domain CLOS)
 | [`sse-protocol`](https://github.com/egao1980/sse-protocol) | `sse-event`, encode/decode, read/write GFs | — |
 | [`sse-backend-http`](https://github.com/egao1980/sse-backend-http) | Client consume via http-protocol stream body | http-protocol, event-protocol |
 | [`sse-backend-clack`](https://github.com/egao1980/sse-backend-clack) | Server emit as Clack `text/event-stream` | http-server-protocol |
-| [`rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) | Newline JSON-RPC over process-protocol | rpc-protocol, process-protocol |
-| [`rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) | JSON-RPC POST (client + Clack app) | rpc-protocol, http-protocol, http-server-protocol |
-| [`rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) | JSON-RPC messages as SSE events | rpc-protocol, sse-protocol |
+| [`rpc-protocol-json`](https://github.com/egao1980/rpc-protocol-json) | JSON-RPC 2.0 codec | rpc-protocol |
+| [`rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) | gRPC binding (`rpc-transport` over grpc-protocol) | rpc-protocol, grpc-protocol |
+| [`rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) | Newline JSON-RPC over process-protocol | rpc-protocol, rpc-protocol-json, process-protocol |
+| [`rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) | JSON-RPC POST (client + Clack app) | rpc-protocol, rpc-protocol-json, http-protocol, http-server-protocol |
+| [`rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) | JSON-RPC messages as SSE events | rpc-protocol, rpc-protocol-json, sse-protocol |
 | [`protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) | serdes `:protobuf` + proto message GFs | serdes-protocol |
 | [`protobuf-backend-cl-protobufs`](https://github.com/egao1980/protobuf-backend-cl-protobufs) | Default — egao1980/cl-protobufs | WKT vendored (`2.0-rc2+`); unix plugin overlay |
-| [`grpc-protocol`](https://github.com/egao1980/grpc-protocol) | channel / unary / stream GFs | — |
+| [`grpc-protocol`](https://github.com/egao1980/grpc-protocol) | gRPC wire: channel / status / connect | — |
 | [`grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) | Unary over http-protocol H2 (Windows-safe) | grpc-protocol, http-protocol |
 | [`grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) | qitab/grpc C-core (linux/darwin) | grpc-protocol |
 
@@ -71,5 +76,6 @@ One app DX per domain. Swap wire by loading a different backend system.
 
 - Extracting a protocol from `cl-ai-project/cl-mcp`
 - Colocating backends under the protocol repo
-- Treating gRPC as `rpc-protocol` transport B
+- Colocating JSON-RPC or gRPC inside `rpc-protocol`
+- JSON-RPC-over-gRPC
 - Implementing MCP/A2A/AG-UI before SSE + JSON-RPC transports exist
