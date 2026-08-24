@@ -40,9 +40,10 @@ MCP / A2A / AG-UI          ← agent protocols (domain CLOS)
 | [`rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) | JSON-RPC POST (client + Clack app) | rpc-protocol, http-protocol, http-server-protocol |
 | [`rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) | JSON-RPC messages as SSE events | rpc-protocol, sse-protocol |
 | [`protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) | serdes `:protobuf` + proto message GFs | serdes-protocol |
-| [`protobuf-backend-cl-protobufs`](https://github.com/egao1980/protobuf-backend-cl-protobufs) | Default — egao1980/cl-protobufs | overlays already exist |
+| [`protobuf-backend-cl-protobufs`](https://github.com/egao1980/protobuf-backend-cl-protobufs) | Default — egao1980/cl-protobufs | WKT vendored (`2.0-rc2+`); unix plugin overlay |
 | [`grpc-protocol`](https://github.com/egao1980/grpc-protocol) | channel / unary / stream GFs | — |
-| [`grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) | qitab/grpc (egao1980 fork + native overlay) | grpc-protocol |
+| [`grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) | Unary over http-protocol H2 (Windows-safe) | grpc-protocol, http-protocol |
+| [`grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) | qitab/grpc C-core (linux/darwin) | grpc-protocol |
 
 Already shipped: [`rpc-protocol`](https://github.com/egao1980/rpc-protocol), [`rpc-backend-inprocess`](https://github.com/egao1980/rpc-backend-inprocess).
 

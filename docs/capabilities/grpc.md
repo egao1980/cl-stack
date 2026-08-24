@@ -1,6 +1,6 @@
 # grpc-protocol (P1)
 
-**Status:** brief **locked** — CLOS channel/call/stream; native backend = egao1980/grpc
+**Status:** brief **locked** — CLOS channel/call/stream; Windows path = HTTP/2, not C-core
 
 gRPC is **not** an [`rpc-protocol`](rpc.md) transport. JSON-RPC 2.0 and gRPC do not share a message model. A2A’s protobuf binding is `a2a-backend-grpc` calling this protocol.
 
@@ -11,9 +11,11 @@ gRPC is **not** an [`rpc-protocol`](rpc.md) transport. JSON-RPC 2.0 and gRPC do 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Shape** | CLOS protocol + backends | Match http-protocol (client) energy |
-| **Default backend (A)** | `grpc-backend-native` | qitab/grpc fork + existing native overlay |
+| **Default backend (A)** | `grpc-backend-http2` (Windows + portable unary) | Existing H2 (`http-backend-async`); no C-core overlay |
+| **Unix C-core** | `grpc-backend-native` | qitab/grpc fork + linux/darwin overlay; Windows stays `:unimplemented` |
 | **Codec** | [protobuf-protocol](protobuf.md) | Messages are proto objects |
-| **HTTP/2** | Backend / C++ stack | Do not reimplement H2 in Lisp for wave-1 |
+| **HTTP/2** | `http-protocol` + backend | Frame in Lisp (`0x00`+u32be+octets). Do **not** vcpkg/MSVC overlay C++ grpc |
+| **h2c / `:insecure`** | http2 backend: TLS only | `http-protocol` rejects `:http/2` on `http://`. Native still does cleartext |
 | **ABCL** | later `grpc-backend-java` | Same pattern as event-backend-nio |
 
 ## Repo layout
@@ -21,9 +23,10 @@ gRPC is **not** an [`rpc-protocol`](rpc.md) transport. JSON-RPC 2.0 and gRPC do 
 | Layer | Repo |
 |-------|------|
 | Protocol | [`egao1980/grpc-protocol`](https://github.com/egao1980/grpc-protocol) |
+| HTTP/2 backend | [`egao1980/grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) |
 | Native backend | [`egao1980/grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) |
 
-`egao1980/grpc` stays the C++/CFFI fork. The backend is a thin CLOS adapter — do not re-fork.
+`egao1980/grpc` stays the C++/CFFI fork (unix). Do not re-fork. Do not overlay it for Windows.
 
 ## Protocol surface
 
@@ -50,4 +53,6 @@ Conditions: `grpc-error` with status code / details.
 
 - JSON-RPC-over-gRPC
 - Replacing qitab/grpc internals
+- vcpkg/MSVC overlay of `egao1980/grpc`
 - Reflection / codegen product (use cl-protobufs protoc as today)
+- Stream GFs on `grpc-backend-http2` wave-1 (unary only)

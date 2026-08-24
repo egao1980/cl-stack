@@ -13,7 +13,7 @@ This is the **format** layer. gRPC *calls* live in [`grpc-protocol`](grpc.md).
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Shape** | Implements [serdes-protocol](serdes.md) `:protobuf` | Brief already reserved protobuf as a serdes implementor |
-| **Default backend (A)** | `protobuf-backend-cl-protobufs` | egao1980 fork of qitab/cl-protobufs; overlay/protoc story exists |
+| **Default backend (A)** | `protobuf-backend-cl-protobufs` | egao1980 fork; WKT Lisp vendored (`2.0-rc2+`) so load needs no protoc. Unix overlays still ship `protoc` + plugin for user `.proto` |
 | **Second backend** | none wave-1 | ABCL/Java protobuf later if needed |
 | **Values** | CLOS proto messages (cl-protobufs classes) | Don’t invent a parallel DOM |
 | **Octets first** | `encode-to-octets` / `decode-octets` | SSE/gRPC want bytes, not UTF-8 strings |
