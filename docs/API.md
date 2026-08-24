@@ -61,8 +61,26 @@
   **Brief:** [capabilities/secrets.md](capabilities/secrets.md) (#104)
 - `process-protocol` — subprocess spawn/pipes (UIOP); **not** RPC  
   **Brief:** [capabilities/process.md](capabilities/process.md) (#106)
-- `rpc-protocol` — JSON-RPC–shaped calls over transports (stdio/HTTP/in-process); codecs via serdes  
-  **Brief:** [capabilities/rpc.md](capabilities/rpc.md)
+- `rpc-protocol` — JSON-RPC 2.0–shaped calls; transports are **separate repos**  
+  **Brief:** [capabilities/rpc.md](capabilities/rpc.md) (#170)
+
+## Agent wire (P1 — MCP / A2A / AG-UI)
+
+HTTP client + server are done. Next layer is **wire codecs + bindings**, each `*-protocol` + `*-backend-*` in **its own GitHub repo**. Overview: [capabilities/agent-wire.md](capabilities/agent-wire.md).
+
+- `sse-protocol` — `text/event-stream` framing; backends http (client) / clack (server)  
+  **Brief:** [capabilities/sse.md](capabilities/sse.md) (#184)
+- `rpc-backend-stdio` / `rpc-backend-http` / `rpc-backend-sse` — JSON-RPC transports (#170)
+- `protobuf-protocol` — serdes `:protobuf`; backend cl-protobufs  
+  **Brief:** [capabilities/protobuf.md](capabilities/protobuf.md)
+- `grpc-protocol` — channel / unary / stream; **not** an rpc-protocol transport  
+  **Brief:** [capabilities/grpc.md](capabilities/grpc.md)
+- `mcp-protocol` — MCP client/server; backends stdio + Streamable HTTP  
+  **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185)
+- `a2a-protocol` — Agent Card / Task; backends jsonrpc + **grpc/protobuf** + httpjson  
+  **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186)
+- `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf  
+  **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
-Impl order (P2 remainder): **crypto + secrets → process → rpc**.
+Impl order: **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui**.
