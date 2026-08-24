@@ -1,9 +1,9 @@
 # mcp-protocol (P1)
 
 **Issues:** [#185](https://github.com/egao1980/cl-stack/issues/185)  
-**Status:** brief **locked** — CLOS client/server; transports are backends
+**Status:** brief **locked** — CLOS client/server; transports are backends; **dual-era**
 
-[MCP](https://modelcontextprotocol.io/specification/2025-06-18) (also 2025-11-25). JSON-RPC 2.0. **Not** a wrap of `cl-ai-project/cl-mcp`.
+[MCP](https://modelcontextprotocol.io/specification/2026-07-28/) current revision **`2026-07-28`** (modern / stateless). Last handshake revision **`2025-11-25`** (legacy). JSON-RPC 2.0 via [`rpc-protocol`](rpc.md). **Not** a wrap of `cl-ai-project/cl-mcp`. Do **not** treat `2025-06-18` as a supported era.
 
 ---
 
@@ -13,9 +13,30 @@
 |----------|--------|
 | **Shape** | `mcp-protocol` GFs + transport backends |
 | **RPC** | [`rpc-protocol`](rpc.md) — do not invent a second JSON-RPC |
+| **Eras** | **Modern** = `2026-07-28`+ per-request `_meta`. **Legacy** = `2025-11-25` initialize handshake. Implement **both**. |
+| **Default / preferred** | Modern: `server/discover` first. `-32022` → retry listed version. Any other discover error / timeout on stdio → `initialize`. Cache era for process/origin lifetime. |
 | **Default backend (A)** | `mcp-backend-stdio` — newline JSON-RPC via `rpc-backend-stdio` |
-| **Second backend (B)** | `mcp-backend-streamable-http` — POST JSON or SSE; optional GET SSE |
+| **Second backend (B)** | `mcp-backend-streamable-http` — POST JSON or SSE; GET SSE optional (wave-1: 405) |
 | **Product** | `cl-mcp` stays Lisp-tools; may consume this later |
+
+## Dual-era wire
+
+**Modern** (`2026-07-28`): no `initialize` / `initialized`, no `Mcp-Session-Id`. Every request is self-describing via `params._meta`:
+
+```
+io.modelcontextprotocol/protocolVersion     = "2026-07-28"
+io.modelcontextprotocol/clientInfo          = {name, version}
+io.modelcontextprotocol/clientCapabilities
+result._meta.io.modelcontextprotocol/serverInfo
+```
+
+Mandatory `server/discover`. Results **MUST** include `resultType` (`"complete"` | `"input_required"`). HTTP headers: `MCP-Protocol-Version`, `Mcp-Method`, `Mcp-Name`. Unsupported version → JSON-RPC `-32022` `UnsupportedProtocolVersion` with `{supported, requested}`.
+
+**Legacy** (`2025-11-25`): `initialize` + `notifications/initialized`. Session-scoped. Initialize result has **no** `resultType`.
+
+Dual-era **server**: `_meta` protocolVersion → stateless modern (reject unknown with `-32022`); method `initialize` → legacy handshake; `server/discover` always answered.
+
+Dual-era **client**: prefer modern. Fall back to legacy as above.
 
 ## Repo layout
 
@@ -36,19 +57,24 @@
 (defclass mcp-resource () ())
 (defvar *mcp-backend* nil)
 
+(defgeneric mcp-discover (peer &key protocol-version capabilities client-info))
 (defgeneric mcp-initialize (peer &key protocol-version capabilities client-info server-info))
-(defgeneric list-tools (server &key cursor))
-(defgeneric call-tool (server name arguments &key))
-(defgeneric list-resources (server &key cursor))
-(defgeneric read-resource (server uri &key))
-(defgeneric list-prompts (server &key))
-(defgeneric get-prompt (server name &key arguments))
+(defgeneric list-tools (peer &key cursor))
+(defgeneric call-tool (peer name arguments &key))
+(defgeneric list-resources (peer &key cursor))
+(defgeneric read-resource (peer uri &key))
+(defgeneric list-prompts (peer &key))
+(defgeneric get-prompt (peer name &key arguments))
 ```
 
-Wave-1 methods: `initialize` / `initialized` / `ping` / `notifications/cancelled` / tools / resources / prompts.
+Wave-1 methods: `server/discover` · `initialize` / `initialized` · `ping` · `notifications/cancelled` · tools / resources / prompts.
+
+`mcp-initialize` on a dual-era client probes `server/discover` first (`era` `:unknown` / `:modern`) and only sends `initialize` when the peer is legacy (`era` `:legacy`, or discover failed).
 
 ## Non-goals (wave-1)
 
 - Sampling, elicitation, roots, completions
+- MRTR / `input_required` beyond recognizing `resultType`
+- Auth / OAuth, Tasks extension
 - Replacing cl-mcp tools
 - Legacy HTTP+SSE (`2024-11-05`) except a cheap compat shim
