@@ -51,7 +51,7 @@ Already shipped: [`rpc-protocol`](https://github.com/egao1980/rpc-protocol), [`r
 
 | Repo | Role | Backends |
 |------|------|----------|
-| [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | dual-era MCP: modern `2026-07-28` (`server/discover` + `_meta`) and legacy `2025-11-25` (`initialize`); tools / resources / prompts | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio), [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) |
+| [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | dual-era MCP: modern `2026-07-28` (`server/discover` + `_meta` + SEP-2549 `ttlMs`/`cacheScope`) and legacy `2025-11-25` (`initialize`); tools / resources / prompts. Canary: [`mcp-parity`](https://github.com/egao1980/mcp-parity) | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio), [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) |
 | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) | Agent Card, Task, Message, Artifact | [`a2a-backend-jsonrpc`](https://github.com/egao1980/a2a-backend-jsonrpc), [`a2a-backend-grpc`](https://github.com/egao1980/a2a-backend-grpc), [`a2a-backend-httpjson`](https://github.com/egao1980/a2a-backend-httpjson) |
 | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) | `RunAgentInput` + typed events | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse), [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) |
 
