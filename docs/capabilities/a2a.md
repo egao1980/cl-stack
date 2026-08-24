@@ -15,7 +15,7 @@ Official bindings: JSON-RPC 2.0 over HTTP+SSE, **gRPC (protobuf)**, HTTP+JSON RE
 |----------|--------|
 | **Shape** | One `a2a-protocol` DX; bindings are backends |
 | **Default backend (A)** | `a2a-backend-jsonrpc` — rpc-protocol HTTP + sse-protocol |
-| **Backend (B)** | `a2a-backend-grpc` — grpc-protocol + official A2A `.proto` |
+| **Backend (B)** | `a2a-backend-grpc` — `rpc-protocol-grpc` + official A2A `.proto` |
 | **Backend (C)** | `a2a-backend-httpjson` — REST/JSON on http-protocol |
 | **Card** | `/.well-known/agent.json` (and gRPC `GetAgentCard`) |
 
