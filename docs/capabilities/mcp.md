@@ -45,6 +45,7 @@ Dual-era **client**: prefer modern. Fall back to legacy as above.
 | Protocol | [`egao1980/mcp-protocol`](https://github.com/egao1980/mcp-protocol) |
 | stdio (A) | [`egao1980/mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) |
 | Streamable HTTP (B) | [`egao1980/mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) |
+| Interop canary | [`egao1980/mcp-parity`](https://github.com/egao1980/mcp-parity) — Lisp ↔ FastMCP 3 / official Node SDK v2 (stdio) |
 
 ## Protocol surface
 

@@ -75,7 +75,7 @@ HTTP client + server are done. Next layer is **wire codecs + bindings**, each `*
   **Brief:** [capabilities/protobuf.md](capabilities/protobuf.md)
 - `grpc-protocol` — channel / unary / stream; **not** an rpc-protocol transport  
   **Brief:** [capabilities/grpc.md](capabilities/grpc.md)
-- `mcp-protocol` — MCP client/server; backends stdio + Streamable HTTP  
+- `mcp-protocol` — MCP client/server; backends stdio + Streamable HTTP; canary [`mcp-parity`](https://github.com/egao1980/mcp-parity)  
   **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185)
 - `a2a-protocol` — Agent Card / Task; backends jsonrpc + **grpc/protobuf** + httpjson  
   **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186)
