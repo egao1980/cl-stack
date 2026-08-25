@@ -72,10 +72,11 @@ Wave-1 methods: `server/discover` · `initialize` / `initialized` · `ping` · `
 
 `mcp-initialize` on a dual-era client probes `server/discover` first (`era` `:unknown` / `:modern`) and only sends `initialize` when the peer is legacy (`era` `:legacy`, or discover failed).
 
+**Spec surface (GFs + CLOS, even if backend I/O is thin):** sampling (`create-message`, `mcp-sampling-request`), elicitation, roots, completions, subscriptions, logging, progress, MRTR `input_required`. Host `mcp-client-sampling-handler` may call a future `llm-protocol` — that is **not** the [blackboard](blackboard.md) loop.
+
 ## Non-goals (wave-1)
 
-- Sampling, elicitation, roots, completions
-- MRTR / `input_required` beyond recognizing `resultType`
 - Auth / OAuth, Tasks extension
 - Replacing cl-mcp tools
 - Legacy HTTP+SSE (`2024-11-05`) except a cheap compat shim
+- Blackboard / KSAR / workspaces (→ [blackboard.md](blackboard.md))

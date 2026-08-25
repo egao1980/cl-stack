@@ -72,6 +72,14 @@ One app DX per domain. Swap wire by loading a different backend system.
 6. `a2a-protocol` + jsonrpc (then grpc, then REST)  
 7. `ag-ui-protocol` + SSE (protobuf transport after)
 
+## Blackboard core (sibling, not this layer)
+
+How an agent **thinks** is [blackboard.md](blackboard.md) + [capability.md](capability.md) — KSAR loop, COW workspaces, CLOS capabilities. **Zero** agent-wire deps.
+
+This file stays **how agents talk**. Adapters (later) may project capabilities as MCP tools, write A2A `send-message` → `:pending-task`, or stream AG-UI events from the board. They do not live in `blackboard-protocol`.
+
+Product that composes both: `egao1980/demiurge` (same stance as `cl-mcp` vs `mcp-protocol`).
+
 ## Non-goals
 
 - Extracting a protocol from `cl-ai-project/cl-mcp`
@@ -79,3 +87,5 @@ One app DX per domain. Swap wire by loading a different backend system.
 - Colocating JSON-RPC or gRPC inside `rpc-protocol`
 - JSON-RPC-over-gRPC
 - Implementing MCP/A2A/AG-UI before SSE + JSON-RPC transports exist
+- Putting an LLM turn loop or `agent-protocol` inside agent-wire
+- Making blackboard-protocol depend on MCP / A2A / AG-UI

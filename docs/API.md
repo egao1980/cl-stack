@@ -84,4 +84,15 @@ HTTP client + server are done. Next layer is **wire codecs + bindings**, each `*
   **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
-Impl order: **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui**.
+Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui**.
+
+## Blackboard core (P2 — AI-agnostic)
+
+Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps.
+
+- `blackboard-protocol` — sections, watchers, KSAR, `requeue-ksar`, serial-per-workspace, fork/merge/discard/cancel  
+  **Brief:** [capabilities/blackboard.md](capabilities/blackboard.md)
+- `capability-protocol` — `defcapability` + registry; world I/O is **not** `mcp-tool`  
+  **Brief:** [capabilities/capability.md](capabilities/capability.md)
+
+LLM / MCP / A2A / AG-UI adapters are **separate** systems that post to the board or implement capabilities. Product: `egao1980/demiurge`. Cursor “agent infra” (skills, `/stack-status`) ≠ this Lisp runtime.
