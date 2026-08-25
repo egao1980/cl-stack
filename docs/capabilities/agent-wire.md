@@ -1,6 +1,6 @@
 # Agent wire layer (MCP / A2A / AG-UI)
 
-**Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) rpc · [#184](https://github.com/egao1980/cl-stack/issues/184) sse · [#185](https://github.com/egao1980/cl-stack/issues/185) mcp · [#186](https://github.com/egao1980/cl-stack/issues/186) a2a · [#187](https://github.com/egao1980/cl-stack/issues/187) ag-ui  
+**Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) rpc · [#184](https://github.com/egao1980/cl-stack/issues/184) sse · [#185](https://github.com/egao1980/cl-stack/issues/185) mcp · [#186](https://github.com/egao1980/cl-stack/issues/186) a2a · [#187](https://github.com/egao1980/cl-stack/issues/187) ag-ui · sibling [#192](https://github.com/egao1980/cl-stack/issues/192) blackboard  
 **Status:** layout **locked** — CLOS protocol + backend **per GitHub repo** (event/http-server precedent, not json-protocol colocated backends)
 
 HTTP **client** ([http-protocol](http-protocol.md)) and **server** ([http-server.md](http-server.md)) are done. This wave adds the **wire codecs and RPC bindings** those stacks do not own, then the three agent-interop protocols on top.
@@ -72,6 +72,14 @@ One app DX per domain. Swap wire by loading a different backend system.
 6. `a2a-protocol` + jsonrpc (then grpc, then REST)  
 7. `ag-ui-protocol` + SSE (protobuf transport after)
 
+## Blackboard core (sibling, not this layer)
+
+How an agent **thinks** is [blackboard.md](blackboard.md) + [capability.md](capability.md) — KSAR loop, COW workspaces, CLOS capabilities. **Zero** agent-wire deps.
+
+This file stays **how agents talk**. Adapters (later) may project capabilities as MCP tools, write A2A `send-message` → `:pending-task`, or stream AG-UI events from the board. They do not live in `blackboard-protocol`.
+
+Product that composes both: `egao1980/demiurge` (same stance as `cl-mcp` vs `mcp-protocol`).
+
 ## Non-goals
 
 - Extracting a protocol from `cl-ai-project/cl-mcp`
@@ -79,3 +87,5 @@ One app DX per domain. Swap wire by loading a different backend system.
 - Colocating JSON-RPC or gRPC inside `rpc-protocol`
 - JSON-RPC-over-gRPC
 - Implementing MCP/A2A/AG-UI before SSE + JSON-RPC transports exist
+- Putting an LLM turn loop or `agent-protocol` inside agent-wire
+- Making blackboard-protocol depend on MCP / A2A / AG-UI
