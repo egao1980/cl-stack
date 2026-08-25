@@ -1,6 +1,6 @@
 # blackboard-protocol (P2)
 
-**Issues:** TBD  
+**Issues:** [#192](https://github.com/egao1980/cl-stack/issues/192) epic · [#193](https://github.com/egao1980/cl-stack/issues/193) protocol · [#194](https://github.com/egao1980/cl-stack/issues/194) capabilities · adapters [#195](https://github.com/egao1980/cl-stack/issues/195) llm · [#196](https://github.com/egao1980/cl-stack/issues/196) wire · product [#197](https://github.com/egao1980/cl-stack/issues/197)  
 **Status:** brief **locked** — AI-agnostic KSAR loop + COW workspaces. Extract of [`egao1980/demiurge`](https://github.com/egao1980/demiurge) **core**, not bootstrap.
 
 Sibling: [capability.md](capability.md). **Not** agent-wire. MCP / A2A / AG-UI / `llm-protocol` are optional adapters that post to the board or implement capabilities. Core `.asd` must not depend on them.
