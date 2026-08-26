@@ -120,6 +120,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
 | `blackboard-protocol` | **0.1.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.1.0** | `defcapability` + registry (`stack-capability`) |
+| `llm-protocol` | **0.1.0** | turns + typed parts (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `llm-protocol-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` + `/responses` |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
@@ -289,6 +291,7 @@ Rules (non-negotiable):
 | RPC / SSE / MCP | [cookbooks/rpc.md](cookbooks/rpc.md) · [sse.md](cookbooks/sse.md) · [mcp.md](cookbooks/mcp.md) |
 | A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
 | Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
+| LLM generate | [cookbooks/llm.md](cookbooks/llm.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |

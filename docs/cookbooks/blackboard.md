@@ -5,13 +5,13 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Board (`stack-blackboard`) | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) | **0.1.0** |
-| Caps (`stack-capability`) | [`capability-protocol`](https://github.com/egao1980/blackboard-protocol) (colocated) | **0.1.0** |
+| Caps (`stack-capability`) | [`capability-protocol`](https://github.com/egao1980/blackboard-protocol) (colocated) | **0.2.0** |
 
 Briefs: [blackboard.md](../capabilities/blackboard.md) (#193) · [capability.md](../capabilities/capability.md) (#194). **Not** agent-wire. World I/O is **not** `mcp-tool`.
 
 ```lisp
 (cl-repo:load-system "blackboard-protocol" :version "0.1.0")
-(cl-repo:load-system "capability-protocol" :version "0.1.0")
+(cl-repo:load-system "capability-protocol" :version "0.2.0")
 ```
 
 ---
@@ -83,7 +83,12 @@ Serial-per-workspace (≤1 running KSAR). `max-concurrency` caps parallel **work
    'stack-capability:write-file "src/foo.lisp" "(+ 1 2)"))
 ```
 
-Domains (GFs only): `:compute` `:code-editing` `:version-control` `:web-search` `:communication`. `:llm-generation` is a reserved name — no provider here. `invoke-operation` is portable (no SBCL eql-specializer).
+Domains (GFs only). Catalogues: `:world` (compute/edit/vcs/search/comms) and `:llm` (generation + modalities). `defcatalogue` is the vocabulary; `make-catalogue` / a blackboard is the live host. `:llm-generation` has `complete` / `stream-complete` — no provider types here. `invoke-operation` is portable (no SBCL eql-specializer).
+
+```lisp
+(stack-capability:catalogue-defines-p :llm :llm-vision)  ; T
+(stack-capability:capability-supported-p bb :llm-vision) ; T only if registered
+```
 
 Wave-1 proof: mock coding-agent KS (no LLM/MCP) does edit → `requeue-ksar` → “test” → requeue → done. See `blackboard-protocol` `tests/coding-agent-test.lisp`.
 
