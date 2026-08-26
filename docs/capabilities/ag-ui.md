@@ -1,7 +1,7 @@
 # ag-ui-protocol (P1)
 
 **Issues:** [#187](https://github.com/egao1980/cl-stack/issues/187)  
-**Status:** brief **locked** — typed events, **not** JSON-RPC; SSE default + protobuf transport backend
+**Status:** wave-1 **done** (`ag-ui-protocol` **0.2.0** + SSE / protobuf-in-SSE backends) — typed events, **not** JSON-RPC
 
 [AG-UI](https://docs.copilotkit.ai/ag-ui/introduction). Agent ↔ UI. Client POSTs `RunAgentInput`; server streams events.
 
@@ -14,7 +14,8 @@
 | **Shape** | CLOS events + `run-agent` GF; transports are backends |
 | **Default backend (A)** | `ag-ui-backend-sse` — sse-protocol over http-server-protocol |
 | **Second backend (B)** | `ag-ui-backend-protobuf` — protobuf-protocol payloads on SSE (or binary) |
-| **Not JSON-RPC** | Do not route through `rpc-protocol-json`. Official HTTP is `POST RunAgentInput` → SSE events — that is rpc-protocol `:call-stream` with a later AG-UI codec. |
+| **Not JSON-RPC** | Do not route through `rpc-protocol-json`. Official HTTP is `POST RunAgentInput` → SSE events. (`rpc-protocol` `:call-stream` is the mode; the codec is AG-UI JSON, not JSON-RPC.) |
+| **Protobuf (B)** | Wave-1 = JSON UTF-8 octets in SSE `data:` (`:format :protobuf`). Official Event proto not compiled yet. |
 
 ## Repo layout
 
@@ -30,14 +31,17 @@
 (defclass ag-ui-event ()
   ((type :initarg :type :accessor ag-ui-event-type)
    (timestamp :initarg :timestamp :initform nil)))
-(defclass run-agent-input () ())
+(defclass run-agent-input ()
+  (thread-id run-id parent-run-id state messages tools context forwarded-props))
+(defclass ag-ui-agent () ())   ; local handler; default = echo last user text
 (defclass ag-ui-backend () ())
 (defvar *ag-ui-backend* nil)
 
 (defgeneric run-agent (backend input &key on-event))
 (defgeneric encode-ag-ui-event (event &key format))   ; :json | :protobuf
 (defgeneric decode-ag-ui-event (source &key format))
-(defgeneric serve-ag-ui (backend &key path))
+(defgeneric serve-ag-ui (backend &key path host port))
+(defun make-ag-ui-app (agent &key path event-format))  ; Clack: POST → SSE
 
 ;; wave-1 event types
 ;; RUN_STARTED RUN_FINISHED RUN_ERROR
