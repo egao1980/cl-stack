@@ -118,6 +118,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `mcp-protocol` | **0.2.0** | dual-era MCP (`2026-07-28` / `2025-11-25`) · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.1.1** | newline JSON-RPC MCP |
 | `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
+| `blackboard-protocol` | **0.1.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
+| `capability-protocol` | **0.1.0** | `defcapability` + registry (`stack-capability`) |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
@@ -286,6 +288,7 @@ Rules (non-negotiable):
 | WebSocket recipes / demos | [cookbooks/websocket.md](cookbooks/websocket.md) |
 | RPC / SSE / MCP | [cookbooks/rpc.md](cookbooks/rpc.md) · [sse.md](cookbooks/sse.md) · [mcp.md](cookbooks/mcp.md) |
 | A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
+| Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |
