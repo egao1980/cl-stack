@@ -97,5 +97,7 @@ Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract:
 
 - `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate`. OpenAI-compat is a backend. Demiurge **consumes** this.  
   **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
+- `ai-agent-protocol` — async-first CLOS loop over `llm-protocol`. `run-ai-agent` (not `run-agent`). MCP sampling lives here.  
+  **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
 
 LLM / MCP / A2A / AG-UI adapters are **separate** systems that post to the board or implement capabilities. Product: `egao1980/demiurge`. Cursor “agent infra” (skills, `/stack-status`) ≠ this Lisp runtime.
