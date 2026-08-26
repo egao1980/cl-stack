@@ -95,6 +95,19 @@ AG-UI: `make-ai-agent-ag-ui-handler` (needs a bound loop). A2A: `a2a-ai-agent-ha
 
 ---
 
+## 5. Live LM Studio (CL tool cycle)
+
+Bind **async × libuv**. `scripts/demo.lisp` in `ai-agent-protocol`: instructions + user prompt + CL `add` → tool call → result → final text.
+
+```bash
+set -a && source ../.env && set +a   # LM_API_TOKEN / OPENAI_MODEL
+CL_SOURCE_REGISTRY="$PWD/../:" ros -l scripts/demo.lisp
+```
+
+`:first-tool-choice :required` forces the first GENERATE to call a tool; the follow-up is `:auto` so the model can stop.
+
+---
+
 ## What not to do
 
 - Don’t name the GF `run-agent`.
