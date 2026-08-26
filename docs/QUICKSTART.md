@@ -106,7 +106,18 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
 | `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
-| `rpc-backend-inprocess` | **0.1.0** | JSON-RPC–shaped in-process RPC |
+| `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
+| `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |
+| `rpc-backend-inprocess` | **0.1.0** | in-process unary |
+| `rpc-backend-stdio` | **0.1.1** | newline JSON-RPC over process-protocol |
+| `rpc-backend-http` | **0.1.1** | JSON-RPC POST (client + Clack) |
+| `rpc-backend-sse` | **0.1.1** | JSON-RPC as SSE `data:` |
+| `sse-protocol` | **0.1.0** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
+| `sse-backend-http` | **0.1.0** | SSE client via http-protocol |
+| `sse-backend-clack` | **0.1.0** | SSE server (Clack) |
+| `mcp-protocol` | **0.2.0** | dual-era MCP (`2026-07-28` / `2025-11-25`) · [cookbook](cookbooks/mcp.md) |
+| `mcp-backend-stdio` | **0.1.1** | newline JSON-RPC MCP |
+| `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
@@ -273,6 +284,8 @@ Rules (non-negotiable):
 |------|----|
 | requests/httpx recipes | [cookbooks/http-client.md](cookbooks/http-client.md) |
 | WebSocket recipes / demos | [cookbooks/websocket.md](cookbooks/websocket.md) |
+| RPC / SSE / MCP | [cookbooks/rpc.md](cookbooks/rpc.md) · [sse.md](cookbooks/sse.md) · [mcp.md](cookbooks/mcp.md) |
+| A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |

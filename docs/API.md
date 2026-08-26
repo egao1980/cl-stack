@@ -62,29 +62,29 @@
 - `process-protocol` — subprocess spawn/pipes (UIOP); **not** RPC  
   **Brief:** [capabilities/process.md](capabilities/process.md) (#106)
 - `rpc-protocol` — interaction modes (`:call-response` / `:notify` / `:call-stream` / `:client-stream` / `:bidi-stream`); JSON-RPC is `rpc-protocol-json`; gRPC binding is `rpc-protocol-grpc`  
-  **Brief:** [capabilities/rpc.md](capabilities/rpc.md) (#170)
+  **Brief:** [capabilities/rpc.md](capabilities/rpc.md) (#170) · cookbook [rpc.md](cookbooks/rpc.md)
 
 ## Agent wire (P1 — MCP / A2A / AG-UI)
 
-HTTP client + server are done. Next layer is **wire codecs + bindings**, each `*-protocol` + `*-backend-*` in **its own GitHub repo**. Overview: [capabilities/agent-wire.md](capabilities/agent-wire.md).
+HTTP client + server are done. Wire codecs + bindings are each `*-protocol` + `*-backend-*` in **its own GitHub repo**. Overview: [capabilities/agent-wire.md](capabilities/agent-wire.md). **Impl order complete.**
 
 - `sse-protocol` — `text/event-stream` framing; backends http (client) / clack (server)  
-  **Brief:** [capabilities/sse.md](capabilities/sse.md) (#184)
+  **Brief:** [capabilities/sse.md](capabilities/sse.md) (#184) · cookbook [sse.md](cookbooks/sse.md)
 - `rpc-protocol-json` / `rpc-protocol-grpc` — JSON-RPC codec and gRPC binding (separate repos)
-- `rpc-backend-stdio` / `rpc-backend-http` / `rpc-backend-sse` — JSON-RPC transports (#170)
+- `rpc-backend-stdio` / `rpc-backend-http` / `rpc-backend-sse` — JSON-RPC transports (#170) · cookbook [rpc.md](cookbooks/rpc.md)
 - `protobuf-protocol` — serdes `:protobuf`; backend cl-protobufs  
   **Brief:** [capabilities/protobuf.md](capabilities/protobuf.md)
 - `grpc-protocol` — gRPC wire (channel / status); call via `rpc-protocol-grpc`  
   **Brief:** [capabilities/grpc.md](capabilities/grpc.md)
 - `mcp-protocol` — MCP client/server; backends stdio + Streamable HTTP; canary [`mcp-parity`](https://github.com/egao1980/mcp-parity)  
-  **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185)
+  **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185) · cookbook [mcp.md](cookbooks/mcp.md)
 - `a2a-protocol` — Agent Card / Task; backends jsonrpc + **grpc/protobuf** + httpjson  
-  **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186)
+  **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186) · cookbook [a2a.md](cookbooks/a2a.md)
 - `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf  
-  **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187)
+  **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187) · cookbook [ag-ui.md](cookbooks/ag-ui.md)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
-Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui**.
+Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui** — **done**. Next: P2 blackboard.
 
 ## Blackboard core (P2 — AI-agnostic)
 

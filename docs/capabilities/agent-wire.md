@@ -1,7 +1,7 @@
 # Agent wire layer (MCP / A2A / AG-UI)
 
 **Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) rpc · [#184](https://github.com/egao1980/cl-stack/issues/184) sse · [#185](https://github.com/egao1980/cl-stack/issues/185) mcp · [#186](https://github.com/egao1980/cl-stack/issues/186) a2a · [#187](https://github.com/egao1980/cl-stack/issues/187) ag-ui · sibling [#192](https://github.com/egao1980/cl-stack/issues/192) blackboard  
-**Status:** layout **locked** — CLOS protocol + backend **per GitHub repo** (event/http-server precedent, not json-protocol colocated backends)
+**Status:** impl order **done** (sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui). Cookbooks: [sse](../cookbooks/sse.md) · [rpc](../cookbooks/rpc.md) · [mcp](../cookbooks/mcp.md) · [a2a](../cookbooks/a2a.md) · [ag-ui](../cookbooks/ag-ui.md). Next code is P2 blackboard ([#192](https://github.com/egao1980/cl-stack/issues/192)–[#197](https://github.com/egao1980/cl-stack/issues/197)).
 
 HTTP **client** ([http-protocol](http-protocol.md)) and **server** ([http-server.md](http-server.md)) are done. This wave adds the **wire codecs and RPC bindings** those stacks do not own, then the three agent-interop protocols on top.
 
@@ -56,21 +56,21 @@ Already shipped: [`rpc-protocol`](https://github.com/egao1980/rpc-protocol), [`r
 
 | Repo | Role | Backends |
 |------|------|----------|
-| [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | dual-era MCP: modern `2026-07-28` (`server/discover` + `_meta` + SEP-2549 `ttlMs`/`cacheScope`) and legacy `2025-11-25` (`initialize`); tools / resources / prompts. Canary: [`mcp-parity`](https://github.com/egao1980/mcp-parity) | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio), [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) |
+| [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) **0.2.0** | dual-era MCP: modern `2026-07-28` (`server/discover` + `_meta` + SEP-2549 `ttlMs`/`cacheScope`) and legacy `2025-11-25` (`initialize`); tools / resources / prompts. Cookbook: [mcp.md](../cookbooks/mcp.md). Canary: [`mcp-parity`](https://github.com/egao1980/mcp-parity) | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) **0.1.1**, [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) **0.2.0** |
 | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** | Agent Card, Task, Message, Artifact. Cookbook: [a2a.md](../cookbooks/a2a.md) | [`a2a-backend-jsonrpc`](https://github.com/egao1980/a2a-backend-jsonrpc) **0.2.1**, [`a2a-backend-grpc`](https://github.com/egao1980/a2a-backend-grpc) **0.2.0**, [`a2a-backend-httpjson`](https://github.com/egao1980/a2a-backend-httpjson) **0.2.0** |
 | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.2.0** | `RunAgentInput` + wave-1 typed events (`schema-protocol` + `schema-protocol-json`); default echo + Clack `make-ag-ui-app`. Cookbook: [ag-ui.md](../cookbooks/ag-ui.md) | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse) **0.2.0**, [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) **0.2.0** |
 
 One app DX per domain. Swap wire by loading a different backend system.
 
-## Impl order
+## Impl order (complete)
 
-1. `sse-protocol` (framing is self-contained) + http/clack backends  
-2. `rpc-backend-stdio` + `rpc-backend-http` + `rpc-backend-sse`  
-3. `protobuf-protocol` + cl-protobufs backend (serdes `:protobuf`)  
-4. `grpc-protocol` + native backend  
-5. `mcp-protocol` + stdio + Streamable HTTP  
-6. `a2a-protocol` + jsonrpc (then grpc, then REST)  
-7. `ag-ui-protocol` + SSE (protobuf transport after)
+1. `sse-protocol` (framing is self-contained) + http/clack backends — **done** · [sse.md](../cookbooks/sse.md)  
+2. `rpc-backend-stdio` + `rpc-backend-http` + `rpc-backend-sse` — **done** · [rpc.md](../cookbooks/rpc.md)  
+3. `protobuf-protocol` + cl-protobufs backend (serdes `:protobuf`) — **done**  
+4. `grpc-protocol` + native backend — **done**  
+5. `mcp-protocol` + stdio + Streamable HTTP — **done** · [mcp.md](../cookbooks/mcp.md)  
+6. `a2a-protocol` + jsonrpc (then grpc, then REST) — **done** · [a2a.md](../cookbooks/a2a.md)  
+7. `ag-ui-protocol` + SSE (protobuf transport after) — **done** · [ag-ui.md](../cookbooks/ag-ui.md)
 
 ## Blackboard core (sibling, not this layer)
 

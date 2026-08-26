@@ -80,5 +80,5 @@ Streams while alive:
 ## 4. What not to do
 
 - Don’t pull `external-program` / `inferior-shell` into default pins — use this protocol.
-- Don’t put JSON-RPC framing here — `rpc-protocol` (+ process as a transport later).
+- Don’t put JSON-RPC framing here — [rpc.md](rpc.md) (`rpc-backend-stdio` over this protocol).
 - Don’t pass shell strings without `:shell t` — that signals `process-error`.

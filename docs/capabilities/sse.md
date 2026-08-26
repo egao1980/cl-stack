@@ -1,7 +1,7 @@
 # sse-protocol (P1)
 
 **Issues:** [#184](https://github.com/egao1980/cl-stack/issues/184)  
-**Status:** brief **locked** — CLOS protocol + HTTP/Clack backends; **separate repos**
+**Status:** wave-1 **done** (`sse-protocol` **0.1.0** + http/clack backends **0.1.0**) · cookbook [sse.md](../cookbooks/sse.md)
 
 W3C / WHATWG Server-Sent Events (`text/event-stream`). Shared by MCP Streamable HTTP, A2A `message/stream`, AG-UI default transport.
 
@@ -23,9 +23,9 @@ Not a [serdes](serdes.md) format — SSE is **framing** around already-encoded `
 
 | Layer | Repo |
 |-------|------|
-| Protocol + framing + conformance | [`egao1980/sse-protocol`](https://github.com/egao1980/sse-protocol) |
-| Client (A) | [`egao1980/sse-backend-http`](https://github.com/egao1980/sse-backend-http) |
-| Server (B) | [`egao1980/sse-backend-clack`](https://github.com/egao1980/sse-backend-clack) |
+| Protocol + framing + conformance | [`egao1980/sse-protocol`](https://github.com/egao1980/sse-protocol) **0.1.0** |
+| Client (A) | [`egao1980/sse-backend-http`](https://github.com/egao1980/sse-backend-http) **0.1.0** |
+| Server (B) | [`egao1980/sse-backend-clack`](https://github.com/egao1980/sse-backend-clack) **0.1.0** |
 
 ## Protocol surface
 
