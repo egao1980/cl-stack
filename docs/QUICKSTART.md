@@ -113,6 +113,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
+| `ag-ui-protocol` | **0.2.0** | typed agent↔UI events (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
+| `ag-ui-backend-sse` | **0.2.0** | POST `RunAgentInput` → SSE |
+| `ag-ui-backend-protobuf` | **0.2.0** | protobuf-in-SSE (`:format :protobuf` = JSON octets) |
 | `http-server-protocol` | **0.1.0** | CLOS server; Clack env; load `http-server-backend-hunchentoot` (default) or `…-woo` ([cookbook](cookbooks/http-server.md)) |
 | `http-server-backend-hunchentoot` | **0.1.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
