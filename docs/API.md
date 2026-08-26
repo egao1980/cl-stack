@@ -49,7 +49,7 @@
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
 - `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.0**); later XML / protobuf / Arrow / …  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
-- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
+- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); backends **[`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl)** / **[`log-backend-vom`](https://github.com/egao1980/log-backend-vom)** (separate repos)  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  

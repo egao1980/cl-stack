@@ -6,9 +6,9 @@
 
 | Layer | Role |
 |-------|------|
-| [`log-protocol`](https://github.com/egao1980/log-protocol) (`stack-log`) | `info` / `with-context` / `configure` |
-| `log-backend-log4cl` | **default** |
-| `log-backend-vom` | alternate (`use-vom-backend`) |
+| [`log-protocol`](https://github.com/egao1980/log-protocol) (`stack-log`) | `info` / `with-context` / `configure` + stream sink |
+| [`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl) | **default** (separate repo) |
+| [`log-backend-vom`](https://github.com/egao1980/log-backend-vom) | alternate (`use-vom-backend`; separate repo) |
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) | structured encode |
 | `sexp-protocol` | `:sexp` structured format |
 | `json-protocol` + jzon | `:json` structured (register serdes `:json`) |

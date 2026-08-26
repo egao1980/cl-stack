@@ -140,8 +140,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
 | `serdes-protocol` | **0.2.0** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
-| `log-protocol` | **0.1.1** | level + filters + async; text/structured ([cookbook](cookbooks/logging.md)) |
-| `log-backend-log4cl` | **0.1.1** | default log backend |
+| `log-protocol` | **0.1.1** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
+| `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
+| `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
 | `event-protocol` | **0.1.1** | event-loop generics |
 | `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
 | `event-backend-libev` | **0.1.2** | Unix second backend |
