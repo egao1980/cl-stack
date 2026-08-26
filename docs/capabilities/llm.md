@@ -34,7 +34,7 @@ Product/agent loop, tool *execution*, UI transcripts, server-side `previous_resp
 | **Tools** | `llm-tool` = name / description / JSON-schema parameters. **Not** an executor. |
 | **Finish** | `:stop` `:length` `:tool-use` `:content-filter`. |
 | **Wire** | First backend: OpenAI-compat `POST {base}/chat/completions`. Default `http://127.0.0.1:1234/v1`. |
-| **Capability** | Optional `llm-protocol/capability` — `complete` → `generate`. |
+| **Capability** | Optional `llm-protocol/capability` — `:llm` catalogue (`make-llm-catalogue`) + `complete` → `generate`. Lookup is `capability-supported-p`, not a parallel flag object. |
 | **MCP** | Optional `llm-protocol/mcp` — map sampling → `generate`. No second `create-message`. |
 | **Stream** | GF exists. Mock yields parts via `on-part`. OpenAI wave-1 → `llm-unsupported`. |
 | **Autolith** | Do not fork `cl-llm-provider-api`. |

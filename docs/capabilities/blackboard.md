@@ -1,7 +1,7 @@
 # blackboard-protocol (P2)
 
 **Issues:** [#192](https://github.com/egao1980/cl-stack/issues/192) epic · [#193](https://github.com/egao1980/cl-stack/issues/193) protocol · [#194](https://github.com/egao1980/cl-stack/issues/194) capabilities · adapters [#195](https://github.com/egao1980/cl-stack/issues/195) llm · [#196](https://github.com/egao1980/cl-stack/issues/196) wire · product [#197](https://github.com/egao1980/cl-stack/issues/197)  
-**Status:** wave-1 **done** (`blackboard-protocol` **0.1.0** + colocated `capability-protocol` **0.1.0**) · cookbook [blackboard.md](../cookbooks/blackboard.md)
+**Status:** wave-1 **done** (`blackboard-protocol` **0.1.0** + colocated `capability-protocol` **0.2.0**) · cookbook [blackboard.md](../cookbooks/blackboard.md)
 
 Sibling: [capability.md](capability.md). **Not** agent-wire. MCP / A2A / AG-UI / `llm-protocol` are optional adapters that post to the board or implement capabilities. Core `.asd` must not depend on them.
 

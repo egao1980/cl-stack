@@ -92,7 +92,7 @@ Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract:
 
 - `blackboard-protocol` — sections, watchers, KSAR, `requeue-ksar`, serial-per-workspace, fork/merge/discard/cancel  
   **Brief:** [capabilities/blackboard.md](capabilities/blackboard.md) ([#192](https://github.com/egao1980/cl-stack/issues/192), [#193](https://github.com/egao1980/cl-stack/issues/193)) · cookbook [blackboard.md](cookbooks/blackboard.md)
-- `capability-protocol` — `defcapability` + registry; world I/O is **not** `mcp-tool`  
+- `capability-protocol` — `defcapability` / `defcatalogue` + query GFs; world I/O is **not** `mcp-tool`  
   **Brief:** [capabilities/capability.md](capabilities/capability.md) ([#194](https://github.com/egao1980/cl-stack/issues/194))
 
 - `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate`. OpenAI-compat is a backend. Demiurge **consumes** this.  

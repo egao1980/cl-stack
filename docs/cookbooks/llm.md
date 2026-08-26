@@ -64,14 +64,20 @@ Wave-1 `stream-generate` on this backend signals `llm-unsupported`.
 
 ---
 
-## 3. Capability `complete` + MCP sampling
+## 3. Capability `complete` + catalogue lookup + MCP sampling
 
 ```lisp
 (asdf:load-system "llm-protocol/capability")
-(let ((cap (stack-llm:make-llm-generation-adapter
-            :backend (stack-llm:make-mock-llm-backend))))
-  (stack-llm:llm-response-text (stack-capability:complete cap "hi")))
+(let* ((b (stack-llm:make-mock-llm-backend))
+       (cat (stack-llm:make-llm-catalogue b)))
+  (stack-capability:capability-supported-p cat :llm-tools)   ; T
+  (stack-capability:capability-supported-p cat :llm-vision)  ; NIL
+  (stack-llm:llm-response-text
+   (stack-capability:complete
+    (stack-capability:get-capability cat :llm-generation) "hi")))
 ```
+
+Vocabulary (`catalogue-defines-p :llm :llm-video`) is not the same as an instance (`capability-supported-p cat :llm-video`). `register-llm-backend` copies the live catalogue onto a blackboard.
 
 MCP host: do **not** add a second `create-message`.
 
