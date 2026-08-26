@@ -1,7 +1,7 @@
 # Agent wire layer (MCP / A2A / AG-UI)
 
 **Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) rpc · [#184](https://github.com/egao1980/cl-stack/issues/184) sse · [#185](https://github.com/egao1980/cl-stack/issues/185) mcp · [#186](https://github.com/egao1980/cl-stack/issues/186) a2a · [#187](https://github.com/egao1980/cl-stack/issues/187) ag-ui · sibling [#192](https://github.com/egao1980/cl-stack/issues/192) blackboard  
-**Status:** impl order **done**. Cookbooks: [sse](../cookbooks/sse.md) · [rpc](../cookbooks/rpc.md) · [mcp](../cookbooks/mcp.md) · [a2a](../cookbooks/a2a.md) · [ag-ui](../cookbooks/ag-ui.md). Sibling core: [blackboard](../cookbooks/blackboard.md) **0.1.0**. Leftover P2: adapters [#195](https://github.com/egao1980/cl-stack/issues/195)–[#197](https://github.com/egao1980/cl-stack/issues/197).
+**Status:** impl order **done**. Cookbooks: [sse](../cookbooks/sse.md) · [rpc](../cookbooks/rpc.md) · [mcp](../cookbooks/mcp.md) · [a2a](../cookbooks/a2a.md) · [ag-ui](../cookbooks/ag-ui.md). Sibling core: [blackboard](../cookbooks/blackboard.md) **0.1.0**. LLM adapter: [llm](../cookbooks/llm.md) **0.1.0** ([#195](https://github.com/egao1980/cl-stack/issues/195)). Leftover P2: [#196](https://github.com/egao1980/cl-stack/issues/196)–[#197](https://github.com/egao1980/cl-stack/issues/197).
 
 HTTP **client** ([http-protocol](http-protocol.md)) and **server** ([http-server.md](http-server.md)) are done. This wave adds the **wire codecs and RPC bindings** those stacks do not own, then the three agent-interop protocols on top.
 
