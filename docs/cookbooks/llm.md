@@ -5,13 +5,13 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Protocol + mock (`stack-llm`) | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.1.0** |
-| OpenAI-compat (`stack-llm-openai`) | [`llm-backend-openai`](https://github.com/egao1980/llm-protocol) | **0.1.0** |
+| OpenAI-compat (`stack-llm-openai`) | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.1.0** |
 
 Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboard-protocol` dep. Demiurge **consumes** this.
 
 ```lisp
 (cl-repo:load-system "llm-protocol" :version "0.1.0")
-(cl-repo:load-system "llm-backend-openai" :version "0.1.0")
+(cl-repo:load-system "llm-protocol-openai" :version "0.1.0")
 ```
 
 ---
@@ -24,6 +24,8 @@ Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboar
 (let ((b (stack-llm:make-mock-llm-backend)))
   (stack-llm:llm-response-text (stack-llm:generate b "hi")))
 ;; ⇒ "echo: hi"
+(stack-llm:llm-response-text (stack-llm:respond b "hi"))
+;; ⇒ "echo: hi"  ; items→turns then generate
 ```
 
 Turns + parts:
@@ -39,20 +41,28 @@ Turns + parts:
 
 ## 2. OpenAI-compatible (LM Studio / OpenRouter)
 
-Bind an `http-protocol` backend. Default base is LM Studio `http://127.0.0.1:1234/v1`.
+Bind **`http-backend-async` × libuv** (dexador is maintenance). Default base is LM Studio `http://127.0.0.1:1234/v1`.
 
 ```lisp
-(asdf:load-system "llm-backend-openai")
-(asdf:load-system "http-backend-dexador")
-(setf http-protocol:*http-backend* (http-backend-dexador:make-dexador-backend))
+(asdf:load-system "llm-protocol-openai")
+(asdf:load-system "event-backend-libuv")
+(asdf:load-system "http-backend-async")
+
+(setf http-backend-async:*event-backend-maker*
+      #'event-backend-libuv:make-libuv-backend)
+(setf http-protocol:*http-backend*
+      (http-backend-async:make-async-backend))
 
 (let ((b (stack-llm-openai:make-openai-compat-backend)))
   (stack-llm:llm-response-text
    (stack-llm:generate b "ping"
-                       :settings '(:temperature 0 :max-tokens 32))))
+                       :settings '(:temperature 0 :max-tokens 32)))
+  (stack-llm:llm-response-text
+   (stack-llm:respond b "ping"
+                     :settings '(:temperature 0 :max-tokens 32))))
 ```
 
-`OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` fill omitted initargs. `list-models` → `GET {base}/models`.
+`OPENAI_API_KEY` / `LM_API_TOKEN` / `OPENAI_BASE_URL` / `OPENAI_MODEL` fill omitted initargs. `list-models` → `GET {base}/models`. `respond` → `POST {base}/responses`.
 
 ```lisp
 (stack-llm:generate b "add 1 and 2"
@@ -60,11 +70,35 @@ Bind an `http-protocol` backend. Default base is LM Studio `http://127.0.0.1:123
 ;; finish-reason :tool-use → llm-response-tool-calls
 ```
 
-Wave-1 `stream-generate` on this backend signals `llm-unsupported`.
+Wave-1 `stream-generate` / `stream-respond` on this backend signal `llm-unsupported`. Live HTTP: `LLM_OPENAI_LIVE=1`.
 
 ---
 
-## 3. Capability `complete` + catalogue lookup + MCP sampling
+## 3. Structured output (`schema-protocol` + `schema-protocol-json`)
+
+Not a PydanticAI `Agent` / retry loop. `defschema` is the model; JSON Schema emit is `schema-protocol-json`; parse is `schema-protocol:parse`.
+
+```lisp
+(asdf:load-system "llm-protocol/schema")
+
+(stack-schema:defschema city ()
+  (name string)
+  (country string))
+
+(let ((r (stack-llm:generate b "Capital of Norway as JSON."
+                             :output 'city
+                             :settings '(:temperature 0 :max-tokens 256))))
+  (stack-llm:llm-response-text r)          ; raw JSON string
+  (slot-value (stack-llm:llm-response-output r) 'name))  ; "Oslo"
+```
+
+`:output` on `generate` / `respond` (or `llm-settings-output`). OpenAI wire is `response_format.json_schema` / Responses `text.format`. Fail → `llm-output-error`. No auto-retry.
+
+Access content: `llm-response-content` (parts), `llm-response-text`, `llm-response-thinking`.
+
+---
+
+## 4. Capability `complete` + catalogue lookup + MCP sampling
 
 ```lisp
 (asdf:load-system "llm-protocol/capability")
@@ -93,6 +127,9 @@ MCP host: do **not** add a second `create-message`.
 
 - Don’t add `llm-protocol` to `blackboard-protocol` `:depends-on`.
 - Don’t treat `/v1/chat/completions` as the protocol — that’s one backend.
+- Don’t colocate the OpenAI wire in `llm-protocol`.
+- Don’t default the HTTP client to dexador — bind async × libuv.
+- Don’t clone PydanticAI `Agent` / output-tools / `ModelRetry` — `:output` + `schema-protocol` is enough.
 - Don’t put tool *execution* here (capability / product).
 - Don’t fork Autolith `cl-llm-provider-api`.
 - Don’t copy Demiurge’s `generate-text` / `generate-with-tools` split.

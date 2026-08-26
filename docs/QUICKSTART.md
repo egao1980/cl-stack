@@ -121,7 +121,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `blackboard-protocol` | **0.1.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.1.0** | `defcapability` + registry (`stack-capability`) |
 | `llm-protocol` | **0.1.0** | turns + typed parts (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `llm-backend-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` |
+| `llm-protocol-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` + `/responses` |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |

@@ -36,7 +36,7 @@ Extract of Demiurge `defcapability` / registry. Core `.asd` has **zero** AI-wire
 (defun make-catalogue (name))
 ```
 
-Concrete backends (`llm-protocol` / `llm-backend-openai`, compute via `process-protocol`) are **separate repos**. They implement these GFs; they do not pull MCP/A2A into `capability-protocol`. Demiurge **consumes** the protocol — it does not define it.
+Concrete backends (`llm-protocol` / `llm-protocol-openai`, compute via `process-protocol`) are **separate repos**. They implement these GFs; they do not pull MCP/A2A into `capability-protocol`. Demiurge **consumes** the protocol — it does not define it.
 
 ---
 
