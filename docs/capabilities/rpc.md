@@ -1,7 +1,7 @@
 # rpc-protocol (P1)
 
 **Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) · related [#106](https://github.com/egao1980/cl-stack/issues/106)  
-**Status:** brief **locked** — encoding-agnostic **interaction modes**. Codecs and the gRPC binding are **separate repos**. One GitHub repo per transport.
+**Status:** wave-1 **done** — modes **0.2.0** + JSON-RPC codec **0.1.0** + in-process **0.1.0** + stdio/http/sse **0.1.1** · cookbook [rpc.md](../cookbooks/rpc.md)
 
 ```text
 rpc-protocol          modes: call-response / notify / call-stream / client-stream / bidi-stream
@@ -38,9 +38,9 @@ Default stream methods on `rpc-transport` signal unimplemented — unary transpo
 | JSON-RPC 2.0 codec | [`egao1980/rpc-protocol-json`](https://github.com/egao1980/rpc-protocol-json) **0.1.0** |
 | gRPC binding | [`egao1980/rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) **0.1.0** |
 | In-process (A) | [`egao1980/rpc-backend-inprocess`](https://github.com/egao1980/rpc-backend-inprocess) **0.1.0** |
-| stdio (B) | [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) |
-| HTTP POST (C) | [`egao1980/rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) |
-| SSE (D) | [`egao1980/rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) |
+| stdio (B) | [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) **0.1.1** |
+| HTTP POST (C) | [`egao1980/rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) **0.1.1** |
+| SSE (D) | [`egao1980/rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) **0.1.1** |
 
 ## Protocol surface
 
