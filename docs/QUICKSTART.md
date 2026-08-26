@@ -114,6 +114,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
 | `ag-ui-protocol` | **0.2.0** | typed agent↔UI events (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
+| `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
+| `a2a-backend-jsonrpc` | **0.2.1** | JSON-RPC 2.0 + SSE |
+| `a2a-backend-httpjson` | **0.2.0** | HTTP+JSON REST |
+| `a2a-backend-grpc` | **0.2.0** | `/lf.a2a.v1.A2AService/*` via `rpc-protocol-grpc` |
 | `ag-ui-backend-sse` | **0.2.0** | POST `RunAgentInput` → SSE |
 | `ag-ui-backend-protobuf` | **0.2.0** | protobuf-in-SSE (`:format :protobuf` = JSON octets) |
 | `http-server-protocol` | **0.1.0** | CLOS server; Clack env; load `http-server-backend-hunchentoot` (default) or `…-woo` ([cookbook](cookbooks/http-server.md)) |
