@@ -121,3 +121,17 @@ Or parse a captured stream: `decode-ag-ui-sse-stream`.
 | State | `STATE_SNAPSHOT` `STATE_DELTA` (RFC 6902) `MESSAGES_SNAPSHOT` |
 
 Reasoning / activity / subagent families are non-goals. `:format :protobuf` is JSON UTF-8 octets in SSE `data:` until the official Event proto is compiled.
+
+---
+
+## 4. JSON Schema (`schema-protocol-json`)
+
+Events / `RunAgentInput` are `defschema` models. Emit draft-07 (OpenAPI `oneOf` + `discriminator` on `type`):
+
+```lisp
+(ag-ui-json-schema 'ag-ui-event)
+(ag-ui-json-schema 'run-agent-input)
+(validate-ag-ui-json "{\"type\":\"RUN_STARTED\",\"threadId\":\"t\",\"runId\":\"r\"}")
+```
+
+Tool `parameters` is a JSON Schema document — validate call args with `validate-tool-arguments`.

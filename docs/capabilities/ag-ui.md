@@ -11,7 +11,8 @@
 
 | Decision | Choice |
 |----------|--------|
-| **Shape** | CLOS events + `run-agent` GF; transports are backends |
+| **Shape** | `schema-protocol` `defschema` events + `run-agent` GF; transports are backends |
+| **JSON Schema** | `schema-protocol-json` — draft-07 emit (`ag-ui-json-schema`), validate incoming JSON (`validate-ag-ui-json`), tool `parameters` (`validate-tool-arguments`) |
 | **Default backend (A)** | `ag-ui-backend-sse` — sse-protocol over http-server-protocol |
 | **Second backend (B)** | `ag-ui-backend-protobuf` — protobuf-protocol payloads on SSE (or binary) |
 | **Not JSON-RPC** | Do not route through `rpc-protocol-json`. Official HTTP is `POST RunAgentInput` → SSE events. (`rpc-protocol` `:call-stream` is the mode; the codec is AG-UI JSON, not JSON-RPC.) |
@@ -28,9 +29,8 @@
 ## Protocol surface
 
 ```lisp
-(defclass ag-ui-event ()
-  ((type :initarg :type :accessor ag-ui-event-type)
-   (timestamp :initarg :timestamp :initform nil)))
+;; defschema ag-ui-event (:tag event-type :key-style :camel)
+;; slot is EVENT-TYPE with wire key "type" (CL:TYPE is package-locked)
 (defclass run-agent-input ()
   (thread-id run-id parent-run-id state messages tools context forwarded-props))
 (defclass ag-ui-agent () ())   ; local handler; default = echo last user text
