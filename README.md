@@ -36,6 +36,9 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 | [docs/cookbooks/http-client.md](docs/cookbooks/http-client.md) | requests/httpx → `cl-stack-http` cookbook (+ OAuth2/JWT packages) |
 | [docs/capabilities/ws-protocol.md](docs/capabilities/ws-protocol.md) | WebSocket client brief (websocket-driver) |
 | [docs/capabilities/json-protocol.md](docs/capabilities/json-protocol.md) | JSON encode/decode — jzon default, yason alternate |
+| [docs/capabilities/datetime.md](docs/capabilities/datetime.md) | Date/time/TZ + calendars (`datetime-protocol`, not local-time) |
+| [docs/capabilities/schema.md](docs/capabilities/schema.md) | CLOS interchange schemas |
+| [docs/cookbooks/conditions.md](docs/cookbooks/conditions.md) | Conditions + restarts (HTTP / FS / subprocess) |
 | [docs/pins.md](docs/pins.md) | Pin file format + stable/edge channels |
 | [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix + GHCR overlay naming |
 | [docs/multi-impl.md](docs/multi-impl.md) | SBCL / ECL / ABCL CI matrix + local smoke notes (#42) |

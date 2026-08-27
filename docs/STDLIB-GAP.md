@@ -17,7 +17,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 
 | Category | Tag | Priority | cl-stack action |
 |----------|-----|----------|-----------------|
-| Conditions / restarts | Kernel-strong | P2 | Cookbooks; map IO errors → conditions |
+| Conditions / restarts | Kernel-strong | P2 | **cookbook shipped** — [conditions.md](cookbooks/conditions.md) ([#107](https://github.com/egao1980/cl-stack/issues/107)) |
 | CLOS / MOP | Kernel-strong | P0 | GF protocols; pin closer-mop |
 | Numbers / sequences | Kernel-strong | P2–P3 | Pin Alexandria+Serapeum |
 | Concurrency | De-facto converged | P1 | Pin bt2 — **done** ([#95](https://github.com/egao1980/cl-stack/issues/95), [concurrency.md](capabilities/concurrency.md)) |
@@ -31,18 +31,18 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Text / Unicode | Fragmented | P1 | Pin Babel; UTF-8-first — **done** ([#94](https://github.com/egao1980/cl-stack/issues/94), [text-unicode.md](capabilities/text-unicode.md)) |
 | i18n / gettext | Absent | P3 | **Needs planning** — [#151](https://github.com/egao1980/cl-stack/issues/151); not gettext-only |
 | Regex | De-facto converged | P2 | Pin cl-ppcre |
-| Pathnames / FS | Wrong-shape | P1 | pathlib-grade facade over UIOP |
+| Pathnames / FS | Wrong-shape | P1 | **shipped** — `cl-stack-pathlib` **0.2.1** (`stack-pathlib`; local/memory/`zip://`; restarts) |
 | Subprocess | De-facto converged | P2 | **done** — `process-protocol` + `process-backend-uiop` 0.1.0 — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](capabilities/process.md) · [cookbook](cookbooks/process.md); RPC — `rpc-protocol` 0.2.0 + inprocess/stdio/http/sse — [#170](https://github.com/egao1980/cl-stack/issues/170) · [rpc.md](capabilities/rpc.md) · [cookbook](cookbooks/rpc.md) |
 | JSON / CSV / XML | Fragmented | P1 | `json-protocol` + **jzon** — **done** ([#91](https://github.com/egao1980/cl-stack/issues/91), [json.md](cookbooks/json.md)); CSV/XML later |
 | SQL | Fragmented | P2 | three layers **shipped**: `sql-protocol` 0.1.0 · `sql-query{,-pg,-sqlite3}` 0.2.0 · `sql-orm` 0.1.0 (first-party CLOS, not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](capabilities/sql.md) · [cookbook](cookbooks/sql.md) |
 | I/O object streams | Absent | P2 | `io-protocol` OCI **0.1.0** — ObjectInput/Output CLOS shell (no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |
-| Serdes | Fragmented | P2 | `serdes-protocol` **0.2.0** + JSONL/events; `json-protocol` / `sexp-protocol` implement — [#132](https://github.com/egao1980/cl-stack/issues/132) · [serdes.md](capabilities/serdes.md) |
+| Serdes | Fragmented | P2 | `serdes-protocol` **0.2.1** + JSONL/events; `json-protocol` / `sexp-protocol` implement — [#132](https://github.com/egao1980/cl-stack/issues/132) · [serdes.md](capabilities/serdes.md) |
 | Logging | Fragmented | P2 | `log-protocol` text (log4j) + structured (JSON/SEXP via serdes) — [#102](https://github.com/egao1980/cl-stack/issues/102) · [logging.md](capabilities/logging.md) |
 | CLI | Fragmented | P2 | `cli-protocol` + clingon / adopt — brief [#103](https://github.com/egao1980/cl-stack/issues/103) · [cli.md](capabilities/cli.md) |
 | Config | Fragmented | P1 | env + **TOML** (tomlet) — brief [#98](https://github.com/egao1980/cl-stack/issues/98); impl [#99](https://github.com/egao1980/cl-stack/issues/99) |
 | Packaging | Fragmented | P0 | **cl-repository** product path |
 | FFI | De-facto converged | P0 | CFFI + overlays |
-| Time / TZ | De-facto converged | P2 | local-time + tzdata overlay |
+| Time / TZ | Fragmented | P2 | **shipped** — first-party `datetime-protocol` **0.1.1** + `cl-stack-tzdata` **2026.3.0** + `cl-stack-calendars` **0.4.0** — **not** a `local-time` pin — [#105](https://github.com/egao1980/cl-stack/issues/105) · [datetime.md](capabilities/datetime.md) · [cookbook](cookbooks/datetime.md) |
 | Testing | Fragmented | P0 | **Rove** + corpus; dogfood PRs |
 | Gray streams | De-facto converged | P1 | trivial-gray-streams; object-stream shell → `io-protocol` |
 | Weak refs | De-facto converged | P2 | trivial-garbage |

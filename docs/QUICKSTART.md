@@ -69,7 +69,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 
 `cl-repo:load-system` pulls the OCI package (and matching overlay), installs deps, then `asdf:load-system`.
 
-**CI pattern:** same bootstrap via `oras` in the job; `actions/checkout` **only** the repo under test — never sibling-checkout deps. See any first-party `scripts/ci-install.lisp`.
+**CI pattern:** canned `egao1980/cl-repository/.github/workflows/test-system.yml@main` (or `setup-client` + `ci` with `phase: install|test`). `actions/checkout` **only** the repo under test — never sibling-checkout deps. Do **not** copy `ci-install.lisp`.
 
 ---
 
@@ -77,7 +77,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 
 | System | OCI tag | Notes |
 |--------|---------|--------|
-| `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
+| `cl-repository-client` | **`:latest`** | system-name anchor — resolve semver then pull (see §1) |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
@@ -99,8 +99,16 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
+| `http-protocol` | **0.3.1** | wire client; `:http-version` / H2 header policy; `TE: trailers` |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
+| `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
+| `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
+| `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
+| `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
+| `schema-protocol` | **0.1.0** | CLOS `defschema` (`stack-schema`) · [cookbook](cookbooks/schema.md) |
+| `schema-protocol-json` | **0.1.1** | draft-07 emit / compile |
+| `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
+| `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `crypto-backend-ironclad` | **0.1.1** | digest/HMAC/AEAD + secrets (Ironclad) |
 | `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
@@ -140,11 +148,11 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
-| `serdes-protocol` | **0.2.0** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
+| `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured ([cookbook](cookbooks/logging.md)) |
 | `log-backend-log4cl` | **0.1.1** | default log backend |
-| `event-protocol` | **0.1.1** | event-loop generics |
+| `event-protocol` | **0.1.2** | event-loop generics |
 | `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
 | `event-backend-libev` | **0.1.2** | Unix second backend |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
@@ -156,7 +164,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ## 3. Minimal HTTP (facade)
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.7")
+(cl-repo:load-system "cl-stack-http" :version "0.1.8")
 ;; optional CE codecs: http-encoding-chipz / -brotli / -zstd
 
 (defpackage #:demo (:use #:cl) (:local-nicknames (#:http #:cl-stack-http)))
@@ -170,11 +178,11 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
   (princ (http:response-text r)))
 ```
 
-### HTTP/2 preference (`http-protocol` 0.3.0+)
+### HTTP/2 preference (`http-protocol` 0.3.1+)
 
 ```lisp
-(cl-repo:load-system "http-protocol" :version "0.3.0")
-(cl-repo:load-system "http-backend-async" :version "0.2.3")
+(cl-repo:load-system "http-protocol" :version "0.3.1")
+(cl-repo:load-system "http-backend-async" :version "0.2.4")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.1")
 
 (setf http-backend-async:*event-backend-maker*
@@ -226,7 +234,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 
 ```lisp
 (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
-(cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
+(cl-repo:load-system "cl-stack-jwt" :version "0.2.0")
 
 ;; OAuth2 client-credentials → pass as :auth to stack-http
 (defvar *auth*
@@ -246,7 +254,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 ## 4. Event loop (promises)
 
 ```lisp
-(cl-repo:load-system "event-protocol" :version "0.1.1")
+(cl-repo:load-system "event-protocol" :version "0.1.2")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.1")
 
 (let* ((eb (event-backend-libuv:make-libuv-backend))
@@ -266,12 +274,8 @@ Default backend = **libuv** (Windows-primary). Unix second = **libev**. Brief: [
 ```yaml
 # checkout ONLY this repo
 - uses: actions/checkout@v4
-- uses: oras-project/setup-oras@v1
-- run: |
-    oras pull ghcr.io/egao1980/cl-repository/cl-repository-client:0.10.0 -o /tmp/cl-repo-pull
-    # extract → CL_SOURCE_REGISTRY includes client tree + $(pwd)//:
-    ros -l scripts/ci-install.lisp   # cl-repo:add-registry + install pins
-    ros -l scripts/ci-test.lisp
+- uses: egao1980/cl-repository/.github/workflows/test-system.yml@main
+  # reads .asd :depends-on + :properties (:cl-repo …)
 ```
 
 Rules (non-negotiable):
@@ -292,6 +296,7 @@ Rules (non-negotiable):
 | A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
 | Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
 | LLM generate | [cookbooks/llm.md](cookbooks/llm.md) |
+| Schema / datetime / conditions | [schema.md](cookbooks/schema.md) · [datetime.md](cookbooks/datetime.md) · [conditions.md](cookbooks/conditions.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |

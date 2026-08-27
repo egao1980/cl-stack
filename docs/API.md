@@ -12,8 +12,8 @@
 
 ## Rules
 
-- Keywords over positionals for user-facing APIs.
-- Conditions (+ restarts where useful), not status-code-only errors.
+- Keywords over positionals for user-facing APIs (exceptions: binary ops, `date-add` field+n).
+- Conditions (+ restarts where useful), not status-code-only errors. See [conditions.md](capabilities/conditions.md).
 - One app-level async DX (promise xor callback xor await-macro); **multiple event-loop backends** via `event-protocol`.
 - `with-` macros + `unwind-protect` for resources.
 - No god base classes.
@@ -97,5 +97,11 @@ Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract:
 
 - `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate`. OpenAI-compat is a backend. Demiurge **consumes** this.  
   **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
+- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`.  
+  **Brief:** [capabilities/schema.md](capabilities/schema.md) · cookbook [schema.md](cookbooks/schema.md)
+- `datetime-protocol` — instant / duration / period / date / zone. IANA data is `cl-stack-tzdata`. Holidays are `cl-stack-calendars`. **Not** a `local-time` pin.  
+  **Brief:** [capabilities/datetime.md](capabilities/datetime.md) ([#105](https://github.com/egao1980/cl-stack/issues/105)) · cookbook [datetime.md](cookbooks/datetime.md)
+- Conditions / restarts — CLHS 9; pathlib is the gold standard.  
+  **Brief:** [capabilities/conditions.md](capabilities/conditions.md) ([#107](https://github.com/egao1980/cl-stack/issues/107)) · cookbook [conditions.md](cookbooks/conditions.md)
 
 LLM / MCP / A2A / AG-UI adapters are **separate** systems that post to the board or implement capabilities. Product: `egao1980/demiurge`. Cursor “agent infra” (skills, `/stack-status`) ≠ this Lisp runtime.

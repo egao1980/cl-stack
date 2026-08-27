@@ -15,7 +15,7 @@
         (parse-system-entry (find "http-protocol" systems
                                   :key #'first :test #'string-equal))
       (ok (equal "http-protocol" name))
-      (ok (equal "0.3.0" ver))
+      (ok (equal "0.3.1" ver))
       (ok (null platforms)))
     (multiple-value-bind (name ver platforms)
         (parse-system-entry (find "event-backend-libev" systems

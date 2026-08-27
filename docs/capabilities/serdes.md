@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` / `sexp-protocol` OCI **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull)
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull)
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
