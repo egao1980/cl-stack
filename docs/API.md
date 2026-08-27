@@ -47,7 +47,7 @@
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.0**); later XML / protobuf / Arrow / …  
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**); later XML / protobuf / Arrow / …  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
@@ -88,7 +88,7 @@ Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a �
 
 ## Blackboard core (P2 — AI-agnostic)
 
-Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.0**).
+Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (`blackboard-protocol` **0.1.0**, `capability-protocol` **0.2.0**).
 
 - `blackboard-protocol` — sections, watchers, KSAR, `requeue-ksar`, serial-per-workspace, fork/merge/discard/cancel  
   **Brief:** [capabilities/blackboard.md](capabilities/blackboard.md) ([#192](https://github.com/egao1980/cl-stack/issues/192), [#193](https://github.com/egao1980/cl-stack/issues/193)) · cookbook [blackboard.md](cookbooks/blackboard.md)

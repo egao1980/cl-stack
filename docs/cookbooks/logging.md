@@ -96,9 +96,4 @@ Appenders / multi-sink / log4cl hierarchy = **backend config**, not protocol.
 
 ## 6. Alternate vom backend
 
-```lisp
-(asdf:load-system "log-backend-vom")
-(log-backend-vom:use-vom-backend)
-(stack-log:configure :level :debug :layout :text)
-(stack-log:debug "probe")
-```
+[`log-backend-vom`](https://github.com/egao1980/log-backend-vom) (`use-vom-backend`) is the alternate sink. **Not** in the living pin table — `origin/main` is still empty. Default pin is `log-backend-log4cl`.

@@ -68,8 +68,9 @@ Same agent, `POST /message:send`, `GET /tasks/{id}`, `POST /message:stream`.
 
 ```lisp
 (asdf:load-system "a2a-backend-httpjson")
-(a2a-backend-httpjson:serve-a2a-httpjson
- (a2a-protocol:make-a2a-agent :name "echo")
+(asdf:load-system "http-server-backend-hunchentoot")
+(http-server-protocol:serve
+ (a2a-backend-httpjson:make-a2a-app (a2a-protocol:make-a2a-agent :name "echo"))
  :host "127.0.0.1" :port 8080)
 ```
 

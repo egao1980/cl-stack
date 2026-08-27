@@ -109,13 +109,20 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `schema-protocol-json` | **0.1.1** | draft-07 emit / compile |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
+| `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
+| `sql-query-postgres` | **0.2.0** | postgres dialect |
+| `sql-orm` | **0.1.0** | CLOS ORM (`defmodel`) |
+| `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
+| `sql-backend-postgres` | **0.1.0** | postgres connectivity |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
+| `crypto-protocol` | **0.1.1** | seal/unseal + hazmat (`stack-crypto`) |
 | `crypto-backend-ironclad` | **0.1.1** | digest/HMAC/AEAD + secrets (Ironclad) |
 | `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
 | `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
 | `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |
+| `rpc-protocol-grpc` | **0.1.0** | gRPC binding over `grpc-protocol` |
 | `rpc-backend-inprocess` | **0.1.0** | in-process unary |
 | `rpc-backend-stdio` | **0.1.1** | newline JSON-RPC over process-protocol |
 | `rpc-backend-http` | **0.1.1** | JSON-RPC POST (client + Clack) |
@@ -127,7 +134,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `mcp-backend-stdio` | **0.1.1** | newline JSON-RPC MCP |
 | `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
 | `blackboard-protocol` | **0.1.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
-| `capability-protocol` | **0.1.0** | `defcapability` + registry (`stack-capability`) |
+| `capability-protocol` | **0.2.0** | `defcapability` + registry (`stack-capability`) |
 | `llm-protocol` | **0.1.0** | turns + typed parts (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `llm-protocol-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` + `/responses` |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
@@ -136,6 +143,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
+| `ws-backend-websocket-driver` | **0.2.2** | H1 Upgrade (`websocket-driver-client`) |
 | `ag-ui-protocol` | **0.2.0** | typed agent↔UI events (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
 | `a2a-backend-jsonrpc` | **0.2.1** | JSON-RPC 2.0 + SSE |
@@ -148,6 +156,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
+| `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
 | `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured ([cookbook](cookbooks/logging.md)) |
@@ -155,6 +164,13 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `event-protocol` | **0.1.2** | event-loop generics |
 | `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
 | `event-backend-libev` | **0.1.2** | Unix second backend |
+| `event-backend-nio` | **0.1.0** | ABCL NIO `Selector` |
+| `http-backend-java` | **0.1.0** | ABCL `java.net.http` |
+| `grpc-protocol` | **0.1.0** | gRPC wire / channel |
+| `grpc-backend-http2` | **0.1.0** | unary over `http-protocol` H2 |
+| `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
+| `protobuf-protocol` | **0.1.0** | serdes `:protobuf` |
+| `protobuf-backend-cl-protobufs` | **0.1.1** | default protobuf backend |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
 
 Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](overlays.md).
@@ -174,7 +190,9 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 (http:ensure-http-backend :auto)
 
 (let ((r (http:get "https://httpbin.org/get" :params '(("q" . "1")))))
-  (format t "~a ~a~%" (http:response-status r) (http:response-http-version r))
+  (format t "~a ~a~%"
+          (http-protocol:response-status r)
+          (http-protocol:response-http-version r))
   (princ (http:response-text r)))
 ```
 

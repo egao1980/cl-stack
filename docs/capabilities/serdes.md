@@ -253,7 +253,7 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Implementation tasks
 
 - [x] Brief lock — [#132](https://github.com/egao1980/cl-stack/issues/132)
-- [x] `serdes-protocol` whole-value + format registry + Gray streams — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) **0.2.0**)
+- [x] `serdes-protocol` whole-value + format registry + Gray streams — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) **0.2.1**)
 - [x] **JSONL helpers** + **event-parser GFs** — `map-jsonl` / `do-jsonl` / `stream-*-value`
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
 - [x] **json event/pull parser** (jzon `parse-next`) — [#138](https://github.com/egao1980/cl-stack/issues/138)

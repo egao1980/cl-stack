@@ -67,7 +67,7 @@ Facade returns **promises** (resolve / reject). Rejected promises signal or carr
     (bb:attach (event:sleep 0.1)
       (lambda (_)
         (bb:attach (http:get-async "https://example.com")
-          (lambda (res) (print (http:status res))))))))
+          (lambda (res) (print (http-protocol:response-status res))))))))
 ```
 
 Blackbird (or a protocol-local promise type with the same shape) is the wave-1 pin for composition macros (`alet*`, `catcher`, `finally`). Protocol code must not hard-depend on Blackbird internals — only the facade.
@@ -121,13 +121,14 @@ Tiny ASDF system `event-protocol`: generics, conditions, value types. Almost no 
 (defgeneric wake (backend loop))              ; cross-thread: schedule on loop thread
 ```
 
-Facade (`cl-stack/event` later) wraps these with keywords + promises:
+Facade (`cl-stack/event` later) wraps these with keywords + promises.
+**Shipped names** are on `event-protocol`: `with-event-loop-var`, `sleep*`, `defer`, `cancel`.
 
 ```lisp
-(event:with-loop () …)           ; make + run + unwind
-(event:sleep 1.0)                ; → promise
-(event:defer #'fn)
-(event:cancel handle)
+(event-protocol:with-event-loop-var (el) …)
+(event-protocol:sleep* eb el 1.0)
+(event-protocol:defer eb el #'fn)
+(event-protocol:cancel eb handle)
 ```
 
 ### Conditions
@@ -153,17 +154,18 @@ Restarts (where useful): `retry`, `abort-loop`, `use-value` (for sleep/defer res
 ## Backend selection DX
 
 ```lisp
-;; default pin (cl-stack / qlfile / cl-repository lock)
-;;   event-backend-libuv
-
+;; default pin — event-backend-libuv
 (asdf:load-system "event-backend-libuv")
-(let ((*event-backend* (make-instance 'libuv-backend)))
-  (event:with-loop () …))
+(let* ((eb (event-backend-libuv:make-libuv-backend))
+       (el (event-protocol:make-event-loop eb)))
+  (event-protocol:with-event-backend (eb)
+    (event-protocol:with-event-loop-var (el)
+      …)))
 
 ;; swap for conformance / Woo-adjacent deploy
 (asdf:load-system "event-backend-libev")
-(let ((*event-backend* (make-instance 'libev-backend)))
-  (event:with-loop () …))
+(let ((eb (event-backend-libev:make-libev-backend)))
+  …)
 ```
 
 No central plugin registry. Metapackage (#21) may depend on the default backend only.
