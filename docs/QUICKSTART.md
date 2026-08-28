@@ -147,7 +147,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `event-protocol` | **0.2.0** | event-loop generics (`wake-call` / `submit`) |
 | `event-backend-libuv` | **0.1.2** | default (Windows-primary); per-loop submit pool |
 | `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
-| `event-backend-nio` | **0.1.1** | ABCL / JVM NIO |
+| `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
 | `cl-stack-executors` | **0.1.0** | BT pools backends *may* plug into `submit` |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
 
