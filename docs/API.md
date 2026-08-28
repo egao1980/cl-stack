@@ -21,8 +21,8 @@
 
 ## Wave-1 protocol set
 
-- `event-protocol` — run / defer / cancel / sleep / register-io; multi-backend + default pin  
-  **Brief:** [capabilities/event-protocol.md](capabilities/event-protocol.md) — DX = **promises**; default **libuv**, second **libev**
+- `event-protocol` — run / defer / cancel / sleep / register-io / wake-call / submit; multi-backend + default pin  
+  **Brief:** [capabilities/event-protocol.md](capabilities/event-protocol.md) — DX = **promises**; default **libuv**, second **libev**. `submit` `:executor` is a thunk runner, not a pool type — backends may plug in [`cl-stack-executors`](https://github.com/egao1980/cl-stack-executors).
 - `http-protocol` — sync + async send; request/response values  
   **Brief:** [capabilities/http-protocol.md](capabilities/http-protocol.md)
 - `ws-protocol` — connect, send, on-message, ping, close  

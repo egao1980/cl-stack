@@ -124,7 +124,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `llm-protocol-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` + `/responses` |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
-| `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
+| `http-backend-async` | **0.2.5** | async + HTTP/2 + RFC 8441 WS; sync slurp via `submit` |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
@@ -144,9 +144,11 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured ([cookbook](cookbooks/logging.md)) |
 | `log-backend-log4cl` | **0.1.1** | default log backend |
-| `event-protocol` | **0.1.1** | event-loop generics |
-| `event-backend-libuv` | **0.1.1** | default (Windows-primary) |
-| `event-backend-libev` | **0.1.2** | Unix second backend |
+| `event-protocol` | **0.2.0** | event-loop generics (`wake-call` / `submit`) |
+| `event-backend-libuv` | **0.1.2** | default (Windows-primary); per-loop submit pool |
+| `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
+| `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
+| `cl-stack-executors` | **0.1.0** | BT pools backends *may* plug into `submit` |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
 
 Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](overlays.md).
@@ -174,8 +176,8 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 
 ```lisp
 (cl-repo:load-system "http-protocol" :version "0.3.0")
-(cl-repo:load-system "http-backend-async" :version "0.2.3")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.1")
+(cl-repo:load-system "http-backend-async" :version "0.2.5")
+(cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
 (setf http-backend-async:*event-backend-maker*
       (lambda () (event-backend-libuv:make-libuv-backend)))
@@ -246,14 +248,14 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 ## 4. Event loop (promises)
 
 ```lisp
-(cl-repo:load-system "event-protocol" :version "0.1.1")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.1")
+(cl-repo:load-system "event-protocol" :version "0.2.0")
+(cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
 (let* ((eb (event-backend-libuv:make-libuv-backend))
        (el (event-protocol:make-event-loop eb)))
   (event-protocol:with-event-backend (eb)
     (event-protocol:with-event-loop-var (el)
-      ;; defer / sleep* / register-io — see capability brief
+      ;; defer / sleep* / register-io / wake-call / submit — see capability brief
       )))
 ```
 
