@@ -51,6 +51,7 @@ Scores: **1** (poor) … **5** (excellent) for wave-1 cl-stack needs.
 | Default backend A | [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) |
 | Second backend B (Unix) | [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) |
 | ABCL / JVM (C) | [`egao1980/event-backend-nio`](https://github.com/egao1980/event-backend-nio) |
+| Optional BT pools (not on the protocol) | [`egao1980/cl-stack-executors`](https://github.com/egao1980/cl-stack-executors) |
 
 ---
 
@@ -118,7 +119,12 @@ Tiny ASDF system `event-protocol`: generics, conditions, value types. Almost no 
 (defgeneric register-io (backend loop fd direction callback &key))
 ;; direction: :read | :write | :read-write
 
-(defgeneric wake (backend loop))              ; cross-thread: schedule on loop thread
+(defgeneric wake (backend loop))              ; kick the loop (no enqueue)
+(defgeneric wake-call (backend loop function)) ; asyncio call_soon_threadsafe
+(defgeneric submit (backend loop thunk &key callback error-callback executor))
+;; THUNK off the loop thread. CALLBACK/ERROR-CALLBACK on LOOP via wake-call.
+;; :executor = function of one thunk (hop-off runner), or NIL → backend default.
+;; Protocol has no pool type. Backends typically plug in cl-stack-executors.
 ```
 
 Facade (`cl-stack/event` later) wraps these with keywords + promises:
@@ -145,8 +151,9 @@ Restarts (where useful): `retry`, `abort-loop`, `use-value` (for sleep/defer res
 ### Threading rules
 
 1. **Affinity:** callbacks run on the loop thread.
-2. **Foreign threads** must use `wake` / `defer` to enter the loop (never touch libuv/libev handles off-thread).
-3. Protocol tests may use a single-threaded model only for wave-1 conformance (#18).
+2. **Foreign threads** must use `wake-call` to enter the loop (never touch libuv/libev handles off-thread). `submit` hops off + back; do not `bt:make-thread` per task.
+3. **No sibling pool protocol.** One GF (`submit`). Protocol has **no BT / no pool type**. `:executor` is a function of one thunk (or `NIL` → backend default). Shared BT pools live in [`cl-stack-executors`](https://github.com/egao1980/cl-stack-executors) — backends *may* use that library (same relationship as `concurrent.futures` next to asyncio). They can also use a JVM `ExecutorService` or another runner. Do not specialize libuv `submit` onto `uv_queue_work` for blocking I/O (ForkJoinPool.commonPool footgun). Do not share one process-global pool across loops.
+4. Protocol tests may use a single-threaded model only for wave-1 conformance (#18).
 
 ---
 
