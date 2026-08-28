@@ -124,7 +124,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `llm-protocol-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` + `/responses` |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
-| `http-backend-async` | **0.2.4** | async + HTTP/2 + **RFC 8441 WS** (loop-native) |
+| `http-backend-async` | **0.2.5** | async + HTTP/2 + RFC 8441 WS; sync slurp via `submit` |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
