@@ -51,7 +51,7 @@ are the composition holes, not a missing graph DSL.
 | Blackboard | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) **0.1.1** + `capability-protocol` **0.2.0** | KSAR + COW; `:llm` / `:world` vocab | Zero LLM/wire deps (locked). `:llm-audio` etc. are vocab only |
 | Caps | `:llm-generation` … `:llm-responses` | 0.2.0 | Catalogue + `complete` → `generate` | No `:llm-embeddings`. Speech/transcribe GFs have no backend |
 | Telemetry | [`telemetry-protocol`](https://github.com/egao1980/telemetry-protocol) | 0.1.0 | `+gen-ai-usage-{input,output}-tokens+` constants | No auto-span around `generate`. No gen_ai semantic conventions wiring in llm-protocol |
-| Native GGUF | [`llm-backend-vllm-cpp`](https://github.com/egao1980/llm-protocol-vllm-cpp) | — | Used by demo/TUI `/vllm` | Not an OpenAI-compat peer; GitHub repo still `llm-protocol-vllm-cpp` until renamed |
+| Native GGUF | [`llm-backend-vllm-cpp`](https://github.com/egao1980/llm-backend-vllm-cpp) | — | Used by demo/TUI `/vllm` | Not an OpenAI-compat peer |
 | Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui), [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) | — | Desk chat + MCP file tools; AG-UI transcript sink | Not a protocol |
 | Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge, [#198](https://github.com/egao1980/cl-stack/issues/198) agent-skills | open | Composition / SKILL.md | Not started |
 
