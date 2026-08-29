@@ -186,6 +186,51 @@ That is the Demiurge hole, not a missing `LangGraph.StateGraph`.
 
 Constants exist (`gen_ai.usage.input_tokens`). `generate` does not open a span, does not record TTFT, does not attach `gen_ai.request.model`. Spring AI + OTel and Phoenix do this by default. One `:around` on `generate` / `run-ai-agent` would close most of the observability gap without a new repo.
 
+### PydanticAI v2 (2026-06-23 → **v2.36.0** 2026-08-28)
+
+v2 is harness-first. The primitive is **`Capability`**: one object that bundles tools + lifecycle hooks + instructions + model settings, passed as `capabilities=[...]`. Core stays small (`pydantic-ai`: providers, loop, MCP, native tools, Thinking, Tool Search, compaction, durability, OTel). Everything else is [`pydantic-ai-harness`](https://github.com/pydantic/pydantic-ai-harness) (0.x, moves fast): `Coder` / `Researcher` are just combined capabilities.
+
+**Their `Capability` ≠ our `capability-protocol`.** Ours is a catalogue/vocab (`:llm-generation`, `:world`) with GFs. Theirs is an agent-loop mixin. Do not rename ours. Closest steal: an `ai-agent` *bundle* (tools + instructions + hook GFs) you can `defer-load`. Name it `agent-bundle` / `agent-skill` — never `capability`.
+
+v2 defaults that matter:
+
+| Change | Implication for us |
+|--------|-------------------|
+| `openai:` → Responses API (`openai-chat:` to stay) | We already split `generate` / `respond`. Default the OpenAI backend's *app* path to `respond` once streaming works. |
+| `WebSearch`/`WebFetch` native-only unless `local=` | Pattern for `:world` backends: native tool when the model has it, local fallback otherwise. |
+| `MCP(url=)` **local by default** (credentials); `native=True` opt-in | Matches our "MCP is a peer, not a provider tool" stance. |
+| A2A extra **removed** → upstream `fasta2a` | We keep first-party `a2a-protocol`. Don't wrap fasta2a. |
+| Instrumentation v5 + `gen_ai.aggregated_usage.*` | When we wire telemetry, skip v1–4 names. |
+| `end_strategy` `early` → `graceful` (side-effect tools run next to output tools) | Our loop already runs all tool-calls in the step. Fine. |
+| Slim extras (bedrock/groq/mistral opt-in) | Same as our one-backend-per-repo rule. |
+
+Feature delta vs this stack (v2.36.0):
+
+| PydanticAI v2 | cl-stack | Steal? |
+|---------------|----------|--------|
+| 20+ providers, string swap, `FallbackModel` | 1 openai-compat + optional `llm-protocol-vllm-cpp` | Anthropic next; no LiteLLM |
+| Embeddings + image gen + realtime voice (OpenAI/Gemini/Azure/xAI) | image part only; no embed/audio GFs | embed P0; voice P2 |
+| Typed `output_type` + `ModelRetry` | `:output` + `use-value` / `ignore-output`, no retry | **leave** in `llm-protocol` |
+| Streaming + `run_stream_events` / AG-UI / Vercel AI adapters | stream GF; OpenAI signals; AG-UI encoder | stream P0 |
+| AG-UI interrupts → `DeferredTools` | `complete-invocation` / `:deferred` | already isomorphic |
+| MCP as `MCPToolset` + `list_prompts`/`get_prompt` | full dual-era protocol + `make-mcp-tool-source` | **ahead** on eras; **behind** on OAuth |
+| Tool Search + `defer_loading` capabilities | always-on tool list | P2: collapse unused tools to a catalog line |
+| Compaction (provider-native + window/summarize/tiered) | `prepare-agent-turns` hook only | **P1 after embed** — long runs die without this |
+| Code Mode (Monty sandbox, one `run_code` RT) | absent | leave until we have a sandbox; interesting |
+| Skills (`SKILL.md` on demand) | [#198](https://github.com/egao1980/cl-stack/issues/198) unlocked | P2, name ≠ A2A `agent-skill` |
+| Memory + conversation search (BM25 over compacted history) | absent | P2 mixin, not board |
+| Subagents / Planning / Advisor / Dynamic Workflow | `:handoffs` + nested agent-as-tool | on-par for handoff; no planner/advisor |
+| `Coder` harness (FS + shell + repo + plan + compaction) | `:world` GFs, no backends | `#196` + real `:compute`/`:code-editing` |
+| Durable: Temporal / DBOS / Prefect + `@durable_operation` + `StepPersistence` (`continue_run` / `fork_run`) | in-memory `agent-run`; blackboard is the durable story | leave Temporal; optional persist of `agent-run` is P2 |
+| Pending queue (`ctx.enqueue`) — steer mid-run | cancel + resume only | P2 if TUI needs it |
+| ACP (experimental, Zed) | no | leave (not A2A) |
+| YAML/JSON `AgentSpec` | `defagent` | leave |
+| Guardrails + spend limits | finish `:content-filter` | leave (product) |
+| CLI `clai` + `--mcp-config` + tool-call streaming | `cl-stack-llm-tui` | TUI is enough |
+| `count_tokens` on Anthropic/Bedrock | usage after the fact | P2 with anthropic backend |
+
+Do **not** grow `llm-protocol` into their Agent. v2 confirms the split we already locked: thin generate protocol, agent loop above, product/harness (`demiurge`) above that. Their Harness is the Demiurge analogue — `#197`.
+
 ---
 
 ## Recommended next (keep the protocol split)
@@ -203,17 +248,20 @@ Constants exist (`gen_ai.usage.input_tokens`). `generate` does not open a span, 
 
 ### P2 — product parity, not protocol sprawl
 
-6. Telemetry `:around` on generate/run (reuse `telemetry-protocol`).
-7. Memory mixin (`window` / `summarize`) on `prepare-agent-turns`.
+6. Telemetry `:around` on generate/run — emit OTel v5 / `gen_ai.aggregated_usage.*` (PydanticAI default).
+7. Compaction mixin on `prepare-agent-turns` (window + summarize). Their Harness Compaction is the model; do not put this in `llm-protocol`.
 8. `ag-ui-parity` + official A2A/AG-UI protos.
 9. Speech / transcribe backends (caps already named).
-10. Agent Skills ([#198](https://github.com/egao1980/cl-stack/issues/198)) — name must not collide with A2A `agent-skill`.
+10. Agent Skills ([#198](https://github.com/egao1980/cl-stack/issues/198)) — name must not collide with A2A `agent-skill` or `capability-protocol`.
 11. MCP OAuth on `mcp-backend-streamable-http` when a host requires it.
 
 ### Leave
 
 - PydanticAI `Agent` / output-tools / `ModelRetry` inside `llm-protocol`.
-- LangGraph `StateGraph` next to blackboard.
+- Renaming `capability-protocol` after their `Capability` mixin.
+- LangGraph / `pydantic-graph` next to blackboard.
+- Temporal/DBOS as a protocol (board + optional `agent-run` persist is enough).
+- Code Mode / Monty / ACP / YAML `AgentSpec`.
 - Colocating OpenAI / Anthropic / OTLP in protocol repos.
 - CopilotKit React.
 - Forking Autolith / `cl-llm-provider-api`.
@@ -232,4 +280,4 @@ Cookbook + brief pointed at nonexistent `llm-protocol/mcp`. Sampling is `ai-agen
 - Workspace: `llm-protocol` 0.1.0, `llm-protocol-openai` 0.1.0, `ai-agent-protocol` 0.2.0, `mcp-protocol` 0.2.0, `a2a-protocol` 0.2.0, `ag-ui-protocol` 0.2.1, `blackboard-protocol` 0.1.1 / `capability-protocol` 0.2.0, `telemetry-protocol` 0.1.0.
 - Briefs: [llm.md](capabilities/llm.md) · [agent-wire.md](capabilities/agent-wire.md) · [mcp.md](capabilities/mcp.md) · [a2a.md](capabilities/a2a.md) · [ag-ui.md](capabilities/ag-ui.md) · [blackboard.md](capabilities/blackboard.md).
 - Issues: [#195](https://github.com/egao1980/cl-stack/issues/195)–[#198](https://github.com/egao1980/cl-stack/issues/198).
-- External (2026): Spring AI 2.0 vs LangChain4j 1.17; Vercel AI SDK 6 (`Agent`, MCP, DurableAgent); PydanticAI v1 + A2A/MCP; FastMCP 3 / MCP spec `2026-07-28`.
+- External (2026-08-29): Spring AI 2.0 vs LangChain4j 1.17; Vercel AI SDK 6; **PydanticAI v2.36.0** (v2.0.0 2026-06-23; [capabilities](https://ai.pydantic.dev/capabilities/), [upgrade](https://ai.pydantic.dev/changelog/), [v2 post](https://pydantic.dev/articles/pydantic-ai-v2)); FastMCP 3 / MCP spec `2026-07-28`.
