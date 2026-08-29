@@ -127,7 +127,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-backend-async` | **0.2.5** | async + HTTP/2 + RFC 8441 WS; sync slurp via `submit` |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
-| `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` + demo |
+| `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` |
+| `ws-backend-websocket-driver` | **0.2.2** | H1 Upgrade (`websocket-driver`); demo `scripts/demo.lisp` |
 | `ag-ui-protocol` | **0.2.0** | typed agent↔UI events (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
 | `a2a-backend-jsonrpc` | **0.2.1** | JSON-RPC 2.0 + SSE |
@@ -204,6 +205,7 @@ CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends
 
 ```lisp
 (cl-repo:load-system "ws-protocol" :version "0.2.2")
+(cl-repo:load-system "ws-backend-websocket-driver" :version "0.2.2") ; :http/1.1 Upgrade
 (cl-repo:load-system "http-backend-async" :version "0.2.4") ; :http/2 Extended CONNECT
 ;; Windows H1 Upgrade:
 ;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")

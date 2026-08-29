@@ -33,7 +33,8 @@
 
 (call-with-ci-muffles
  (lambda ()
-   (dolist (n '("rove" "com.inuoe.jzon" "yason"))
+   (dolist (n '("rove" "com.inuoe.jzon" "yason"
+                "cl-json" "assoc-utils" "trivial-utf-8"))
      (unless (asdf:find-system n nil)
        (ql:quickload n :silent t)))
    (asdf:load-system "cl-stack/meta")

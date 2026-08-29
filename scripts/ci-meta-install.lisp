@@ -49,7 +49,10 @@
                   ("com.inuoe.jzon" :ql)
                   ("yason" :ql)
                   ("trivial-features" :ql)
-                  ("cl-unicode" :ql)))
+                  ("cl-unicode" :ql)
+                  ("cl-json" :ql)
+                  ("assoc-utils" :ql)
+                  ("trivial-utf-8" :ql)))
      (ci-record-installed-version "cl-stack-ssl" "CL_STACK_SSL_VERSION"))))
 
 (format t "~&; ci: meta install done~%")
