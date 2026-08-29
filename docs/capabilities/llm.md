@@ -35,7 +35,7 @@ Product/agent loop, tool *execution*, UI transcripts, server-side `previous_resp
 | **Finish** | `:stop` `:length` `:tool-use` `:content-filter`. |
 | **Wire** | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai): `POST {base}/chat/completions` + `POST {base}/responses`. HTTP = `http-backend-async` × libuv. Default `http://127.0.0.1:1234/v1`. |
 | **Capability** | Optional `llm-protocol/capability` — `:llm` catalogue (`make-llm-catalogue`) + `complete` → `generate`. Lookup is `capability-supported-p`, not a parallel flag object. |
-| **MCP** | Optional `llm-protocol/mcp` — map sampling → `generate`. No second `create-message`. |
+| **MCP** | Optional `ai-agent-protocol/mcp` — map sampling → `generate`. No second `create-message`. Not in this repo. |
 | **Stream** | GF exists. Mock yields parts via `on-part`. OpenAI wave-1 → `llm-unsupported`. |
 | **Autolith** | Do not fork `cl-llm-provider-api`. |
 
@@ -59,7 +59,10 @@ Product/agent loop, tool *execution*, UI transcripts, server-side `previous_resp
 |-------|------|
 | Protocol + mock | [`egao1980/llm-protocol`](https://github.com/egao1980/llm-protocol) |
 | OpenAI-compat | [`egao1980/llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) |
-| Capability / MCP | `llm-protocol/capability`, `llm-protocol/mcp` |
+| Capability | `llm-protocol/capability` |
+| MCP sampling | [`ai-agent-protocol/mcp`](https://github.com/egao1980/ai-agent-protocol) — **not** `llm-protocol` |
+
+Gaps vs Py/Node/Java: [AI-GAP.md](../AI-GAP.md).
 
 Env: `OPENAI_API_KEY` / `LM_API_TOKEN` · `OPENAI_BASE_URL` · `OPENAI_MODEL`. Tests inject `request-fn` plus an async×libuv fixture; live HTTP behind `LLM_OPENAI_LIVE=1`.
 

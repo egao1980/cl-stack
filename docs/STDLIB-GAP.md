@@ -44,6 +44,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | FFI | De-facto converged | P0 | CFFI + overlays |
 | Time / TZ | De-facto converged | P2 | local-time + tzdata overlay |
 | Testing | Fragmented | P0 | **Rove** + corpus; dogfood PRs |
+| LLM / agents / wire | Fragmented | P1 | **wave-1 shipped** — generate + MCP/A2A/AG-UI + agent loop; **gaps** (stream, embed, RAG, providers) → [AI-GAP.md](AI-GAP.md) |
 | Gray streams | De-facto converged | P1 | trivial-gray-streams; object-stream shell → `io-protocol` |
 | Weak refs | De-facto converged | P2 | trivial-garbage |
 

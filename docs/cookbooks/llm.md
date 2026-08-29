@@ -113,12 +113,12 @@ Access content: `llm-response-content` (parts), `llm-response-text`, `llm-respon
 
 Vocabulary (`catalogue-defines-p :llm :llm-video`) is not the same as an instance (`capability-supported-p cat :llm-video`). `register-llm-backend` copies the live catalogue onto a blackboard.
 
-MCP host: do **not** add a second `create-message`.
+MCP host: do **not** add a second `create-message`. Sampling is `ai-agent-protocol/mcp` — **not** `llm-protocol`.
 
 ```lisp
-(asdf:load-system "llm-protocol/mcp")
+(asdf:load-system "ai-agent-protocol/mcp")
 (setf (mcp-protocol:mcp-client-sampling-handler client)
-      (llm-protocol/mcp:make-mcp-sampling-handler :backend b))
+      (ai-agent-protocol/mcp:make-mcp-sampling-handler :backend b))
 ```
 
 ---

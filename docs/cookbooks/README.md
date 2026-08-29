@@ -24,5 +24,5 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [AG-UI](ag-ui.md) | `ag-ui-protocol` / SSE · protobuf-in-SSE (`RunAgentInput` → events) |
 | [A2A](a2a.md) | `a2a-protocol` / JSON-RPC · REST · gRPC (Agent Card + tasks) |
 | [Blackboard](blackboard.md) | `blackboard-protocol` / `capability-protocol` (KSAR + COW, no AI wire) |
-| [LLM](llm.md) | `llm-protocol` / `llm-protocol-openai` (turns + parts, OpenAI-compat) |
+| [LLM](llm.md) | `llm-protocol` / `llm-protocol-openai` (turns + parts, OpenAI-compat) — gaps: [AI-GAP.md](../AI-GAP.md) |
 | [Unicode / i18n / l10n](unicode.md) | `unicode-protocol` / `i18n-protocol` / `l10n-protocol` (+ ICU · ICU4J · sb-unicode) |
