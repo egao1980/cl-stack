@@ -70,65 +70,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - uses: egao1980/cl-repository/.github/actions/setup-client@main
+      - uses: egao1980/cl-repository/.github/actions/setup-roswell@main
+        with:
+          sbcl-version: ${{ env.SBCL_VERSION }}
+          roswell-version: ${{ env.ROSWELL_VERSION }}
+
       - uses: oras-project/setup-oras@v2
         with:
           version: 1.2.3
 
-      - name: Install Roswell (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
-          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
-
-      - name: Install Roswell (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          curl -sL "https://github.com/roswell/roswell/releases/download/v${ROSWELL_VERSION}/roswell_${ROSWELL_VERSION}_amd64.zip" \
-            -o /tmp/roswell.zip
-          rm -rf /c/roswell && mkdir -p /c/roswell
-          unzip -qo /tmp/roswell.zip -d /c/roswell
-          echo "/c/roswell/roswell" >> "$GITHUB_PATH"
-          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
-
-      - name: Install SBCL
-        shell: bash
-        run: |
-          ros install "sbcl-bin/$SBCL_VERSION"
-          ros use "sbcl-bin/$SBCL_VERSION"
-
-      - name: Pull cl-repository-client (OCI)
-        shell: bash
-        run: |
-          echo "${GITHUB_TOKEN}" | oras login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
-          rm -rf /tmp/cl-repo-pull .cl-repository
-          mkdir -p /tmp/cl-repo-pull .cl-repository
-          CLIENT_VER="${CL_REPOSITORY_CLIENT_VERSION}"
-          if [ -z "${CLIENT_VER}" ] || [ "${CLIENT_VER}" = "latest" ]; then
-            CLIENT_VER=$(oras manifest fetch "${CL_REPOSITORY_CLIENT_IMAGE}:latest" \
-              | python3 -c 'import sys,json; print(json.load(sys.stdin)["annotations"]["org.opencontainers.image.version"])')
-            : "${CLIENT_VER:?failed to resolve cl-repository-client from :latest anchor}"
-            echo "Resolved cl-repository-client → ${CLIENT_VER}"
-          fi
-          oras pull "${CL_REPOSITORY_CLIENT_IMAGE}:${CLIENT_VER}" -o /tmp/cl-repo-pull
-          for f in /tmp/cl-repo-pull/*.tar.gz; do
-            tar -xzf "$f" -C .cl-repository
-          done
-          CLIENT_DIR="$(find .cl-repository -maxdepth 1 -type d -name 'cl-oci-*' | head -1)"
-          : "${CLIENT_DIR:?cl-oci-* not found after oras pull}"
-          echo "CL_REPOSITORY_CLIENT_DIR=${CLIENT_DIR}" >> "$GITHUB_ENV"
-          ls -la "${CLIENT_DIR}"
-
-      - name: Bootstrap cl-repository-client (QL deps for client only)
-        shell: bash
-        run: |
-          ros -e '(ql:quickload (quote ("yason" "ironclad" "babel" "dexador" "quri" "chipz" "flexi-streams" "cl-ppcre" "cl-base64" "trivial-features" "salza2" "archive")) :silent t)' -q
-
       - name: Apply stable pins from GHCR
         shell: bash
         run: |
-          export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/${CL_REPOSITORY_CLIENT_DIR}//:"
           ros -l scripts/ci-meta-install.lisp -q
 
       # Overlay libssl needs matching libcrypto on the loader path (Linux ignores
@@ -177,5 +131,4 @@ jobs:
       - name: Load cl-stack/meta + e2e tests
         shell: bash
         run: |
-          export CL_SOURCE_REGISTRY="$(pwd)//:$(pwd)/${CL_REPOSITORY_CLIENT_DIR}//:"
           ros -l scripts/ci-meta-test.lisp -q
