@@ -43,15 +43,16 @@ are the composition holes, not a missing graph DSL.
 | OpenAI wire | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | 0.1.0 | `POST /chat/completions` + `/responses`; `GET /models`; vision/tools/json_schema | `stream-*` → `llm-unsupported`. No embeddings / images / audio / realtime / batches / files / vector stores |
 | Agent loop | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | 0.2.0 | `run-ai-agent(-async)`, function tools, nested agent-as-tool, `:handoffs`, HITL `approve`/`deny`, parallel `invoke-tool-async` | No memory, no graph, no evals, no skill loader. Streaming depends on LLM backend |
 | MCP sampling + tools | `ai-agent-protocol/mcp` | 0.1.0 | `create-message` → `generate`; `make-mcp-tool-source` | Cookbook pointed at nonexistent `llm-protocol/mcp` (fixed here) |
-| AG-UI encode | `ai-agent-protocol/ag-ui` | 0.2.0 | `on-event` → AG-UI events | — |
-| A2A expose | `ai-agent-protocol/a2a` | 0.1.0 | Agent as A2A peer | Thin |
+| AG-UI encode | `ai-agent-protocol/ag-ui` | 0.2.0 | `on-event` → AG-UI events | Drops thinking / image parts |
+| A2A expose | `ai-agent-protocol/a2a` | 0.1.0 | Sync `run-ai-agent` → completed task + text artifact | No stream / input-required / artifacts beyond text |
 | MCP | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) **0.2.0** + stdio **0.1.1** + Streamable HTTP **0.2.0** | dual-era `2026-07-28` / `2025-11-25`; tools/resources/prompts + sampling/elicit/roots/completions/subs/MRTR GFs | Auth / OAuth / Tasks = non-goal. No legacy `2025-06-18` |
 | A2A | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0** | Card + tasks + stream + list/cancel/resubscribe | Push notifications refuse. gRPC payloads = JSON objects (no official proto) |
 | AG-UI | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.2.1** + SSE / protobuf-in-SSE **0.2.0** + TUI sink | `RUN_*` / `TEXT_MESSAGE_*` / `TOOL_CALL_*` / `STATE_*` / `MESSAGES_SNAPSHOT` | No reasoning/activity families. Protobuf = JSON octets. TUI `STATE_DELTA` no-op |
 | Blackboard | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) **0.1.1** + `capability-protocol` **0.2.0** | KSAR + COW; `:llm` / `:world` vocab | Zero LLM/wire deps (locked). `:llm-audio` etc. are vocab only |
 | Caps | `:llm-generation` … `:llm-responses` | 0.2.0 | Catalogue + `complete` → `generate` | No `:llm-embeddings`. Speech/transcribe GFs have no backend |
 | Telemetry | [`telemetry-protocol`](https://github.com/egao1980/telemetry-protocol) | 0.1.0 | `+gen-ai-usage-{input,output}-tokens+` constants | No auto-span around `generate`. No gen_ai semantic conventions wiring in llm-protocol |
-| Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui), [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) | — | Desk chat + MCP file tools; AG-UI transcript sink | Not a protocol. vllm.cpp optional |
+| Native GGUF | [`llm-protocol-vllm-cpp`](https://github.com/egao1980/llm-protocol-vllm-cpp) | — | Used by demo/TUI `/vllm` | Not in this workspace tree; not an OpenAI-compat peer |
+| Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui), [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) | — | Desk chat + MCP file tools; AG-UI transcript sink | Not a protocol |
 | Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge, [#198](https://github.com/egao1980/cl-stack/issues/198) agent-skills | open | Composition / SKILL.md | Not started |
 
 Parity canaries: [`mcp-parity`](https://github.com/egao1980/mcp-parity), [`a2a-parity`](https://github.com/egao1980/a2a-parity). **No `ag-ui-parity`.**
@@ -151,26 +152,29 @@ Does **not** have (and should not steal from LangGraph):
 
 ### MCP — spec surface yes; host product no
 
-Protocol GFs cover the 2026-07-28 surface (including MRTR `input_required`, sampling, elicitation, roots, completions, subscriptions, list_changed). Backends may leave I/O thin — that is the locked rule.
+Protocol GFs cover the 2026-07-28 surface. Catalog (tools/resources/prompts) + MRTR + completions + dual-era negotiate are real. Backends are thin transports — locked.
 
-Gaps vs FastMCP 3 / Spring AI 2.0 MCP starters:
+Server vs client is the real hole vs FastMCP 3:
 
-- **OAuth / resource metadata** — transport-level, not a protocol GF. Streamable HTTP will lose to hosted FastMCP the first time a SaaS MCP requires OAuth.
-- **Tasks extension** — non-goal.
-- **`cl-mcp` does not consume `mcp-protocol`.** Product split is correct; the Lisp-tools server is a second stack until it switches.
-- No HTTP+SSE `2024-11-05` (locked). Fine.
+- **Sampling / elicitation / roots as server RPC** — GFs + client handlers exist; server dispatch **rejects `-32601`**. A Lisp MCP *server* cannot ask the host to sample. Host-side `make-mcp-sampling-handler` still works.
+- **Outbound push** — `notify-*-list-changed` / progress build objects and return `t`; no wire send. Client inbound handlers exist.
+- **OAuth / Tasks** — non-goals. First SaaS MCP that requires OAuth loses.
+- **`cl-mcp` does not consume `mcp-protocol`.** Product split is correct; two stacks until it switches.
+- `mcp-parity` skips `input_required` interop. No HTTP+SSE `2025-06-18` (locked).
 
 ### A2A — bindings exist; proto and push do not
 
-GFs: `fetch/serve-agent-card`, `send-message`, `stream-message`, `get/list/cancel-task`, `resubscribe-task`. Push-notification methods are recognized and **refused**.
+GFs: `fetch/serve-agent-card`, `send-message`, `stream-message`, `get/list/cancel-task`, `resubscribe-task`. Push-notification methods are recognized and **refused** (`-32003`). Auth is a wire enum (`TASK_STATE_AUTH_REQUIRED`) — no OAuth/JWT flow.
 
-vs official A2A Python/Java/TS: missing authenticated extended card UX, official `a2a.proto` compile (grpc backend is JSON-in-gRPC), webhook push. LangChain4j has A2A; Spring AI 2.0 still does not — we are ahead of Spring here.
+Binding holes: HTTP+JSON has no resubscribe (`:unsupported`). gRPC is JSON-in-gRPC, not compiled `a2a.proto`. `a2a-parity` covers JSON-RPC SendMessage only; stream / REST / gRPC deferred.
+
+vs official A2A Python/Java/TS: missing authenticated extended card UX and webhook push. LangChain4j has A2A; Spring AI 2.0 still does not — we are ahead of Spring on bindings, behind on proto/auth.
 
 ### AG-UI — server events yes; client ecosystem no
 
-Wave-1 event set matches CopilotKit's core transcript. Missing (locked): reasoning / activity families, official Event proto, CopilotKit React. TUI sink does not apply `STATE_DELTA`.
+Wave-1 event set matches CopilotKit's core transcript (`RUN_*` / `TEXT_MESSAGE_*` / `TOOL_CALL_*` / `STATE_*` / `MESSAGES_SNAPSHOT`). `STEP_*` schemas exist; default echo never emits them. `REASONING_*` is missing — decode **errors**. TUI `STATE_DELTA` is a no-op. Encoder skips thinking/image.
 
-No interop canary. Add `ag-ui-parity` (Lisp ↔ CopilotKit / `@ag-ui/client`) before claiming done vs Node.
+HITL lives on `ai-agent-protocol` (`approve`/`deny`), not as AG-UI event types. No interop canary. Add `ag-ui-parity` (Lisp ↔ CopilotKit / `@ag-ui/client`) before claiming done vs Node.
 
 ### Blackboard + capabilities — vocab ahead of adapters
 
