@@ -7,7 +7,7 @@
 | Layer | Analogue | Lisp |
 |-------|----------|------|
 | Protocol / facade | browser `WebSocket` | [`ws-protocol`](https://github.com/egao1980/ws-protocol) (`ws` nick) |
-| H1 Upgrade backend | websocket-client | `ws-backend-websocket-driver` · [`http-backend-winhttp`](https://github.com/egao1980/http-backend-winhttp) |
+| H1 Upgrade backend | websocket-client | [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) · [`http-backend-winhttp`](https://github.com/egao1980/http-backend-winhttp) |
 | H2 Extended CONNECT | (rare in Python) | [`http-backend-async`](https://github.com/egao1980/http-backend-async) **0.2.3+** |
 
 Capability brief (RFCs, CLOS transport split): [ws-protocol.md](../capabilities/ws-protocol.md). Pins: [QUICKSTART](../QUICKSTART.md).
@@ -47,7 +47,7 @@ Capability brief (RFCs, CLOS transport split): [ws-protocol.md](../capabilities/
 Runnable demo (starts Clack echo + client):
 
 ```bash
-# from a ws-protocol checkout with deps installed
+# from a ws-backend-websocket-driver checkout with deps installed
 ros -l scripts/demo.lisp
 ```
 
@@ -167,5 +167,5 @@ Live: `WINHTTP_WS_LIVE=1`. Upgrade-only — not RFC 8441.
 
 | Script | Repo | What |
 |--------|------|------|
-| `scripts/demo.lisp` | [ws-protocol](https://github.com/egao1980/ws-protocol) | Local H1 echo round-trip |
+| `scripts/demo.lisp` | [ws-backend-websocket-driver](https://github.com/egao1980/ws-backend-websocket-driver) | Local H1 echo round-trip |
 | `scripts/demo-ws.lisp` | [http-backend-async](https://github.com/egao1980/http-backend-async) | Extended CONNECT open (env URL) |

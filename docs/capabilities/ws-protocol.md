@@ -55,11 +55,11 @@ CLOS split (mirrors `http-protocol` HTTP version):
 
 | Backend | Transports | Notes |
 |---------|------------|-------|
-| `ws-backend-websocket-driver` | `:http/1.1` | Wave-1 driver |
+| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) | `:http/1.1` | Wave-1 driver (own repo) |
 | `http-backend-winhttp` **0.1.3+** | `:http/1.1` | Native WinHTTP WebSocket upgrade; live `WINHTTP_WS_LIVE` |
 | `http-backend-async` **0.2.3+** | `:http/2` | RFC 8441 Extended CONNECT + `fast-websocket` framing; live `HTTP_ASYNC_WS_H2_LIVE` |
 
-`ws-protocol` **0.2.2+**: `feature-or-env-enabled-p` for live/smoke gates (`*features*` ∪ truthy env). Cookbook: [websocket.md](../cookbooks/websocket.md); demos `ws-protocol/scripts/demo.lisp`, `http-backend-async/scripts/demo-ws.lisp`.
+`ws-protocol` **0.2.2+**: `feature-or-env-enabled-p` for live/smoke gates (`*features*` ∪ truthy env). Cookbook: [websocket.md](../cookbooks/websocket.md); demos `ws-backend-websocket-driver/scripts/demo.lisp`, `http-backend-async/scripts/demo-ws.lisp`.
 
 ---
 
@@ -133,13 +133,11 @@ P2: high-water marks, explicit `drain` / `pause` / `resume` mirroring Node `stre
 
 ## Backend plan
 
-| Layer | Repo (planned) | Notes |
-|-------|----------------|-------|
+| Layer | Repo | Notes |
+|-------|------|-------|
 | Protocol | [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) | generics + conditions + `ws` facade |
-| Client backend | same repo: ASDF `ws-backend-websocket-driver` | wraps `websocket-driver-client` |
+| Client backend | [`egao1980/ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) | wraps `websocket-driver-client` |
 | TLS | `cl-stack-ssl` | `#35` WSS Done-when |
-
-Wave-1 ships the thin backend **in-repo** (pure Lisp + cl+ssl via driver). Split later if CI/natives diverge.
 
 ---
 
