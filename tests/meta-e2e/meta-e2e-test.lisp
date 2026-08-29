@@ -9,6 +9,7 @@
   (ok (asdf:component-loaded-p (asdf:find-system "cl-stack/meta")))
   ;; Spot-check a few roots from the metapackage.
   (dolist (sys '("http-protocol" "cl-stack-http" "event-protocol"
-                 "event-backend-libuv" "ws-protocol"))
+                 "event-backend-libuv" "ws-protocol"
+                 "ws-backend-websocket-driver"))
     (ok (asdf:component-loaded-p (asdf:find-system sys))
         (format nil "~a loaded" sys))))

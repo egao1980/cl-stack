@@ -6,7 +6,7 @@
   :event-backend "event-backend-libuv"
   :http-backend "http-backend-dexador"
   :http-async-backend "http-backend-async"
-  :ws-backend "ws-protocol")
+  :ws-backend "ws-backend-websocket-driver")
  (:systems
   ;; Core / FFI
   ("alexandria" "1.0.1")
@@ -83,4 +83,5 @@
   ("cl-stack-jwt" "0.2.0")
   ("cl-stack-oauth2" "0.1.0")
   ;; WebSocket
-  ("ws-protocol" "0.2.2")))
+  ("ws-protocol" "0.2.2")
+  ("ws-backend-websocket-driver" "0.2.2")))

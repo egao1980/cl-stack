@@ -43,7 +43,8 @@
                "cl-stack-http"
                "cl-stack-jwt"
                "cl-stack-oauth2"
-               "ws-protocol")
+               "ws-protocol"
+               "ws-backend-websocket-driver")
   ;; Pure dependency umbrella (Anaconda-style metapackage) — no Lisp sources.
   :components ())
 
