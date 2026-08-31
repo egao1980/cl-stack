@@ -350,12 +350,12 @@ Async variants: either `*-async` siblings (httpx) **or** same names under an asy
 ```lisp
 (bb:attach (http:get-async "https://example.com" :accept "application/json")
   (lambda (res)
-    (print (http:status res))))
+    (print (http-protocol:response-status res))))
 ```
 
 ### Response accessors
 
-`status`, `headers`, `header`, `url`, `http-version`, `content` / `text` / `json` / `body-stream`, `cookies`, `history` (redirect chain), `trailers`.
+`response-status`, `response-headers`, `response-header`, `response-url`, `response-http-version`, `response-body` / `body-stream`, `response-cookies`, `response-history`. Facade (`stack-http`) adds `response-text` / `response-json`.
 
 ### Conditions
 

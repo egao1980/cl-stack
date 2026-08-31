@@ -35,8 +35,8 @@ Related: [overlays.md](overlays.md), [LICENSE-POLICY.md](LICENSE-POLICY.md).
   ("http-backend-async" "0.1.0")
   ("event-protocol" "0.1.0")
   ("event-backend-libuv" "0.1.0")
-  ("ws-protocol" "0.2.2")
-  ("ws-backend-websocket-driver" "0.2.2")
+  ("ws-protocol" "0.1.0")
+  ("ws-backend-websocket-driver" "0.1.0")
   ("cl-stack-ssl" "3.4.1")
   ;; Unix-only second event backend — omit on Windows consumers
   ("event-backend-libev" "0.1.0" :platforms (:unix))))
@@ -124,6 +124,6 @@ Never both fork **and** `cl-stack-systems` import for the same lib.
 (asdf:load-system "cl-stack/meta")   ; umbrella over curated roots
 ```
 
-Or install a single root: `(cl-repo:load-system "cl-stack-http" :version "0.1.7")`.
+Or install a single root: `(cl-repo:load-system "cl-stack-http" :version "0.1.8")`.
 
 Clean-container E2E = workflow **Metapackage E2E** (`scripts/ci-meta-*.lisp`).

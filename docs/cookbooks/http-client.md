@@ -15,12 +15,12 @@ Capability brief (decisions, RFCs): [http-protocol.md](../capabilities/http-prot
 Pins below use current OCI tags; bump with hub releases.
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.7")
+(cl-repo:load-system "cl-stack-http" :version "0.1.8")
 ;; soft CE codecs (optional):
 ;;   http-encoding-chipz / http-encoding-brotli / http-encoding-zstd
 ;; OAuth2 / JWT (optional):
 ;;   (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
-;;   (cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
+;;   (cl-repo:load-system "cl-stack-jwt" :version "0.2.0")
 ```
 
 Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in http-parity).
@@ -54,11 +54,11 @@ Nickname: `#:stack-http` or local nickname `#:http` → `cl-stack-http` (as in h
 | download to path | `download` / `download-many` (CD filename + MIME ext; streamed) | have |
 | upload path | `upload` / `:files` | have |
 | `AsyncClient` | `*-async` + blackbird; prefer `:async` backend | have |
-| `http2=True` | `:http-version :http/2` / `:auto` on client+request | **have** (http-protocol **0.3.0+** + async/winhttp backends; see [QUICKSTART](../QUICKSTART.md#http2-preference-http-protocol-030)) |
+| `http2=True` | `:http-version :http/2` / `:auto` on client+request | **have** (http-protocol **0.3.1+** + async/winhttp backends; see [QUICKSTART](../QUICKSTART.md#http2-preference-http-protocol-031)) |
 | `hooks=` / `event_hooks=` | `prepare-request` / `handle-response` + `:client-class` | **have** (cl-stack-http **0.1.5+**; see [§12](#12-hooks-via-clos-around)) |
 | `r.elapsed` / `num_bytes_downloaded` | `response-elapsed` / `response-bytes-downloaded` | **have** (cl-stack-http **0.1.6+** / http-protocol **0.2.3+**; see [§13](#13-timing--byte-stats)) |
 | `PreparedRequest` / `build_request` mutability | build `http-request` + `send` | partial (CLOS, no httpx merge DSL) |
-| OAuth2 / JWT | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | **sep** packages **0.1.0** (see [§8](#8-auth)) |
+| OAuth2 / JWT | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | **sep** packages **0.1.0** / **0.2.0** (see [§8](#8-auth)) |
 
 ---
 
@@ -236,7 +236,7 @@ They plug into stack-http via CLOS `prepare-auth` / `handle-auth-response`.
 ```
 
 ```lisp
-(cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
+(cl-repo:load-system "cl-stack-jwt" :version "0.2.0")
 (stack-jwt:encode :hs256 key '(("sub" . "u") ("exp" . 9999999999)))
 (stack-jwt:decode :hs256 key token)
 (stack-jwt:inspect-token token)   ; unverified
@@ -246,7 +246,7 @@ They plug into stack-http via CLOS `prepare-auth` / `handle-auth-response`.
 | Package | OCI | Role |
 |---------|-----|------|
 | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) | `0.1.0` | scopes, grants, PKCE, 401 refresh |
-| [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | `0.1.0` | encode/decode/inspect (jose) |
+| [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | `0.2.0` | encode/decode/inspect (HS* via crypto-protocol:hmac) |
 
 ---
 

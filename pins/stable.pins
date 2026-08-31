@@ -22,9 +22,9 @@
   ("com.inuoe.jzon" "1.1.4")
   ("yason" "0.8.3")
   ("tomlet" "0.1.0")
-  ("json-protocol" "0.1.1")
-  ("json-backend-jzon" "0.1.1")
-  ("json-backend-yason" "0.1.1")
+  ("json-protocol" "0.2.0")
+  ("json-backend-jzon" "0.2.0")
+  ("json-backend-yason" "0.2.0")
   ("cl-stack-config" "0.1.0")
   ;; CLI / logging / serdes
   ("cli-protocol" "0.1.0")
@@ -32,18 +32,18 @@
   ("cli-backend-adopt" "0.1.0")
   ("clingon" "0.5.0")
   ("adopt" "1.2.0")
-  ("serdes-protocol" "0.1.0")
-  ("sexp-protocol" "0.1.0")
+  ("serdes-protocol" "0.2.1")
+  ("sexp-protocol" "0.2.0")
   ("log-protocol" "0.1.1")
   ("log-backend-log4cl" "0.1.1")
   ("log-backend-vom" "0.1.1")
   ("log4cl" "1.1.4")
   ("vom" "latest")
   ;; Paths
-  ("cl-stack-pathlib" "0.1.1")
+  ("cl-stack-pathlib" "0.2.1")
   ;; Event
-  ("event-protocol" "0.1.1")
-  ("event-backend-libuv" "0.1.1")
+  ("event-protocol" "0.2.0")
+  ("event-backend-libuv" "0.1.2")
   ("event-backend-libev" "0.1.2" :platforms (:unix))
   ;; TLS + CE natives
   ("cl-stack-ssl" "3.4.1")
@@ -53,12 +53,12 @@
   ("cl-stack-brotli" "1.2.0")
   ("cl-stack-zstd" "1.5.7")
   ;; HTTP
-  ("http-protocol" "0.3.0")
+  ("http-protocol" "0.3.1")
   ("http-encoding-chipz" "0.1.0")
   ("http-encoding-brotli" "0.1.0")
   ("http-encoding-zstd" "0.1.0")
   ("http-backend-dexador" "0.1.2")
-  ("http-backend-async" "0.2.4")
+  ("http-backend-async" "0.2.5")
   ("http-backend-winhttp" "0.1.3" :platforms (:windows))
   ("cl-stack-http" "0.1.8")
   ;; HTTP server
@@ -76,7 +76,7 @@
   ;; Process / RPC
   ("process-protocol" "0.1.0")
   ("process-backend-uiop" "0.1.0")
-  ("rpc-protocol" "0.1.0")
+  ("rpc-protocol" "0.2.0")
   ("rpc-backend-inprocess" "0.1.0")
   ;; Auth
   ("jose" "0.1.0")

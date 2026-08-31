@@ -4,15 +4,18 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-ag-ui`) | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) | **0.2.0** |
-| Default backend | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse) | **0.2.0** |
-| Protobuf-in-SSE | [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) | **0.2.0** |
+| Protocol (`stack-ag-ui`) | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) | **0.3.0** |
+| Client reducer | `ag-ui-protocol/client` | (same) |
+| Default backend | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse) | **0.2.1** |
+| Protobuf (WKT) | [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) | **0.3.0** |
+| TUI sink | [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) | **0.1.0** |
+| JSON Patch | [`json-patch`](https://github.com/egao1980/json-patch) | **0.1.0** |
 
-Brief: [ag-ui.md](../capabilities/ag-ui.md) (#187). **Not JSON-RPC.** Official HTTP is `POST RunAgentInput` → `text/event-stream`.
+Brief: [ag-ui.md](../capabilities/ag-ui.md) (#187). **Not JSON-RPC.** Official HTTP is `POST RunAgentInput` → `text/event-stream`. All **36** event types. Loop is `run-ai-agent` — [ai-agent.md](ai-agent.md).
 
 ```lisp
-(cl-repo:load-system "ag-ui-protocol" :version "0.2.0")
-(cl-repo:load-system "ag-ui-backend-sse" :version "0.2.0")
+(cl-repo:load-system "ag-ui-protocol" :version "0.3.0")
+(cl-repo:load-system "ag-ui-backend-sse" :version "0.2.1")
 (cl-repo:load-system "http-server-backend-hunchentoot" :version "0.1.0")
 ```
 
@@ -33,7 +36,7 @@ Brief: [ag-ui.md](../capabilities/ag-ui.md) (#187). **Not JSON-RPC.** Official H
 ;;    TEXT_MESSAGE_END RUN_FINISHED)
 ```
 
-Swap the handler for a real agent:
+Incremental handlers call `ag-ui-emit` while `*ag-ui-emit*` is bound. A returned event list is `mapc`'d onto `:on-event` if the handler never emits.
 
 ```lisp
 (make-ag-ui-agent
@@ -45,6 +48,8 @@ Swap the handler for a real agent:
                    :thread-id (run-agent-input-thread-id input)
                    :run-id (run-agent-input-run-id input)))))
 ```
+
+`*_CHUNK` → `expand-ag-ui-chunks` (or a `chunk-expander`) so reducers only see START/CONTENT/END. Unknown `type` → `unknown-ag-ui-event` unless `:strict t`.
 
 ---
 
@@ -74,28 +79,22 @@ curl -sN -X POST http://127.0.0.1:8000/ \
   }'
 ```
 
-Wire frames:
-
-```
-data: {"type":"RUN_STARTED","threadId":"thread_123","runId":"run_456"}
-
-data: {"type":"TEXT_MESSAGE_START","messageId":"msg-echo","role":"assistant"}
-
-data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"msg-echo","delta":"Hello, how are you?"}
-
-data: {"type":"TEXT_MESSAGE_END","messageId":"msg-echo"}
-
-data: {"type":"RUN_FINISHED","threadId":"thread_123","runId":"run_456"}
-```
-
-Point CopilotKit `HttpAgent` at that URL. Clack app only (no server): `make-ag-ui-app`.
+`Accept: application/vnd.ag-ui.event+proto` → length-prefixed WKT `google.protobuf.Value` (not official `Event` oneof). GET on the path → `AgentCapabilities`. Clack app only: `make-ag-ui-app`.
 
 ---
 
-## 3. Client consume
+## 3. Client consume (async × libuv)
 
 ```lisp
-(asdf:load-system "http-backend-dexador")  ; or async
+(asdf:load-system "ag-ui-backend-sse")
+(asdf:load-system "event-backend-libuv")
+(asdf:load-system "http-backend-async")
+
+(setf http-backend-async:*event-backend-maker*
+      #'event-backend-libuv:make-libuv-backend)
+(setf http-protocol:*http-backend*
+      (http-backend-async:make-async-backend))
+
 (let ((backend (ag-ui-backend-sse:make-sse-ag-ui-backend
                 :url "http://127.0.0.1:8000/")))
   (ag-ui-protocol:run-agent
@@ -108,25 +107,49 @@ Point CopilotKit `HttpAgent` at that URL. Clack app only (no server): `make-ag-u
 
 Or parse a captured stream: `decode-ag-ui-sse-stream`.
 
----
+Reducer (`json-patch` for `STATE_DELTA`):
 
-## Event types (wave-1)
-
-| Family | Types |
-|--------|--------|
-| Run | `RUN_STARTED` `RUN_FINISHED` `RUN_ERROR` |
-| Step | `STEP_STARTED` `STEP_FINISHED` |
-| Text | `TEXT_MESSAGE_START` `TEXT_MESSAGE_CONTENT` `TEXT_MESSAGE_END` |
-| Tools | `TOOL_CALL_START` `TOOL_CALL_ARGS` `TOOL_CALL_END` `TOOL_CALL_RESULT` |
-| State | `STATE_SNAPSHOT` `STATE_DELTA` (RFC 6902) `MESSAGES_SNAPSHOT` |
-
-Reasoning / activity / subagent families are non-goals. `:format :protobuf` is JSON UTF-8 octets in SSE `data:` until the official Event proto is compiled.
+```lisp
+(asdf:load-system "ag-ui-protocol/client")
+(ag-ui-client:reduce-events events)   ; → agent-state
+```
 
 ---
 
-## 4. JSON Schema (`schema-protocol-json`)
+## 4. Interrupts / resume
 
-Events / `RunAgentInput` are `defschema` models. Emit draft-07 (OpenAPI `oneOf` + `discriminator` on `type`):
+`RUN_FINISHED` with `outcome: "interrupt"` + `interrupts[]`. Answer with `RunAgentInput.resume` (`make-resume-entry` / `validate-resume`). Client reducer surfaces `agent-state-status` `:interrupted` + `agent-state-interrupts`.
+
+HITL desk: [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) (`AG_UI_TUI_APPROVE=1`). Product glue: [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui).
+
+---
+
+## 5. TUI sink
+
+Consumes **AG-UI events only** — never `ai-agent-protocol` `:part`. Not a wire client (no `run-agent`).
+
+```lisp
+(asdf:load-system "ag-ui-backend-tui")
+(let ((tr (ag-ui-backend-tui:make-transcript)))
+  (ag-ui-backend-tui:apply-ag-ui-event
+   tr (ag-ui-protocol:make-text-message-content-event
+       :message-id "m" :delta "hi"))
+  (ag-ui-backend-tui:render-transcript tr))
+```
+
+Loop ownership when painting: tuition `tui:run` on the main thread; `event-protocol:run` (libuv) on a side thread. Never `http:request` on the tuition thread.
+
+Canary: [`ag-ui-parity`](https://github.com/egao1980/ag-ui-parity) (SSE JSON full; WKT Lisp-only).
+
+---
+
+## Event types
+
+All 36 upstream types, including reasoning / activity / subagent / chunks. Inventory is pinned by `every-upstream-event-type-is-modelled`. See [brief](../capabilities/ag-ui.md).
+
+---
+
+## 6. JSON Schema (`schema-protocol-json`)
 
 ```lisp
 (ag-ui-json-schema 'ag-ui-event)
@@ -134,4 +157,4 @@ Events / `RunAgentInput` are `defschema` models. Emit draft-07 (OpenAPI `oneOf` 
 (validate-ag-ui-json "{\"type\":\"RUN_STARTED\",\"threadId\":\"t\",\"runId\":\"r\"}")
 ```
 
-Tool `parameters` is a JSON Schema document — validate call args with `validate-tool-arguments`.
+Tool `parameters` is a JSON Schema document — `validate-tool-arguments`.

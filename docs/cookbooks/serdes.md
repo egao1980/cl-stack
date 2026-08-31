@@ -6,7 +6,7 @@
 
 | Layer | Role | OCI |
 |-------|------|-----|
-| [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs | **0.2.0** |
+| [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs | **0.2.1** |
 | `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.0** |
 | [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
 

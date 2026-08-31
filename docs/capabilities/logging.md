@@ -100,8 +100,9 @@ When fields non-empty, append ` %k` style or ` {k=v, …}` — exact pattern tok
 | Serdes interface | `serdes-protocol` — [serdes.md](serdes.md) |
 | JSON implementor | `json-protocol` (implements serdes `:json`) |
 | SEXP implementor | `sexp-protocol` (implements serdes `:sexp`) |
-| Log protocol | `egao1980/log-protocol` (`stack-log`) |
-| Logger A/B | `log-backend-log4cl`, `log-backend-vom` |
+| Log protocol | [`egao1980/log-protocol`](https://github.com/egao1980/log-protocol) (`stack-log`) + in-tree `stream-log-backend` |
+| Logger A | [`egao1980/log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl) — **separate repo** |
+| Logger B | [`egao1980/log-backend-vom`](https://github.com/egao1980/log-backend-vom) — **separate repo** |
 
 **Imports:** `log4cl`; `vom` pin. App loads `json-protocol` / sexp to register serdes formats.
 

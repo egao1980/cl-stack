@@ -12,8 +12,8 @@
 
 ## Rules
 
-- Keywords over positionals for user-facing APIs.
-- Conditions (+ restarts where useful), not status-code-only errors.
+- Keywords over positionals for user-facing APIs (exceptions: binary ops, `date-add` field+n).
+- Conditions (+ restarts where useful), not status-code-only errors. See [conditions.md](capabilities/conditions.md).
 - One app-level async DX (promise xor callback xor await-macro); **multiple event-loop backends** via `event-protocol`.
 - `with-` macros + `unwind-protect` for resources.
 - No god base classes.
@@ -47,10 +47,16 @@
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.0**); later XML / protobuf / Arrow / …  
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**); later XML / protobuf / Arrow / …  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
-- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
+- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); backends **[`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl)** / **[`log-backend-vom`](https://github.com/egao1980/log-backend-vom)** (separate repos)  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
+- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`.  
+  **Brief:** [capabilities/schema.md](capabilities/schema.md) · cookbook [schema.md](cookbooks/schema.md)
+- `datetime-protocol` — instant / duration / period / date / zone. IANA data is `cl-stack-tzdata`. Holidays are `cl-stack-calendars`. **Not** a `local-time` pin.  
+  **Brief:** [capabilities/datetime.md](capabilities/datetime.md) ([#105](https://github.com/egao1980/cl-stack/issues/105)) · cookbook [datetime.md](cookbooks/datetime.md)
+- Conditions / restarts — CLHS 9; pathlib is the gold standard.  
+  **Brief:** [capabilities/conditions.md](capabilities/conditions.md) ([#107](https://github.com/egao1980/cl-stack/issues/107)) · cookbook [conditions.md](cookbooks/conditions.md)
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
   - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core checklist); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends (OCI **0.2.0**)  
@@ -80,22 +86,30 @@ HTTP client + server are done. Wire codecs + bindings are each `*-protocol` + `*
   **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185) · cookbook [mcp.md](cookbooks/mcp.md)
 - `a2a-protocol` — Agent Card / Task; backends jsonrpc + **grpc/protobuf** + httpjson  
   **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186) · cookbook [a2a.md](cookbooks/a2a.md)
-- `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf  
+- `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf + TUI sink; `/client` reducer (`json-patch` for `STATE_DELTA`)  
   **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187) · cookbook [ag-ui.md](cookbooks/ag-ui.md)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
 Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui** — **done**.
 
+## AI agent loop (P2 — above wire)
+
+Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal `ag-ui-protocol:run-agent` — that is the wire GF.
+
+- `ai-agent-protocol` — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.  
+  **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
+- `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
+  **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
+
+MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`.
+
 ## Blackboard core (P2 — AI-agnostic)
 
-Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.0**).
+Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.1** / capability **0.2.1**).
 
 - `blackboard-protocol` — sections, watchers, KSAR, `requeue-ksar`, serial-per-workspace, fork/merge/discard/cancel  
   **Brief:** [capabilities/blackboard.md](capabilities/blackboard.md) ([#192](https://github.com/egao1980/cl-stack/issues/192), [#193](https://github.com/egao1980/cl-stack/issues/193)) · cookbook [blackboard.md](cookbooks/blackboard.md)
 - `capability-protocol` — `defcapability` / `defcatalogue` + query GFs; world I/O is **not** `mcp-tool`  
   **Brief:** [capabilities/capability.md](capabilities/capability.md) ([#194](https://github.com/egao1980/cl-stack/issues/194))
-
-- `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate`. OpenAI-compat is a backend. Demiurge **consumes** this.  
-  **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
 
 LLM / MCP / A2A / AG-UI adapters are **separate** systems that post to the board or implement capabilities. Product: `egao1980/demiurge`. Cursor “agent infra” (skills, `/stack-status`) ≠ this Lisp runtime.

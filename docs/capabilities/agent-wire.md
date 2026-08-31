@@ -1,12 +1,14 @@
 # Agent wire layer (MCP / A2A / AG-UI)
 
 **Issues:** [#170](https://github.com/egao1980/cl-stack/issues/170) rpc · [#184](https://github.com/egao1980/cl-stack/issues/184) sse · [#185](https://github.com/egao1980/cl-stack/issues/185) mcp · [#186](https://github.com/egao1980/cl-stack/issues/186) a2a · [#187](https://github.com/egao1980/cl-stack/issues/187) ag-ui · sibling [#192](https://github.com/egao1980/cl-stack/issues/192) blackboard  
-**Status:** impl order **done**. Cookbooks: [sse](../cookbooks/sse.md) · [rpc](../cookbooks/rpc.md) · [mcp](../cookbooks/mcp.md) · [a2a](../cookbooks/a2a.md) · [ag-ui](../cookbooks/ag-ui.md). Sibling core: [blackboard](../cookbooks/blackboard.md) **0.1.0**. LLM adapter: [llm](../cookbooks/llm.md) **0.1.0** ([#195](https://github.com/egao1980/cl-stack/issues/195)). Leftover P2: [#196](https://github.com/egao1980/cl-stack/issues/196)–[#197](https://github.com/egao1980/cl-stack/issues/197).
+**Status:** impl order **done**. Cookbooks: [sse](../cookbooks/sse.md) · [rpc](../cookbooks/rpc.md) · [mcp](../cookbooks/mcp.md) · [a2a](../cookbooks/a2a.md) · [ag-ui](../cookbooks/ag-ui.md). Loop **above** wire: [ai-agent](../cookbooks/ai-agent.md) **0.2.0**. Sibling core: [blackboard](../cookbooks/blackboard.md) **0.1.1**. LLM adapter: [llm](../cookbooks/llm.md) **0.2.0** ([#195](https://github.com/egao1980/cl-stack/issues/195)). Leftover P2: [#196](https://github.com/egao1980/cl-stack/issues/196)–[#197](https://github.com/egao1980/cl-stack/issues/197).
 
-HTTP **client** ([http-protocol](http-protocol.md)) and **server** ([http-server.md](http-server.md)) are done. This wave adds the **wire codecs and RPC bindings** those stacks do not own, then the three agent-interop protocols on top.
+HTTP **client** ([http-protocol](http-protocol.md)) and **server** ([http-server.md](http-server.md)) are done. This wave adds the **wire codecs and RPC bindings** those stacks do not own, then the three agent-interop protocols on top. The **think/act loop** is [ai-agent.md](ai-agent.md) — not this layer.
 
 ```text
-MCP / A2A / AG-UI          ← agent protocols (domain CLOS)
+          ai-agent-protocol     ← loop (not wire; zero MCP/A2A/AG-UI deps)
+                    │
+MCP / A2A / AG-UI   ← agent protocols (domain CLOS)
         │
  rpc-protocol              sse-protocol   protobuf-protocol
     ├── rpc-protocol-json                         │
@@ -58,7 +60,7 @@ Already shipped: [`rpc-protocol`](https://github.com/egao1980/rpc-protocol), [`r
 |------|------|----------|
 | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) **0.2.0** | dual-era MCP: modern `2026-07-28` (`server/discover` + `_meta` + SEP-2549 `ttlMs`/`cacheScope`) and legacy `2025-11-25` (`initialize`); tools / resources / prompts. Cookbook: [mcp.md](../cookbooks/mcp.md). Canary: [`mcp-parity`](https://github.com/egao1980/mcp-parity) | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) **0.1.1**, [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) **0.2.0** |
 | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** | Agent Card, Task, Message, Artifact. Cookbook: [a2a.md](../cookbooks/a2a.md) | [`a2a-backend-jsonrpc`](https://github.com/egao1980/a2a-backend-jsonrpc) **0.2.1**, [`a2a-backend-grpc`](https://github.com/egao1980/a2a-backend-grpc) **0.2.0**, [`a2a-backend-httpjson`](https://github.com/egao1980/a2a-backend-httpjson) **0.2.0** |
-| [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.2.0** | `RunAgentInput` + wave-1 typed events (`schema-protocol` + `schema-protocol-json`); default echo + Clack `make-ag-ui-app`. Cookbook: [ag-ui.md](../cookbooks/ag-ui.md) | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse) **0.2.0**, [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) **0.2.0** |
+| [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.3.0** | `RunAgentInput` + **all 36** event types; `expand-ag-ui-chunks`; interrupts/resume; `/client` reducer (`json-patch` for `STATE_DELTA`). Cookbook: [ag-ui.md](../cookbooks/ag-ui.md). Canary: [`ag-ui-parity`](https://github.com/egao1980/ag-ui-parity) | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse) **0.2.1**, [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) **0.3.0** (JSON-as-WKT `google.protobuf.Value`, **not** official `Event` oneof), [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) **0.1.0** (sink, not a wire client) |
 
 One app DX per domain. Swap wire by loading a different backend system.
 
@@ -72,11 +74,13 @@ One app DX per domain. Swap wire by loading a different backend system.
 6. `a2a-protocol` + jsonrpc (then grpc, then REST) — **done** · [a2a.md](../cookbooks/a2a.md)  
 7. `ag-ui-protocol` + SSE (protobuf transport after) — **done** · [ag-ui.md](../cookbooks/ag-ui.md)
 
-## Blackboard core (sibling, not this layer)
+## Loop above this layer (not inside it)
 
-How an agent **thinks** is [blackboard.md](blackboard.md) + [capability.md](capability.md) — KSAR loop, COW workspaces, CLOS capabilities. **Zero** agent-wire deps.
+How a single agent **runs a turn** is [ai-agent.md](ai-agent.md) — `run-ai-agent` over `llm-protocol`. Core `.asd` has **zero** MCP / A2A / AG-UI deps. Optional systems (`/mcp` `/ag-ui` `/a2a`) sit on top of this wire.
 
-This file stays **how agents talk**. Adapters (later) may project capabilities as MCP tools, write A2A `send-message` → `:pending-task`, or stream AG-UI events from the board. They do not live in `blackboard-protocol`.
+How an agent **thinks on a board** is [blackboard.md](blackboard.md) + [capability.md](capability.md) — KSAR loop, COW workspaces, CLOS capabilities. **Zero** agent-wire deps.
+
+This file stays **how agents talk**. Adapters may project capabilities as MCP tools, write A2A `send-message` → `:pending-task`, or stream AG-UI events from the board / `ai-agent-protocol`. They do not live in `blackboard-protocol`.
 
 Product that composes both: `egao1980/demiurge` (same stance as `cl-mcp` vs `mcp-protocol`).
 
