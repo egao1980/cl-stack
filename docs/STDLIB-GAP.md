@@ -40,7 +40,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | RPC | Fragmented | P1 | **shipped** — `rpc-protocol` **0.2.0** + JSON-RPC / gRPC bindings + inprocess/stdio/http/sse — [#170](https://github.com/egao1980/cl-stack/issues/170) · [rpc.md](cookbooks/rpc.md) |
 | SSE | Fragmented | P1 | **shipped** — `sse-protocol` **0.1.0** + http / clack — [sse.md](cookbooks/sse.md) |
 | Protobuf / gRPC | Fragmented | P1 | **shipped** — `protobuf-protocol` **0.1.0** + cl-protobufs **0.1.1**; `grpc-protocol` **0.1.0** + http2 / native — [protobuf.md](capabilities/protobuf.md) · [grpc.md](capabilities/grpc.md) |
-| JSON / CSV / XML | Fragmented | P1 | JSON **shipped** — `json-protocol` **0.2.0** + jzon — [#91](https://github.com/egao1980/cl-stack/issues/91) · [json.md](cookbooks/json.md). **CSV / XML later** |
+| JSON / CSV / XML | Fragmented | P1 | JSON **shipped** — `json-protocol` **0.2.0** + jzon — [#91](https://github.com/egao1980/cl-stack/issues/91) · [json.md](cookbooks/json.md). CSV **implemented** — [`csv-protocol`](https://github.com/egao1980/csv-protocol) `0.1.0` (serdes `:csv`/`:tsv`, dialects) · [csv.md](cookbooks/csv.md). **XML later** |
 | Schema | Fragmented | P2 | **shipped** — `schema-protocol` **0.1.0** + `schema-protocol-json` **0.1.1** — [schema.md](cookbooks/schema.md) |
 | SQL | Fragmented | P2 | **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-pg,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** (not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](cookbooks/sql.md) |
 | I/O object streams | Wrong-shape | P2 | **shipped** — `io-protocol` **0.1.0** (ObjectInput/Output CLOS shell; no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |
@@ -60,11 +60,11 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 
 Overlays, `event-protocol`, `http-protocol`, `ws-protocol`, cl-repository pins, Rove/corpus — **shipped**. Do not treat this list as current P0.
 
-**Still open on this matrix:** CSV / XML. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
+**Still open on this matrix:** XML. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
 
 ## Absent appendix
 
-ANSI-missing: threads, async I/O, sockets/HTTP/WS, TLS, regex, UUID, JSON/CSV/XML, SQL, crypto, logging, argparse, subprocess, pathlib-grade FS, i18n, venv-equivalent. Addressed via pins/facades above except **CSV / XML** and a venv-equivalent (cl-repository, not a venv).
+ANSI-missing: threads, async I/O, sockets/HTTP/WS, TLS, regex, UUID, JSON/CSV/XML, SQL, crypto, logging, argparse, subprocess, pathlib-grade FS, i18n, venv-equivalent. Addressed via pins/facades above except **XML** and a venv-equivalent (cl-repository, not a venv).
 
 ## CDR / CL21
 
