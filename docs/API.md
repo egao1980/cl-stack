@@ -12,8 +12,8 @@
 
 ## Rules
 
-- Keywords over positionals for user-facing APIs.
-- Conditions (+ restarts where useful), not status-code-only errors.
+- Keywords over positionals for user-facing APIs (exceptions: binary ops, `date-add` field+n).
+- Conditions (+ restarts where useful), not status-code-only errors. See [conditions.md](capabilities/conditions.md).
 - One app-level async DX (promise xor callback xor await-macro); **multiple event-loop backends** via `event-protocol`.
 - `with-` macros + `unwind-protect` for resources.
 - No god base classes.
@@ -47,10 +47,16 @@
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.0**); later XML / protobuf / Arrow / …  
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**); later XML / protobuf / Arrow / …  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
-- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); default **log4cl**, alternate **vom**  
+- `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); backends **[`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl)** / **[`log-backend-vom`](https://github.com/egao1980/log-backend-vom)** (separate repos)  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
+- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`.  
+  **Brief:** [capabilities/schema.md](capabilities/schema.md) · cookbook [schema.md](cookbooks/schema.md)
+- `datetime-protocol` — instant / duration / period / date / zone. IANA data is `cl-stack-tzdata`. Holidays are `cl-stack-calendars`. **Not** a `local-time` pin.  
+  **Brief:** [capabilities/datetime.md](capabilities/datetime.md) ([#105](https://github.com/egao1980/cl-stack/issues/105)) · cookbook [datetime.md](cookbooks/datetime.md)
+- Conditions / restarts — CLHS 9; pathlib is the gold standard.  
+  **Brief:** [capabilities/conditions.md](capabilities/conditions.md) ([#107](https://github.com/egao1980/cl-stack/issues/107)) · cookbook [conditions.md](cookbooks/conditions.md)
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
   - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core checklist); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends (OCI **0.2.0**)  

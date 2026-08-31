@@ -15,7 +15,7 @@ Brief: [http-server.md](../capabilities/http-server.md). App contract = **Clack 
 
 ```lisp
 (cl-repo:load-system "http-server-backend-hunchentoot" :version "0.1.0")
-(cl-repo:load-system "json-backend-jzon" :version "0.1.1")
+(cl-repo:load-system "json-backend-jzon" :version "0.2.0")
 ;; nick: stack-http-server
 ```
 

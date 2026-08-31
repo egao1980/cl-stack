@@ -99,15 +99,29 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.0** | wire client; `:http-version` / H2 header policy |
+| `http-protocol` | **0.3.1** | wire client; `:http-version` / H2 header policy; `TE: trailers` |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
+| `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
+| `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
+| `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
+| `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
+| `schema-protocol` | **0.1.0** | CLOS `defschema` (`stack-schema`) · [cookbook](cookbooks/schema.md) |
+| `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
+| `sql-query` | **0.2.0** | CLOS SQL DSL |
+| `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
+| `sql-query-postgres` | **0.2.0** | postgres dialect |
+| `sql-orm` | **0.1.0** | CLOS ORM (`defmodel`) |
+| `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
+| `sql-backend-postgres` | **0.1.0** | postgres connectivity |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
+| `crypto-protocol` | **0.1.1** | seal/unseal + hazmat (`stack-crypto`) |
 | `crypto-backend-ironclad` | **0.1.1** | digest/HMAC/AEAD + secrets (Ironclad) |
 | `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
 | `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
 | `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |
+| `rpc-protocol-grpc` | **0.1.0** | gRPC binding over `grpc-protocol` |
 | `rpc-backend-inprocess` | **0.1.0** | in-process unary |
 | `rpc-backend-stdio` | **0.1.1** | newline JSON-RPC over process-protocol |
 | `rpc-backend-http` | **0.1.1** | JSON-RPC POST (client + Clack) |
@@ -133,6 +147,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-backend-async` | **0.2.5** | async + HTTP/2 + RFC 8441 WS; sync slurp via `submit` |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
+| `http-backend-java` | **0.1.0** | ABCL `java.net.http` |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` |
 | `ws-backend-websocket-driver` | **0.2.2** | H1 Upgrade (`websocket-driver`); demo `scripts/demo.lisp` |
 | `ag-ui-protocol` | **0.3.0** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
@@ -148,10 +163,17 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
-| `serdes-protocol` | **0.2.0** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
+| `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
+| `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
-| `log-protocol` | **0.1.1** | level + filters + async; text/structured ([cookbook](cookbooks/logging.md)) |
-| `log-backend-log4cl` | **0.1.1** | default log backend |
+| `log-protocol` | **0.1.1** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
+| `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
+| `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
+| `grpc-protocol` | **0.1.0** | gRPC wire / channel |
+| `grpc-backend-http2` | **0.1.0** | unary over `http-protocol` H2 |
+| `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
+| `protobuf-protocol` | **0.1.0** | serdes `:protobuf` |
+| `protobuf-backend-cl-protobufs` | **0.1.1** | default protobuf backend |
 | `event-protocol` | **0.2.0** | event-loop generics (`wake-call` / `submit`) |
 | `event-backend-libuv` | **0.1.2** | default (Windows-primary); per-loop submit pool |
 | `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
@@ -180,10 +202,10 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
   (princ (http:response-text r)))
 ```
 
-### HTTP/2 preference (`http-protocol` 0.3.0+)
+### HTTP/2 preference (`http-protocol` 0.3.1+)
 
 ```lisp
-(cl-repo:load-system "http-protocol" :version "0.3.0")
+(cl-repo:load-system "http-protocol" :version "0.3.1")
 (cl-repo:load-system "http-backend-async" :version "0.2.5")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
@@ -304,6 +326,7 @@ Rules (non-negotiable):
 | AI agent loop | [cookbooks/ai-agent.md](cookbooks/ai-agent.md) |
 | Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
 | LLM generate / stream / embed | [cookbooks/llm.md](cookbooks/llm.md) |
+| Schema / datetime / conditions | [schema.md](cookbooks/schema.md) · [datetime.md](cookbooks/datetime.md) · [conditions.md](cookbooks/conditions.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |

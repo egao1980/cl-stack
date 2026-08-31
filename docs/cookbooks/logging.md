@@ -6,9 +6,9 @@
 
 | Layer | Role |
 |-------|------|
-| [`log-protocol`](https://github.com/egao1980/log-protocol) (`stack-log`) | `info` / `with-context` / `configure` |
-| `log-backend-log4cl` | **default** |
-| `log-backend-vom` | alternate (`use-vom-backend`) |
+| [`log-protocol`](https://github.com/egao1980/log-protocol) (`stack-log`) | `info` / `with-context` / `configure` + stream sink |
+| [`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl) | **default** (separate repo) |
+| [`log-backend-vom`](https://github.com/egao1980/log-backend-vom) | alternate (`use-vom-backend`; separate repo) |
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) | structured encode |
 | `sexp-protocol` | `:sexp` structured format |
 | `json-protocol` + jzon | `:json` structured (register serdes `:json`) |
@@ -16,8 +16,8 @@
 Brief: [logging.md](../capabilities/logging.md).
 
 ```lisp
-(cl-repo:load-system "log-backend-log4cl" :version "0.1.0")
-(cl-repo:load-system "sexp-protocol" :version "0.1.0")  ; for structured :sexp
+(cl-repo:load-system "log-backend-log4cl" :version "0.1.1")
+(cl-repo:load-system "sexp-protocol" :version "0.2.0")  ; for structured :sexp
 ```
 
 ---
