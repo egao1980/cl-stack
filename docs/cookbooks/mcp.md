@@ -122,7 +122,7 @@ Client prefers discover. Retryable `-32022` `UnsupportedProtocolVersion` → lis
 
 ## Spec GFs (protocol, even if I/O is thin)
 
-tools / resources / prompts / templates · completions · subscriptions · sampling · elicitation · roots · logging · progress · MRTR `input_required`. OAuth stays transport-level. Canary: [`mcp-parity`](https://github.com/egao1980/mcp-parity) (Lisp ↔ FastMCP 3 / official Node SDK v2, stdio + Streamable HTTP).
+tools / resources / prompts / templates · completions · subscriptions · sampling · elicitation · roots · logging · progress · MRTR `input_required`. OAuth stays transport-level. Sampling host: `ai-agent-protocol/mcp:make-mcp-sampling-handler` — [ai-agent cookbook](ai-agent.md). Canary: [`mcp-parity`](https://github.com/egao1980/mcp-parity) (Lisp ↔ FastMCP 3 / official Node SDK v2, stdio + Streamable HTTP).
 
 ---
 
@@ -132,3 +132,4 @@ tools / resources / prompts / templates · completions · subscriptions · sampl
 - Don’t invent a second JSON-RPC — `rpc-protocol` + `rpc-backend-*`.
 - Don’t treat `2025-06-18` as a supported era.
 - Don’t put blackboard / KSAR / workspaces here — [blackboard.md](../capabilities/blackboard.md).
+- Don’t load `llm-protocol/mcp` — sampling lives in `ai-agent-protocol/mcp`.

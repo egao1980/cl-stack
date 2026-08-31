@@ -72,7 +72,7 @@ Wave-1 methods: `server/discover` · `initialize` / `initialized` · `ping` · `
 
 `mcp-initialize` on a dual-era client probes `server/discover` first (`era` `:unknown` / `:modern`) and only sends `initialize` when the peer is legacy (`era` `:legacy`, or discover failed).
 
-**Spec surface (GFs + CLOS, even if backend I/O is thin):** sampling (`create-message`, `mcp-sampling-request`), elicitation, roots, completions, subscriptions, logging, progress, MRTR `input_required`. Host `mcp-client-sampling-handler` may call `llm-protocol` (`llm-protocol/mcp:make-mcp-sampling-handler`) — that is **not** the [blackboard](blackboard.md) loop.
+**Spec surface (GFs + CLOS, even if backend I/O is thin):** sampling (`create-message`, `mcp-sampling-request`), elicitation, roots, completions, subscriptions, logging, progress, MRTR `input_required`. Host `mcp-client-sampling-handler` is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`. That is **not** the [blackboard](blackboard.md) loop. See [ai-agent.md](ai-agent.md).
 
 ## Non-goals (wave-1)
 

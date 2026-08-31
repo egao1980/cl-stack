@@ -4,14 +4,14 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Board (`stack-blackboard`) | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) | **0.1.0** |
-| Caps (`stack-capability`) | [`capability-protocol`](https://github.com/egao1980/blackboard-protocol) (colocated) | **0.2.0** |
+| Board (`stack-blackboard`) | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) | **0.1.1** |
+| Caps (`stack-capability`) | [`capability-protocol`](https://github.com/egao1980/blackboard-protocol) (colocated) | **0.2.1** |
 
 Briefs: [blackboard.md](../capabilities/blackboard.md) (#193) · [capability.md](../capabilities/capability.md) (#194). **Not** agent-wire. World I/O is **not** `mcp-tool`.
 
 ```lisp
-(cl-repo:load-system "blackboard-protocol" :version "0.1.0")
-(cl-repo:load-system "capability-protocol" :version "0.2.0")
+(cl-repo:load-system "blackboard-protocol" :version "0.1.1")
+(cl-repo:load-system "capability-protocol" :version "0.2.1")
 ```
 
 ---

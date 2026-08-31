@@ -118,10 +118,16 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `mcp-protocol` | **0.2.0** | dual-era MCP (`2026-07-28` / `2025-11-25`) · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.1.1** | newline JSON-RPC MCP |
 | `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
-| `blackboard-protocol` | **0.1.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
-| `capability-protocol` | **0.1.0** | `defcapability` + registry (`stack-capability`) |
-| `llm-protocol` | **0.1.0** | turns + typed parts (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `llm-protocol-openai` | **0.1.0** | OpenAI-compat `/v1/chat/completions` + `/responses` |
+| `blackboard-protocol` | **0.1.1** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
+| `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
+| `schema-protocol-json` | **0.1.1** | JSON Schema emit/validate (LLM `:output`, AG-UI, MCP tools) |
+| `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
+| `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
+| `llama-cpp` | **0.1.5** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
+| `llm-backend-llama-cpp` | **0.1.2** | native generate / stream-generate / embed; `:output` → GBNF; no tools |
+| `ai-agent-protocol` | **0.2.0** | async-first loop (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
+| `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.2.0** | JWT HS* via crypto-protocol:hmac (`stack-jwt`) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT crypto) |
 | `http-backend-async` | **0.2.5** | async + HTTP/2 + RFC 8441 WS; sync slurp via `submit` |
@@ -129,13 +135,14 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `ws-protocol` | **0.2.2** | CLOS `:transport` + `feature-or-env-enabled-p` |
 | `ws-backend-websocket-driver` | **0.2.2** | H1 Upgrade (`websocket-driver`); demo `scripts/demo.lisp` |
-| `ag-ui-protocol` | **0.2.0** | typed agent↔UI events (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
+| `ag-ui-protocol` | **0.3.0** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
 | `a2a-backend-jsonrpc` | **0.2.1** | JSON-RPC 2.0 + SSE |
 | `a2a-backend-httpjson` | **0.2.0** | HTTP+JSON REST |
 | `a2a-backend-grpc` | **0.2.0** | `/lf.a2a.v1.A2AService/*` via `rpc-protocol-grpc` |
-| `ag-ui-backend-sse` | **0.2.0** | POST `RunAgentInput` → SSE |
-| `ag-ui-backend-protobuf` | **0.2.0** | protobuf-in-SSE (`:format :protobuf` = JSON octets) |
+| `ag-ui-backend-sse` | **0.2.1** | POST `RunAgentInput` → SSE |
+| `ag-ui-backend-protobuf` | **0.3.0** | JSON-as-WKT (`google.protobuf.Value`), not official `Event` oneof |
+| `ag-ui-backend-tui` | **0.1.0** | event sink + transcript (not a wire client) |
 | `http-server-protocol` | **0.1.0** | CLOS server; Clack env; load `http-server-backend-hunchentoot` (default) or `…-woo` ([cookbook](cookbooks/http-server.md)) |
 | `http-server-backend-hunchentoot` | **0.1.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
@@ -294,8 +301,9 @@ Rules (non-negotiable):
 | WebSocket recipes / demos | [cookbooks/websocket.md](cookbooks/websocket.md) |
 | RPC / SSE / MCP | [cookbooks/rpc.md](cookbooks/rpc.md) · [sse.md](cookbooks/sse.md) · [mcp.md](cookbooks/mcp.md) |
 | A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
+| AI agent loop | [cookbooks/ai-agent.md](cookbooks/ai-agent.md) |
 | Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
-| LLM generate | [cookbooks/llm.md](cookbooks/llm.md) |
+| LLM generate / stream / embed | [cookbooks/llm.md](cookbooks/llm.md) |
 | Protocol decisions / RFCs | [capabilities/](capabilities/) |
 | Overlay platforms | [overlays.md](overlays.md) |
 | Pin channels | [pins.md](pins.md) |

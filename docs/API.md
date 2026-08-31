@@ -80,22 +80,30 @@ HTTP client + server are done. Wire codecs + bindings are each `*-protocol` + `*
   **Brief:** [capabilities/mcp.md](capabilities/mcp.md) (#185) · cookbook [mcp.md](cookbooks/mcp.md)
 - `a2a-protocol` — Agent Card / Task; backends jsonrpc + **grpc/protobuf** + httpjson  
   **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186) · cookbook [a2a.md](cookbooks/a2a.md)
-- `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf  
+- `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf + TUI sink; `/client` reducer (`json-patch` for `STATE_DELTA`)  
   **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187) · cookbook [ag-ui.md](cookbooks/ag-ui.md)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
 Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui** — **done**.
 
+## AI agent loop (P2 — above wire)
+
+Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal `ag-ui-protocol:run-agent` — that is the wire GF.
+
+- `ai-agent-protocol` — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.  
+  **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
+- `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
+  **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
+
+MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`.
+
 ## Blackboard core (P2 — AI-agnostic)
 
-Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.0**).
+Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.1** / capability **0.2.1**).
 
 - `blackboard-protocol` — sections, watchers, KSAR, `requeue-ksar`, serial-per-workspace, fork/merge/discard/cancel  
   **Brief:** [capabilities/blackboard.md](capabilities/blackboard.md) ([#192](https://github.com/egao1980/cl-stack/issues/192), [#193](https://github.com/egao1980/cl-stack/issues/193)) · cookbook [blackboard.md](cookbooks/blackboard.md)
 - `capability-protocol` — `defcapability` / `defcatalogue` + query GFs; world I/O is **not** `mcp-tool`  
   **Brief:** [capabilities/capability.md](capabilities/capability.md) ([#194](https://github.com/egao1980/cl-stack/issues/194))
-
-- `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate`. OpenAI-compat is a backend. Demiurge **consumes** this.  
-  **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
 
 LLM / MCP / A2A / AG-UI adapters are **separate** systems that post to the board or implement capabilities. Product: `egao1980/demiurge`. Cursor “agent infra” (skills, `/stack-status`) ≠ this Lisp runtime.

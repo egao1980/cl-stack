@@ -34,6 +34,7 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 | [docs/capabilities/event-protocol.md](docs/capabilities/event-protocol.md) | Event loop protocol brief + backend picks (libuv/libev) |
 | [docs/capabilities/http-protocol.md](docs/capabilities/http-protocol.md) | HTTP client facade brief |
 | [docs/cookbooks/http-client.md](docs/cookbooks/http-client.md) | requests/httpx → `cl-stack-http` cookbook (+ OAuth2/JWT packages) |
+| [docs/cookbooks/llm.md](docs/cookbooks/llm.md) · [ai-agent.md](docs/cookbooks/ai-agent.md) · [mcp.md](docs/cookbooks/mcp.md) · [a2a.md](docs/cookbooks/a2a.md) · [ag-ui.md](docs/cookbooks/ag-ui.md) | AI: LLM turns · agent loop · MCP · A2A · AG-UI |
 | [docs/capabilities/ws-protocol.md](docs/capabilities/ws-protocol.md) | WebSocket client brief (`ws-backend-websocket-driver`) |
 | [docs/capabilities/json-protocol.md](docs/capabilities/json-protocol.md) | JSON encode/decode — jzon default, yason alternate |
 | [docs/pins.md](docs/pins.md) | Pin file format + stable/edge channels |
