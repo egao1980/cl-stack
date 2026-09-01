@@ -121,7 +121,28 @@ Optional: `parse-next-element` → next complete sub-value as one Lisp object (j
   (write-char #\Space out))   ; pass-through to underlying
 ```
 
-Binary Gray classes exist for later protobuf/Arrow; wave-1 json/sexp use character streams.
+Binary Gray classes: json/sexp use character streams; [`arrow-protocol`](../capabilities/arrow.md) uses binary (`:arrow` IPC stream / `:parquet` file).
+
+---
+
+## 5. Arrow / Parquet
+
+```lisp
+(asdf:load-system "arrow-protocol")
+
+(let* ((schema (stack-arrow:make-arrow-schema
+                (list (stack-arrow:make-arrow-field :name "n" :type :int32)
+                      (stack-arrow:make-arrow-field :name "s" :type :utf8))))
+       (table (stack-arrow:table-from-rows
+               (list (alexandria:plist-hash-table '("n" 1 "s" "a") :test #'equal))
+               :schema schema)))
+  (stack-serdes:encode table :format :arrow)
+  (stack-serdes:encode table :format :parquet))
+```
+
+`:arrow` whole-value = IPC **file**. `stream-*-value` = IPC **stream** (schema on first write, one record batch per value, EOS on close). `:parquet` is file-only — `stream-*-value` signals.
+
+`defschema` → Arrow schema + table↔objects: load [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) and call `table-from-objects` / `objects-from-table`. Do not rely on `dump obj :format :arrow` to wrap a single object as a 1-row table.
 
 ---
 
