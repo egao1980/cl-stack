@@ -51,7 +51,7 @@
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); backends **[`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl)** / **[`log-backend-vom`](https://github.com/egao1980/log-backend-vom)** (separate repos)  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
-- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`.  
+- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`. XSD is `schema-protocol-xsd`.  
   **Brief:** [capabilities/schema.md](capabilities/schema.md) · cookbook [schema.md](cookbooks/schema.md)
 - `datetime-protocol` — instant / duration / period / date / zone. IANA data is `cl-stack-tzdata`. Holidays are `cl-stack-calendars`. **Not** a `local-time` pin.  
   **Brief:** [capabilities/datetime.md](capabilities/datetime.md) ([#105](https://github.com/egao1980/cl-stack/issues/105)) · cookbook [datetime.md](cookbooks/datetime.md)

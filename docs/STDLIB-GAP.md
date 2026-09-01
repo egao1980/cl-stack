@@ -41,7 +41,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | SSE | Fragmented | P1 | **shipped** — `sse-protocol` **0.1.0** + http / clack — [sse.md](cookbooks/sse.md) |
 | Protobuf / gRPC | Fragmented | P1 | **shipped** — `protobuf-protocol` **0.1.0** + cl-protobufs **0.1.1**; `grpc-protocol` **0.1.0** + http2 / native — [protobuf.md](capabilities/protobuf.md) · [grpc.md](capabilities/grpc.md) |
 | JSON / CSV / XML | Fragmented | P1 | JSON **shipped** — `json-protocol` **0.2.0** + jzon — [#91](https://github.com/egao1980/cl-stack/issues/91) · [json.md](cookbooks/json.md). **CSV / XML later** |
-| Schema | Fragmented | P2 | **shipped** — `schema-protocol` **0.1.0** + `schema-protocol-json` **0.1.1** — [schema.md](cookbooks/schema.md) |
+| Schema | Fragmented | P2 | **shipped** — `schema-protocol` **0.1.1** + `schema-protocol-json` **0.1.1** + `schema-protocol-xsd` **0.1.1** — [schema.md](cookbooks/schema.md) |
 | SQL | Fragmented | P2 | **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-pg,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** (not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](cookbooks/sql.md) |
 | I/O object streams | Wrong-shape | P2 | **shipped** — `io-protocol` **0.1.0** (ObjectInput/Output CLOS shell; no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |
 | Serdes | Fragmented | P2 | **shipped** — `serdes-protocol` **0.2.1** + JSONL/events; `json-protocol` / `sexp-protocol` implement — [#132](https://github.com/egao1980/cl-stack/issues/132) · [serdes.md](capabilities/serdes.md) |
