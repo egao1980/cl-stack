@@ -7,6 +7,7 @@ Python Pydantic is the **feature checklist**. It is **not** the API.
 ```text
 schema-protocol            ← metaclass + parse / validate / dump
 schema-protocol-json       ← draft-07 emit / compile / OpenAPI discriminator
+schema-protocol-xsd        ← XSD 1.0/1.1 emit / compile / instance validate
         │
 serdes-protocol / json-protocol   ← bytes when :format is set
 ```
@@ -29,7 +30,8 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 | **Unions** | CLOS subclasses + `:tag` slot. Not a parallel tagged-union DSL. |
 | **Enums** | `defenum` with proto-style aliases (name / `TYPE_MEMBER` / number / `allow_alias`). |
 | **Pattern** | Function designator, not a regex string. |
-| **JSON Schema** | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) — `json-schema` GF on the protocol; `emit` / `compile-schema` in the format package. Later: `schema-protocol-xsd`, … |
+| **JSON Schema** | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) — `json-schema` GF on the protocol; `emit` / `compile-schema` in the format package. |
+| **XSD** | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) — `xsd-schema` GF; 1.0 default, `:version :1.1` for alternatives / openContent / assert. Closed XPath subset. |
 | **Wire** | Default parse/dump speak hash-tables / plists / alists. `:format` goes through `serdes-protocol` when loaded. |
 | **Restarts** | Per field, while that field is being parsed: `use-value`, `skip-field`, `use-default`. `schema-fail` signals immediately (restart still live). `schema-issue` collects; `%raise-issues` fires after. |
 
@@ -39,8 +41,9 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 
 | Layer | Repo | OCI |
 |-------|------|-----|
-| Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.1.0** |
+| Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.1.1** |
 | JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.1** |
+| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.1** |
 
 ---
 
@@ -53,6 +56,7 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 (defgeneric parse (schema source &key coerce extra format))
 (defgeneric dump (object &key as include-computed format))
 (defgeneric json-schema (schema &key draft))   ; method in schema-protocol-json
+(defgeneric xsd-schema (schema &key version))  ; method in schema-protocol-xsd (:1.0 / :1.1)
 (defgeneric validate-object (object))
 (defgeneric validate-field (schema-name slot-name value))
 (defgeneric coerce-field (schema-name slot-name value))

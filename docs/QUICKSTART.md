@@ -105,7 +105,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
-| `schema-protocol` | **0.1.0** | CLOS `defschema` (`stack-schema`) · [cookbook](cookbooks/schema.md) |
+| `schema-protocol` | **0.1.1** | CLOS `defschema` (`stack-schema`); `xsd-schema` GF · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
@@ -135,6 +135,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `blackboard-protocol` | **0.1.1** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.1** | JSON Schema emit/validate (LLM `:output`, AG-UI, MCP tools) |
+| `schema-protocol-xsd` | **0.1.1** | XSD 1.0/1.1 emit/parse/validate (`stack-schema-xsd`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
