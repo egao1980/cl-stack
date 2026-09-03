@@ -107,7 +107,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
-| `schema-protocol` | **0.1.1** | CLOS `defschema` (`stack-schema`); `xsd-schema` GF · [cookbook](cookbooks/schema.md) |
+| `schema-protocol` | **0.1.2** | CLOS `defschema` (`stack-schema`); `xsd-schema` / `arrow-schema` GFs · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
@@ -138,6 +138,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.1** | JSON Schema emit/validate (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.2** | XSD 1.0/1.1 on `xml-element`; `decode-validating` (`stack-schema-xsd`) |
+| `schema-protocol-arrow` | **0.1.0** | Arrow emit + table↔objects (`stack-schema-arrow`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
@@ -169,6 +170,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
 | `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
+| `arrow-protocol` | **0.1.0** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |

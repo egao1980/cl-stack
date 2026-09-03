@@ -9,7 +9,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [HTTP client](http-client.md) | `cl-stack-http` / `http-protocol` (requests · httpx) |
 | [JSON](json.md) | `json-protocol` / jzon · yason · `cl-stack-http` |
 | [XML](xml.md) | `xml-protocol` / `xml-backend-native` (Infoset · events · `:xml`) |
-| [Serdes](serdes.md) | `serdes-protocol` / `sexp-protocol` / `json-protocol` / `xml-protocol` (JSONL · events) |
+| [Serdes](serdes.md) | `serdes-protocol` / `sexp-protocol` / `json-protocol` / `xml-protocol` / `arrow-protocol` (JSONL · events) |
 | [Object streams](io.md) | `io-protocol` (ObjectInput/Output · prin1/read) |
 | [Config](config.md) | `cl-stack-config` (TOML + env) |
 | [WebSocket](websocket.md) | `ws-protocol` / async · winhttp · websocket-driver |
