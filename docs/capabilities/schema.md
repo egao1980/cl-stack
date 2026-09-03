@@ -9,7 +9,7 @@ schema-protocol            ← metaclass + parse / validate / dump
 schema-protocol-json       ← draft-07 emit / compile / OpenAPI discriminator
 schema-protocol-xsd        ← XSD 1.0/1.1 emit / compile / instance validate
         │
-serdes-protocol / json-protocol   ← bytes when :format is set
+serdes-protocol / json-protocol / xml-protocol   ← bytes when :format is set
 ```
 
 **Not** [`sql-orm`](sql.md) `defmodel` (persistence). **Not** [`cl-stack-config`](config.md) (env/TOML settings). Use `defschema` for API / RPC / tool payloads.
@@ -31,7 +31,7 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 | **Enums** | `defenum` with proto-style aliases (name / `TYPE_MEMBER` / number / `allow_alias`). |
 | **Pattern** | Function designator, not a regex string. |
 | **JSON Schema** | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) — `json-schema` GF on the protocol; `emit` / `compile-schema` in the format package. |
-| **XSD** | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) — `xsd-schema` GF; 1.0 default, `:version :1.1` for alternatives / openContent / assert. Closed XPath subset. |
+| **XSD** | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.2** — `xsd-schema` GF; trees are `xml-protocol` `xml-element`; `decode-validating` = decode then `validate-instance`. 1.0 default, `:version :1.1` for alternatives / openContent / assert. Closed XPath subset. |
 | **Wire** | Default parse/dump speak hash-tables / plists / alists. `:format` goes through `serdes-protocol` when loaded. |
 | **Restarts** | Per field, while that field is being parsed: `use-value`, `skip-field`, `use-default`. `schema-fail` signals immediately (restart still live). `schema-issue` collects; `%raise-issues` fires after. |
 
@@ -43,7 +43,7 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 |-------|------|-----|
 | Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.1.1** |
 | JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.1** |
-| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.1** |
+| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.2** |
 
 ---
 

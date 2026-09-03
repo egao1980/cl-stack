@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull)
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`.
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
@@ -14,8 +14,9 @@ serdes-protocol              ← GFs + Gray stream classes + format registry
     ▲ implemented by (wave-1)
 json-protocol (+ jzon/yason) ← :json (+ JSONL streams)
 sexp-protocol                ← :sexp (+ stream-*-value)
+xml-protocol (+ native)      ← :xml (Infoset + events + writer)
     ▲ later implementors (same Gray GFs)
-xml-protocol / protobuf-… / arrow-… / msgpack-… / …
+protobuf-… / arrow-… / msgpack-… / …
     ▲ used by
 log-protocol / cl-stack-http / …
 ```
@@ -258,4 +259,5 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
 - [x] **json event/pull parser** (jzon `parse-next`) — [#138](https://github.com/egao1980/cl-stack/issues/138)
 - [x] SEXP implementor (whole-value + line streams) — `sexp-protocol` **0.2.0**
+- [x] **XML implementor** — `xml-protocol` **0.1.0** + `xml-backend-native` (Infoset + events + writer)
 - [x] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)

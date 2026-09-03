@@ -80,6 +80,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
+| `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
+| `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
 | `unicode-protocol` | **0.1.2** | UCD/normalize/case/IDNA/breaks/uset (`stack-unicode`) · [cookbook](cookbooks/unicode.md) |
@@ -135,7 +137,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `blackboard-protocol` | **0.1.1** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.1** | JSON Schema emit/validate (LLM `:output`, AG-UI, MCP tools) |
-| `schema-protocol-xsd` | **0.1.1** | XSD 1.0/1.1 emit/parse/validate (`stack-schema-xsd`) |
+| `schema-protocol-xsd` | **0.1.2** | XSD 1.0/1.1 on `xml-element`; `decode-validating` (`stack-schema-xsd`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |

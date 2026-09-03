@@ -6,14 +6,14 @@
 |-------|---------|-----|
 | Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.1.1** |
 | JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.1** |
-| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.1** |
+| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.2** |
 
 Brief: [schema.md](../capabilities/schema.md). Persistence → [sql.md](sql.md). Settings → [config.md](config.md). Field recoveries → [conditions.md](conditions.md).
 
 ```lisp
 (cl-repo:load-system "schema-protocol" :version "0.1.1")
 (cl-repo:load-system "schema-protocol-json" :version "0.1.1")  ; optional JSON Schema
-(cl-repo:load-system "schema-protocol-xsd" :version "0.1.1")   ; optional XSD 1.0/1.1
+(cl-repo:load-system "schema-protocol-xsd" :version "0.1.2")   ; optional XSD 1.0/1.1
 ```
 
 ---
@@ -92,14 +92,15 @@ Wave-1: local `$ref` (`#/$defs/…`) only. JSON Schema `pattern` strings are ign
 
 ## 4. XSD
 
-`xsd-schema` GF lives on the protocol; methods are in `schema-protocol-xsd`. Default emit is XSD 1.0; `:version :1.1` writes `xs:alternative` / `xs:openContent` / `vc:minVersion`. Parse and `validate-instance` accept 1.1 (`xs:assert`, closed XPath subset). No cxml / libxml2.
+`xsd-schema` GF lives on the protocol; methods are in `schema-protocol-xsd`. Trees are `xml-protocol` `xml-element` (`xml-elem` is gone). Default emit is XSD 1.0; `:version :1.1` writes `xs:alternative` / `xs:openContent` / `vc:minVersion`. Parse and `validate-instance` accept 1.1 (`xs:assert`, closed XPath subset). `decode-validating` = well-formed decode then `validate-instance`. No cxml / libxml2. Streaming content-model validator is later.
 
 ```lisp
-(asdf:load-system "schema-protocol-xsd")
+(asdf:load-system "schema-protocol-xsd")   ; pulls xml-protocol + xml-backend-native
 (stack-schema:xsd-schema 'user)                 ; 1.0 XML string
 (stack-schema-xsd:emit 'user :version :1.1)
 (stack-schema-xsd:compile-schema xml)            ; → schema-class
-(stack-schema-xsd:validate-instance xml ht-or-xml)
+(stack-schema-xsd:validate-instance schema ht-or-xml-document)
+(stack-schema-xsd:decode-validating "<person/>" schema)
 ```
 
 ---
