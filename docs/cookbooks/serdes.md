@@ -9,6 +9,7 @@
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs | **0.2.1** |
 | `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.0** |
 | [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
+| [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) (`stack-arrow`) | `:arrow` / `:parquet` | **0.1.0** |
 
 Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json cookbook](json.md). Object streams (no formats): [io cookbook](io.md).
 
@@ -16,9 +17,10 @@ Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json c
 (cl-repo:load-system "json-backend-jzon" :version "0.2.0")  ; pulls json-protocol + serdes
 ;; optional:
 (cl-repo:load-system "sexp-protocol" :version "0.2.0")
+(cl-repo:load-system "arrow-protocol" :version "0.1.0")
 ```
 
-Load an implementor ASDF → registers `:json` / `:sexp`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants.
+Load an implementor ASDF → registers `:json` / `:sexp` / `:arrow` / `:parquet`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants.
 
 ---
 
@@ -121,7 +123,28 @@ Optional: `parse-next-element` → next complete sub-value as one Lisp object (j
   (write-char #\Space out))   ; pass-through to underlying
 ```
 
-Binary Gray classes exist for later protobuf/Arrow; wave-1 json/sexp use character streams.
+Binary Gray classes: json/sexp use character streams; [`arrow-protocol`](../capabilities/arrow.md) uses binary (`:arrow` IPC stream / `:parquet` file).
+
+---
+
+## 5. Arrow / Parquet
+
+```lisp
+(cl-repo:load-system "arrow-protocol" :version "0.1.0")
+
+(let* ((schema (stack-arrow:make-arrow-schema
+                (list (stack-arrow:make-arrow-field :name "n" :type :int32)
+                      (stack-arrow:make-arrow-field :name "s" :type :utf8))))
+       (table (stack-arrow:table-from-rows
+               (list (alexandria:plist-hash-table '("n" 1 "s" "a") :test #'equal))
+               :schema schema)))
+  (stack-serdes:encode table :format :arrow)
+  (stack-serdes:encode table :format :parquet))
+```
+
+`:arrow` whole-value = IPC **file**. `stream-*-value` = IPC **stream** (schema on first write, one record batch per value, EOS on close). `:parquet` is file-only — `stream-*-value` signals.
+
+`defschema` → Arrow schema + table↔objects: load [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) and call `table-from-objects` / `objects-from-table`. Do not rely on `dump obj :format :arrow` to wrap a single object as a 1-row table.
 
 ---
 

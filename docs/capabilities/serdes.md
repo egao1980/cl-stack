@@ -15,7 +15,9 @@ serdes-protocol              ← GFs + Gray stream classes + format registry
 json-protocol (+ jzon/yason) ← :json (+ JSONL streams)
 sexp-protocol                ← :sexp (+ stream-*-value)
     ▲ later implementors (same Gray GFs)
-xml-protocol / protobuf-… / arrow-… / msgpack-… / …
+xml-protocol / protobuf-… / msgpack-… / …
+    ▲ shipped
+arrow-protocol               ← :arrow (IPC) + :parquet
     ▲ used by
 log-protocol / cl-stack-http / …
 ```
@@ -234,7 +236,7 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 |--------|---------------------------|
 | **XML** | After CSV/XML gap work; value mapping TBD (DOM vs event vs map-shaped) |
 | **Protobuf** | Likely ties to `cl-protobufs` / overlays; binary octets path first-class |
-| **Apache Arrow** | Columnar IPC/flight on **binary** Gray streams + `stream-*-value` / sequence ops already in protocol |
+| **Apache Arrow** | **Shipped** — [`arrow-protocol`](arrow.md) (`stack-arrow`) native IPC + Parquet subset; serdes `:arrow` / `:parquet`. Flight / C Data Interface later. |
 | MessagePack / EDN / CBOR | Compact / Lisp-adjacent |
 | Avro / Cap’n Proto | Only if demand; same registration pattern |
 
@@ -243,7 +245,7 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Non-goals (wave-1)
 
 - Replacing json-protocol’s public API  
-- Shipping XML / protobuf / Arrow implementors  
+- Shipping XML / msgpack implementors (Arrow + protobuf have their own briefs)  
 - Building a full in-memory DOM for huge files (use events / JSONL instead)  
 - cl-store object graphs  
 - Config TOML as a serdes format (stays [`cl-stack-config`](config.md))  
