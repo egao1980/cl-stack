@@ -7,7 +7,7 @@
 Brief: [csv-protocol.md](../capabilities/csv-protocol.md).
 
 ```lisp
-(asdf:load-system "csv-protocol")
+(cl-repo:load-system "csv-protocol" :version "0.1.0")
 ;; nick: stack-csv — registers serdes :csv and :tsv
 ```
 

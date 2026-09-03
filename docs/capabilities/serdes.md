@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`csv-protocol`](csv-protocol.md) `0.1.0` implements `:csv` / `:tsv` (not on GHCR until tagged publish).
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`.
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
@@ -233,7 +233,7 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 
 | Format | Notes (when we get there) |
 |--------|---------------------------|
-| **CSV** | **Shipped** (repo) — [`csv-protocol`](csv-protocol.md) `0.1.0`; dialects; row streams; events |
+| **CSV** | **Shipped** — [`csv-protocol`](csv-protocol.md) OCI **0.1.0**; dialects; row streams; events |
 | **XML** | After remaining XML gap work; value mapping TBD (DOM vs event vs map-shaped) |
 | **Protobuf** | Likely ties to `cl-protobufs` / overlays; binary octets path first-class |
 | **Apache Arrow** | Columnar IPC/flight on **binary** Gray streams + `stream-*-value` / sequence ops already in protocol |

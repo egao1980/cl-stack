@@ -1,6 +1,6 @@
 # csv-protocol (P1)
 
-**Status:** implemented — [`egao1980/csv-protocol`](https://github.com/egao1980/csv-protocol) `0.1.0` (`stack-csv`). Not on GHCR until tagged publish.  
+**Status:** **shipped** — [`egao1980/csv-protocol`](https://github.com/egao1980/csv-protocol) OCI **0.1.0** (`stack-csv`)  
 **Cookbook:** [csv.md](../cookbooks/csv.md)
 
 CLOS encode/decode for CSV (RFC 4180 dialects). **Implements** [`serdes-protocol`](serdes.md) `:csv` and `:tsv`. First-party codec — no `cl-csv`.

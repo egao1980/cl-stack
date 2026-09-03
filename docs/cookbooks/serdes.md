@@ -9,7 +9,7 @@
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs | **0.2.1** |
 | `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.0** |
 | [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
-| [`csv-protocol`](https://github.com/egao1980/csv-protocol) (`stack-csv`) | `:csv` / `:tsv` (dialects, row streams, events) | **0.1.0** (repo; OCI on tag) |
+| [`csv-protocol`](https://github.com/egao1980/csv-protocol) (`stack-csv`) | `:csv` / `:tsv` (dialects, row streams, events) | **0.1.0** |
 
 Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json cookbook](json.md). Object streams (no formats): [io cookbook](io.md).
 
@@ -17,6 +17,7 @@ Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json c
 (cl-repo:load-system "json-backend-jzon" :version "0.2.0")  ; pulls json-protocol + serdes
 ;; optional:
 (cl-repo:load-system "sexp-protocol" :version "0.2.0")
+(cl-repo:load-system "csv-protocol" :version "0.1.0")
 ```
 
 Load an implementor ASDF → registers `:json` / `:sexp` / `:csv` / `:tsv`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants. CSV dialects: [csv cookbook](csv.md).
