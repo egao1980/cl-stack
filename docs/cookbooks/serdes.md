@@ -9,6 +9,7 @@
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs | **0.2.1** |
 | `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.0** |
 | [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
+| [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) (`stack-arrow`) | `:arrow` / `:parquet` | **0.1.0** |
 
 Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json cookbook](json.md). Object streams (no formats): [io cookbook](io.md).
 
@@ -16,9 +17,10 @@ Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json c
 (cl-repo:load-system "json-backend-jzon" :version "0.2.0")  ; pulls json-protocol + serdes
 ;; optional:
 (cl-repo:load-system "sexp-protocol" :version "0.2.0")
+(cl-repo:load-system "arrow-protocol" :version "0.1.0")
 ```
 
-Load an implementor ASDF → registers `:json` / `:sexp`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants.
+Load an implementor ASDF → registers `:json` / `:sexp` / `:arrow` / `:parquet`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants.
 
 ---
 
@@ -128,7 +130,7 @@ Binary Gray classes: json/sexp use character streams; [`arrow-protocol`](../capa
 ## 5. Arrow / Parquet
 
 ```lisp
-(asdf:load-system "arrow-protocol")
+(cl-repo:load-system "arrow-protocol" :version "0.1.0")
 
 (let* ((schema (stack-arrow:make-arrow-schema
                 (list (stack-arrow:make-arrow-field :name "n" :type :int32)
