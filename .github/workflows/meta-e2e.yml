@@ -86,7 +86,8 @@ jobs:
       - name: Apply stable pins from GHCR
         shell: bash
         run: |
-          # llama-cpp 0.1.5 overlay decompress is ~1.7GB; default 1GB heap OOMs.
+          # 4GB heap for the 140-system apply. llama-cpp CUDA overlay is skipped
+          # in ci-meta-install (see :except) — 1.7GB extract OOMs even at 4GB.
           # ros option, not sbcl --dynamic-space-size (must come before -l).
           ros dynamic-space-size=4096 -l scripts/ci-meta-install.lisp -q
 

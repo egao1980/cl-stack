@@ -38,7 +38,10 @@
   (format t "~&; ci: apply-pins ~a~%" pins)
   (call-with-ci-muffles
    (lambda ()
-     (cl-stack:apply-pins pins)
+     ;; llama-cpp linux/windows overlays are CUDA+Vulkan (~1.7GB in-heap extract).
+     ;; One-image apply-all already holds ~2.8GB of fasls; skip the GGUF natives
+     ;; here (not a cl-stack/meta dep). Tag still lives in stable.pins.
+     (cl-stack:apply-pins pins :except '("llama-cpp" "llm-backend-llama-cpp"))
      ;; Fill QL-only transitive deps of pinned systems (e.g. com.inuoe.jzon).
      ;; cl-repo :sources QL policy still fails dotted names not on GHCR — force QL.
      (dolist (n '("com.inuoe.jzon" "yason"))
