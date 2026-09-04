@@ -49,7 +49,7 @@
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**) + `csv-protocol` **0.1.0** + `xml-protocol` **0.1.0** + `arrow-protocol` **0.1.0**; later protobuf / …  
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**) + `csv-protocol` **0.1.0** + `xml-protocol` **0.1.0** + `arrow-protocol` **0.1.0** + `protobuf-protocol` **0.2.0**; later msgpack / EDN / CBOR / Avro  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `csv-protocol` — RFC 4180 dialects; whole-document + row streams + events; implements serdes `:csv` / `:tsv`  
   **Brief:** [capabilities/csv-protocol.md](capabilities/csv-protocol.md) · cookbook [csv.md](cookbooks/csv.md)
@@ -82,7 +82,7 @@ HTTP client + server are done. Wire codecs + bindings are each `*-protocol` + `*
   **Brief:** [capabilities/sse.md](capabilities/sse.md) (#184) · cookbook [sse.md](cookbooks/sse.md)
 - `rpc-protocol-json` / `rpc-protocol-grpc` — JSON-RPC codec and gRPC binding (separate repos)
 - `rpc-backend-stdio` / `rpc-backend-http` / `rpc-backend-sse` — JSON-RPC transports (#170) · cookbook [rpc.md](cookbooks/rpc.md)
-- `protobuf-protocol` — serdes `:protobuf`; backend cl-protobufs  
+- `protobuf-protocol` — serdes `:protobuf` + proto3 JSON / WKT; backend cl-protobufs **0.2.0**  
   **Brief:** [capabilities/protobuf.md](capabilities/protobuf.md)
 - `grpc-protocol` — gRPC wire (channel / status); call via `rpc-protocol-grpc`  
   **Brief:** [capabilities/grpc.md](capabilities/grpc.md)

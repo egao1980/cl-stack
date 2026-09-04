@@ -101,18 +101,20 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.1** | wire client; `:http-version` / H2 header policy; `TE: trailers` |
+| `http-protocol` | **0.3.4** | wire client; `:http-version` / H2 header policy; `TE: trailers`; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
+| `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
 | `schema-protocol` | **0.1.2** | CLOS `defschema` (`stack-schema`); `xsd-schema` / `arrow-schema` GFs · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
 | `sql-query-postgres` | **0.2.0** | postgres dialect |
 | `sql-orm` | **0.1.0** | CLOS ORM (`defmodel`) |
+| `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
@@ -172,14 +174,18 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
 | `arrow-protocol` | **0.1.0** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
-| `log-protocol` | **0.1.1** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
+| `log-protocol` | **0.1.2** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
+| `telemetry-protocol` | **0.1.0** | traces / spans + thin metrics (`stack-telemetry`) |
+| `telemetry-backend-otlp` | **0.1.0** | OTLP/HTTP JSON |
+| `cl-stack-snappy` | **1.2.2** | Snappy raw + framed; HTTP CE uses raw |
+| `http-encoding-snappy` | **0.1.0** | `Content-Encoding: snappy` (raw, not framed) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
 | `grpc-protocol` | **0.1.0** | gRPC wire / channel |
 | `grpc-backend-http2` | **0.1.0** | unary over `http-protocol` H2 |
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
-| `protobuf-protocol` | **0.1.0** | serdes `:protobuf` |
-| `protobuf-backend-cl-protobufs` | **0.1.1** | default protobuf backend |
+| `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
+| `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
 | `event-protocol` | **0.2.0** | event-loop generics (`wake-call` / `submit`) |
 | `event-backend-libuv` | **0.1.2** | default (Windows-primary); per-loop submit pool |
 | `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
@@ -194,8 +200,8 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ## 3. Minimal HTTP (facade)
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.7")
-;; optional CE codecs: http-encoding-chipz / -brotli / -zstd
+(cl-repo:load-system "cl-stack-http" :version "0.1.8")
+;; optional CE codecs: http-encoding-chipz / -brotli / -zstd / -snappy
 
 (defpackage #:demo (:use #:cl) (:local-nicknames (#:http #:cl-stack-http)))
 (in-package #:demo)
@@ -211,7 +217,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ### HTTP/2 preference (`http-protocol` 0.3.1+)
 
 ```lisp
-(cl-repo:load-system "http-protocol" :version "0.3.1")
+(cl-repo:load-system "http-protocol" :version "0.3.4")
 (cl-repo:load-system "http-backend-async" :version "0.2.5")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
@@ -265,7 +271,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 
 ```lisp
 (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
-(cl-repo:load-system "cl-stack-jwt" :version "0.1.0")
+(cl-repo:load-system "cl-stack-jwt" :version "0.2.0")
 
 ;; OAuth2 client-credentials → pass as :auth to stack-http
 (defvar *auth*

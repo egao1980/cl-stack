@@ -1,6 +1,6 @@
 (in-package #:cl-stack)
 
-(defun apply-pins (path &key (load nil) force
+(defun apply-pins (path &key (load nil) force except
                            (sources '(("babel" :ql)
                                       ("trivial-features" :ql)
                                       ("cl-unicode" :ql))))
@@ -8,6 +8,7 @@
 
    Requires CL-REPOSITORY-CLIENT loaded (system cl-stack/pins). Registry/namespace
    come from the pin file. Skips entries whose :platforms filter excludes this host.
+   EXCEPT is a list of system name strings to skip (e.g. fat native overlays).
    When LOAD is true, ASDF-loads each system after install.
    SOURCES defaults force babel/cl-unicode via Quicklisp (avoids OCI dual-load
    defconstant clashes with the client bootstrap).
@@ -27,7 +28,8 @@
       (let ((installed '()))
         (dolist (entry (pin-systems pins))
           (multiple-value-bind (name version platforms) (parse-system-entry entry)
-            (when (platforms-match-p platforms)
+            (when (and (platforms-match-p platforms)
+                       (not (member name except :test #'equal)))
               (format t "~&; cl-stack: pin ~a:~a~%" name version)
               (uiop:symbol-call :cl-repo :ensure-systems
                                 (list name)

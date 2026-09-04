@@ -31,7 +31,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **Errors** | Conditions (+ restarts), not status-only | API.md; map 4xx/5xx optionally via policy |
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
 | **URI** | **quri** (`egao1980/quri`) | Host/query/IPv6; IDNA via `cl-idna` |
-| **Content-Encoding** | **gzip / deflate / br / zstd** (wave-1) | httpx parity; see [Content encoding](#content-encoding-wave-1) |
+| **Content-Encoding** | **gzip / deflate / br / zstd / snappy** (raw) | httpx parity + Snappy; see [Content encoding](#content-encoding-wave-1) |
 | **MIME / multipart** | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** (fork of [40ants/cl-mime](https://github.com/40ants/cl-mime)) + **trivial-mimes** / **chunga** where dexador already uses them | Full MIME parse/print + CTE; see support libs |
 
 ---
@@ -48,6 +48,7 @@ Wave-1: pin what dexador already uses, **except IDNA** — use stack `cl-idna`.
 | Content encode gzip/deflate | **salza2** via `http-encoding-chipz` | Wave-1 (request `Content-Encoding`) |
 | Content decode/encode **br** | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) → [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) | CFFI + `libbrotli` OCI overlay |
 | Content decode/encode **zstd** | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) → [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) | CFFI + `libzstd` OCI overlay |
+| Content decode/encode **snappy** | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) → [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.2.2** | CFFI + `libsnappy`; **raw** block (not framed) |
 | MIME type guess | **trivial-mimes** | Via dexador (filename → type) |
 | MIME parse/print + CTE | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** | Fork of 40ants/cl-mime (hanshuebner lineage, LGPL+Lisp exception). `mime:decode-content` / `encode-content` = **Content-Transfer-Encoding** (7bit/8bit/base64/qp) — **not** HTTP Content-Encoding. qlot: `github egao1980/cl-mime`. |
 | Multipart / chunked | **cl-mime** + **chunga** (+ dexador body) | Prefer cl-mime for structured MIME; chunga for chunked framing |
@@ -139,7 +140,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Range requests | 9110 §14 | P (headers) | app | P | P | **Y** helpers (`:range`) |
 | Conditional reqs | 9110 §13 | P (headers) | app | P | P | **P** via raw headers wave-1; named helpers **P2** |
 | Content negotiation | 9110 §12 | P (headers) | app | P | P | **Y** helpers (`:accept` / `:accept-encoding` / `:accept-language`) |
-| Auto decompress | Content-Encoding | Y | N | Y | Y (gzip/deflate) | **Y** (gzip/deflate/**br**/**zstd**) |
+| Auto decompress | Content-Encoding | Y | N | Y | Y (gzip/deflate) | **Y** (gzip/deflate/**br**/**zstd**/**snappy**) |
 | Request compress | Content-Encoding | P | N | P | N | **Y** (opt-in `:content-encoding`) |
 | Connection pool / keep-alive | 9112 | Y | app | Y | Y | **Y** (client object) |
 | Trailers | 9110 §6.5 | P | Y | P | N | **P** wave-1 (expose if backend gives); full **P2** |
@@ -183,7 +184,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 
 ## Content encoding (wave-1)
 
-Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked for wave-1 (was P2).
+Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked for wave-1 (was P2). **`snappy`** (raw block, not framed) is a later first-party coding via `http-encoding-snappy` + `cl-stack-snappy` **1.2.2**.
 
 ### Codings
 
@@ -194,19 +195,20 @@ Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked f
 | `deflate` | RFC 1950/1951 | `http-encoding-chipz` | pure Lisp |
 | `br` | RFC 7932 | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) | [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) OCI |
 | `zstd` | RFC 8878 | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) | [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) OCI |
+| `snappy` | raw Snappy (not framed; no HTTP RFC) | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) | [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.2.2** |
 
 Skip obsolete `compress` (LZW). Dictionary transport (`dcb` / `dcz`, RFC 9842) = **P2**.
 
-**Layout (same as event-protocol):** `http-protocol` holds generics + parse + soft-load probe (`*content-coding-systems*`) + shared `http-protocol/conformance`. Encoding backends are **separate repos** that specialize `decode-content-coding` / `encode-content-coding` (octets **and** Gray streams). No plugin registry — load the ASDF system; methods appear. Natives stay in `cl-stack-brotli` / `cl-stack-zstd` (overlays do not depend on `http-protocol`).
+**Layout (same as event-protocol):** `http-protocol` holds generics + parse + soft-load probe (`*content-coding-systems*`) + shared `http-protocol/conformance`. Encoding backends are **separate repos** that specialize `decode-content-coding` / `encode-content-coding` (octets **and** Gray streams). No plugin registry — load the ASDF system; methods appear. Natives stay in `cl-stack-brotli` / `cl-stack-zstd` / `cl-stack-snappy` (overlays do not depend on `http-protocol`).
 
 ### Client policy
 
-1. Default `Accept-Encoding: gzip, deflate, br, zstd` (order = preference; q-values optional).
+1. Default `Accept-Encoding: gzip, deflate, br, zstd` (order = preference; q-values optional). `snappy` is advertised only when `http-encoding-snappy` is loaded.
 2. **Auto-decode** response body when `Content-Encoding` is present (httpx/dexador shape). Opt out: `:decompress nil`.
-3. Request body compression is **opt-in**: `:content-encoding :gzip` / `:br` / `:zstd` / `:deflate` (sets header + encodes publisher).
+3. Request body compression is **opt-in**: `:content-encoding :gzip` / `:br` / `:zstd` / `:deflate` / `:snappy` (sets header + encodes publisher).
 4. Multiple codings in one header (applied left-to-right on wire) — decode in **reverse** order.
 5. Unknown coding → `http-protocol-error` (or `unsupported-operation`) unless `:decompress nil`.
-6. Missing encoding backend / native overlay for `br`/`zstd`: omit that token from default `Accept-Encoding` **or** signal at client construction (prefer omit + warn once; never advertise what we cannot decode).
+6. Missing encoding backend / native overlay for `br`/`zstd`/`snappy`: omit that token from default `Accept-Encoding` **or** signal at client construction (prefer omit + warn once; never advertise what we cannot decode).
 
 ### Protocol / facade bits
 
@@ -237,12 +239,13 @@ Same policy as OpenSSL ([overlays.md](../overlays.md)): grovel at build time if 
 |---------|--------|--------|
 | `cl-stack-brotli` | `libbrotli` (dec+enc) | linux/amd64+arm64, darwin/arm64, **windows/amd64** |
 | `cl-stack-zstd` | `libzstd` | same |
+| `cl-stack-snappy` | `libsnappy` (raw) | linux/amd64+arm64, darwin/arm64, windows/amd64 |
 
 Thin CFFI in overlay repos; `http-encoding-*` only specializes HTTP generics. Consumers must not need a C toolchain.
 
 ### Dexador gap
 
-Stock dexador auto-decodes gzip/deflate via chipz only. Wave-1 facade wraps the body pipeline so `br`/`zstd` work for **both** sync (dexador) and async backends — either post-process the octet body or inject a decompressing gray stream before charset decode.
+Stock dexador auto-decodes gzip/deflate via chipz only. Wave-1 facade wraps the body pipeline so `br`/`zstd`/`snappy` work for **both** sync (dexador) and async backends — either post-process the octet body or inject a decompressing gray stream before charset decode.
 
 ---
 

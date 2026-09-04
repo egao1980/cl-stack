@@ -1,4 +1,4 @@
-# Cookbook: serdes (JSON / SEXP / XML / JSONL / events)
+# Cookbook: serdes (JSON / SEXP / CSV / XML / Arrow / protobuf / JSONL / events)
 
 **Audience:** one call site for “encode as JSON or SEXP”, log shipping (JSONL), or SAX-like pull over large JSON/XML.
 
@@ -11,6 +11,7 @@
 | [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
 | [`csv-protocol`](https://github.com/egao1980/csv-protocol) (`stack-csv`) | `:csv` / `:tsv` (dialects, row streams, events) | **0.1.0** |
 | [`xml-protocol`](https://github.com/egao1980/xml-protocol) + `xml-backend-native` | `:xml` implementor (Infoset + events + writer) | **0.1.0** |
+| [`protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) | `:protobuf` (octets + proto3 JSON / WKT) | **0.2.0** |
 | [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) (`stack-arrow`) | `:arrow` / `:parquet` | **0.1.0** |
 
 Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json cookbook](json.md). XML-only API: [xml cookbook](xml.md). Object streams (no formats): [io cookbook](io.md).
@@ -22,9 +23,10 @@ Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json c
 (cl-repo:load-system "csv-protocol" :version "0.1.0")
 (cl-repo:load-system "xml-backend-native" :version "0.1.0")
 (cl-repo:load-system "arrow-protocol" :version "0.1.0")
+(cl-repo:load-system "protobuf-backend-cl-protobufs" :version "0.2.0")
 ```
 
-Load an implementor ASDF → registers `:json` / `:sexp` / `:csv` / `:tsv` / `:xml` / `:arrow` / `:parquet`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants. CSV dialects: [csv cookbook](csv.md).
+Load an implementor ASDF → registers `:json` / `:sexp` / `:csv` / `:tsv` / `:xml` / `:arrow` / `:parquet` / `:protobuf`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants. CSV dialects: [csv cookbook](csv.md).
 
 ---
 
