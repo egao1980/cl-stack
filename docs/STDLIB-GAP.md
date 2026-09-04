@@ -62,7 +62,7 @@ Overlays, `event-protocol`, `http-protocol`, `ws-protocol`, cl-repository pins, 
 
 **Still open on this matrix:** none of the format rows. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
 
-**Depth tranche (this round):** H2 `:want-stream` + trailers; gRPC http2 server/bidi streams (flush-on-first-recv); crypto `sign`/`verify`; JWT RS/ES/EdDSA without jose; H2 server backend + WS `accept`. Canaries: `http-parity` H2 row; `grpc-backend-http2` mock streams + `parity/python`; `ws-backend-websocket-driver` server + `parity/python`. Interleaved bidi / H2 CONNECT server / HTTP/3 stay follow-on.
+**Depth tranche (this round):** [#220](https://github.com/egao1980/cl-stack/issues/220) — H2 `:want-stream` + trailers; gRPC http2 server/bidi streams (flush-on-first-recv); crypto `sign`/`verify`; JWT RS/ES/EdDSA without jose; H2 server backend + WS `accept`. Canaries: `http-parity` H2 row; `grpc-backend-http2` mock streams + `parity/python`; `ws-backend-websocket-driver` server + `parity/python`. Interleaved bidi / H2 CONNECT server / HTTP/3 stay follow-on.
 
 ## Absent appendix
 
