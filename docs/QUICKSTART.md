@@ -80,6 +80,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
+| `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
+| `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
 | `unicode-protocol` | **0.1.2** | UCD/normalize/case/IDNA/breaks/uset (`stack-unicode`) · [cookbook](cookbooks/unicode.md) |
@@ -105,7 +107,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
-| `schema-protocol` | **0.1.0** | CLOS `defschema` (`stack-schema`) · [cookbook](cookbooks/schema.md) |
+| `schema-protocol` | **0.1.2** | CLOS `defschema` (`stack-schema`); `xsd-schema` / `arrow-schema` GFs · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
@@ -135,6 +137,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `blackboard-protocol` | **0.1.1** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.1** | JSON Schema emit/validate (LLM `:output`, AG-UI, MCP tools) |
+| `schema-protocol-xsd` | **0.1.2** | XSD 1.0/1.1 on `xml-element`; `decode-validating` (`stack-schema-xsd`) |
+| `schema-protocol-arrow` | **0.1.0** | Arrow emit + table↔objects (`stack-schema-arrow`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
@@ -167,6 +171,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
+| `arrow-protocol` | **0.1.0** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |

@@ -32,6 +32,8 @@
 
 - `json-protocol` — encode/decode (RFC 8259); default **jzon**, alternate **yason**  
   **Brief:** [capabilities/json-protocol.md](capabilities/json-protocol.md) · cookbook [json.md](cookbooks/json.md) — streaming = P2
+- `xml-protocol` — well-formed XML 1.0 + NS Infoset / pull events / writer; default **xml-backend-native**  
+  **Brief:** [capabilities/xml-protocol.md](capabilities/xml-protocol.md) · cookbook [xml.md](cookbooks/xml.md)
 - `babel` — UTF-8 octets ↔ string — [text-unicode.md](capabilities/text-unicode.md)
 - `unicode-protocol` — UCD / normalize / IDNA / breaks — [unicode-protocol.md](capabilities/unicode-protocol.md)
 - `i18n-protocol` — locale / MF2 templating / catalogs — [i18n.md](capabilities/i18n.md)
@@ -47,13 +49,13 @@
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**) + [`csv-protocol`](https://github.com/egao1980/csv-protocol) (`:csv`/`:tsv`); later XML / protobuf / Arrow / …  
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events; **implemented by** `json-protocol` + sexp (OCI **0.2.1**) + `csv-protocol` **0.1.0** + `xml-protocol` **0.1.0** + `arrow-protocol` **0.1.0**; later protobuf / …  
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `csv-protocol` — RFC 4180 dialects; whole-document + row streams + events; implements serdes `:csv` / `:tsv`  
   **Brief:** [capabilities/csv-protocol.md](capabilities/csv-protocol.md) · cookbook [csv.md](cookbooks/csv.md)
 - `log-protocol` — **text** (log4j pattern) + **structured** (JSON/SEXP via serdes); backends **[`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl)** / **[`log-backend-vom`](https://github.com/egao1980/log-backend-vom)** (separate repos)  
   **Brief:** [capabilities/logging.md](capabilities/logging.md) (#102)
-- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`.  
+- `schema-protocol` — CLOS interchange models (`defschema` / `defenum` / `:tag`). JSON Schema is `schema-protocol-json`. XSD is `schema-protocol-xsd`.  
   **Brief:** [capabilities/schema.md](capabilities/schema.md) · cookbook [schema.md](cookbooks/schema.md)
 - `datetime-protocol` — instant / duration / period / date / zone. IANA data is `cl-stack-tzdata`. Holidays are `cl-stack-calendars`. **Not** a `local-time` pin.  
   **Brief:** [capabilities/datetime.md](capabilities/datetime.md) ([#105](https://github.com/egao1980/cl-stack/issues/105)) · cookbook [datetime.md](cookbooks/datetime.md)

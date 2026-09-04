@@ -8,7 +8,9 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 |----------|------------|
 | [HTTP client](http-client.md) | `cl-stack-http` / `http-protocol` (requests · httpx) |
 | [JSON](json.md) | `json-protocol` / jzon · yason · `cl-stack-http` |
-| [Serdes](serdes.md) | `serdes-protocol` / `sexp-protocol` / `json-protocol` (JSONL · events) |
+| [XML](xml.md) | `xml-protocol` / `xml-backend-native` (Infoset · events · `:xml`) |
+| [CSV](csv.md) | `csv-protocol` (`:csv` / `:tsv` · dialects) |
+| [Serdes](serdes.md) | `serdes-protocol` / `sexp-protocol` / `json-protocol` / `csv-protocol` / `xml-protocol` / `arrow-protocol` (JSONL · events) |
 | [Object streams](io.md) | `io-protocol` (ObjectInput/Output · prin1/read) |
 | [Config](config.md) | `cl-stack-config` (TOML + env) |
 | [WebSocket](websocket.md) | `ws-protocol` / async · winhttp · websocket-driver |
@@ -26,7 +28,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [AI agent](ai-agent.md) | `ai-agent-protocol` **0.2.0** (`run-ai-agent`; `/mcp` sampling; not `run-agent`) |
 | [Blackboard](blackboard.md) | `blackboard-protocol` / `capability-protocol` (KSAR + COW, no AI wire) |
 | [LLM](llm.md) | `llm-protocol` **0.2.0** / OpenAI **0.3.0** / llama.cpp (generate · stream · embed) |
-| [Schema](schema.md) | `schema-protocol` / `schema-protocol-json` (`defschema` · JSON Schema) |
+| [Schema](schema.md) | `schema-protocol` / `schema-protocol-json` / `schema-protocol-xsd` (`defschema` · JSON Schema · XSD) |
 | [Date / time / TZ](datetime.md) | `datetime-protocol` / `cl-stack-tzdata` / `cl-stack-calendars` |
 | [Conditions / restarts](conditions.md) | CLHS 9 — HTTP / FS / subprocess |
 | [Unicode / i18n / l10n](unicode.md) | `unicode-protocol` / `i18n-protocol` / `l10n-protocol` (+ ICU · ICU4J · sb-unicode) |
