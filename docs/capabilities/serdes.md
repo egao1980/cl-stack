@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`.
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`.
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
@@ -17,8 +17,9 @@ sexp-protocol                ← :sexp (+ stream-*-value)
 csv-protocol                 ← :csv / :tsv (dialects + row streams + events)
 xml-protocol (+ native)      ← :xml (Infoset + events + writer)
 arrow-protocol               ← :arrow (IPC) + :parquet
+protobuf-protocol            ← :protobuf (octets + proto3 JSON / WKT)
     ▲ later implementors (same Gray GFs)
-protobuf-… / msgpack-… / …
+msgpack-… / edn / cbor / …
     ▲ used by
 log-protocol / cl-stack-http / …
 ```
@@ -36,7 +37,7 @@ Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol
 | JSON value rules stay coherent | Owned by **`json-protocol`** (still); it **implements** serdes |
 | SEXP without bloating json-* | Separate implementor of serdes |
 | Logging structured layouts | Depend on **serdes-protocol** only; load json/sexp implementors |
-| Later XML / protobuf / Arrow / … | New **implementors**; reuse wave-1 Gray GFs |
+| Later msgpack / EDN / CBOR / Avro | New **implementors**; reuse wave-1 Gray GFs |
 | Streaming / pipes | **Gray streams from day one** + **JSONL** + **event/pull JSON** (large files) |
 
 **Reject:** `serdes-backend-json` shim; deferring streams “until Arrow.”  
@@ -72,7 +73,7 @@ Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol
 | **Octets** | UTF-8 via Babel for text formats | |
 | **Gray streams** | **In protocol wave-1** — binary + character base classes; `backend-make-*-stream`; `stream-encode-value` / `stream-decode-value` | http-protocol precedent; Arrow/protobuf specialize later |
 | **Wave-1 formats** | `:json`, `:sexp` | Character streams + `stream-*-value` required |
-| **Future implementors** | XML, protobuf, Arrow, msgpack, edn, … | § Future implementors |
+| **Future implementors** | msgpack, EDN, CBOR, Avro, … | § Future implementors |
 | **Selection** | `:format` / `*serdes-backend*` | Load json-protocol / sexp-protocol |
 
 ---
@@ -233,13 +234,13 @@ cl-stack-http    → migrate :json / :sexp onto serdes (optional follow-on)
 
 Same contract as json/sexp — **implement** serdes, don’t wrap it:
 
-| Format | Notes (when we get there) |
-|--------|---------------------------|
+| Format | Notes |
+|--------|-------|
 | **CSV** | **Shipped** — [`csv-protocol`](csv-protocol.md) OCI **0.1.0**; dialects; row streams; events |
-| **XML** | After remaining XML gap work; value mapping TBD (DOM vs event vs map-shaped) |
-| **Protobuf** | Likely ties to `cl-protobufs` / overlays; binary octets path first-class |
+| **XML** | **Shipped** — [`xml-protocol`](xml-protocol.md) **0.1.0** + `xml-backend-native` (Infoset + events + writer) |
+| **Protobuf** | **Shipped** — [`protobuf-protocol`](protobuf.md) **0.2.0** + cl-protobufs **0.2.0**; octets + proto3 JSON / WKT |
 | **Apache Arrow** | **Shipped** — [`arrow-protocol`](arrow.md) (`stack-arrow`) native IPC + Parquet subset; serdes `:arrow` / `:parquet`. Flight / C Data Interface later. |
-| MessagePack / EDN / CBOR | Compact / Lisp-adjacent |
+| MessagePack / EDN / CBOR | Compact / Lisp-adjacent — **later** |
 | Avro / Cap’n Proto | Only if demand; same registration pattern |
 
 No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GFs.
@@ -247,7 +248,7 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Non-goals (wave-1)
 
 - Replacing json-protocol’s public API  
-- Shipping XML / msgpack implementors (Arrow + protobuf have their own briefs)  
+- Shipping msgpack / EDN / CBOR implementors (CSV / XML / Arrow / protobuf have their own briefs)  
 - Building a full in-memory DOM for huge files (use events / JSONL instead)  
 - cl-store object graphs  
 - Config TOML as a serdes format (stays [`cl-stack-config`](config.md))  
@@ -264,4 +265,5 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 - [x] SEXP implementor (whole-value + line streams) — `sexp-protocol` **0.2.0**
 - [x] **CSV implementor** — `csv-protocol` **0.1.0** (`:csv` / `:tsv`)
 - [x] **XML implementor** — `xml-protocol` **0.1.0** + `xml-backend-native` (Infoset + events + writer)
+- [x] **Protobuf implementor** — `protobuf-protocol` **0.2.0** + `protobuf-backend-cl-protobufs` **0.2.0**
 - [x] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)

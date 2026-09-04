@@ -1,6 +1,6 @@
 # protobuf-protocol (P1)
 
-**Status:** brief **locked** — serdes implementor + CLOS message GFs; backend = cl-protobufs
+**Status:** **shipped** — [`egao1980/protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) OCI **0.2.0** + [`protobuf-backend-cl-protobufs`](https://github.com/egao1980/protobuf-backend-cl-protobufs) **0.2.0**; serdes `:protobuf` + proto3 JSON / WKT
 
 Binary protobuf encode/decode. Required for A2A’s official gRPC binding and AG-UI’s optional protobuf transport.
 

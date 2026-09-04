@@ -17,7 +17,7 @@ Pins below use current OCI tags; bump with hub releases.
 ```lisp
 (cl-repo:load-system "cl-stack-http" :version "0.1.8")
 ;; soft CE codecs (optional):
-;;   http-encoding-chipz / http-encoding-brotli / http-encoding-zstd
+;;   http-encoding-chipz / http-encoding-brotli / http-encoding-zstd / http-encoding-snappy
 ;; OAuth2 / JWT (optional):
 ;;   (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
 ;;   (cl-repo:load-system "cl-stack-jwt" :version "0.2.0")
@@ -128,7 +128,7 @@ Or fail fast:
 (http:get url :raise-for-status t)
 ```
 
-**CE:** gzip/deflate via `http-encoding-chipz`; br/zstd when those systems are loaded. After decode, `Content-Encoding` is stripped (httpx-shaped).
+**CE:** gzip/deflate via `http-encoding-chipz`; br/zstd/snappy when those systems are loaded (`http-encoding-snappy` = raw Snappy, not framed). After decode, `Content-Encoding` is stripped (httpx-shaped).
 
 ---
 
