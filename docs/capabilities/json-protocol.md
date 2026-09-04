@@ -3,7 +3,7 @@
 **Issues:** [#91](https://github.com/egao1980/cl-stack/issues/91) · [#96](https://github.com/egao1980/cl-stack/issues/96) · [#97](https://github.com/egao1980/cl-stack/issues/97)  
 **Status:** **done** — [`egao1980/json-protocol`](https://github.com/egao1980/json-protocol) `0.2.0` + backends on GHCR; cookbook [json.md](../cookbooks/json.md); `cl-stack-http` **0.1.8** uses jzon via protocol
 
-CLOS encode/decode contract for JSON (RFC 8259). One app DX; swappable backends. XML is [`xml-protocol`](xml-protocol.md). CSV stays out of scope.
+CLOS encode/decode contract for JSON (RFC 8259). One app DX; swappable backends. XML is [`xml-protocol`](xml-protocol.md). CSV is [`csv-protocol`](csv-protocol.md).
 
 **Serdes:** `json-protocol` **implements** [`serdes-protocol`](serdes.md) for `:format :json` (depends on serdes interface; registers methods — not wrapped by a separate serdes-backend-json). Follow-on bump when serdes ships (#133).
 

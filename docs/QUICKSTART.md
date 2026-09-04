@@ -170,6 +170,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
 | `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
+| `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
 | `arrow-protocol` | **0.1.0** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
 | `log-protocol` | **0.1.1** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |

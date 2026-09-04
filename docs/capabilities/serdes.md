@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`.
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`.
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
@@ -14,6 +14,7 @@ serdes-protocol              ← GFs + Gray stream classes + format registry
     ▲ implemented by (wave-1)
 json-protocol (+ jzon/yason) ← :json (+ JSONL streams)
 sexp-protocol                ← :sexp (+ stream-*-value)
+csv-protocol                 ← :csv / :tsv (dialects + row streams + events)
 xml-protocol (+ native)      ← :xml (Infoset + events + writer)
 arrow-protocol               ← :arrow (IPC) + :parquet
     ▲ later implementors (same Gray GFs)
@@ -234,7 +235,8 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 
 | Format | Notes (when we get there) |
 |--------|---------------------------|
-| **XML** | After CSV/XML gap work; value mapping TBD (DOM vs event vs map-shaped) |
+| **CSV** | **Shipped** — [`csv-protocol`](csv-protocol.md) OCI **0.1.0**; dialects; row streams; events |
+| **XML** | After remaining XML gap work; value mapping TBD (DOM vs event vs map-shaped) |
 | **Protobuf** | Likely ties to `cl-protobufs` / overlays; binary octets path first-class |
 | **Apache Arrow** | **Shipped** — [`arrow-protocol`](arrow.md) (`stack-arrow`) native IPC + Parquet subset; serdes `:arrow` / `:parquet`. Flight / C Data Interface later. |
 | MessagePack / EDN / CBOR | Compact / Lisp-adjacent |
@@ -260,5 +262,6 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
 - [x] **json event/pull parser** (jzon `parse-next`) — [#138](https://github.com/egao1980/cl-stack/issues/138)
 - [x] SEXP implementor (whole-value + line streams) — `sexp-protocol` **0.2.0**
+- [x] **CSV implementor** — `csv-protocol` **0.1.0** (`:csv` / `:tsv`)
 - [x] **XML implementor** — `xml-protocol` **0.1.0** + `xml-backend-native` (Infoset + events + writer)
 - [x] Wire `log-protocol` structured layouts — [#124](https://github.com/egao1980/cl-stack/issues/124)
