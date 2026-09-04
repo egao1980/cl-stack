@@ -1,4 +1,6 @@
 ;;;; #22: install stable pins from GHCR (no sibling checkouts, no grovel).
+;;;; Caller must raise the SBCL heap (ros dynamic-space-size=4096) — llama-cpp
+;;;; overlay extract is ~1.7GB and OOMs the default 1GB image.
 
 (setf *debugger-hook*
       (lambda (c h)

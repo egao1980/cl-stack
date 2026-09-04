@@ -86,7 +86,9 @@ jobs:
       - name: Apply stable pins from GHCR
         shell: bash
         run: |
-          ros -l scripts/ci-meta-install.lisp -q
+          # llama-cpp 0.1.5 overlay decompress is ~1.7GB; default 1GB heap OOMs.
+          # ros option, not sbcl --dynamic-space-size (must come before -l).
+          ros dynamic-space-size=4096 -l scripts/ci-meta-install.lisp -q
 
       # Overlay libssl needs matching libcrypto on the loader path (Linux ignores
       # mid-process setenv; stage before the test lisp process starts).
@@ -134,4 +136,4 @@ jobs:
       - name: Load cl-stack/meta + e2e tests
         shell: bash
         run: |
-          ros -l scripts/ci-meta-test.lisp -q
+          ros dynamic-space-size=4096 -l scripts/ci-meta-test.lisp -q
