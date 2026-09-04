@@ -11,7 +11,7 @@ Capability briefs: [crypto.md](../capabilities/crypto.md) · [secrets.md](../cap
 
 ```lisp
 ;; One backend system implements both crypto-protocol and secrets-protocol
-(cl-repo:load-system "crypto-backend-ironclad" :version "0.1.1")
+(cl-repo:load-system "crypto-backend-ironclad" :version "0.2.0")
 ;; binds *crypto-backend* and *secrets-backend*
 ```
 
@@ -34,6 +34,14 @@ Like Fernet / `AESGCM` — AEAD with safe defaults. **Do not** roll your own CBC
 ```
 
 Wrong key / tampered blob → `crypto-authentication-error` (fail closed).
+
+Sign / verify (Ed25519, RSA-PSS, ECDSA P-256; RS256 PKCS#1 only when you ask):
+
+```lisp
+(multiple-value-bind (sk pk) (generate-key-pair :ed25519)
+  (let ((sig (sign #(1 2 3) :algorithm :ed25519 :key sk)))
+    (verify #(1 2 3) sig :algorithm :ed25519 :key pk)))
+```
 
 Associated data (authenticated, not encrypted):
 

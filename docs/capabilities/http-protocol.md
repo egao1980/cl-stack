@@ -3,7 +3,7 @@
 **Issues:** [#3](https://github.com/egao1980/cl-stack/issues/3) · [#29](https://github.com/egao1980/cl-stack/issues/29) · [#30](https://github.com/egao1980/cl-stack/issues/30) · [#31](https://github.com/egao1980/cl-stack/issues/31) · [#32](https://github.com/egao1980/cl-stack/issues/32) · encoding [#45](https://github.com/egao1980/cl-stack/issues/45)/[#46](https://github.com/egao1980/cl-stack/issues/46)/[#47](https://github.com/egao1980/cl-stack/issues/47)  
 **Status:** brief locked (#29 closed); overlays + CE backends done; `#30` sync [`http-backend-dexador`](https://github.com/egao1980/http-backend-dexador) + `http` facade **done**; `#31` async [`http-backend-async`](https://github.com/egao1980/http-backend-async) on `event-protocol` **done** (HTTP/1.1 + HTTPS + redirects/cookies; live CE via `HTTP_ASYNC_LIVE`); `#32` hub corpus + OCI consumer **done**; `#54` `:auth` / `:range` / `http:trace`+`connect` **shipped**; `#71` buffered body Gray streams; `#73` `http-file` CLOS + multipart `:data`/`:files` (FS-free wire; pathlib facade → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http))
 
-**Layering (Python analogy):** `http-protocol` + backends ≈ **urllib3 / httpx** (wire client). **requests-like** DX → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) (pathlib upload/download, Session, JSON/sexp, MIME, backend select, Digest/netrc, CLOS auth protocol). OAuth2 → [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2); JWT crypto → [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) (jose).
+**Layering (Python analogy):** `http-protocol` + backends ≈ **urllib3 / httpx** (wire client). **requests-like** DX → [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) (pathlib upload/download, Session, JSON/sexp, MIME, backend select, Digest/netrc, CLOS auth protocol). OAuth2 → [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2); JWT crypto → [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) (crypto-protocol sign).
 
 **Cookbook (quickstart recipes):** [cookbooks/http-client.md](../cookbooks/http-client.md).
 
@@ -19,7 +19,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 |----------|--------|-----------|
 | **DX target** | **httpx** (requests-compatible) | Issue #3; sync+async one API shape |
 | **requests-like layer** | [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) | Path/`download`/`upload`, Session, JSON/sexp, MIME, Digest/netrc, CLOS auth — wraps protocol (no core FS) |
-| **OAuth2 / JWT** | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | Token flows + jose JWT (separate packages) |
+| **OAuth2 / JWT** | [`cl-stack-oauth2`](https://github.com/egao1980/cl-stack-oauth2) / [`cl-stack-jwt`](https://github.com/egao1980/cl-stack-jwt) | Token flows + JWT via crypto-protocol (jose escape hatch) |
 | **Parity refs** | **Java `java.net.http`** + **Boost.Beast verbs/messages** + RFCs below | Java = high-level client bar; Beast = wire vocabulary (not a full client) |
 | **Sync backend** | **dexador** | De-facto CL client; pooling, multipart, cookies, proxy |
 | **Async** | On **event-protocol** (≥2 backends) | Not hard-wired to libuv/libev; promises at facade |
@@ -123,7 +123,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | All RFC methods + PATCH | 9110, 5789 | Y (+ generic) | Y (enum) | Y | P | **Y** |
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
 | Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray stream / chunked (`*http-stream-buffer-size*`, default 64KiB); `#71` |
-| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync + async H1 (`:want-stream` / `http:stream` / `http:stream-async` + CE Gray wrap); async = socket-fed bounded queue (`http-backend-async`); H2 stream body **P2** |
+| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync + async H1 **and H2** (`:want-stream` / `http:stream` / `http:stream-async` + CE Gray wrap); async H2 DATA → Gray stream + `response-trailers` (`http-protocol` **0.3.5** / `http-backend-async` **0.2.6**) |
 | Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** — `:data`+`:files` as `http-file`/streams; pull Gray multipart (`#73`); **no pathnames in protocol** |
 | File upload/download value | — | P | N | Y | P | **Y** — CLOS `http-file` (filename, content-type, length, content stream/octets); `response-as-http-file`; FS open/save → higher lib (pathlib+MIME) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
@@ -143,7 +143,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Auto decompress | Content-Encoding | Y | N | Y | Y (gzip/deflate) | **Y** (gzip/deflate/**br**/**zstd**/**snappy**) |
 | Request compress | Content-Encoding | P | N | P | N | **Y** (opt-in `:content-encoding`) |
 | Connection pool / keep-alive | 9112 | Y | app | Y | Y | **Y** (client object) |
-| Trailers | 9110 §6.5 | P | Y | P | N | **P** wave-1 (expose if backend gives); full **P2** |
+| Trailers | 9110 §6.5 | P | Y | P | N | **Y** `response-trailers` (H2 END_STREAM; `http-protocol` **0.3.5**) |
 | Push promise (H2) | 9113 | Y (`PushPromiseHandler`) | N | N | N | **P2** |
 | Client-side cache | 9111 | N | N | N | N | **P2** |
 | WebSocket | 6455 | Y (on HttpClient) | Y | N (other libs) | N | **sep** → `ws-protocol` |
