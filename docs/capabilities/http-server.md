@@ -18,6 +18,7 @@ Conventions: [API.md](../API.md). Event loops: [event-protocol.md](event-protoco
 | **Middleware** | **[Lack](https://github.com/fukamachi/lack)** | Compose around Clack apps; not reimplemented in protocol |
 | **Default backend (A)** | **[Hunchentoot](https://github.com/edicl/hunchentoot)** via Clack adapter | **Windows primary** + linux/darwin; no libev; mature; good for dev + portable prod |
 | **Second backend (B)** | **[Woo](https://github.com/fukamachi/woo)** | Fast Unix accept loop on **libev**; shares native story with `event-backend-libev` |
+| **HTTP/2 backend** | **`http-server-backend-http2`** (same repo; zellerin `http2`) | TLS required (`:ssl-cert` / `:ssl-key`). Proxy-first remains the cookbook default |
 | **Not wave-2 default** | Bare Clack-without-protocol | Apps that want raw Clack still can; stack DX goes through protocol |
 | **Selection DX** | ASDF + `*http-server-backend*` | Load `http-server-backend-hunchentoot` (default) or `…-woo`; no plugin registry |
 | **JSON APIs** | `json-protocol` / `stack-json` in handlers | Cookbook = minimal JSON API over protocol |

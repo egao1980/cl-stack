@@ -41,7 +41,7 @@ Conventions: [API.md](../API.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md).
 | **Keys / nonces** | `(simple-array (unsigned-byte 8) (*))` | No strings-as-keys |
 | **RNG** | Via **secrets-protocol** | One CSPRNG story |
 | **Password hashing** | **secrets-protocol** | Not a Cipher |
-| **Signatures / PKI** | Follow-on | Ed25519/RSA-PSS later |
+| **Signatures / PKI** | **Shipped** `sign`/`verify` | `:ed25519` `:rsa-pss-sha256` `:ecdsa-p256-sha256`; `:rsa-pkcs1-sha256` for JWT RS256 only. Thin key octets (raw Ed25519). No CA/OCSP/PKCS#11 |
 | **Default backend (A)** | **Ironclad** via `crypto-backend-ironclad` (also implements secrets-protocol) | Already imported; pure Lisp |
 | **Watchlist (B)** | OpenSSL via cl+ssl / custom EVP | When hardware AES or FIPS matters |
 | **Windows** | Required | Ironclad = no native overlay |

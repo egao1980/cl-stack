@@ -25,12 +25,12 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Concurrency | De-facto converged | P1 | bt2 **0.9.4** — **done** ([#95](https://github.com/egao1980/cl-stack/issues/95), [concurrency.md](capabilities/concurrency.md)) |
 | Async I/O / event loop | Wrong-shape | P0 | **shipped** — `event-protocol` **0.2.0** (`wake-call` / `submit`) + libuv **0.1.2** / libev **0.1.3** / nio **0.1.2** + `cl-stack-executors` **0.1.0** — [event-protocol.md](capabilities/event-protocol.md) |
 | Sockets / DNS | De-facto converged | P1 | Consumed by `http-protocol`. `usocket` is not a stack pin |
-| HTTP client | Fragmented | P0 | **shipped** — `http-protocol` **0.3.4** + `cl-stack-http` **0.1.8**. First-party = `http-backend-async` **0.2.5** × libuv; also dexador (maintenance), winhttp, java. CE: gzip/deflate/br/zstd/**snappy** — [http-protocol.md](capabilities/http-protocol.md) · [cookbook](cookbooks/http-client.md) |
-| HTTP server | Fragmented | P1 | **shipped** — `http-server-protocol` **0.1.0**; Hunchentoot / Woo — [#93](https://github.com/egao1980/cl-stack/issues/93) · [cookbook](cookbooks/http-server.md) |
-| WebSocket | Fragmented | P0 | **shipped** — `ws-protocol` **0.2.2** (H1 Upgrade + RFC 8441 H2 + WinHTTP H1) — [ws-protocol.md](capabilities/ws-protocol.md) · [cookbook](cookbooks/websocket.md) |
+| HTTP client | Fragmented | P0 | **shipped** — `http-protocol` **0.3.5** (`response-trailers`) + `cl-stack-http` **0.1.8**. First-party = `http-backend-async` **0.2.6** (H2 `:want-stream`) × libuv; also dexador (maintenance), winhttp, java. CE: gzip/deflate/br/zstd/**snappy** — [http-protocol.md](capabilities/http-protocol.md) · [cookbook](cookbooks/http-client.md) |
+| HTTP server | Fragmented | P1 | **shipped** — `http-server-protocol` **0.1.0**; Hunchentoot / Woo + **H2** (`http-server-backend-http2` in the protocol repo) — [#93](https://github.com/egao1980/cl-stack/issues/93) · [cookbook](cookbooks/http-server.md) |
+| WebSocket | Fragmented | P0 | **shipped** — `ws-protocol` **0.3.0** (client + **H1 Upgrade accept**) — [ws-protocol.md](capabilities/ws-protocol.md) · [cookbook](cookbooks/websocket.md) |
 | TLS / SSL | Wrong-shape | P0 | **shipped** — `cl-stack-ssl` **3.4.1** overlays + cl+ssl — [overlays.md](overlays.md) |
-| Crypto / secrets | De-facto converged | P2 | **shipped** — `crypto-protocol` **0.1.1** · `secrets-protocol` **0.1.0** (incl. UUID) · Ironclad **0.1.1** — [#104](https://github.com/egao1980/cl-stack/issues/104) · [crypto.md](cookbooks/crypto.md) |
-| Auth | Fragmented | P1 | **shipped** — `cl-stack-oauth2` **0.1.0** · `cl-stack-jwt` **0.2.0** |
+| Crypto / secrets | De-facto converged | P2 | **shipped** — `crypto-protocol` **0.2.0** (sign/verify) · `secrets-protocol` **0.1.0** · Ironclad **0.2.0** — [#104](https://github.com/egao1980/cl-stack/issues/104) · [crypto.md](cookbooks/crypto.md) |
+| Auth | Fragmented | P1 | **shipped** — `cl-stack-oauth2` **0.1.0** · `cl-stack-jwt` **0.3.0** (RS/ES/EdDSA via crypto-protocol) |
 | Octets / UTF-8 | De-facto converged | P1 | Babel **0.5.0** — [text-unicode.md](capabilities/text-unicode.md) ([#94](https://github.com/egao1980/cl-stack/issues/94)) |
 | Unicode | Fragmented | P1 | **shipped** — `unicode-protocol` **0.1.2** (UCD / normalize / IDNA / breaks / uset) + cl-unicode / sbcl / ICU4C **78.1.3** / ICU4J **78.1.3**; facade `cl-stack-idna` **0.1.0** — [unicode-protocol.md](capabilities/unicode-protocol.md) · [cookbook](cookbooks/unicode.md) |
 | i18n / l10n | Fragmented | P1 | **shipped** — ICU4C + ICU4J, [#151](https://github.com/egao1980/cl-stack/issues/151) **closed**. `i18n-protocol` **0.1.0** (locale / MF2 / plural / catalogs) · `l10n-protocol` **0.1.0** (collate / number / date / currency / list / relative-time / locale case). **Not** gettext. Locked ICU *app* surface, not every ICU header (no translit / bidi / `uregex` / spoof / MeasureFormat) — [i18n.md](capabilities/i18n.md) · [l10n.md](capabilities/l10n.md) |
@@ -39,7 +39,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Subprocess | De-facto converged | P2 | **shipped** — `process-protocol` + `process-backend-uiop` **0.1.0** — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](cookbooks/process.md) |
 | RPC | Fragmented | P1 | **shipped** — `rpc-protocol` **0.2.0** + JSON-RPC / gRPC bindings + inprocess/stdio/http/sse — [#170](https://github.com/egao1980/cl-stack/issues/170) · [rpc.md](cookbooks/rpc.md) |
 | SSE | Fragmented | P1 | **shipped** — `sse-protocol` **0.1.0** + http / clack — [sse.md](cookbooks/sse.md) |
-| Protobuf / gRPC | Fragmented | P1 | **shipped** — `protobuf-protocol` **0.2.0** + cl-protobufs **0.2.0**; `grpc-protocol` **0.1.0** + http2 / native — [protobuf.md](capabilities/protobuf.md) · [grpc.md](capabilities/grpc.md) |
+| Protobuf / gRPC | Fragmented | P1 | **shipped** — `protobuf-protocol` **0.2.0** + cl-protobufs **0.2.0**; `grpc-protocol` **0.1.0** + http2 **0.2.0** (unary + server/bidi streams) / native — [protobuf.md](capabilities/protobuf.md) · [grpc.md](capabilities/grpc.md) |
 | JSON / CSV / XML | Fragmented | P1 | JSON **shipped** — `json-protocol` **0.2.0** + jzon — [#91](https://github.com/egao1980/cl-stack/issues/91) · [json.md](cookbooks/json.md). CSV **shipped** — [`csv-protocol`](https://github.com/egao1980/csv-protocol) OCI **0.1.0** (serdes `:csv`/`:tsv`, dialects) · [csv.md](cookbooks/csv.md). XML **shipped** — `xml-protocol` **0.1.0** + `xml-backend-native` — [xml.md](cookbooks/xml.md) |
 | Schema | Fragmented | P2 | **shipped** — `schema-protocol` **0.1.2** + `schema-protocol-json` **0.1.1** + `schema-protocol-xsd` **0.1.2** + `schema-protocol-arrow` **0.1.0** — [schema.md](cookbooks/schema.md) |
 | SQL | Fragmented | P2 | **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-pg,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** (not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](cookbooks/sql.md) |
@@ -61,6 +61,8 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 Overlays, `event-protocol`, `http-protocol`, `ws-protocol`, cl-repository pins, Rove/corpus — **shipped**. Do not treat this list as current P0.
 
 **Still open on this matrix:** none of the format rows. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
+
+**Depth tranche (this round):** [#220](https://github.com/egao1980/cl-stack/issues/220) — H2 `:want-stream` + trailers; gRPC http2 server/bidi streams (flush-on-first-recv); crypto `sign`/`verify`; JWT RS/ES/EdDSA without jose; H2 server backend + WS `accept`. Canaries: `http-parity` H2 row; `grpc-backend-http2` mock streams + `parity/python`; `ws-backend-websocket-driver` server + `parity/python`. Interleaved bidi / H2 CONNECT server / HTTP/3 stay follow-on.
 
 ## Absent appendix
 
