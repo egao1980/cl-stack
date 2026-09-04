@@ -40,11 +40,11 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | RPC | Fragmented | P1 | **shipped** — `rpc-protocol` **0.2.0** + JSON-RPC / gRPC bindings + inprocess/stdio/http/sse — [#170](https://github.com/egao1980/cl-stack/issues/170) · [rpc.md](cookbooks/rpc.md) |
 | SSE | Fragmented | P1 | **shipped** — `sse-protocol` **0.1.0** + http / clack — [sse.md](cookbooks/sse.md) |
 | Protobuf / gRPC | Fragmented | P1 | **shipped** — `protobuf-protocol` **0.1.0** + cl-protobufs **0.1.1**; `grpc-protocol` **0.1.0** + http2 / native — [protobuf.md](capabilities/protobuf.md) · [grpc.md](capabilities/grpc.md) |
-| JSON / CSV / XML | Fragmented | P1 | JSON **shipped** — `json-protocol` **0.2.0** + jzon — [#91](https://github.com/egao1980/cl-stack/issues/91) · [json.md](cookbooks/json.md). **CSV / XML later** |
-| Schema | Fragmented | P2 | **shipped** — `schema-protocol` **0.1.1** + `schema-protocol-json` **0.1.1** + `schema-protocol-xsd` **0.1.1** — [schema.md](cookbooks/schema.md) |
+| JSON / CSV / XML | Fragmented | P1 | JSON **shipped** — `json-protocol` **0.2.0** + jzon — [#91](https://github.com/egao1980/cl-stack/issues/91) · [json.md](cookbooks/json.md). XML **shipped** — `xml-protocol` **0.1.0** + `xml-backend-native` — [xml.md](cookbooks/xml.md). **CSV later** |
+| Schema | Fragmented | P2 | **shipped** — `schema-protocol` **0.1.1** + `schema-protocol-json` **0.1.1** + `schema-protocol-xsd` **0.1.2** (`xml-element`) — [schema.md](cookbooks/schema.md) |
 | SQL | Fragmented | P2 | **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-pg,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** (not Mito) — [#101](https://github.com/egao1980/cl-stack/issues/101) · [sql.md](cookbooks/sql.md) |
 | I/O object streams | Wrong-shape | P2 | **shipped** — `io-protocol` **0.1.0** (ObjectInput/Output CLOS shell; no serdes) — [#140](https://github.com/egao1980/cl-stack/issues/140) · [io.md](capabilities/io.md) |
-| Serdes | Fragmented | P2 | **shipped** — `serdes-protocol` **0.2.1** + JSONL/events; `json-protocol` / `sexp-protocol` implement — [#132](https://github.com/egao1980/cl-stack/issues/132) · [serdes.md](capabilities/serdes.md) |
+| Serdes | Fragmented | P2 | **shipped** — `serdes-protocol` **0.2.1** + JSONL/events; `json-protocol` / `sexp-protocol` / `xml-protocol` / `arrow-protocol` implement — [#132](https://github.com/egao1980/cl-stack/issues/132) · [serdes.md](capabilities/serdes.md) |
 | Logging | Fragmented | P2 | **shipped** — `log-protocol` **0.1.1**; backends [`log-backend-log4cl`](https://github.com/egao1980/log-backend-log4cl) / [`log-backend-vom`](https://github.com/egao1980/log-backend-vom) **0.1.1** (separate repos) — [#102](https://github.com/egao1980/cl-stack/issues/102) · [logging.md](cookbooks/logging.md) |
 | CLI | Fragmented | P2 | **shipped** — `cli-protocol` **0.1.0** + clingon / adopt — [#103](https://github.com/egao1980/cl-stack/issues/103) · [cli.md](capabilities/cli.md) |
 | Config | Fragmented | P1 | **shipped** — `cl-stack-config` **0.1.0** + tomlet (env overlay) — [#98](https://github.com/egao1980/cl-stack/issues/98) / [#99](https://github.com/egao1980/cl-stack/issues/99) · [config.md](cookbooks/config.md) |
@@ -60,11 +60,11 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 
 Overlays, `event-protocol`, `http-protocol`, `ws-protocol`, cl-repository pins, Rove/corpus — **shipped**. Do not treat this list as current P0.
 
-**Still open on this matrix:** CSV / XML. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
+**Still open on this matrix:** CSV. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
 
 ## Absent appendix
 
-ANSI-missing: threads, async I/O, sockets/HTTP/WS, TLS, regex, UUID, JSON/CSV/XML, SQL, crypto, logging, argparse, subprocess, pathlib-grade FS, i18n, venv-equivalent. Addressed via pins/facades above except **CSV / XML** and a venv-equivalent (cl-repository, not a venv).
+ANSI-missing: threads, async I/O, sockets/HTTP/WS, TLS, regex, UUID, JSON/CSV/XML, SQL, crypto, logging, argparse, subprocess, pathlib-grade FS, i18n, venv-equivalent. Addressed via pins/facades above except **CSV** and a venv-equivalent (cl-repository, not a venv).
 
 ## CDR / CL21
 
