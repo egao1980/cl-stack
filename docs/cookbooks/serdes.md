@@ -1,4 +1,4 @@
-# Cookbook: serdes (JSON / YAML / SEXP / CSV / XML / Arrow / protobuf / MIME / CBOR / MessagePack / Avro / JSONL / events)
+# Cookbook: serdes (JSON / YAML / SEXP / CSV / XML / Arrow / protobuf / MIME / CBOR / MessagePack / Avro / encodings / JSONL / events)
 
 **Audience:** one call site for “encode as JSON or SEXP”, log shipping (JSONL), or SAX-like pull over large JSON/XML.
 
@@ -18,6 +18,7 @@
 | [`cbor-protocol`](https://github.com/egao1980/cbor-protocol) (`stack-cbor`) | `:cbor` | **0.1.0** |
 | [`messagepack-protocol`](https://github.com/egao1980/messagepack-protocol) | `:messagepack` / `:msgpack` | **0.1.0** |
 | [`avro-protocol`](https://github.com/egao1980/avro-protocol) (`stack-avro`) | `:avro` (writer schema required) | **0.1.0** |
+| [`encoding-protocol`](https://github.com/egao1980/encoding-protocol) (`stack-encoding`) | RFC 4648 / QP / RLE; `/serdes` registers `:base64` … | **0.1.2** |
 
 Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json cookbook](json.md). XML-only API: [xml cookbook](xml.md). Object streams (no formats): [io cookbook](io.md).
 
@@ -34,9 +35,11 @@ Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json c
 (cl-repo:load-system "cbor-protocol" :version "0.1.0")
 (cl-repo:load-system "messagepack-protocol" :version "0.1.0")
 (cl-repo:load-system "avro-protocol" :version "0.1.0")
+(cl-repo:load-system "encoding-protocol" :version "0.1.2")
+(asdf:load-system "encoding-protocol/serdes")
 ```
 
-Load an implementor ASDF → registers `:json` / `:yaml` / `:sexp` / `:csv` / `:tsv` / `:xml` / `:arrow` / `:parquet` / `:protobuf` / `:mime` / `:multipart` / `:cbor` / `:messagepack` / `:avro`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants. CSV dialects: [csv cookbook](csv.md).
+Load an implementor ASDF → registers `:json` / `:yaml` / `:sexp` / `:csv` / `:tsv` / `:xml` / `:arrow` / `:parquet` / `:protobuf` / `:mime` / `:multipart` / `:cbor` / `:messagepack` / `:avro` / `:base64` / `:base64url` / `:base32` / `:base32hex` / `:base16` / `:quoted-printable` / `:rle`. Logging structured path depends on `serdes-protocol` only; the app loads the format it wants. CSV dialects: [csv cookbook](csv.md). Encodings: [encoding-protocol](../capabilities/encoding-protocol.md).
 
 ---
 

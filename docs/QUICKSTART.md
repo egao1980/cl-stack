@@ -175,6 +175,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `serdes-protocol` | **0.2.2** | format encode/decode + Gray/JSONL/events + media types · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
+| `encoding-protocol` | **0.1.2** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
 | `mime-protocol` | **0.1.0** | serdes `:mime` / `:multipart` · [mime-protocol](capabilities/mime-protocol.md) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
