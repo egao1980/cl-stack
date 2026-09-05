@@ -32,7 +32,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **IDNA** | [`egao1980/cl-idna`](https://github.com/egao1980/cl-idna) | IDNA2008 + [UTS #46](https://unicode.org/reports/tr46/); supersedes `antifuchs/idna` for stack pin |
 | **URI** | **quri** (`egao1980/quri`) | Host/query/IPv6; IDNA via `cl-idna` |
 | **Content-Encoding** | **gzip / deflate / br / zstd / snappy** (raw) | httpx parity + Snappy; see [Content encoding](#content-encoding-wave-1) |
-| **MIME / multipart** | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** (fork of [40ants/cl-mime](https://github.com/40ants/cl-mime)) + **trivial-mimes** / **chunga** where dexador already uses them | Full MIME parse/print + CTE; see support libs |
+| **MIME / multipart** | **[`mime-protocol`](mime-protocol.md)** (`stack-mime`) for parse/print + CTE + serdes `:mime`/`:multipart`. HTTP `:form-data`/`:files` stay in this package. `cl-mime` is the old LGPL email fork — do not wrap it. | Soft-hooks `*data-serializers*` when mime-protocol is loaded; `:auto` uses them when registered |
 
 ---
 
@@ -49,9 +49,9 @@ Wave-1: pin what dexador already uses, **except IDNA** — use stack `cl-idna`.
 | Content decode/encode **br** | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) → [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) | CFFI + `libbrotli` OCI overlay |
 | Content decode/encode **zstd** | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) → [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) | CFFI + `libzstd` OCI overlay |
 | Content decode/encode **snappy** | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) → [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.2.2** | CFFI + `libsnappy`; **raw** block (not framed) |
-| MIME type guess | **trivial-mimes** | Via dexador (filename → type) |
-| MIME parse/print + CTE | **[`egao1980/cl-mime`](https://github.com/egao1980/cl-mime)** | Fork of 40ants/cl-mime (hanshuebner lineage, LGPL+Lisp exception). `mime:decode-content` / `encode-content` = **Content-Transfer-Encoding** (7bit/8bit/base64/qp) — **not** HTTP Content-Encoding. qlot: `github egao1980/cl-mime`. |
-| Multipart / chunked | **cl-mime** + **chunga** (+ dexador body) | Prefer cl-mime for structured MIME; chunga for chunked framing |
+| MIME type guess | **`mime-protocol`** `lookup-mime` (or trivial-mimes via dexador) | Filename → type |
+| MIME parse/print + CTE | **[`mime-protocol`](https://github.com/egao1980/mime-protocol)** **0.1.0** | First-party; `decode-content` / `encode-content` = **Content-Transfer-Encoding** — **not** HTTP Content-Encoding |
+| Multipart / chunked | `http-protocol` streaming multipart + `mime-protocol` `:multipart` + **chunga** | Form uploads stay here; structured MIME entities → mime-protocol |
 | Charset | **babel** | Via dexador |
 | Cookies | **cl-cookie** | Via dexador |
 | HTTP parse | **fast-http** | Via dexador |

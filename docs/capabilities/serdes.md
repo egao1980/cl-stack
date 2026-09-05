@@ -1,7 +1,8 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML; **0.1.0**). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`.
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.2** (media-type registry) / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`. [`mime-protocol`](mime-protocol.md) **0.1.0** implements `:mime` / `:multipart`. [`cbor-protocol`](cbor-protocol.md) **0.1.0** implements `:cbor`. [`messagepack-protocol`](messagepack-protocol.md) **0.1.0** implements `:messagepack` / `:msgpack`. [`avro-protocol`](avro-protocol.md) **0.1.0** implements `:avro`.
+
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
@@ -19,8 +20,10 @@ csv-protocol                 ← :csv / :tsv (dialects + row streams + events)
 xml-protocol (+ native)      ← :xml (Infoset + events + writer)
 arrow-protocol               ← :arrow (IPC) + :parquet
 protobuf-protocol            ← :protobuf (octets + proto3 JSON / WKT)
-    ▲ later implementors (same Gray GFs)
-msgpack-… / edn / cbor / …
+mime-protocol                ← :mime / :multipart
+cbor-protocol                ← :cbor
+messagepack-protocol         ← :messagepack / :msgpack
+avro-protocol                ← :avro
     ▲ used by
 log-protocol / cl-stack-http / …
 ```
@@ -38,7 +41,7 @@ Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol
 | JSON value rules stay coherent | Owned by **`json-protocol`** (still); it **implements** serdes |
 | SEXP without bloating json-* | Separate implementor of serdes |
 | Logging structured layouts | Depend on **serdes-protocol** only; load json/sexp implementors |
-| Later msgpack / EDN / CBOR / Avro | New **implementors**; reuse wave-1 Gray GFs |
+| MIME / CBOR / MessagePack / Avro | **Shipped** as implementors; reuse wave-1 Gray GFs |
 | Streaming / pipes | **Gray streams from day one** + **JSONL** + **event/pull JSON** (large files) |
 
 **Reject:** `serdes-backend-json` shim; deferring streams “until Arrow.”  
@@ -242,15 +245,18 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 | **XML** | **Shipped** — [`xml-protocol`](xml-protocol.md) **0.1.0** + `xml-backend-native` (Infoset + events + writer) |
 | **Protobuf** | **Shipped** — [`protobuf-protocol`](protobuf.md) **0.2.0** + cl-protobufs **0.2.0**; octets + proto3 JSON / WKT |
 | **Apache Arrow** | **Shipped** — [`arrow-protocol`](arrow.md) (`stack-arrow`) native IPC + Parquet subset; serdes `:arrow` / `:parquet`. Flight / C Data Interface later. |
-| MessagePack / EDN / CBOR | Compact / Lisp-adjacent — **later** |
-| Avro / Cap’n Proto | Only if demand; same registration pattern |
+| **MIME** | **Shipped** — [`mime-protocol`](mime-protocol.md) **0.1.0**; serdes `:mime` / `:multipart` |
+| **CBOR** | **Shipped** — [`cbor-protocol`](cbor-protocol.md) **0.1.0**; serdes `:cbor` |
+| **MessagePack** | **Shipped** — [`messagepack-protocol`](messagepack-protocol.md) **0.1.0**; serdes `:messagepack` / `:msgpack` |
+| **Avro** | **Shipped** — [`avro-protocol`](avro-protocol.md) **0.1.0** + `schema-protocol-avro`; serdes `:avro` |
+| EDN / Cap’n Proto | Only if demand; same registration pattern |
 
 No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GFs.
 
 ## Non-goals (wave-1)
 
 - Replacing json-protocol’s public API  
-- Shipping msgpack / EDN / CBOR implementors (CSV / XML / Arrow / protobuf have their own briefs)  
+- Shipping EDN / Cap’n Proto implementors (CSV / XML / Arrow / protobuf / MIME / CBOR / MessagePack / Avro have their own briefs)  
 - Building a full in-memory DOM for huge files (use events / JSONL instead)  
 - cl-store object graphs  
 - Config TOML as a serdes format (stays [`cl-stack-config`](config.md))  
@@ -260,7 +266,9 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 ## Implementation tasks
 
 - [x] Brief lock — [#132](https://github.com/egao1980/cl-stack/issues/132)
-- [x] `serdes-protocol` whole-value + format registry + Gray streams — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) **0.2.1**)
+- [x] `serdes-protocol` whole-value + format registry + Gray streams — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) **0.2.2**)
+- [x] media-type / binary registry (`format-media-type` / `find-format-for-media-type`)
+- [x] **MIME / CBOR / MessagePack / Avro implementors** — **0.1.0**
 - [x] **JSONL helpers** + **event-parser GFs** — `map-jsonl` / `do-jsonl` / `stream-*-value`
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
 - [x] **YAML implementor** — `yaml-protocol` **0.1.0** (serdes `:yaml`)
