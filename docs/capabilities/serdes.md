@@ -20,8 +20,10 @@ csv-protocol                 ← :csv / :tsv (dialects + row streams + events)
 xml-protocol (+ native)      ← :xml (Infoset + events + writer)
 arrow-protocol               ← :arrow (IPC) + :parquet
 protobuf-protocol            ← :protobuf (octets + proto3 JSON / WKT)
-    ▲ later implementors (same Gray GFs)
-msgpack-… / edn / cbor / …
+mime-protocol                ← :mime / :multipart
+cbor-protocol                ← :cbor
+messagepack-protocol         ← :messagepack / :msgpack
+avro-protocol                ← :avro
     ▲ used by
 log-protocol / cl-stack-http / …
 ```
