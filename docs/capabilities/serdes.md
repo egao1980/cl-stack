@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`.
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.1** / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML; pin **`latest`**). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`.
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
@@ -13,6 +13,7 @@ Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **
 serdes-protocol              ← GFs + Gray stream classes + format registry
     ▲ implemented by (wave-1)
 json-protocol (+ jzon/yason) ← :json (+ JSONL streams)
+yaml-protocol                ← :yaml (JSON⊂YAML; same Lisp mapping)
 sexp-protocol                ← :sexp (+ stream-*-value)
 csv-protocol                 ← :csv / :tsv (dialects + row streams + events)
 xml-protocol (+ native)      ← :xml (Infoset + events + writer)
@@ -236,6 +237,7 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 
 | Format | Notes |
 |--------|-------|
+| **YAML** | **Shipped** — `yaml-protocol` (in [`json-protocol`](json-protocol.md) repo); serdes `:yaml`; pin **`latest`** until `:0.1.0` |
 | **CSV** | **Shipped** — [`csv-protocol`](csv-protocol.md) OCI **0.1.0**; dialects; row streams; events |
 | **XML** | **Shipped** — [`xml-protocol`](xml-protocol.md) **0.1.0** + `xml-backend-native` (Infoset + events + writer) |
 | **Protobuf** | **Shipped** — [`protobuf-protocol`](protobuf.md) **0.2.0** + cl-protobufs **0.2.0**; octets + proto3 JSON / WKT |
@@ -261,6 +263,7 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 - [x] `serdes-protocol` whole-value + format registry + Gray streams — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) **0.2.1**)
 - [x] **JSONL helpers** + **event-parser GFs** — `map-jsonl` / `do-jsonl` / `stream-*-value`
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
+- [x] **YAML implementor** — `yaml-protocol` (serdes `:yaml`; pin **`latest`**)
 - [x] **json event/pull parser** (jzon `parse-next`) — [#138](https://github.com/egao1980/cl-stack/issues/138)
 - [x] SEXP implementor (whole-value + line streams) — `sexp-protocol` **0.2.0**
 - [x] **CSV implementor** — `csv-protocol` **0.1.0** (`:csv` / `:tsv`)

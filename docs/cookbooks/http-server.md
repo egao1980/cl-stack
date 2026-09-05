@@ -9,6 +9,7 @@
 | [`http-server-protocol`](https://github.com/egao1980/http-server-protocol) (`stack-http-server`) | `serve` / `with-server` / start·stop |
 | `http-server-backend-hunchentoot` | **default** — Windows + Unix |
 | `http-server-backend-woo` | Unix / libev — call `use-woo-backend` |
+| `http-server-backend-http2` **0.2.0** | TLS H2; advertises `ENABLE_CONNECT_PROTOCOL` |
 | [`json-protocol`](https://github.com/egao1980/json-protocol) | JSON body encode/decode |
 
 Brief: [http-server.md](../capabilities/http-server.md). App contract = **Clack env** → `(status headers body)`.
@@ -81,7 +82,17 @@ Needs system **libev** (`libev4` / Homebrew `libev`). Does **not** auto-bind —
 
 ---
 
-## 4. Errors
+## 4. HTTP/2 (TLS)
+
+```lisp
+(cl-repo:load-system "http-server-backend-http2" :version "0.2.0")
+(stack-http-server:serve #'app :port 8443
+                         :ssl-cert "cert.pem" :ssl-key "key.pem")
+```
+
+CONNECT (RFC 8441) is dispatched when headers end — the client does not `END_STREAM`. WebSocket framing on that stream is `ws-backend-websocket-driver` **0.4.0**, not this backend.
+
+## 5. Errors
 
 ```lisp
 (handler-case (stack-http-server:serve #'app :port 1)  ; privileged / bind fail

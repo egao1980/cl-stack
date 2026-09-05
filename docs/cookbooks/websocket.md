@@ -13,13 +13,13 @@
 Capability brief (RFCs, CLOS transport split): [ws-protocol.md](../capabilities/ws-protocol.md). Pins: [QUICKSTART](../QUICKSTART.md).
 
 ```lisp
-(cl-repo:load-system "ws-protocol" :version "0.2.2")
-;; H1 Upgrade (cross-platform driver):
-(cl-repo:load-system "ws-backend-websocket-driver" :version "0.2.2")
-;; or Windows native:
+(cl-repo:load-system "ws-protocol" :version "0.4.0")
+;; H1 Upgrade + H2 CONNECT server:
+(cl-repo:load-system "ws-backend-websocket-driver" :version "0.4.0")
+;; or Windows native H1:
 ;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
-;; H2 Extended CONNECT (event-loop):
-;; (cl-repo:load-system "http-backend-async" :version "0.2.4")
+;; H2 Extended CONNECT client (event-loop):
+;; (cl-repo:load-system "http-backend-async" :version "0.2.8")
 ```
 
 ---
@@ -93,8 +93,8 @@ Wrong transport → `ws-transport-not-available` (e.g. WinHTTP + `:http/2`, asyn
 `http-backend-async` **0.2.3+** runs handshake + DATA on `register-io` (same TLS WANT_* / H2 pump as HTTP). No BT frame reader.
 
 ```lisp
-(cl-repo:load-system "http-backend-async" :version "0.2.4")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.1")
+(cl-repo:load-system "http-backend-async" :version "0.2.8")
+(cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
 (setf http-backend-async:*event-backend-maker*
       (lambda () (event-backend-libuv:make-libuv-backend)))
@@ -154,9 +154,28 @@ Live: `WINHTTP_WS_LIVE=1`. Upgrade-only — not RFC 8441.
 
 ---
 
-## 6. Out of scope (for now)
+## 6. H2 Extended CONNECT server (0.4.0)
 
-- WebSocket **server**
+`:transport :http/2` requires TLS. `:auto` stays H1 (WSS tests stay on Upgrade).
+
+```lisp
+(asdf:load-system "ws-backend-websocket-driver")
+(let ((server (ws:make-server :transport :http/2
+                              :host "127.0.0.1" :port 8443 :path "/echo"
+                              :ssl-cert "cert.pem" :ssl-key "key.pem"
+                              :on-connect
+                              (lambda (conn)
+                                (ws:on conn :message
+                                       (lambda (msg) (ws:send conn msg)))))))
+  (ws-protocol:start-ws-server server))
+```
+
+Client (do **not** bind `*event-loop*` — deadlock): `http-backend-async` **0.2.8** + `:transport :http/2` `:verify nil` against a self-signed cert.
+
+`http2/server/threaded` may fail to load on Windows — tests skip.
+
+## 7. Out of scope (for now)
+
 - permessage-deflate (P2)
 - Proxy for Extended CONNECT (P2)
 - Multiplexed app protocols (JSON-RPC, STOMP, …) — sit above `ws-protocol`

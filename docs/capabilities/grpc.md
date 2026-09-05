@@ -11,7 +11,7 @@ gRPC **wire** (channel / status / connect). App-facing call shapes live on [`rpc
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Shape** | CLOS protocol + backends | Match http-protocol (client) energy |
-| **Default backend (A)** | `grpc-backend-http2` (Windows + portable unary **+ server/bidi streams**) | Existing H2 (`http-backend-async` `:want-stream`); no C-core overlay |
+| **Default backend (A)** | `grpc-backend-http2` **0.3.0** (Windows + portable unary **+ interleaved bidi**) | `http-body-pipe` as request `:content` + `:want-stream`; `grpc-send` `:end` half-closes |
 | **Unix C-core** | `grpc-backend-native` | qitab/grpc fork + linux/darwin overlay; Windows stays `:unimplemented` |
 | **Codec** | [protobuf-protocol](protobuf.md) | Messages are proto objects |
 | **HTTP/2** | `http-protocol` + backend | Frame in Lisp (`0x00`+u32be+octets). Do **not** vcpkg/MSVC overlay C++ grpc |
@@ -56,4 +56,4 @@ Conditions: `grpc-error` with status code / details.
 - Replacing qitab/grpc internals
 - vcpkg/MSVC overlay of `egao1980/grpc`
 - Reflection / codegen product (use cl-protobufs protoc as today)
-- Compressed gRPC frames; interleaved bidi (send after first recv) until request-body streaming
+- Compressed gRPC frames

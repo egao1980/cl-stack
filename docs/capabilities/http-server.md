@@ -18,12 +18,12 @@ Conventions: [API.md](../API.md). Event loops: [event-protocol.md](event-protoco
 | **Middleware** | **[Lack](https://github.com/fukamachi/lack)** | Compose around Clack apps; not reimplemented in protocol |
 | **Default backend (A)** | **[Hunchentoot](https://github.com/edicl/hunchentoot)** via Clack adapter | **Windows primary** + linux/darwin; no libev; mature; good for dev + portable prod |
 | **Second backend (B)** | **[Woo](https://github.com/fukamachi/woo)** | Fast Unix accept loop on **libev**; shares native story with `event-backend-libev` |
-| **HTTP/2 backend** | **`http-server-backend-http2`** (same repo; zellerin `http2`) | TLS required (`:ssl-cert` / `:ssl-key`). Proxy-first remains the cookbook default |
+| **HTTP/2 backend** | **`http-server-backend-http2` 0.2.0** (same repo; zellerin `http2`) | TLS required. Advertises `ENABLE_CONNECT_PROTOCOL`. CONNECT dispatched on `process-end-headers` (not `peer-ends-http-stream`) |
 | **Not wave-2 default** | Bare Clack-without-protocol | Apps that want raw Clack still can; stack DX goes through protocol |
 | **Selection DX** | ASDF + `*http-server-backend*` | Load `http-server-backend-hunchentoot` (default) or `…-woo`; no plugin registry |
 | **JSON APIs** | `json-protocol` / `stack-json` in handlers | Cookbook = minimal JSON API over protocol |
 | **TLS terminate** | Backend-specific in wave-2; prefer reverse-proxy in cookbooks | Full TLS accept = follow-on (cl-stack-ssl server path) |
-| **WebSocket upgrade** | Out of this protocol → `ws-protocol` server later | Keep upgrade path documented only |
+| **WebSocket upgrade** | Out of this protocol → `ws-protocol` / `ws-backend-websocket-driver` **0.4.0** | H1 Upgrade + H2 CONNECT live there; this backend is generic Clack |
 
 **Supersedes** epic #93 wording “Non-goals: new server protocol reinventing Clack.” We **do not reinvent the Clack env**. We **do** add a thin CLOS server protocol so backends swap like the client stack.
 
@@ -178,7 +178,7 @@ Minimal JSON API:
 - Full ASGI/HTTP2 server stack  
 - Production Woo hardening / multi-worker supervisors  
 - Replacing Clack env with a new app DSL  
-- Server-side WebSocket (follow-on)  
+- Server-side WebSocket framing (owned by `ws-protocol`)  
 - Built-in TLS as the default deploy story (proxy-first)
 
 ---
