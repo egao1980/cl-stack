@@ -1,7 +1,7 @@
 # ws-protocol (wave-1)
 
 **Issues:** [#4](https://github.com/egao1980/cl-stack/issues/4) · [#33](https://github.com/egao1980/cl-stack/issues/33) · [#34](https://github.com/egao1980/cl-stack/issues/34) · [#35](https://github.com/egao1980/cl-stack/issues/35)  
-**Status:** wave-1 **complete** ([#4](https://github.com/egao1980/cl-stack/issues/4) closed) — brief `#33`; [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) cleartext `#34` + WSS/`cl-stack-ssl` `#35`; hub corpus `tests/corpus/ws/echo-frames/`
+**Status:** wave-1 **complete** ([#4](https://github.com/egao1980/cl-stack/issues/4) closed) — brief `#33`; [`egao1980/ws-protocol`](https://github.com/egao1980/ws-protocol) cleartext `#34` + WSS/`cl-stack-ssl` `#35`; hub corpus `tests/corpus/ws/echo-frames/`; H1 server canary [`ws-parity`](https://github.com/egao1980/ws-parity)
 
 WebSocket **client** facade (RFC 6455). Separate from `http-protocol` (API.md) — Java puts WS on `HttpClient`; we keep a dedicated protocol so HTTP backends stay thin.
 
@@ -167,5 +167,5 @@ P2: high-water marks, explicit `drain` / `pause` / `resume` mirroring Node `stre
 ## Extended CONNECT status
 
 - **Client** — `http-backend-async` **0.2.8** (event-loop I/O + HPACK `":protocol"` string).
-- **Server** — `ws-backend-websocket-driver` **0.4.0** (`:transport :http/2`, advertises `ENABLE_CONNECT_PROTOCOL`). Generic Clack H2 = `http-server-backend-http2` **0.2.0**.
+- **Server** — `ws-backend-websocket-driver` **0.4.0** (`:transport :http/2`, advertises `ENABLE_CONNECT_PROTOCOL`). Generic Clack H2 = `http-server-backend-http2` **0.2.0**. H1 echo/close canary: [`ws-parity`](https://github.com/egao1980/ws-parity) (Python `websockets` / Node `ws`).
 - WinHTTP stays Upgrade-only (OS API).

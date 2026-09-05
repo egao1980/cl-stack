@@ -62,7 +62,7 @@ Overlays, `event-protocol`, `http-protocol`, `ws-protocol`, cl-repository pins, 
 
 **Still open on this matrix:** none of the format rows. AI leftovers stay in [AI-GAP.md](AI-GAP.md).
 
-**Depth tranche ([#220](https://github.com/egao1980/cl-stack/issues/220) closed):** H2 `:want-stream` + trailers; request-body pipe + H2 DATA (`http-protocol` **0.3.7** / async **0.2.8**); gRPC http2 **interleaved** bidi + gzip/deflate frames (`grpc-backend-http2` **0.3.1**, live grpcio); crypto `sign`/`verify`; JWT RS/ES/EdDSA; H2 Clack backend **0.2.0** (`ENABLE_CONNECT_PROTOCOL`); WS H1 `accept` + **H2 Extended CONNECT server** (`ws-backend-websocket-driver` **0.4.0**).
+**Depth tranche ([#220](https://github.com/egao1980/cl-stack/issues/220) closed):** H2 `:want-stream` + trailers; request-body pipe + H2 DATA (`http-protocol` **0.3.7** / async **0.2.8**); gRPC http2 **interleaved** bidi + gzip/deflate frames (`grpc-backend-http2` **0.3.1**, live grpcio); crypto `sign`/`verify`; JWT RS/ES/EdDSA; H2 Clack backend **0.2.0** (`ENABLE_CONNECT_PROTOCOL`); WS H1 `accept` + **H2 Extended CONNECT server** (`ws-backend-websocket-driver` **0.4.0**). Cross-language canaries: [`grpc-parity`](https://github.com/egao1980/grpc-parity) (Lisp → grpcio, Windows required) · [`ws-parity`](https://github.com/egao1980/ws-parity) (Lisp ↔ Python `websockets` / Node `ws`, echo + close 1000).
 
 **Format tranche (done):** MIME / CBOR / MessagePack / Avro as serdes implementors; `schema-protocol` **0.2.0** `emit-schema` / `parse-schema`; `encoding-protocol` **0.1.2** (RFC 4648 / QP / RLE). Compressed gRPC frames **shipped** (http2 **0.3.1**). Do **not** start HTTP/3 or [AI-GAP](AI-GAP.md).
 

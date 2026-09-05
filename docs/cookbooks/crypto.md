@@ -35,7 +35,8 @@ Like Fernet / `AESGCM` — AEAD with safe defaults. **Do not** roll your own CBC
 
 Wrong key / tampered blob → `crypto-authentication-error` (fail closed).
 
-Sign / verify (Ed25519, RSA-PSS, ECDSA P-256; RS256 PKCS#1 only when you ask):
+Sign / verify (Ed25519, RSA-PSS, ECDSA P-256; RS256 PKCS#1 only when you ask).
+KATs: RFC 8032 + Wycheproof excerpt in `crypto-backend-ironclad`; JWT interop vs PyJWT in `cl-stack-jwt`:
 
 ```lisp
 (multiple-value-bind (sk pk) (generate-key-pair :ed25519)
