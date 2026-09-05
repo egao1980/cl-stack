@@ -142,7 +142,7 @@
   ("grpc-backend-http2" "0.3.0")
   ("grpc-backend-native" "0.1.0" :platforms (:unix))
   ;; WebSocket
-  ("ws-protocol" "0.3.0")
+  ("ws-protocol" "0.4.0")
   ("ws-backend-websocket-driver" "0.3.0")
   ;; Telemetry
   ("telemetry-protocol" "0.1.0")
