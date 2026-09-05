@@ -9,8 +9,9 @@ schema-protocol            ← metaclass + parse / validate / dump
 schema-protocol-json       ← draft-07 emit / compile / OpenAPI discriminator
 schema-protocol-xsd        ← XSD 1.0/1.1 emit / compile / instance validate
 schema-protocol-arrow      ← Arrow schema emit + table↔objects
+schema-protocol-avro       ← Avro JSON schema emit
         │
-serdes-protocol / json-protocol / xml-protocol / arrow-protocol   ← bytes when :format is set
+serdes-protocol / json-protocol / xml-protocol / arrow-protocol / avro-protocol   ← bytes when :format is set
 ```
 
 **Not** [`sql-orm`](sql.md) `defmodel` (persistence). **Not** [`cl-stack-config`](config.md) (env/TOML settings). Use `defschema` for API / RPC / tool payloads.
@@ -34,6 +35,7 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 | **JSON Schema** | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) — `json-schema` GF on the protocol; `emit` / `compile-schema` in the format package. |
 | **XSD** | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.2** — `xsd-schema` GF; trees are `xml-protocol` `xml-element`; `decode-validating` = decode then `validate-instance`. 1.0 default, `:version :1.1` for alternatives / openContent / assert. Closed XPath subset. |
 | **Arrow** | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) — `arrow-schema` GF; `emit` / `table-from-objects` / `objects-from-table`. Bytes stay in [`arrow-protocol`](arrow.md). |
+| **Avro** | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) — `avro-schema` GF; `defschema` → Avro JSON tree. Bytes stay in [`avro-protocol`](avro-protocol.md). |
 | **Wire** | Default parse/dump speak hash-tables / plists / alists. `:format` goes through `serdes-protocol` when loaded. |
 | **Restarts** | Per field, while that field is being parsed: `use-value`, `skip-field`, `use-default`. `schema-fail` signals immediately (restart still live). `schema-issue` collects; `%raise-issues` fires after. |
 

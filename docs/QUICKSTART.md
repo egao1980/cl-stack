@@ -102,14 +102,14 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.6** | wire client; `http-body-pipe` + H2 request DATA; `response-trailers`; CE gzip/br/zstd/**snappy** |
+| `http-protocol` | **0.3.7** | wire client; `http-body-pipe` + H2 request DATA; `:auto` uses registered MIME/CBOR/msgpack/Avro codecs; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
 | `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
-| `schema-protocol` | **0.1.2** | CLOS `defschema` (`stack-schema`); `xsd-schema` / `arrow-schema` GFs · [cookbook](cookbooks/schema.md) |
+| `schema-protocol` | **0.1.3** | CLOS `defschema` (`stack-schema`); `xsd-schema` / `arrow-schema` / `avro-schema` GFs · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
@@ -142,6 +142,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `schema-protocol-json` | **0.1.1** | JSON Schema emit/validate (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.2** | XSD 1.0/1.1 on `xml-element`; `decode-validating` (`stack-schema-xsd`) |
 | `schema-protocol-arrow` | **0.1.0** | Arrow emit + table↔objects (`stack-schema-arrow`) |
+| `schema-protocol-avro` | **0.1.0** | Avro emit (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
@@ -171,9 +172,13 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
 | `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
-| `serdes-protocol` | **0.2.1** | format encode/decode + Gray/JSONL/events · [cookbook](cookbooks/serdes.md) |
+| `serdes-protocol` | **0.2.2** | format encode/decode + Gray/JSONL/events + media types · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
+| `mime-protocol` | **0.1.0** | serdes `:mime` / `:multipart` · [mime-protocol](capabilities/mime-protocol.md) |
+| `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
+| `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
+| `avro-protocol` | **0.1.0** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
 | `arrow-protocol` | **0.1.0** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
 | `log-protocol` | **0.1.2** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
 | `telemetry-protocol` | **0.1.0** | traces / spans + thin metrics (`stack-telemetry`) |
@@ -218,7 +223,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ### HTTP/2 preference (`http-protocol` 0.3.1+)
 
 ```lisp
-(cl-repo:load-system "http-protocol" :version "0.3.6")
+(cl-repo:load-system "http-protocol" :version "0.3.7")
 (cl-repo:load-system "http-backend-async" :version "0.2.8")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
