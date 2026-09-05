@@ -49,7 +49,7 @@ MCP / A2A / AG-UI   ← agent protocols (domain CLOS)
 | [`protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) | serdes `:protobuf` + proto message GFs | serdes-protocol |
 | [`protobuf-backend-cl-protobufs`](https://github.com/egao1980/protobuf-backend-cl-protobufs) | Default — egao1980/cl-protobufs | WKT vendored (`2.0-rc2+`); unix plugin overlay |
 | [`grpc-protocol`](https://github.com/egao1980/grpc-protocol) | gRPC wire: channel / status / connect | — |
-| [`grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) | Unary over http-protocol H2 (Windows-safe) | grpc-protocol, http-protocol |
+| [`grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) | Unary + interleaved bidi + gzip/deflate frames over H2 (Windows-safe) | grpc-protocol, http-protocol |
 | [`grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) | qitab/grpc C-core (linux/darwin) | grpc-protocol |
 
 Already shipped: [`rpc-protocol`](https://github.com/egao1980/rpc-protocol), [`rpc-backend-inprocess`](https://github.com/egao1980/rpc-backend-inprocess).

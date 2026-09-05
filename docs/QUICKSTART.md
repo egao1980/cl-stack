@@ -188,8 +188,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-encoding-snappy` | **0.1.0** | `Content-Encoding: snappy` (raw, not framed) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
-| `grpc-protocol` | **0.1.0** | gRPC wire / channel |
-| `grpc-backend-http2` | **0.3.0** | unary + interleaved bidi over `http-protocol` H2 (`http-body-pipe`) |
+| `grpc-protocol` | **0.1.1** | gRPC wire / channel (`:compression` facade) |
+| `grpc-backend-http2` | **0.3.1** | unary + interleaved bidi + gzip/deflate frames (`http-body-pipe`) |
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
