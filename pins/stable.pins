@@ -27,7 +27,7 @@
   ("json-backend-jzon" "0.2.0")
   ("json-backend-yason" "0.2.0")
   ("json-patch" "0.1.0")
-  ("yaml-protocol" "latest")
+  ("yaml-protocol" "0.1.0")
   ("cl-stack-config" "0.1.0")
   ;; CLI / logging / serdes
   ("cli-protocol" "0.1.0")
