@@ -80,6 +80,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
+| `yaml-protocol` | **latest** | YAML 1.2; JSON⊂YAML same Lisp mapping; serdes `:yaml` (pin unversioned until `:0.1.0` exists) |
 | `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
@@ -101,7 +102,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.5** | wire client; `:http-version` / H2 header policy; `response-trailers`; CE gzip/br/zstd/**snappy** |
+| `http-protocol` | **0.3.6** | wire client; `http-body-pipe` + H2 request DATA; `response-trailers`; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
@@ -150,11 +151,11 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.6** | async + HTTP/2 `:want-stream` + trailers + RFC 8441 WS |
+| `http-backend-async` | **0.2.7** | async + H2 `:want-stream` + request DATA + trailers + RFC 8441 WS |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.0** | ABCL `java.net.http` |
-| `ws-protocol` | **0.3.0** | CLOS client + `accept` / `make-ws-server` (H1 Upgrade) |
+| `ws-protocol` | **0.4.0** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
 | `ws-backend-websocket-driver` | **0.3.0** | H1 Upgrade client + server (`websocket-driver`) |
 | `ag-ui-protocol` | **0.3.0** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
@@ -182,7 +183,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
 | `grpc-protocol` | **0.1.0** | gRPC wire / channel |
-| `grpc-backend-http2` | **0.2.0** | unary + server/bidi streams over `http-protocol` H2 |
+| `grpc-backend-http2` | **0.3.0** | unary + interleaved bidi over `http-protocol` H2 (`http-body-pipe`) |
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
@@ -217,8 +218,8 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ### HTTP/2 preference (`http-protocol` 0.3.1+)
 
 ```lisp
-(cl-repo:load-system "http-protocol" :version "0.3.5")
-(cl-repo:load-system "http-backend-async" :version "0.2.6")
+(cl-repo:load-system "http-protocol" :version "0.3.6")
+(cl-repo:load-system "http-backend-async" :version "0.2.7")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
 (setf http-backend-async:*event-backend-maker*
@@ -242,12 +243,12 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 
 CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends own wire (or WinHTTP). Brief: [capabilities/http-protocol.md](capabilities/http-protocol.md). Recipes: [cookbooks/http-client.md](cookbooks/http-client.md).
 
-### WebSocket (`ws-protocol` 0.3.0+)
+### WebSocket (`ws-protocol` 0.4.0+)
 
 ```lisp
-(cl-repo:load-system "ws-protocol" :version "0.3.0")
+(cl-repo:load-system "ws-protocol" :version "0.4.0")
 (cl-repo:load-system "ws-backend-websocket-driver" :version "0.3.0") ; :http/1.1 Upgrade + accept
-(cl-repo:load-system "http-backend-async" :version "0.2.4") ; :http/2 Extended CONNECT
+(cl-repo:load-system "http-backend-async" :version "0.2.7") ; :http/2 Extended CONNECT client
 ;; Windows H1 Upgrade:
 ;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
 

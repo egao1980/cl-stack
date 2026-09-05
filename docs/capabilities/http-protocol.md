@@ -122,8 +122,8 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Async send | — | Y (`CompletableFuture`) | Y (Asio) | Y | N | **Y** (promises on event-protocol) |
 | All RFC methods + PATCH | 9110, 5789 | Y (+ generic) | Y (enum) | Y | P | **Y** |
 | Request/response values | 9110 msg model | Y | Y (message) | Y | P (multi-value return) | **Y** (`http-request` / `http-response`) |
-| Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray stream / chunked (`*http-stream-buffer-size*`, default 64KiB); `#71` |
-| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync + async H1 **and H2** (`:want-stream` / `http:stream` / `http:stream-async` + CE Gray wrap); async H2 DATA → Gray stream + `response-trailers` (`http-protocol` **0.3.5** / `http-backend-async` **0.2.6**) |
+| Streaming request body | 9110 content | Y (`BodyPublisher`) | Y (serializer) | Y | P | **Y** — buffered Gray / chunked (`#71`) + `http-body-pipe` → H2 request DATA (`http-protocol` **0.3.6** / async **0.2.7**) |
+| Streaming response body | 9110 | Y (`BodyHandler`/`Subscriber`) | Y (parser) | Y | Y (`want-stream`) | **Y** sync + async H1 **and H2** (`:want-stream` / `http:stream` / `http:stream-async` + CE Gray wrap); async H2 DATA → Gray stream + `response-trailers` (`http-protocol` **0.3.6** / `http-backend-async` **0.2.7**) |
 | Multipart upload | 2046 / form | P (manual) | N (app) | Y | Y (pathname alist) | **Y** — `:data`+`:files` as `http-file`/streams; pull Gray multipart (`#73`); **no pathnames in protocol** |
 | File upload/download value | — | P | N | Y | P | **Y** — CLOS `http-file` (filename, content-type, length, content stream/octets); `response-as-http-file`; FS open/save → higher lib (pathlib+MIME) |
 | JSON convenience | — | N | N | Y | N | **Y** (`:json` → content-type + encode pin) |
@@ -143,7 +143,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 | Auto decompress | Content-Encoding | Y | N | Y | Y (gzip/deflate) | **Y** (gzip/deflate/**br**/**zstd**/**snappy**) |
 | Request compress | Content-Encoding | P | N | P | N | **Y** (opt-in `:content-encoding`) |
 | Connection pool / keep-alive | 9112 | Y | app | Y | Y | **Y** (client object) |
-| Trailers | 9110 §6.5 | P | Y | P | N | **Y** `response-trailers` (H2 END_STREAM; `http-protocol` **0.3.5**) |
+| Trailers | 9110 §6.5 | P | Y | P | N | **Y** `response-trailers` (H2 END_STREAM; `http-protocol` **0.3.6**) |
 | Push promise (H2) | 9113 | Y (`PushPromiseHandler`) | N | N | N | **P2** |
 | Client-side cache | 9111 | N | N | N | N | **P2** |
 | WebSocket | 6455 | Y (on HttpClient) | Y | N (other libs) | N | **sep** → `ws-protocol` |

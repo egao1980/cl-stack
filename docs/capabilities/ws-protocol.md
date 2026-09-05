@@ -19,7 +19,7 @@ Conventions: [API.md](../API.md). Event DX: [event-protocol.md](event-protocol.m
 | **Event loop** | Prefer ops schedulable on `event-protocol` | Driver wave-1 may use BT threads internally; facade must not block the loop thread on `send`/`close` without documenting affinity |
 | **TLS / WSS** | **cl+ssl** + `cl-stack-ssl` overlay | Same as HTTPS (#12 / #35); no second TLS stack |
 | **Windows** | **Primary** | usocket path; no libev/Woo required for client |
-| **Server** | **H1 Upgrade shipped** (`accept` / `make-ws-server`) | `ws-backend-websocket-driver` **0.3.0** via websocket-driver + Clack. H2 Extended CONNECT server = follow-on |
+| **Server** | **H1 Upgrade shipped** (`accept` / `make-ws-server` `:transport`) | Protocol **0.4.0** takes `:auto` / `:http/1.1` / `:http/2`. Driver **0.3.0** is H1; H2 Extended CONNECT server = PRs in flight |
 | **Extensions** | **permessage-deflate** = **P2** | RFC 7692; ship only if backend exposes it cheaply |
 | **Subprotocols** | Pass-through `:protocols` list | Negotiate via handshake headers |
 
