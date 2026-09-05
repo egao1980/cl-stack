@@ -3,6 +3,7 @@
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
 **Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.2** (media-type registry) / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`. [`mime-protocol`](mime-protocol.md) **0.1.0** implements `:mime` / `:multipart`. [`cbor-protocol`](cbor-protocol.md) **0.1.0** implements `:cbor`. [`messagepack-protocol`](messagepack-protocol.md) **0.1.0** implements `:messagepack` / `:msgpack`. [`avro-protocol`](avro-protocol.md) **0.1.0** implements `:avro`.
 
+
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
 
 **Layering (locked):** `serdes-protocol` is the **format** interface (whole-value + Gray/JSONL/events). Format stacks **implement** it — not wrapped *by* a `serdes-backend-*` shim.
@@ -237,7 +238,7 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 
 | Format | Notes |
 |--------|-------|
-| **YAML** | **Shipped** — `yaml-protocol` (in [`json-protocol`](json-protocol.md) repo); serdes `:yaml`; pin **`latest`** until `:0.1.0` |
+| **YAML** | **Shipped** — `yaml-protocol` **0.1.0** (in [`json-protocol`](json-protocol.md) repo); serdes `:yaml` |
 | **CSV** | **Shipped** — [`csv-protocol`](csv-protocol.md) OCI **0.1.0**; dialects; row streams; events |
 | **XML** | **Shipped** — [`xml-protocol`](xml-protocol.md) **0.1.0** + `xml-backend-native` (Infoset + events + writer) |
 | **Protobuf** | **Shipped** — [`protobuf-protocol`](protobuf.md) **0.2.0** + cl-protobufs **0.2.0**; octets + proto3 JSON / WKT |
@@ -268,7 +269,7 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 - [x] **MIME / CBOR / MessagePack / Avro implementors** — **0.1.0**
 - [x] **JSONL helpers** + **event-parser GFs** — `map-jsonl` / `do-jsonl` / `stream-*-value`
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
-- [x] **YAML implementor** — `yaml-protocol` (serdes `:yaml`; pin **`latest`**)
+- [x] **YAML implementor** — `yaml-protocol` **0.1.0** (serdes `:yaml`)
 - [x] **json event/pull parser** (jzon `parse-next`) — [#138](https://github.com/egao1980/cl-stack/issues/138)
 - [x] SEXP implementor (whole-value + line streams) — `sexp-protocol` **0.2.0**
 - [x] **CSV implementor** — `csv-protocol` **0.1.0** (`:csv` / `:tsv`)

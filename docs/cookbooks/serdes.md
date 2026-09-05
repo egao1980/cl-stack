@@ -9,7 +9,7 @@
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs, media types | **0.2.2** |
 | `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.0** |
 | [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
-| `yaml-protocol` (same repo) | `:yaml` (JSON⊂YAML, same Lisp mapping) | **latest** |
+| `yaml-protocol` (same repo) | `:yaml` (JSON⊂YAML, same Lisp mapping) | **0.1.0** |
 | [`csv-protocol`](https://github.com/egao1980/csv-protocol) (`stack-csv`) | `:csv` / `:tsv` (dialects, row streams, events) | **0.1.0** |
 | [`xml-protocol`](https://github.com/egao1980/xml-protocol) + `xml-backend-native` | `:xml` implementor (Infoset + events + writer) | **0.1.0** |
 | [`protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) | `:protobuf` (octets + proto3 JSON / WKT) | **0.2.0** |
@@ -24,7 +24,7 @@ Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json c
 ```lisp
 (cl-repo:load-system "json-backend-jzon" :version "0.2.0")  ; pulls json-protocol + serdes
 ;; optional:
-(cl-repo:load-system "yaml-protocol")  ; pin :latest until :0.1.0 exists
+(cl-repo:load-system "yaml-protocol" :version "0.1.0")
 (cl-repo:load-system "sexp-protocol" :version "0.2.0")
 (cl-repo:load-system "csv-protocol" :version "0.1.0")
 (cl-repo:load-system "xml-backend-native" :version "0.1.0")

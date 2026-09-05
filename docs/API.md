@@ -50,6 +50,7 @@
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
 - `serdes-protocol` — format encode/decode + Gray/JSONL/events + media-type registry (OCI **0.2.2**); **implemented by** `json-protocol` + `yaml-protocol` (`:yaml` **0.1.0**) + sexp (**0.2.0**) + `csv-protocol` **0.1.0** + `xml-protocol` **0.1.0** + `arrow-protocol` **0.1.0** + `protobuf-protocol` **0.2.0** + `mime-protocol` **0.1.0** + `cbor-protocol` **0.1.0** + `messagepack-protocol` **0.1.0** + `avro-protocol` **0.1.0**  
+
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `csv-protocol` — RFC 4180 dialects; whole-document + row streams + events; implements serdes `:csv` / `:tsv`  
   **Brief:** [capabilities/csv-protocol.md](capabilities/csv-protocol.md) · cookbook [csv.md](cookbooks/csv.md)
