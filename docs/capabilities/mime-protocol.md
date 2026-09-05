@@ -4,7 +4,7 @@
 
 CLOS media-type / Content-Disposition / CTE / multipart. **Implements** [`serdes-protocol`](serdes.md) `:mime` and `:multipart`. Soft-hooks `http-protocol` `*data-serializers*` when that package is loaded.
 
-**Not** HTTP `Content-Encoding` (gzip/br/zstd) — that stays on [`http-protocol`](http-protocol.md). **Not** the LGPL `cl-mime` email fork.
+**Not** HTTP `Content-Encoding` (gzip/br/zstd) — that stays on [`http-protocol`](http-protocol.md). CTE bytes use [`encoding-protocol`](encoding-protocol.md). **Not** the LGPL `cl-mime` email fork.
 
 Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md).
 

@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.2** (media-type registry) / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`. [`mime-protocol`](mime-protocol.md) **0.1.0** implements `:mime` / `:multipart`. [`cbor-protocol`](cbor-protocol.md) **0.1.0** implements `:cbor`. [`messagepack-protocol`](messagepack-protocol.md) **0.1.0** implements `:messagepack` / `:msgpack`. [`avro-protocol`](avro-protocol.md) **0.1.0** implements `:avro`.
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.2** (media-type registry) / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`. [`mime-protocol`](mime-protocol.md) **0.1.0** implements `:mime` / `:multipart`. [`cbor-protocol`](cbor-protocol.md) **0.1.0** implements `:cbor`. [`messagepack-protocol`](messagepack-protocol.md) **0.1.0** implements `:messagepack` / `:msgpack`. [`avro-protocol`](avro-protocol.md) **0.1.0** implements `:avro`. [`encoding-protocol`](encoding-protocol.md) **0.1.2** (`/serdes`) implements `:base64` / `:base64url` / `:base32` / `:base32hex` / `:base16` / `:quoted-printable` / `:rle`.
 
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
@@ -24,6 +24,7 @@ mime-protocol                ← :mime / :multipart
 cbor-protocol                ← :cbor
 messagepack-protocol         ← :messagepack / :msgpack
 avro-protocol                ← :avro
+encoding-protocol/serdes     ← :base64 / :base64url / :base32 / :base32hex / :base16 / :quoted-printable / :rle
     ▲ used by
 log-protocol / cl-stack-http / …
 ```
@@ -77,7 +78,7 @@ Conventions: [API.md](../API.md). JSON details: [json-protocol.md](json-protocol
 | **Octets** | UTF-8 via Babel for text formats | |
 | **Gray streams** | **In protocol wave-1** — binary + character base classes; `backend-make-*-stream`; `stream-encode-value` / `stream-decode-value` | http-protocol precedent; Arrow/protobuf specialize later |
 | **Wave-1 formats** | `:json`, `:sexp` | Character streams + `stream-*-value` required |
-| **Future implementors** | msgpack, EDN, CBOR, Avro, … | § Future implementors |
+| **Future implementors** | EDN / Cap’n Proto only if demand | § Future implementors |
 | **Selection** | `:format` / `*serdes-backend*` | Load json-protocol / sexp-protocol |
 
 ---
@@ -249,6 +250,7 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 | **CBOR** | **Shipped** — [`cbor-protocol`](cbor-protocol.md) **0.1.0**; serdes `:cbor` |
 | **MessagePack** | **Shipped** — [`messagepack-protocol`](messagepack-protocol.md) **0.1.0**; serdes `:messagepack` / `:msgpack` |
 | **Avro** | **Shipped** — [`avro-protocol`](avro-protocol.md) **0.1.0** + `schema-protocol-avro`; serdes `:avro` |
+| **Encodings** | **Shipped** — [`encoding-protocol`](encoding-protocol.md) **0.1.2**; `/serdes` registers RFC 4648 / QP / RLE |
 | EDN / Cap’n Proto | Only if demand; same registration pattern |
 
 No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GFs.
@@ -269,6 +271,7 @@ No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GF
 - [x] `serdes-protocol` whole-value + format registry + Gray streams — [#133](https://github.com/egao1980/cl-stack/issues/133) ([repo](https://github.com/egao1980/serdes-protocol) **0.2.2**)
 - [x] media-type / binary registry (`format-media-type` / `find-format-for-media-type`)
 - [x] **MIME / CBOR / MessagePack / Avro implementors** — **0.1.0**
+- [x] **encoding-protocol** — **0.1.2** (`/serdes` RFC 4648 / QP / RLE)
 - [x] **JSONL helpers** + **event-parser GFs** — `map-jsonl` / `do-jsonl` / `stream-*-value`
 - [x] **`json-protocol` hard-depends / implements serdes** (value + JSONL) — **0.2.0**
 - [x] **YAML implementor** — `yaml-protocol` **0.1.0** (serdes `:yaml`)

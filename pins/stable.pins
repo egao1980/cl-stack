@@ -41,6 +41,7 @@
   ("xml-protocol" "0.1.0")
   ("xml-backend-native" "0.1.0")
   ("arrow-protocol" "0.1.0")
+  ("encoding-protocol" "0.1.2")
   ("mime-protocol" "0.1.0")
   ("cbor-protocol" "0.1.0")
   ("messagepack-protocol" "0.1.0")
