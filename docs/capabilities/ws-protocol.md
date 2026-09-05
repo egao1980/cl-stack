@@ -19,7 +19,7 @@ Conventions: [API.md](../API.md). Event DX: [event-protocol.md](event-protocol.m
 | **Event loop** | Prefer ops schedulable on `event-protocol` | Driver wave-1 may use BT threads internally; facade must not block the loop thread on `send`/`close` without documenting affinity |
 | **TLS / WSS** | **cl+ssl** + `cl-stack-ssl` overlay | Same as HTTPS (#12 / #35); no second TLS stack |
 | **Windows** | **Primary** | usocket path; no libev/Woo required for client |
-| **Server** | **H1 Upgrade shipped** (`accept` / `make-ws-server` `:transport`) | Protocol **0.4.0** takes `:auto` / `:http/1.1` / `:http/2`. Driver **0.3.0** is H1; H2 Extended CONNECT server = PRs in flight |
+| **Server** | **H1 + H2 shipped** (`accept` / `make-ws-server` `:transport`) | Protocol **0.4.0**: `:auto` / `:http/1.1` / `:http/2`. Driver **0.4.0** H1 Upgrade + RFC 8441 CONNECT (TLS, `ENABLE_CONNECT_PROTOCOL`). `:auto` stays H1 so WSS tests are unsurprised |
 | **Extensions** | **permessage-deflate** = **P2** | RFC 7692; ship only if backend exposes it cheaply |
 | **Subprotocols** | Pass-through `:protocols` list | Negotiate via handshake headers |
 
@@ -55,9 +55,9 @@ CLOS split (mirrors `http-protocol` HTTP version):
 
 | Backend | Transports | Notes |
 |---------|------------|-------|
-| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) | `:http/1.1` | Wave-1 driver (own repo) |
+| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) **0.4.0** | `:http/1.1` (client+server) · `:http/2` (server) | H2 listen needs `:ssl-cert` / `:ssl-key`; client H2 stays `http-backend-async` |
 | `http-backend-winhttp` **0.1.3+** | `:http/1.1` | Native WinHTTP WebSocket upgrade; live `WINHTTP_WS_LIVE` |
-| `http-backend-async` **0.2.3+** | `:http/2` | RFC 8441 Extended CONNECT + `fast-websocket` framing; live `HTTP_ASYNC_WS_H2_LIVE` |
+| `http-backend-async` **0.2.8+** | `:http/2` | RFC 8441 Extended CONNECT + `fast-websocket`; HPACK `":protocol"` string; live `HTTP_ASYNC_WS_H2_LIVE` |
 
 `ws-protocol` **0.2.2+**: `feature-or-env-enabled-p` for live/smoke gates (`*features*` ∪ truthy env). Cookbook: [websocket.md](../cookbooks/websocket.md); demos `ws-backend-websocket-driver/scripts/demo.lisp`, `http-backend-async/scripts/demo-ws.lisp`.
 
@@ -166,5 +166,6 @@ P2: high-water marks, explicit `drain` / `pause` / `resume` mirroring Node `stre
 
 ## Extended CONNECT status
 
-- **Done** in `http-backend-async` **0.2.3** (event-loop I/O: TLS WANT_* + `async-h2-pump-stream` + `register-io`; `connect-async` primary).
-- WinHTTP stays Upgrade-only (OS API); H2 WS = async backend.
+- **Client** — `http-backend-async` **0.2.8** (event-loop I/O + HPACK `":protocol"` string).
+- **Server** — `ws-backend-websocket-driver` **0.4.0** (`:transport :http/2`, advertises `ENABLE_CONNECT_PROTOCOL`). Generic Clack H2 = `http-server-backend-http2` **0.2.0**.
+- WinHTTP stays Upgrade-only (OS API).

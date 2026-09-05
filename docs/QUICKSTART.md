@@ -151,12 +151,12 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.7** | async + H2 `:want-stream` + request DATA + trailers + RFC 8441 WS |
+| `http-backend-async` | **0.2.8** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
 | `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.0** | ABCL `java.net.http` |
 | `ws-protocol` | **0.4.0** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
-| `ws-backend-websocket-driver` | **0.3.0** | H1 Upgrade client + server (`websocket-driver`) |
+| `ws-backend-websocket-driver` | **0.4.0** | H1 Upgrade + **H2 Extended CONNECT server** (`make-ws-server :transport :http/2`) |
 | `ag-ui-protocol` | **0.3.0** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
 | `a2a-backend-jsonrpc` | **0.2.1** | JSON-RPC 2.0 + SSE |
@@ -165,7 +165,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `ag-ui-backend-sse` | **0.2.1** | POST `RunAgentInput` → SSE |
 | `ag-ui-backend-protobuf` | **0.3.0** | JSON-as-WKT (`google.protobuf.Value`), not official `Event` oneof |
 | `ag-ui-backend-tui` | **0.1.0** | event sink + transcript (not a wire client) |
-| `http-server-protocol` | **0.1.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2`** |
+| `http-server-protocol` | **0.1.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
 | `http-server-backend-hunchentoot` | **0.1.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
@@ -219,7 +219,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 
 ```lisp
 (cl-repo:load-system "http-protocol" :version "0.3.6")
-(cl-repo:load-system "http-backend-async" :version "0.2.7")
+(cl-repo:load-system "http-backend-async" :version "0.2.8")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
 (setf http-backend-async:*event-backend-maker*
@@ -247,8 +247,8 @@ CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends
 
 ```lisp
 (cl-repo:load-system "ws-protocol" :version "0.4.0")
-(cl-repo:load-system "ws-backend-websocket-driver" :version "0.3.0") ; :http/1.1 Upgrade + accept
-(cl-repo:load-system "http-backend-async" :version "0.2.7") ; :http/2 Extended CONNECT client
+(cl-repo:load-system "ws-backend-websocket-driver" :version "0.4.0") ; H1 Upgrade + H2 CONNECT server
+(cl-repo:load-system "http-backend-async" :version "0.2.8") ; :http/2 Extended CONNECT client
 ;; Windows H1 Upgrade:
 ;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
 
@@ -264,7 +264,21 @@ CLOS split: protocol owns preference / ALPN helpers / H2 header policy; backends
 |------------|---------|
 | `:auto` | Prefer `:http/2` when backend lists it, else `:http/1.1` |
 | `:http/1.1` | RFC 6455 Upgrade (websocket-driver / WinHTTP) |
-| `:http/2` | RFC 8441 Extended CONNECT (async; needs peer `ENABLE_CONNECT_PROTOCOL`) |
+| `:http/2` | RFC 8441 Extended CONNECT (async client; H2 server via `make-ws-server :transport :http/2`) |
+
+H2 server (`:ssl-cert` / `:ssl-key` required; `:auto` stays H1):
+
+```lisp
+(let* ((backend (ws-backend-websocket-driver:make-websocket-driver-backend))
+       (server (ws-protocol:make-ws-server backend :transport :http/2
+                                           :host "127.0.0.1" :port 8443 :path "/echo"
+                                           :ssl-cert "cert.pem" :ssl-key "key.pem"
+                                           :on-connect
+                                           (lambda (conn)
+                                             (ws-protocol:on-event conn :message
+                                               (lambda (msg) (ws-protocol:send-text conn msg)))))))
+  (ws-protocol:start-ws-server server))
+```
 
 Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-enabled-p`). Brief: [capabilities/ws-protocol.md](capabilities/ws-protocol.md). Recipes + demos: [cookbooks/websocket.md](cookbooks/websocket.md).
 
