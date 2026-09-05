@@ -11,6 +11,7 @@
 | HTTP POST | [`rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) | **0.1.1** |
 | SSE | [`rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) | **0.1.1** |
 | gRPC binding | [`rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) | **0.1.0** |
+| gRPC canary | [`grpc-parity`](https://github.com/egao1980/grpc-parity) | Lisp → grpcio (CI-only) |
 
 Brief: [rpc.md](../capabilities/rpc.md) (#170). Modes live on the protocol; JSON-RPC is a **codec**; transports are backends. **Not** AG-UI (typed events, never a JSON-RPC envelope).
 

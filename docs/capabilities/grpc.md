@@ -27,6 +27,7 @@ gRPC **wire** (channel / status / connect). App-facing call shapes live on [`rpc
 | rpc-protocol binding | [`egao1980/rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) |
 | HTTP/2 backend | [`egao1980/grpc-backend-http2`](https://github.com/egao1980/grpc-backend-http2) |
 | Native backend | [`egao1980/grpc-backend-native`](https://github.com/egao1980/grpc-backend-native) |
+| Canary | [`egao1980/grpc-parity`](https://github.com/egao1980/grpc-parity) — Lisp → grpcio unary / server-stream / interleaved bidi (CI includes `windows-latest`) |
 
 `egao1980/grpc` stays the C++/CFFI fork (unix). Do not re-fork. Do not overlay it for Windows.
 
