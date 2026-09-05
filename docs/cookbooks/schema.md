@@ -4,20 +4,20 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.1.3** |
-| JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.1** |
-| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.2** |
-| Arrow (`stack-schema-arrow`) | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) | **0.1.0** |
-| Avro (`stack-schema-avro`) | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) | **0.1.0** |
+| Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.2.0** |
+| JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.2** |
+| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.3** |
+| Arrow (`stack-schema-arrow`) | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) | **0.1.1** |
+| Avro (`stack-schema-avro`) | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) | **0.1.1** |
 
 Brief: [schema.md](../capabilities/schema.md). Persistence → [sql.md](sql.md). Settings → [config.md](config.md). Field recoveries → [conditions.md](conditions.md).
 
 ```lisp
-(cl-repo:load-system "schema-protocol" :version "0.1.3")
-(cl-repo:load-system "schema-protocol-json" :version "0.1.1")  ; optional JSON Schema
-(cl-repo:load-system "schema-protocol-xsd" :version "0.1.2")   ; optional XSD 1.0/1.1
-(cl-repo:load-system "schema-protocol-arrow" :version "0.1.0") ; optional Arrow emit / tables
-(cl-repo:load-system "schema-protocol-avro" :version "0.1.0")  ; optional Avro emit
+(cl-repo:load-system "schema-protocol" :version "0.2.0")
+(cl-repo:load-system "schema-protocol-json" :version "0.1.2")  ; optional :json
+(cl-repo:load-system "schema-protocol-xsd" :version "0.1.3")   ; optional :xsd
+(cl-repo:load-system "schema-protocol-arrow" :version "0.1.1") ; optional :arrow
+(cl-repo:load-system "schema-protocol-avro" :version "0.1.1")  ; optional :avro
 ```
 
 ---
@@ -77,14 +77,27 @@ Wire accepts keyword, symbol-name (any case), proto `COLOR_RED`, and the integer
 
 ---
 
-## 3. JSON Schema
+## 3. Schema documents (`emit-schema` / `parse-schema`)
 
-`json-schema` GF lives on the protocol; methods are in `schema-protocol-json`. `emit` is the same emit path. `compile-schema` takes a document (hash-table / plist / alist / string).
+Same dispatch as serdes. Load a format implementor, then:
+
+```lisp
+(stack-schema:emit-schema 'user :format :json)
+(stack-schema:emit-schema 'user :format :xsd :version :1.1)
+(stack-schema:emit-schema 'user :format :arrow)
+(stack-schema:emit-schema 'user :format :avro)
+
+(stack-schema:parse-schema json-schema-ht :format :json)   ; → schema-class
+(stack-schema:parse-schema xsd-string :format :xsd)
+(stack-schema:parse-schema avro-json :format :avro)
+```
+
+`json-schema` / `xsd-schema` / `arrow-schema` / `avro-schema` wrap `emit-schema`. `parse` / `dump` `:format` is still **instance** serdes, not schema documents.
 
 ```lisp
 (asdf:load-system "schema-protocol-json")
-(stack-schema:json-schema 'user)          ; draft-07 (default)
-(stack-schema-json:emit 'user)
+(stack-schema:emit-schema 'user :format :json)   ; draft-07
+(stack-schema:json-schema 'user)                 ; same
 (stack-schema-json:compile-schema
  '(:type "object" :required #("name")
    :properties (:name (:type "string"))))
