@@ -30,7 +30,7 @@ Related: [overlays.md](overlays.md), [LICENSE-POLICY.md](LICENSE-POLICY.md).
   ("cl-idna" "0.1.0")
   ("quri" "0.7.1")
   ("http-protocol" "0.1.0")
-  ("http-encoding-chipz" "0.1.0")
+  ("http-encoding-chipz" "0.1.1")
   ("http-backend-dexador" "0.1.0")
   ("http-backend-async" "0.1.0")
   ("event-protocol" "0.1.0")

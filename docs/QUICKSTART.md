@@ -153,7 +153,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
 | `http-backend-async` | **0.2.8** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
-| `http-backend-dexador` | **0.1.2** | sync HTTP/1.1 |
+| `http-backend-dexador` | **0.1.3** | sync HTTP/1.1 (soft-loads CE codecs) |
 | `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.0** | ABCL `java.net.http` |
 | `ws-protocol` | **0.4.0** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
@@ -176,6 +176,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
 | `encoding-protocol` | **0.1.2** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
+| `compression-protocol` | **0.1.1** | codec + zip GFs (`compress` / `decompress`); HTTP CE goes through this |
+| `compression-backend-chipz` | **0.1.1** | `:gzip` `:zlib` `:deflate` (chipz + salza2) |
 | `mime-protocol` | **0.1.0** | serdes `:mime` / `:multipart` · [mime-protocol](capabilities/mime-protocol.md) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
@@ -185,7 +187,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `telemetry-protocol` | **0.1.0** | traces / spans + thin metrics (`stack-telemetry`) |
 | `telemetry-backend-otlp` | **0.1.0** | OTLP/HTTP JSON |
 | `cl-stack-snappy` | **1.2.2** | Snappy raw + framed; HTTP CE uses raw |
-| `http-encoding-snappy` | **0.1.0** | `Content-Encoding: snappy` (raw, not framed) |
+| `http-encoding-chipz` | **0.1.1** | `gzip` / `deflate` Content-Encoding |
+| `http-encoding-brotli` | **0.1.1** | `br` |
+| `http-encoding-zstd` | **0.1.1** | `zstd` |
+| `http-encoding-snappy` | **0.1.1** | `snappy` (raw, not framed) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
 | `grpc-protocol` | **0.1.1** | gRPC wire / channel (`:compression` facade) |

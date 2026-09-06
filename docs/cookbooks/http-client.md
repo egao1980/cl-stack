@@ -128,7 +128,7 @@ Or fail fast:
 (http:get url :raise-for-status t)
 ```
 
-**CE:** gzip/deflate via `http-encoding-chipz`; br/zstd/snappy when those systems are loaded (`http-encoding-snappy` = raw Snappy, not framed). After decode, `Content-Encoding` is stripped (httpx-shaped).
+**CE:** bytes go through `compression-protocol`. gzip/deflate via `http-encoding-chipz`; br/zstd/snappy when those systems are loaded (`http-encoding-snappy` = raw Snappy, not framed). After decode, `Content-Encoding` is stripped (httpx-shaped).
 
 ---
 
