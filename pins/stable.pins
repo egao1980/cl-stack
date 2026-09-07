@@ -172,6 +172,7 @@
   ("rag-protocol" "0.1.0")
   ("rag-backend-memory" "0.1.0")
   ("rag-backend-sql" "0.1.0")
+  ("rag-backend-pgvector" "0.1.0")
   ("rag-backend-text" "0.1.0")
   ("llm-protocol-openai" "0.3.0")
   ("llama-cpp" "0.1.5")
