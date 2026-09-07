@@ -6,6 +6,7 @@
 |-------|---------|-----|
 | Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.0** |
 | In-process cosine store | [`rag-backend-memory`](https://github.com/egao1980/rag-backend-memory) | **0.1.0** |
+| SQL persist + Lisp cosine | [`rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) | **0.1.0** |
 | Recursive character splitter | [`rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.1.0** |
 | Embeddings | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.0** |
 
@@ -36,6 +37,20 @@ Swap the mock embedder for OpenAI / llama.cpp — same `embed` / `embed-query` G
                   (stack-rag:make-rag-chunk
                    :id "a:0" :text "alpha" :embedding #(1.0 0.0)))
 (stack-rag:query-store stack-rag:*rag-store* #(1.0 0.0) :top-k 5)
+```
+
+SQL (SQLite here; same GFs on a `sql-protocol` connection):
+
+```lisp
+(cl-repo:load-system "sql-backend-sqlite3" :version "0.1.0")
+(cl-repo:load-system "rag-backend-sql" :version "0.1.0")
+(let ((store (rag-backend-sql:make-sql-vector-store
+              :driver :sqlite3 :database-name "rag.sqlite")))
+  (stack-rag:upsert store
+                    (stack-rag:make-rag-chunk
+                     :id "a:0" :text "alpha" :embedding #(1.0 0.0)))
+  (stack-rag:query-store store #(1.0 0.0) :top-k 5)
+  (rag-backend-sql:close-sql-vector-store store))
 ```
 
 Default `rerank` is identity (score desc). Missing store / embedder: `rag-missing-backend` + `use-value`. Dim mismatch: `continue` skips the chunk; `use-value` supplies a vector. Unknown ids on `delete-ids`: `rag-not-found` + `continue`.
