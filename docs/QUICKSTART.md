@@ -141,7 +141,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.3** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
-| `schema-protocol-arrow` | **0.1.1** | `:arrow` emit + table↔objects (`stack-schema-arrow`) |
+| `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.1** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
