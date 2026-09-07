@@ -18,7 +18,7 @@ Do **not** clone LangChain. Locked split: protocol GFs + thin backends + product
 
 **Wire is competitive.** Dual-era MCP, three A2A bindings, AG-UI 36-event + `/client` + TUI, and a CLOS agent loop with HITL / handoffs / parallel tools are on-par with 2026 Java/TS agent kits.
 
-**Generation shipped past wave-1.** `llm-protocol` **0.2.1** has `embed` / stream + an in-memory **provider catalog**. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Anthropic Messages **0.1.0** (official / vLLM / llama-server, same class; native tools official-only, `:compat` flattens). Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.2** generate / stream / embed / GBNF — still **no tools**.
+**Generation shipped past wave-1.** `llm-protocol` **0.2.1** has `embed` / stream + an in-memory **provider catalog**. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Anthropic Messages **0.1.0** (official / vLLM / llama-server, same class; native tools official-only, `:compat` flattens). Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.4** generate / stream / embed / GBNF tools / Lisp chat templates (`:chatml` / `:llama3`). No GGUF Jinja (ABI 5).
 
 **RAG P0 shipped.** `rag-protocol` **0.1.0** (`ingest` / `retrieve`) + memory / SQL cosine stores + optional pgvector ANN + recursive character splitter. Embeddings stay on `llm-protocol`. No hybrid / rerank model.
 
@@ -41,7 +41,7 @@ are the composition holes, not a missing graph DSL.
 | Generate | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** | Turns + parts + items; `generate` / stream / `embed`; provider catalog; mock; schema `:output`; `/capability` | No audio/file/video parts |
 | OpenAI wire | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.0** | `/chat/completions` + `/responses` + `/embeddings` + stream | No images / audio / realtime / batches / files / vector stores |
 | Anthropic wire | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.1.0** | `POST /v1/messages` + SSE; official / vLLM / llama-server; native tools (`:dialect :compat` flattens) | No embeddings; no `cache_control`; vLLM tools need `--enable-auto-tool-choice` |
-| Native GGUF | [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** | `libllamastack` ABI 4; generate / stream / embed; `:output` → GBNF | **No tools.** Grammar/stream/` :parsed` need matching overlay |
+| Native GGUF | [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.4** | `libllamastack` ABI 4; generate / stream / embed; GBNF tools; `:chat-template` | No GGUF Jinja (ABI 5). Grammar/stream/` :parsed` need matching overlay |
 | Agent loop | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** | `run-ai-agent(-async)`, function tools, nested agent-as-tool, `:handoffs`, HITL, `:memory`, `:steering` | No graph, no evals |
 | Conversation | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.1.0** | session store + buffer / window over `llm-turn` | No SQL persist / summary-memory / token window |
 | Steering | [`steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.1.0** | rules / `SKILL.md` → system prompt | Not A2A `agent-skill`; no tool-bearing skills |
