@@ -144,13 +144,14 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `schema-protocol-arrow` | **0.1.1** | `:arrow` emit + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.1** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `llm-protocol` | **0.2.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `rag-protocol` | **0.1.0** | chunk / store / rerank / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
 | `rag-backend-sql` | **0.1.0** | persist via `sql-protocol`; Lisp cosine (not ANN) |
 | `rag-backend-pgvector` | **0.1.0** | Postgres `<=>` ANN; text `'[1,0]'::vector` wire |
 | `rag-backend-text` | **0.1.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
+| `llm-protocol-anthropic` | **0.1.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server |
 | `llama-cpp` | **0.1.5** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.2** | native generate / stream-generate / embed; `:output` → GBNF; no tools |
 | `ai-agent-protocol` | **0.2.0** | async-first loop (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |

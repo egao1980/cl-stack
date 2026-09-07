@@ -1,7 +1,7 @@
 # llm-protocol (P2)
 
 **Issues:** [#195](https://github.com/egao1980/cl-stack/issues/195) · parent [#192](https://github.com/egao1980/cl-stack/issues/192)
-**Status:** `llm-protocol` **0.2.0** + [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** · cookbook [llm.md](../cookbooks/llm.md)
+**Status:** `llm-protocol` **0.2.1** + [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0** + [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** · cookbook [llm.md](../cookbooks/llm.md)
 
 CLOS generation + embeddings protocol. **Not** a `blackboard-protocol` dependency. **Demiurge is a consumer**, not the driver.
 
@@ -36,7 +36,8 @@ Product/agent loop, tool *execution*, UI transcripts stay out. Those are [ai-age
 | **Settings** | `llm-settings` (or a plist). Not flattened onto the GF. |
 | **Tools** | `llm-tool` = name / description / JSON-schema parameters. **Not** an executor. |
 | **Finish** | `:stop` `:length` `:tool-use` `:content-filter`. |
-| **Wire (HTTP)** | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0**: `POST {base}/chat/completions` + `/responses` + `/embeddings` + streaming. HTTP = `http-backend-async` × libuv. Default `http://127.0.0.1:1234/v1`. |
+| **Wire (HTTP)** | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0**: `POST {base}/chat/completions` + `/responses` + `/embeddings` + streaming. [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0**: `POST {base}/messages` (official / vLLM / llama-server). HTTP = `http-backend-async` × libuv. |
+| **Catalog** | `llm-provider-catalog` on the protocol (0.2.1). Name → backend. Not LiteLLM. Not a router. Not `make-llm-catalogue` (capability `:llm`). |
 | **Wire (native)** | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** over [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5**. CFFI to `libllamastack` (`llama-stack.h`), **not** `llama.h`. |
 | **Capability** | Optional `llm-protocol/capability` — `:llm` catalogue (`make-llm-catalogue`) + `complete` → `generate` + `embed`. Lookup is `capability-supported-p`. |
 | **Schema** | Optional `llm-protocol/schema` — `:output` → `schema-protocol` parse. |
@@ -58,19 +59,24 @@ Product/agent loop, tool *execution*, UI transcripts stay out. Those are [ai-age
 (defgeneric embed (backend inputs &key model dimensions encoding-format))
 (defgeneric list-models (backend &key))
 (defgeneric backend-supports-p (backend feature))
+(defgeneric register-provider (catalog name backend &key models))
+(defgeneric resolve-backend (catalog designator))
 ```
 
 `turns`: string, `llm-turn`, or a sequence. Result is `llm-response` (`llm-response-text`, `llm-response-tool-calls`, `llm-response-thinking`, `llm-response-output`, `llm-usage`). Items: `llm-item` (`llm-message-item`, `llm-function-call-item`, …). `embed-query` is sugar over `embed`.
 
 | Layer | Repo | OCI |
 |-------|------|-----|
-| Protocol + mock | [`egao1980/llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.0** |
+| Protocol + mock + catalog | [`egao1980/llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
 | OpenAI-compat | [`egao1980/llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.0** |
+| Anthropic Messages | [`egao1980/llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.1.0** |
 | llama.cpp native | [`egao1980/llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.2** |
 | CFFI + overlays | [`egao1980/llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.1.5** |
 | Capability / schema | `llm-protocol/capability`, `llm-protocol/schema` | (same as protocol) |
 
-Env: `OPENAI_API_KEY` / `LM_API_TOKEN` · `OPENAI_BASE_URL` · `OPENAI_MODEL` · `OPENAI_EMBEDDING_MODEL` · `LLAMA_MODEL_PATH`. Tests inject `request-fn` plus an async×libuv fixture; live HTTP behind `LLM_OPENAI_LIVE=1`. Embed smoke: `cl-stack-llm-demo` `scripts/smoke-embed.lisp` (local product, **not** on GHCR).
+Env: `OPENAI_API_KEY` / `LM_API_TOKEN` · `OPENAI_BASE_URL` · `OPENAI_MODEL` · `OPENAI_EMBEDDING_MODEL` · `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` · `ANTHROPIC_BASE_URL` · `ANTHROPIC_MODEL` · `LLAMA_MODEL_PATH`. Tests inject `request-fn` plus an async×libuv fixture; live OpenAI behind `LLM_OPENAI_LIVE=1`. Embed smoke: `cl-stack-llm-demo` `scripts/smoke-embed.lisp` (local product, **not** on GHCR).
+
+vLLM / llama-server Anthropic: same `anthropic-backend`, `make-vllm-anthropic-backend` (`http://127.0.0.1:8000/v1`) / `make-llama-server-anthropic-backend` (`http://127.0.0.1:8080/v1`), **`:dialect :compat`**. Compat flattens native `type`s to `{name, input_schema}` and rewrites outbound `server_tool_use` → `tool_use`. `:native-tools` is official only (`make-web-search-tool`, `make-bash-tool`, …). Server tools finish `:stop`; stream `:tool-use` only for client calls. Not CFFI `llm-backend-llama-cpp`. vLLM tools need `--enable-auto-tool-choice`.
 
 ---
 
@@ -104,7 +110,6 @@ An ABI 1 overlay against Lisp 0.1.5: `:grammar` / `:on-token` / `:parsed` are no
 
 - Blackboard / KSAR in this package
 - MCP sampling (→ [ai-agent.md](ai-agent.md))
-- Anthropic native backend (parts already round-trip thinking + signature)
 - Autolith fork
 - Provider-side conversation store
 - Tools / tool-calling on the llama.cpp backend
