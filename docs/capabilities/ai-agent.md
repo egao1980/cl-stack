@@ -1,7 +1,7 @@
 # ai-agent-protocol (P2)
 
 **Issues:** leftover of [#195](https://github.com/egao1980/cl-stack/issues/195) · parent [#192](https://github.com/egao1980/cl-stack/issues/192)
-**Status:** wave-1 (`ai-agent-protocol` **0.2.0** + `/mcp` **0.1.0** · `/ag-ui` **0.2.0** · `/a2a` **0.1.0`) · cookbook [ai-agent.md](../cookbooks/ai-agent.md)
+**Status:** wave-1 (`ai-agent-protocol` **0.2.2** + `/mcp` **0.1.0** · `/ag-ui` **0.2.0** · `/a2a` **0.1.0`) · cookbook [ai-agent.md](../cookbooks/ai-agent.md)
 
 Async-first CLOS **agent loop** over [`llm-protocol`](llm.md). **Not** blackboard core. **Not** `ag-ui-protocol:run-agent` — use `run-ai-agent` / `run-ai-agent-async`.
 
@@ -33,6 +33,8 @@ MCP    ── call  ───┘
 | **`defagent`** | `defclass` + `:default-initargs`. |
 | **MCP sampling** | `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`. |
 | **Approvals** | Pause `:approval`. `invoke-approve` / `invoke-deny` then `resume-ai-agent*`. |
+| **Memory** | Optional `conversation-protocol` `:memory` / `:session`. Recall on prepare; remember on terminal finish. Not RAG. |
+| **Steering** | `steer-protocol` `:steering`. Rules / `SKILL.md` after recall. Not A2A `agent-skill`. |
 | **Promises** | Later facade. No Blackbird in the protocol. |
 
 ---
@@ -48,7 +50,7 @@ MCP    ── call  ───┘
 
 | Layer | Repo |
 |-------|------|
-| Protocol | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) **0.2.0** |
+| Protocol | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) **0.2.2** |
 | MCP sampling + peer tools | `ai-agent-protocol/mcp` **0.1.0** |
 | AG-UI encoder | `ai-agent-protocol/ag-ui` **0.2.0** |
 | A2A expose | `ai-agent-protocol/a2a` **0.1.0** |

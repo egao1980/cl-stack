@@ -1,21 +1,24 @@
 # Cookbook: RAG ingest / retrieve
 
-**Audience:** chunk text, embed via `llm-protocol`, store vectors, retrieve top-k. **Not** conversation memory.
+**Audience:** chunk text, embed via `llm-protocol`, store vectors, retrieve top-k. **Not** conversation memory — [conversation.md](conversation.md).
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.1** |
+| Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.2** |
 | In-process cosine store | [`rag-backend-memory`](https://github.com/egao1980/rag-backend-memory) | **0.1.0** |
 | SQL persist + Lisp cosine | [`rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) | **0.1.0** |
 | Postgres ANN (pgvector) | [`rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) | **0.1.0** |
-| BM25 + RRF hybrid | [`rag-backend-hybrid`](https://github.com/egao1980/rag-backend-hybrid) | **0.1.0** |
+| BM25 + RRF / linear hybrid | [`rag-backend-hybrid`](https://github.com/egao1980/rag-backend-hybrid) | **0.1.1** |
+| Postgres FTS | [`rag-backend-tsvector`](https://github.com/egao1980/rag-backend-tsvector) | **0.1.0** |
+| Sparse store + encoder | [`rag-backend-splade`](https://github.com/egao1980/rag-backend-splade) | **0.1.0** |
+| Pairwise rerank | [`rag-backend-cross-encoder`](https://github.com/egao1980/rag-backend-cross-encoder) | **0.1.0** |
 | Recursive character splitter | [`rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.1.0** |
-| Embeddings | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.0** |
+| Embeddings | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
 
 Brief: [rag.md](../capabilities/rag.md). Embeddings stay on an `llm-backend` — [llm cookbook](llm.md).
 
 ```lisp
-(cl-repo:load-system "rag-protocol" :version "0.1.1")
+(cl-repo:load-system "rag-protocol" :version "0.1.2")
 (cl-repo:load-system "rag-backend-memory" :version "0.1.0")
 (cl-repo:load-system "rag-backend-text" :version "0.1.0")
 
@@ -71,10 +74,10 @@ Postgres + pgvector (`<=>` ANN; score is `1 - distance`):
   (rag-backend-pgvector:close-pgvector-store store))
 ```
 
-Hybrid (dense + Okapi BM25, RRF). `retrieve` on protocol **0.1.1+** forwards query text. Lexical index is in-process — re-ingest after restart.
+Hybrid (dense + Okapi BM25, RRF or linear). `retrieve` on protocol **0.1.1+** forwards query text. In-process BM25 needs a re-ingest after restart unless `:lexical-store` is persisted (`rag-backend-tsvector`).
 
 ```lisp
-(cl-repo:load-system "rag-backend-hybrid" :version "0.1.0")
+(cl-repo:load-system "rag-backend-hybrid" :version "0.1.1")
 (let* ((dense (rag-backend-memory:make-memory-vector-store))
        (store (rag-backend-hybrid:make-hybrid-store :vector-store dense)))
   (stack-rag:upsert store
@@ -91,5 +94,5 @@ Default `rerank` is identity (score desc). Missing store / embedder: `rag-missin
 ## What not to do
 
 - Don’t put RAG GFs on `llm-protocol`.
-- Don’t treat conversation memory as this protocol.
-- Don’t expect `tsvector` / a stemmer / a cross-encoder in this pin set. ANN is `rag-backend-pgvector`; BM25 is `rag-backend-hybrid`.
+- Don’t treat conversation memory as this protocol — [conversation.md](conversation.md).
+- Cross-encoder default is token overlap — pass `:score-fn` / `:batch-fn` for a real model. Neural SPLADE is `:encode-fn` on the sparse encoder.

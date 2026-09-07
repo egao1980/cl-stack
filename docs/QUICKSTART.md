@@ -144,17 +144,23 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `schema-protocol-arrow` | **0.1.1** | `:arrow` emit + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.1** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `rag-protocol` | **0.1.1** | chunk / store / rerank / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
+| `llm-protocol` | **0.2.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `conversation-protocol` | **0.1.0** | session store + buffer / window (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
+| `steer-protocol` | **0.1.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) · [cookbook](cookbooks/steer.md) |
+| `rag-protocol` | **0.1.2** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
 | `rag-backend-sql` | **0.1.0** | persist via `sql-protocol`; Lisp cosine (not ANN) |
 | `rag-backend-pgvector` | **0.1.0** | Postgres `<=>` ANN; text `'[1,0]'::vector` wire |
-| `rag-backend-hybrid` | **0.1.0** | in-process Okapi BM25 + RRF over a vector store |
+| `rag-backend-hybrid` | **0.1.1** | Okapi BM25 + RRF / linear fusion over a vector store |
+| `rag-backend-tsvector` | **0.1.0** | Postgres `tsvector` / `ts_rank` lexical store |
+| `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
+| `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.1.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
+| `llm-protocol-anthropic` | **0.1.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server |
 | `llama-cpp` | **0.1.5** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
-| `llm-backend-llama-cpp` | **0.1.2** | native generate / stream-generate / embed; `:output` → GBNF; no tools |
-| `ai-agent-protocol` | **0.2.0** | async-first loop (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
+| `llm-backend-llama-cpp` | **0.1.4** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
+| `ai-agent-protocol` | **0.2.2** | async-first loop + `:memory` + `:steering` (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |

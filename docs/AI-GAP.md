@@ -18,11 +18,15 @@ Do **not** clone LangChain. Locked split: protocol GFs + thin backends + product
 
 **Wire is competitive.** Dual-era MCP, three A2A bindings, AG-UI 36-event + `/client` + TUI, and a CLOS agent loop with HITL / handoffs / parallel tools are on-par with 2026 Java/TS agent kits.
 
-**Generation shipped past wave-1.** `llm-protocol` **0.2.0** has `embed` / `stream-generate` / `stream-respond`. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.2** generate / stream / embed / GBNF — still **no tools**.
+**Generation shipped past wave-1.** `llm-protocol` **0.2.1** has `embed` / stream + an in-memory **provider catalog**. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Anthropic Messages **0.1.0** (official / vLLM / llama-server, same class; native tools official-only, `:compat` flattens). Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.4** generate / stream / embed / GBNF tools / Lisp chat templates (`:chatml` / `:llama3`). No GGUF Jinja (ABI 5).
 
-**RAG P0 shipped.** `rag-protocol` **0.1.1** (`ingest` / `retrieve` forwards `rag-query`) + memory / SQL cosine stores + optional pgvector ANN + in-process BM25/RRF hybrid + recursive character splitter. Embeddings stay on `llm-protocol`. No rerank model / conversation memory.
+**RAG P0 shipped.** `rag-protocol` **0.1.2** (`ingest` / `retrieve` / `analyze` / `fuse` / `encode-sparse`) + memory / SQL cosine + pgvector ANN + hybrid BM25 + tsvector / SPLADE / cross-encoder + recursive character splitter. Embeddings stay on `llm-protocol`.
 
-**Still missing as protocols:** conversation memory, provider catalog beyond OpenAI-compat + llama.cpp, router/budget, Anthropic native, prompt cache, audio/realtime. Those are the delta vs PydanticAI / Vercel / Spring AI.
+**Conversation memory shipped.** `conversation-protocol` **0.1.0** (buffer / window, in-process store) + `ai-agent-protocol` **0.2.2** optional `:memory`. No SQL persist / LLM summary / token window.
+
+**Steering shipped.** `steer-protocol` **0.1.0** (rules / `SKILL.md`) + agent `:steering`. Not A2A `agent-skill`. [#198](https://github.com/egao1980/cl-stack/issues/198).
+
+**Still missing as protocols:** router/budget, prompt cache, audio/realtime. Those are the delta vs PydanticAI / Vercel / Spring AI.
 
 Blackboard KSAR is a *different* orchestration model (not a missing LangGraph).
 [#196](https://github.com/egao1980/cl-stack/issues/196) / [#197](https://github.com/egao1980/cl-stack/issues/197)
@@ -34,10 +38,13 @@ are the composition holes, not a missing graph DSL.
 
 | Layer | Repo | Ver | Role | Hole |
 |-------|------|-----|------|------|
-| Generate | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.0** | Turns + parts + items; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`; mock; schema `:output`; `/capability` | No audio/file/video parts |
+| Generate | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** | Turns + parts + items; `generate` / stream / `embed`; provider catalog; mock; schema `:output`; `/capability` | No audio/file/video parts |
 | OpenAI wire | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.0** | `/chat/completions` + `/responses` + `/embeddings` + stream | No images / audio / realtime / batches / files / vector stores |
-| Native GGUF | [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** | `libllamastack` ABI 4; generate / stream / embed; `:output` → GBNF | **No tools.** Grammar/stream/` :parsed` need matching overlay |
-| Agent loop | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.0** | `run-ai-agent(-async)`, function tools, nested agent-as-tool, `:handoffs`, HITL | No memory, no graph, no evals, no skill loader |
+| Anthropic wire | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.1.0** | `POST /v1/messages` + SSE; official / vLLM / llama-server; native tools (`:dialect :compat` flattens) | No embeddings; no `cache_control`; vLLM tools need `--enable-auto-tool-choice` |
+| Native GGUF | [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.4** | `libllamastack` ABI 4; generate / stream / embed; GBNF tools; `:chat-template` | No GGUF Jinja (ABI 5). Grammar/stream/` :parsed` need matching overlay |
+| Agent loop | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** | `run-ai-agent(-async)`, function tools, nested agent-as-tool, `:handoffs`, HITL, `:memory`, `:steering` | No graph, no evals |
+| Conversation | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.1.0** | session store + buffer / window over `llm-turn` | No SQL persist / summary-memory / token window |
+| Steering | [`steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.1.0** | rules / `SKILL.md` → system prompt | Not A2A `agent-skill`; no tool-bearing skills |
 | MCP sampling + tools | `ai-agent-protocol/mcp` | **0.1.0** | `create-message` → `generate`; `make-mcp-tool-source` | **Not** `llm-protocol/mcp` (does not exist) |
 | AG-UI encode | `ai-agent-protocol/ag-ui` | **0.2.0** | `on-event` → AG-UI events | — |
 | A2A expose | `ai-agent-protocol/a2a` | **0.1.0** | Sync `run-ai-agent` → completed task + text artifact | No stream / input-required / artifacts beyond text |
@@ -45,9 +52,9 @@ are the composition holes, not a missing graph DSL.
 | A2A | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0** | Card + tasks + stream | Push notifications refuse |
 | AG-UI | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.3.0** + SSE **0.2.1** + protobuf **0.3.0** (WKT) + TUI **0.1.0** + `/client` (`json-patch`) | all 36 events; chunks; interrupts | Official `Event` oneof not compiled. WKT Lisp-only in canary |
 | Blackboard | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) **0.1.1** + `capability-protocol` **0.2.1** | KSAR + COW; `:llm` / `:world` vocab | Zero LLM/wire deps (locked) |
-| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.1** + memory **0.1.0** + sql **0.1.0** + pgvector **0.1.0** + hybrid **0.1.0** + text **0.1.0** | chunk / store / rerank / `ingest` / `retrieve`; SQL persist + optional `<=>` ANN + in-process BM25/RRF | No cross-encoder; conversation memory is a different gap |
+| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.2** + memory / sql / pgvector / hybrid **0.1.1** / tsvector / splade / cross-encoder / text | chunk / store / rerank / `ingest` / `retrieve`; ANN + BM25 + FTS + sparse | Cross-encoder default is token overlap, not a CE model |
 | Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui) **0.1.0**, [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) **0.1.0** | desk chat + transcript sink | Not a protocol. `cl-stack-llm-demo` is local (no GHCR) |
-| Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge, [#198](https://github.com/egao1980/cl-stack/issues/198) agent-skills | open | Composition / SKILL.md | Not started |
+| Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge | open | Composition | [#198](https://github.com/egao1980/cl-stack/issues/198) → `steer-protocol` **0.1.0** |
 
 Parity canaries: [`mcp-parity`](https://github.com/egao1980/mcp-parity), [`a2a-parity`](https://github.com/egao1980/a2a-parity), [`ag-ui-parity`](https://github.com/egao1980/ag-ui-parity) (SSE JSON full; WKT Lisp-only).
 
@@ -61,20 +68,21 @@ Status: **ahead** / **on-par** / **thin** / **gap** / **leave** (intentional non
 |------------|----------|--------|
 | Typed turns + parts | `llm-turn` / `llm-part` | **on-par** |
 | Chat + Responses dual grain | `generate` + `respond` | **on-par** |
-| HTTP streaming | OpenAI `stream-generate` / `stream-respond`; llama.cpp `stream-generate` | **on-par** (shipped) |
+| HTTP streaming | OpenAI `stream-generate` / `stream-respond`; Anthropic Messages SSE; llama.cpp `stream-generate` | **on-par** (shipped) |
 | Embeddings | `embed` / `embed-query`; OpenAI `/embeddings`; llama.cpp GGUF | **on-par** (shipped) |
 | Structured output | `:output` + `schema-protocol`; llama.cpp → GBNF | **thin** — parse + `use-value`; no `ModelRetry` (locked) |
 | Native GGUF | `llama-cpp` ABI 4 + backend | **thin** — no tools |
-| Provider catalog | OpenAI-compat + llama.cpp | **gap** (P1) — no Anthropic native; compat covers Groq/OpenRouter/vLLM *if* they speak the same JSON |
+| Provider catalog | `register-provider` / `resolve-backend` on `llm-protocol` **0.2.1** + Anthropic Messages **0.1.0** | **thin** — in-memory only; not LiteLLM; no router/budget |
 | Fallback / router / budget | `with-auto-retry` on 429/5xx only | **gap** |
-| RAG / vector / chunk / rerank | `rag-protocol` **0.1.1** + memory / sql / pgvector / hybrid stores + text splitter | **thin** — Lisp cosine + optional pgvector ANN + in-process BM25/RRF; no rerank model |
-| Conversation memory / window | `prepare-agent-turns` hook only | **gap** |
+| RAG / vector / chunk / rerank | `rag-protocol` **0.1.2** + memory / sql / pgvector / hybrid / tsvector / splade / CE / text | **on-par** — ANN + BM25/RRF + FTS + sparse; CE hook is `:score-fn` |
+| Conversation memory / window | `conversation-protocol` **0.1.0** + agent `:memory` | **thin** — in-process buffer/window; no SQL / summary / tokens |
 | Token count / context mgmt | `llm-usage` after the fact | **gap** |
 | Prompt cache | no `cache_control` / `prompt_cache_key` | **gap** (P2) |
 | Image / audio / speech / realtime | `llm-image-part` only | **gap** (P2) |
 | Batch / files / vector stores | no | **leave** — hosted OpenAI vector stores still out; in-process store is `rag-backend-memory` |
 | Agent loop (HITL / handoff / nested) | `ai-agent-protocol` | **on-par** |
 | MCP / A2A / AG-UI wire | dual-era + 3 A2A + 36-event AG-UI | **on-par** / **ahead** on AG-UI typing |
-| Evals / skills / graph | absent | **gap** — [#198](https://github.com/egao1980/cl-stack/issues/198); not LangGraph |
+| Skills / `SKILL.md` | `steer-protocol` **0.1.0** + agent `:steering` | **thin** — [#198](https://github.com/egao1980/cl-stack/issues/198); not A2A `agent-skill` |
+| Evals / graph | absent | **gap** — not LangGraph |
 
-Hub cookbooks: [llm](cookbooks/llm.md) · [rag](cookbooks/rag.md) · [ai-agent](cookbooks/ai-agent.md) · [mcp](cookbooks/mcp.md) · [a2a](cookbooks/a2a.md) · [ag-ui](cookbooks/ag-ui.md).
+Hub cookbooks: [llm](cookbooks/llm.md) · [conversation](cookbooks/conversation.md) · [steer](cookbooks/steer.md) · [rag](cookbooks/rag.md) · [ai-agent](cookbooks/ai-agent.md) · [mcp](cookbooks/mcp.md) · [a2a](cookbooks/a2a.md) · [ag-ui](cookbooks/ag-ui.md).
