@@ -20,7 +20,7 @@ Do **not** clone LangChain. Locked split: protocol GFs + thin backends + product
 
 **Generation shipped past wave-1.** `llm-protocol` **0.2.1** has `embed` / stream + an in-memory **provider catalog**. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Anthropic Messages **0.1.0** (official / vLLM / llama-server, same class; native tools official-only, `:compat` flattens). Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.4** generate / stream / embed / GBNF tools / Lisp chat templates (`:chatml` / `:llama3`). No GGUF Jinja (ABI 5).
 
-**RAG P0 shipped.** `rag-protocol` **0.1.0** (`ingest` / `retrieve`) + memory / SQL cosine stores + optional pgvector ANN + recursive character splitter. Embeddings stay on `llm-protocol`. No hybrid / rerank model.
+**RAG P0 shipped.** `rag-protocol` **0.1.2** (`ingest` / `retrieve` / `analyze` / `fuse` / `encode-sparse`) + memory / SQL cosine + pgvector ANN + hybrid BM25 + tsvector / SPLADE / cross-encoder + recursive character splitter. Embeddings stay on `llm-protocol`.
 
 **Conversation memory shipped.** `conversation-protocol` **0.1.0** (buffer / window, in-process store) + `ai-agent-protocol` **0.2.2** optional `:memory`. No SQL persist / LLM summary / token window.
 
@@ -52,7 +52,7 @@ are the composition holes, not a missing graph DSL.
 | A2A | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0** | Card + tasks + stream | Push notifications refuse |
 | AG-UI | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.3.0** + SSE **0.2.1** + protobuf **0.3.0** (WKT) + TUI **0.1.0** + `/client` (`json-patch`) | all 36 events; chunks; interrupts | Official `Event` oneof not compiled. WKT Lisp-only in canary |
 | Blackboard | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) **0.1.1** + `capability-protocol` **0.2.1** | KSAR + COW; `:llm` / `:world` vocab | Zero LLM/wire deps (locked) |
-| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.0** + memory **0.1.0** + sql **0.1.0** + pgvector **0.1.0** + text **0.1.0** | chunk / store / rerank / `ingest` / `retrieve`; SQL persist + optional `<=>` ANN | No hybrid / cross-encoder |
+| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.2** + memory / sql / pgvector / hybrid **0.1.1** / tsvector / splade / cross-encoder / text | chunk / store / rerank / `ingest` / `retrieve`; ANN + BM25 + FTS + sparse | Cross-encoder default is token overlap, not a CE model |
 | Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui) **0.1.0**, [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) **0.1.0** | desk chat + transcript sink | Not a protocol. `cl-stack-llm-demo` is local (no GHCR) |
 | Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge | open | Composition | [#198](https://github.com/egao1980/cl-stack/issues/198) → `steer-protocol` **0.1.0** |
 
@@ -74,7 +74,7 @@ Status: **ahead** / **on-par** / **thin** / **gap** / **leave** (intentional non
 | Native GGUF | `llama-cpp` ABI 4 + backend | **thin** — no tools |
 | Provider catalog | `register-provider` / `resolve-backend` on `llm-protocol` **0.2.1** + Anthropic Messages **0.1.0** | **thin** — in-memory only; not LiteLLM; no router/budget |
 | Fallback / router / budget | `with-auto-retry` on 429/5xx only | **gap** |
-| RAG / vector / chunk / rerank | `rag-protocol` **0.1.0** + memory / sql / pgvector stores + text splitter | **thin** — Lisp cosine + optional pgvector ANN; no hybrid / rerank model |
+| RAG / vector / chunk / rerank | `rag-protocol` **0.1.2** + memory / sql / pgvector / hybrid / tsvector / splade / CE / text | **on-par** — ANN + BM25/RRF + FTS + sparse; CE hook is `:score-fn` |
 | Conversation memory / window | `conversation-protocol` **0.1.0** + agent `:memory` | **thin** — in-process buffer/window; no SQL / summary / tokens |
 | Token count / context mgmt | `llm-usage` after the fact | **gap** |
 | Prompt cache | no `cache_control` / `prompt_cache_key` | **gap** (P2) |

@@ -141,16 +141,20 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.3** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
-| `schema-protocol-arrow` | **0.1.1** | `:arrow` emit + table↔objects (`stack-schema-arrow`) |
+| `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.1** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `conversation-protocol` | **0.1.0** | session store + buffer / window (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
 | `steer-protocol` | **0.1.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) · [cookbook](cookbooks/steer.md) |
-| `rag-protocol` | **0.1.0** | chunk / store / rerank / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
+| `rag-protocol` | **0.1.2** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
 | `rag-backend-sql` | **0.1.0** | persist via `sql-protocol`; Lisp cosine (not ANN) |
 | `rag-backend-pgvector` | **0.1.0** | Postgres `<=>` ANN; text `'[1,0]'::vector` wire |
+| `rag-backend-hybrid` | **0.1.1** | Okapi BM25 + RRF / linear fusion over a vector store |
+| `rag-backend-tsvector` | **0.1.0** | Postgres `tsvector` / `ts_rank` lexical store |
+| `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
+| `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.1.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
 | `llm-protocol-anthropic` | **0.1.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server |

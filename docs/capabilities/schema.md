@@ -9,7 +9,7 @@ schema-protocol            ← metaclass + parse / validate / dump
                            ← emit-schema / parse-schema (:format :json/:xsd/:arrow/:avro)
 schema-protocol-json       ← registers :json
 schema-protocol-xsd        ← registers :xsd
-schema-protocol-arrow      ← registers :arrow (emit; parse not yet)
+schema-protocol-arrow      ← registers :arrow (emit + parse)
 schema-protocol-avro       ← registers :avro
         │
 serdes-protocol / json-protocol / xml-protocol / arrow-protocol / avro-protocol   ← instance bytes
@@ -36,7 +36,7 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 | **Schema documents** | `emit-schema` / `parse-schema` + `register-schema-format` (same shape as serdes). Default `*schema-format*` is `:json`. Unknown format → `schema-unknown-format`. |
 | **JSON Schema** | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) **0.1.2** — `:json` backend. `json-schema` wraps `(emit-schema … :format :json)`. |
 | **XSD** | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.3** — `:xsd` backend; trees are `xml-protocol` `xml-element`; `decode-validating` = decode then `validate-instance`. 1.0 default, `:version :1.1` for alternatives / openContent / assert. Closed XPath subset. |
-| **Arrow** | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) **0.1.1** — `:arrow` backend (emit). `parse-schema` for `:arrow` is not implemented. Bytes stay in [`arrow-protocol`](arrow.md). |
+| **Arrow** | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) **0.1.2** — `:arrow` backend (emit + parse from `arrow-schema` / IPC / Parquet). Bytes stay in [`arrow-protocol`](arrow.md). |
 | **Avro** | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) **0.1.1** — `:avro` backend (`defschema` ↔ Avro JSON tree). Binary codec is [`avro-protocol`](avro-protocol.md) (`avro-protocol:parse-schema` is the writer schema, not this). |
 | **Wire** | Default parse/dump speak hash-tables / plists / alists. `parse`/`dump` `:format` goes through `serdes-protocol` when loaded (instance values). Distinct from `emit-schema`/`parse-schema` `:format`. |
 | **Restarts** | Per field, while that field is being parsed: `use-value`, `skip-field`, `use-default`. `schema-fail` signals immediately (restart still live). `schema-issue` collects; `%raise-issues` fires after. |
@@ -50,7 +50,7 @@ Conventions: [API.md](../API.md). Used by [ag-ui.md](ag-ui.md), [llm.md](llm.md)
 | Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.2.0** |
 | JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.2** |
 | XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.3** |
-| Arrow (`stack-schema-arrow`) | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) | **0.1.1** |
+| Arrow (`stack-schema-arrow`) | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) | **0.1.2** |
 | Avro (`stack-schema-avro`) | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) | **0.1.1** |
 
 ---

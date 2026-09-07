@@ -30,7 +30,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [LLM](llm.md) | `llm-protocol` **0.2.1** / OpenAI **0.3.0** / Anthropic **0.1.0** / llama.cpp (generate · stream · embed) |
 | [Conversation memory](conversation.md) | `conversation-protocol` **0.1.0** (buffer · window) + agent `:memory` |
 | [Steer](steer.md) | `steer-protocol` **0.1.0** (rules · `SKILL.md`) + agent `:steering` |
-| [RAG](rag.md) | `rag-protocol` **0.1.0** / memory · sql · pgvector stores / text splitter (`ingest` · `retrieve`) |
+| [RAG](rag.md) | `rag-protocol` **0.1.2** / memory · sql · pgvector · hybrid · tsvector · splade · CE / text splitter |
 | [Schema](schema.md) | `schema-protocol` / `schema-protocol-json` / `schema-protocol-xsd` (`defschema` · JSON Schema · XSD) |
 | [Date / time / TZ](datetime.md) | `datetime-protocol` / `cl-stack-tzdata` / `cl-stack-calendars` |
 | [Conditions / restarts](conditions.md) | CLHS 9 — HTTP / FS / subprocess |

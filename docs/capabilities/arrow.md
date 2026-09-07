@@ -12,7 +12,7 @@ arrow-protocol   (schema/table + IPC + parquet)
 :arrow    IPC file (encode) / IPC stream (stream-*-value)
 :parquet  parquet file (encode only)
 
-schema-protocol-arrow   defschema → arrow-schema + table↔objects
+schema-protocol-arrow   defschema → arrow-schema + parse-schema + table↔objects
 ```
 
 Cookbook: [serdes.md](../cookbooks/serdes.md). Schema emit: [schema.md](schema.md).
