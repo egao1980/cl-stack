@@ -27,7 +27,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [A2A](a2a.md) | `a2a-protocol` / JSON-RPC · REST · gRPC (Agent Card + tasks) |
 | [AI agent](ai-agent.md) | `ai-agent-protocol` **0.2.0** (`run-ai-agent`; `/mcp` sampling; not `run-agent`) |
 | [Blackboard](blackboard.md) | `blackboard-protocol` / `capability-protocol` (KSAR + COW, no AI wire) |
-| [LLM](llm.md) | `llm-protocol` **0.2.0** / OpenAI **0.3.0** / llama.cpp (generate · stream · embed) |
+| [LLM](llm.md) | `llm-protocol` **0.2.1** / OpenAI **0.3.0** / Anthropic **0.1.0** / llama.cpp (generate · stream · embed) |
 | [RAG](rag.md) | `rag-protocol` **0.1.0** / memory · sql · pgvector stores / text splitter (`ingest` · `retrieve`) |
 | [Schema](schema.md) | `schema-protocol` / `schema-protocol-json` / `schema-protocol-xsd` (`defschema` · JSON Schema · XSD) |
 | [Date / time / TZ](datetime.md) | `datetime-protocol` / `cl-stack-tzdata` / `cl-stack-calendars` |

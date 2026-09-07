@@ -18,11 +18,11 @@ Do **not** clone LangChain. Locked split: protocol GFs + thin backends + product
 
 **Wire is competitive.** Dual-era MCP, three A2A bindings, AG-UI 36-event + `/client` + TUI, and a CLOS agent loop with HITL / handoffs / parallel tools are on-par with 2026 Java/TS agent kits.
 
-**Generation shipped past wave-1.** `llm-protocol` **0.2.0** has `embed` / `stream-generate` / `stream-respond`. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.2** generate / stream / embed / GBNF — still **no tools**.
+**Generation shipped past wave-1.** `llm-protocol` **0.2.1** has `embed` / stream + an in-memory **provider catalog**. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Anthropic Messages **0.1.0** (official / vLLM / llama-server, same class). Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.2** generate / stream / embed / GBNF — still **no tools**.
 
 **RAG P0 shipped.** `rag-protocol` **0.1.0** (`ingest` / `retrieve`) + memory / SQL cosine stores + optional pgvector ANN + recursive character splitter. Embeddings stay on `llm-protocol`. No hybrid / rerank model / conversation memory.
 
-**Still missing as protocols:** conversation memory, provider catalog beyond OpenAI-compat + llama.cpp, router/budget, Anthropic native, prompt cache, audio/realtime. Those are the delta vs PydanticAI / Vercel / Spring AI.
+**Still missing as protocols:** conversation memory, router/budget, prompt cache, audio/realtime. Those are the delta vs PydanticAI / Vercel / Spring AI.
 
 Blackboard KSAR is a *different* orchestration model (not a missing LangGraph).
 [#196](https://github.com/egao1980/cl-stack/issues/196) / [#197](https://github.com/egao1980/cl-stack/issues/197)
@@ -34,8 +34,9 @@ are the composition holes, not a missing graph DSL.
 
 | Layer | Repo | Ver | Role | Hole |
 |-------|------|-----|------|------|
-| Generate | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.0** | Turns + parts + items; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`; mock; schema `:output`; `/capability` | No audio/file/video parts |
+| Generate | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** | Turns + parts + items; `generate` / stream / `embed`; provider catalog; mock; schema `:output`; `/capability` | No audio/file/video parts |
 | OpenAI wire | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.0** | `/chat/completions` + `/responses` + `/embeddings` + stream | No images / audio / realtime / batches / files / vector stores |
+| Anthropic wire | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.1.0** | `POST /v1/messages` + SSE; official / vLLM / llama-server | No embeddings; no `cache_control`; vLLM tools need `--enable-auto-tool-choice` |
 | Native GGUF | [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** | `libllamastack` ABI 4; generate / stream / embed; `:output` → GBNF | **No tools.** Grammar/stream/` :parsed` need matching overlay |
 | Agent loop | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.0** | `run-ai-agent(-async)`, function tools, nested agent-as-tool, `:handoffs`, HITL | No memory, no graph, no evals, no skill loader |
 | MCP sampling + tools | `ai-agent-protocol/mcp` | **0.1.0** | `create-message` → `generate`; `make-mcp-tool-source` | **Not** `llm-protocol/mcp` (does not exist) |
@@ -61,11 +62,11 @@ Status: **ahead** / **on-par** / **thin** / **gap** / **leave** (intentional non
 |------------|----------|--------|
 | Typed turns + parts | `llm-turn` / `llm-part` | **on-par** |
 | Chat + Responses dual grain | `generate` + `respond` | **on-par** |
-| HTTP streaming | OpenAI `stream-generate` / `stream-respond`; llama.cpp `stream-generate` | **on-par** (shipped) |
+| HTTP streaming | OpenAI `stream-generate` / `stream-respond`; Anthropic Messages SSE; llama.cpp `stream-generate` | **on-par** (shipped) |
 | Embeddings | `embed` / `embed-query`; OpenAI `/embeddings`; llama.cpp GGUF | **on-par** (shipped) |
 | Structured output | `:output` + `schema-protocol`; llama.cpp → GBNF | **thin** — parse + `use-value`; no `ModelRetry` (locked) |
 | Native GGUF | `llama-cpp` ABI 4 + backend | **thin** — no tools |
-| Provider catalog | OpenAI-compat + llama.cpp | **gap** (P1) — no Anthropic native; compat covers Groq/OpenRouter/vLLM *if* they speak the same JSON |
+| Provider catalog | `register-provider` / `resolve-backend` on `llm-protocol` **0.2.1** + Anthropic Messages **0.1.0** | **thin** — in-memory only; not LiteLLM; no router/budget |
 | Fallback / router / budget | `with-auto-retry` on 429/5xx only | **gap** |
 | RAG / vector / chunk / rerank | `rag-protocol` **0.1.0** + memory / sql / pgvector stores + text splitter | **thin** — Lisp cosine + optional pgvector ANN; no hybrid / rerank model |
 | Conversation memory / window | `prepare-agent-turns` hook only | **gap** |
