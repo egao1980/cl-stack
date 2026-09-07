@@ -1,6 +1,6 @@
 # conversation-protocol (P1)
 
-**Status:** `conversation-protocol` **0.1.0** + `ai-agent-protocol` **0.2.1** `:memory` · cookbook [conversation.md](../cookbooks/conversation.md)
+**Status:** `conversation-protocol` **0.1.0** + `ai-agent-protocol` **0.2.2** `:memory` · cookbook [conversation.md](../cookbooks/conversation.md)
 
 CLOS **conversation memory** over [`llm-turn`](llm.md). **Not** RAG. **Not** GFs on `llm-protocol`.
 
@@ -39,6 +39,6 @@ Package nick: `stack-conversation`.
 | Layer | Repo | Ver |
 |-------|------|-----|
 | Protocol + in-process store / buffer / window | [`egao1980/conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.1.0** |
-| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.1** |
+| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** |
 
 Conditions: `conversation-missing-backend` (`use-value`); `conversation-session-not-found` (`continue`).

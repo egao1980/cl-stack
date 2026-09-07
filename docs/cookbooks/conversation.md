@@ -5,7 +5,7 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Protocol + buffer / window (`stack-conversation`) | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.1.0** |
-| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.1** |
+| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** |
 | Turns | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
 
 Brief: [conversation.md](../capabilities/conversation.md).
@@ -66,3 +66,4 @@ Hand-wire without the slot:
 - Don’t put this on `rag-protocol` or `llm-protocol`.
 - Don’t window by tokens — no tokenizer protocol yet.
 - Don’t treat `remember` of a full `agent-run-turns` as append (use `:replace t`).
+- Don’t put rules / `SKILL.md` here — [steer.md](steer.md).

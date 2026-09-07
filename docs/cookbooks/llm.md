@@ -10,7 +10,7 @@
 | llama.cpp native | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.2** |
 | CFFI + overlays | [`llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.1.5** |
 
-Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboard-protocol` dep. Demiurge **consumes** this. Sampling → [ai-agent.md](ai-agent.md). Conversation memory → [conversation.md](conversation.md). RAG / chunk / retrieve → [rag.md](rag.md).
+Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboard-protocol` dep. Demiurge **consumes** this. Sampling → [ai-agent.md](ai-agent.md). Conversation memory → [conversation.md](conversation.md). Rules / skills → [steer.md](steer.md). RAG / chunk / retrieve → [rag.md](rag.md).
 
 ```lisp
 (cl-repo:load-system "llm-protocol" :version "0.2.1")
@@ -216,6 +216,7 @@ MCP host: do **not** add a second `create-message`. Sampling is `ai-agent-protoc
 - Don’t put tool *execution* here (capability / [ai-agent](ai-agent.md) / product).
 - Don’t put RAG / chunk / vector-store GFs here — [rag-protocol](rag.md).
 - Don’t put conversation memory GFs here — [conversation-protocol](conversation.md).
+- Don’t put rules / `SKILL.md` GFs here — [steer-protocol](steer.md).
 - Don’t put raw GBNF on `llm-protocol` — `llama-cpp-settings` only.
 - Don’t fork Autolith `cl-llm-provider-api`.
 - Don’t copy Demiurge’s `generate-text` / `generate-with-tools` split.
