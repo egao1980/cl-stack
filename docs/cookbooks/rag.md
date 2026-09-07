@@ -1,6 +1,6 @@
 # Cookbook: RAG ingest / retrieve
 
-**Audience:** chunk text, embed via `llm-protocol`, store vectors, retrieve top-k. **Not** conversation memory.
+**Audience:** chunk text, embed via `llm-protocol`, store vectors, retrieve top-k. **Not** conversation memory — [conversation.md](conversation.md).
 
 | Piece | Package | OCI |
 |-------|---------|-----|
@@ -76,5 +76,5 @@ Default `rerank` is identity (score desc). Missing store / embedder: `rag-missin
 ## What not to do
 
 - Don’t put RAG GFs on `llm-protocol`.
-- Don’t treat conversation memory as this protocol.
+- Don’t treat conversation memory as this protocol — [conversation.md](conversation.md).
 - Don’t expect hybrid BM25 / a cross-encoder in 0.1.0. `rag-backend-sql` is Lisp cosine; ANN is `rag-backend-pgvector`.
