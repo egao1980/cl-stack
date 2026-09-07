@@ -4,17 +4,18 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.0** |
+| Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.1** |
 | In-process cosine store | [`rag-backend-memory`](https://github.com/egao1980/rag-backend-memory) | **0.1.0** |
 | SQL persist + Lisp cosine | [`rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) | **0.1.0** |
 | Postgres ANN (pgvector) | [`rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) | **0.1.0** |
+| BM25 + RRF hybrid | [`rag-backend-hybrid`](https://github.com/egao1980/rag-backend-hybrid) | **0.1.0** |
 | Recursive character splitter | [`rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.1.0** |
 | Embeddings | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.0** |
 
 Brief: [rag.md](../capabilities/rag.md). Embeddings stay on an `llm-backend` — [llm cookbook](llm.md).
 
 ```lisp
-(cl-repo:load-system "rag-protocol" :version "0.1.0")
+(cl-repo:load-system "rag-protocol" :version "0.1.1")
 (cl-repo:load-system "rag-backend-memory" :version "0.1.0")
 (cl-repo:load-system "rag-backend-text" :version "0.1.0")
 
@@ -70,6 +71,20 @@ Postgres + pgvector (`<=>` ANN; score is `1 - distance`):
   (rag-backend-pgvector:close-pgvector-store store))
 ```
 
+Hybrid (dense + Okapi BM25, RRF). `retrieve` on protocol **0.1.1+** forwards query text. Lexical index is in-process — re-ingest after restart.
+
+```lisp
+(cl-repo:load-system "rag-backend-hybrid" :version "0.1.0")
+(let* ((dense (rag-backend-memory:make-memory-vector-store))
+       (store (rag-backend-hybrid:make-hybrid-store :vector-store dense)))
+  (stack-rag:upsert store
+                    (stack-rag:make-rag-chunk
+                     :id "a:0" :text "red apple" :embedding #(1.0 0.0)))
+  (stack-rag:query-store store
+                         (stack-rag:make-rag-query
+                          :text "apple" :embedding #(1.0 0.0))
+                         :top-k 5))
+```
 
 Default `rerank` is identity (score desc). Missing store / embedder: `rag-missing-backend` + `use-value`. Dim mismatch: `continue` skips the chunk; `use-value` supplies a vector. Unknown ids on `delete-ids`: `rag-not-found` + `continue`.
 
@@ -77,4 +92,4 @@ Default `rerank` is identity (score desc). Missing store / embedder: `rag-missin
 
 - Don’t put RAG GFs on `llm-protocol`.
 - Don’t treat conversation memory as this protocol.
-- Don’t expect hybrid BM25 / a cross-encoder in 0.1.0. `rag-backend-sql` is Lisp cosine; ANN is `rag-backend-pgvector`.
+- Don’t expect `tsvector` / a stemmer / a cross-encoder in this pin set. ANN is `rag-backend-pgvector`; BM25 is `rag-backend-hybrid`.

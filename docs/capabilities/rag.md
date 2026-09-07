@@ -1,6 +1,6 @@
 # rag-protocol (P1)
 
-**Status:** `rag-protocol` **0.1.0** + memory **0.1.0** + text **0.1.0** + [`rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) **0.1.0** + [`rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) **0.1.0** · cookbook [rag.md](../cookbooks/rag.md)
+**Status:** `rag-protocol` **0.1.1** + memory **0.1.0** + text **0.1.0** + sql **0.1.0** + [`rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) **0.1.0** + [`rag-backend-hybrid`](https://github.com/egao1980/rag-backend-hybrid) **0.1.0** · cookbook [rag.md](../cookbooks/rag.md)
 
 CLOS chunk / store / rerank / retrieve. **Not** stuffed into `llm-protocol`. Embeddings stay `embed` / `embed-query` on an `llm-backend`.
 
@@ -33,8 +33,9 @@ Conversation memory is a **different** gap (`prepare-agent-turns` only).
 | **First store** | `rag-backend-memory` — brute-force cosine, dim fixed on first upsert |
 | **SQL store** | `rag-backend-sql` — persist via `sql-protocol`; cosine still in Lisp |
 | **pgvector store** | `rag-backend-pgvector` — `<=>` ANN, text `'[1,0]'::vector` wire, optional HNSW |
+| **Hybrid** | `rag-backend-hybrid` — in-process Okapi BM25 + RRF over a vector store. Lexical index is not persisted. |
 | **First chunker** | `rag-backend-text` — recursive character splitter (CL characters) |
-| **Not here** | Conversation memory, hybrid BM25, rerank models, token splitters, vector OID codecs |
+| **Not here** | Conversation memory, rerank models, token splitters, `tsvector` / stemmers |
 
 ---
 
@@ -59,10 +60,11 @@ Package nick: `stack-rag`.
 
 | Layer | Repo | OCI |
 |-------|------|-----|
-| Protocol + mock | [`egao1980/rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.0** |
+| Protocol + mock | [`egao1980/rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.1** |
 | Memory store | [`egao1980/rag-backend-memory`](https://github.com/egao1980/rag-backend-memory) | **0.1.0** |
 | SQL store | [`egao1980/rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) | **0.1.0** |
 | pgvector store | [`egao1980/rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) | **0.1.0** |
+| Hybrid BM25 + RRF | [`egao1980/rag-backend-hybrid`](https://github.com/egao1980/rag-backend-hybrid) | **0.1.0** |
 | Text chunker | [`egao1980/rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.1.0** |
 
 Conditions: `rag-error` / `rag-missing-backend` (`use-value`) / `rag-dimension-mismatch` (`continue` / `use-value`) / `rag-not-found` (`continue`).
