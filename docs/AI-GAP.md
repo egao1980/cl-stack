@@ -45,7 +45,7 @@ are the composition holes, not a missing graph DSL.
 | A2A | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0** | Card + tasks + stream | Push notifications refuse |
 | AG-UI | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.3.0** + SSE **0.2.1** + protobuf **0.3.0** (WKT) + TUI **0.1.0** + `/client` (`json-patch`) | all 36 events; chunks; interrupts | Official `Event` oneof not compiled. WKT Lisp-only in canary |
 | Blackboard | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) **0.1.1** + `capability-protocol` **0.2.1** | KSAR + COW; `:llm` / `:world` vocab | Zero LLM/wire deps (locked) |
-| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.0** + memory **0.1.0** + text **0.1.0** | chunk / store / rerank / `ingest` / `retrieve`; embeddings via `llm-protocol` | No pgvector / hybrid / cross-encoder; conversation memory is a different gap |
+| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.0** + memory **0.1.0** + sql **0.1.0** + text **0.1.0** | chunk / store / rerank / `ingest` / `retrieve`; SQL persist via `sql-protocol` | No pgvector / hybrid / cross-encoder; conversation memory is a different gap |
 | Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui) **0.1.0**, [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) **0.1.0** | desk chat + transcript sink | Not a protocol. `cl-stack-llm-demo` is local (no GHCR) |
 | Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge, [#198](https://github.com/egao1980/cl-stack/issues/198) agent-skills | open | Composition / SKILL.md | Not started |
 
@@ -67,7 +67,7 @@ Status: **ahead** / **on-par** / **thin** / **gap** / **leave** (intentional non
 | Native GGUF | `llama-cpp` ABI 4 + backend | **thin** — no tools |
 | Provider catalog | OpenAI-compat + llama.cpp | **gap** (P1) — no Anthropic native; compat covers Groq/OpenRouter/vLLM *if* they speak the same JSON |
 | Fallback / router / budget | `with-auto-retry` on 429/5xx only | **gap** |
-| RAG / vector / chunk / rerank | `rag-protocol` **0.1.0** + memory store + text splitter | **thin** — in-process cosine + recursive char split; no hosted store / rerank model |
+| RAG / vector / chunk / rerank | `rag-protocol` **0.1.0** + memory / sql stores + text splitter | **thin** — Lisp cosine (in-process or SQL persist); no pgvector / rerank model |
 | Conversation memory / window | `prepare-agent-turns` hook only | **gap** |
 | Token count / context mgmt | `llm-usage` after the fact | **gap** |
 | Prompt cache | no `cache_control` / `prompt_cache_key` | **gap** (P2) |
