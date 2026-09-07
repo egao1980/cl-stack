@@ -155,7 +155,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
 | `llm-protocol-anthropic` | **0.1.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server |
 | `llama-cpp` | **0.1.5** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
-| `llm-backend-llama-cpp` | **0.1.2** | native generate / stream-generate / embed; `:output` → GBNF; no tools |
+| `llm-backend-llama-cpp` | **0.1.4** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.2.2** | async-first loop + `:memory` + `:steering` (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |

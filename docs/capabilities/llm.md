@@ -1,7 +1,7 @@
 # llm-protocol (P2)
 
 **Issues:** [#195](https://github.com/egao1980/cl-stack/issues/195) · parent [#192](https://github.com/egao1980/cl-stack/issues/192)
-**Status:** `llm-protocol` **0.2.1** + [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0** + [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** · cookbook [llm.md](../cookbooks/llm.md)
+**Status:** `llm-protocol` **0.2.1** + [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0** + [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.4** · cookbook [llm.md](../cookbooks/llm.md)
 
 CLOS generation + embeddings protocol. **Not** a `blackboard-protocol` dependency. **Demiurge is a consumer**, not the driver.
 
@@ -38,7 +38,7 @@ Product/agent loop, tool *execution*, UI transcripts stay out. Those are [ai-age
 | **Finish** | `:stop` `:length` `:tool-use` `:content-filter`. |
 | **Wire (HTTP)** | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0**: `POST {base}/chat/completions` + `/responses` + `/embeddings` + streaming. [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0**: `POST {base}/messages` (official / vLLM / llama-server). HTTP = `http-backend-async` × libuv. |
 | **Catalog** | `llm-provider-catalog` on the protocol (0.2.1). Name → backend. Not LiteLLM. Not a router. Not `make-llm-catalogue` (capability `:llm`). |
-| **Wire (native)** | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.2** over [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5**. CFFI to `libllamastack` (`llama-stack.h`), **not** `llama.h`. |
+| **Wire (native)** | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.4** over [`llama-cpp`](https://github.com/egao1980/llama-cpp) **0.1.5**. CFFI to `libllamastack` (`llama-stack.h`), **not** `llama.h`. GBNF tools + Lisp `:chat-template` (`:auto` / `:chatml` / `:llama3`). |
 | **Capability** | Optional `llm-protocol/capability` — `:llm` catalogue (`make-llm-catalogue`) + `complete` → `generate` + `embed`. Lookup is `capability-supported-p`. |
 | **Schema** | Optional `llm-protocol/schema` — `:output` → `schema-protocol` parse. |
 | **MCP** | **Not here.** `ai-agent-protocol/mcp:make-mcp-sampling-handler`. |
@@ -70,7 +70,7 @@ Product/agent loop, tool *execution*, UI transcripts stay out. Those are [ai-age
 | Protocol + mock + catalog | [`egao1980/llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
 | OpenAI-compat | [`egao1980/llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.0** |
 | Anthropic Messages | [`egao1980/llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.1.0** |
-| llama.cpp native | [`egao1980/llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.2** |
+| llama.cpp native | [`egao1980/llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.4** |
 | CFFI + overlays | [`egao1980/llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.1.5** |
 | Capability / schema | `llm-protocol/capability`, `llm-protocol/schema` | (same as protocol) |
 
@@ -100,7 +100,7 @@ ABI on **0.1.5** (pin the Lisp tag; grammar / stream / `:parsed` need a matching
 | 3 | `llama_stack_complete_stream` | `:on-token` (non-NIL stops) |
 | 4 | `llama_stack_grammar_parse` | `parse-grammar` + `:parsed` (clone; engine outlives handle) |
 
-Backend: `generate` / `stream-generate` (no tools). `respond` → `generate`. `:output` (JSON Schema / `schema-protocol`) → GBNF via `json-schema-to-gbnf`. Raw GBNF is backend-local (`llama-cpp-settings` / `llm-settings-extra`) — **not** an `llm-protocol` field. Extra grammar **wins** over `:output`. `backend-supports-p`: `:structured-output` `:grammar` `:stream`. `embed` → `llama_stack_embed` (GGUF families llama.cpp loads: `bert`, `qwen3`, …).
+Backend: `generate` / `stream-generate` / GBNF tools. `respond` → `generate`. Chat turns use `apply-chat-template` (`:chat-template` `:auto` infers ChatML / Llama-3 from the GGUF path; lone user stays raw). `:output` (JSON Schema / `schema-protocol`) → GBNF via `json-schema-to-gbnf`. Raw GBNF / `:chat-template` are backend-local (`llama-cpp-settings` / `llm-settings-extra`) — **not** `llm-protocol` fields. Extra grammar **wins** over `:output` and over tools. `backend-supports-p`: `:structured-output` `:grammar` `:stream` `:tools`. `embed` → `llama_stack_embed` (GGUF families llama.cpp loads: `bert`, `qwen3`, …). No GGUF Jinja (needs ABI 5).
 
 An ABI 1 overlay against Lisp 0.1.5: `:grammar` / `:on-token` / `:parsed` are no-ops or fall back to non-streaming complete. Rebuild the overlay (`publish-oci.yml` / local `scripts/build-llama.sh`).
 
@@ -112,4 +112,4 @@ An ABI 1 overlay against Lisp 0.1.5: `:grammar` / `:on-token` / `:parsed` are no
 - MCP sampling (→ [ai-agent.md](ai-agent.md))
 - Autolith fork
 - Provider-side conversation store
-- Tools / tool-calling on the llama.cpp backend
+- GGUF Jinja chat-template apply (ABI 5 / minja)

@@ -179,7 +179,7 @@
   ("llm-protocol-openai" "0.3.0")
   ("llm-protocol-anthropic" "0.1.0")
   ("llama-cpp" "0.1.5")
-  ("llm-backend-llama-cpp" "0.1.2")
+  ("llm-backend-llama-cpp" "0.1.4")
   ("ai-agent-protocol" "0.2.2")
   ("blackboard-protocol" "0.1.1")
   ("capability-protocol" "0.2.1")
