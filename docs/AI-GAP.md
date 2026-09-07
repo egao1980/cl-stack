@@ -1,6 +1,6 @@
 # AI protocol / backend gaps vs Python / Node / Java
 
-Scored **2026-08-31** against GitHub `main` + GHCR pins. Companion to [STDLIB-GAP.md](STDLIB-GAP.md) — that file is ANSI batteries; this one is the LLM / agent layer.
+Scored **2026-09-07** against GitHub `main` + GHCR pins. Companion to [STDLIB-GAP.md](STDLIB-GAP.md) — that file is ANSI batteries; this one is the LLM / agent layer.
 
 **Comparators**
 
@@ -20,7 +20,9 @@ Do **not** clone LangChain. Locked split: protocol GFs + thin backends + product
 
 **Generation shipped past wave-1.** `llm-protocol` **0.2.0** has `embed` / `stream-generate` / `stream-respond`. OpenAI-compat **0.3.0** streams chat + Responses and hits `/embeddings`. Native `llama-cpp` **0.1.5** (ABI 4) + `llm-backend-llama-cpp` **0.1.2** generate / stream / embed / GBNF — still **no tools**.
 
-**Still missing as protocols:** RAG / vector / chunk / rerank, conversation memory, provider catalog beyond OpenAI-compat + llama.cpp, router/budget, Anthropic native, prompt cache, audio/realtime. Those are the delta vs PydanticAI / Vercel / Spring AI.
+**RAG P0 shipped.** `rag-protocol` **0.1.0** (`ingest` / `retrieve`) + in-process cosine store + recursive character splitter. Embeddings stay on `llm-protocol`. No pgvector / rerank model / conversation memory.
+
+**Still missing as protocols:** conversation memory, provider catalog beyond OpenAI-compat + llama.cpp, router/budget, Anthropic native, prompt cache, audio/realtime. Those are the delta vs PydanticAI / Vercel / Spring AI.
 
 Blackboard KSAR is a *different* orchestration model (not a missing LangGraph).
 [#196](https://github.com/egao1980/cl-stack/issues/196) / [#197](https://github.com/egao1980/cl-stack/issues/197)
@@ -43,6 +45,7 @@ are the composition holes, not a missing graph DSL.
 | A2A | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0** | Card + tasks + stream | Push notifications refuse |
 | AG-UI | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) **0.3.0** + SSE **0.2.1** + protobuf **0.3.0** (WKT) + TUI **0.1.0** + `/client` (`json-patch`) | all 36 events; chunks; interrupts | Official `Event` oneof not compiled. WKT Lisp-only in canary |
 | Blackboard | [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol) **0.1.1** + `capability-protocol` **0.2.1** | KSAR + COW; `:llm` / `:world` vocab | Zero LLM/wire deps (locked) |
+| RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.0** + memory **0.1.0** + text **0.1.0** | chunk / store / rerank / `ingest` / `retrieve`; embeddings via `llm-protocol` | No pgvector / hybrid / cross-encoder; conversation memory is a different gap |
 | Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui) **0.1.0**, [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) **0.1.0** | desk chat + transcript sink | Not a protocol. `cl-stack-llm-demo` is local (no GHCR) |
 | Leftover epics | [#196](https://github.com/egao1980/cl-stack/issues/196) wire↔board, [#197](https://github.com/egao1980/cl-stack/issues/197) demiurge, [#198](https://github.com/egao1980/cl-stack/issues/198) agent-skills | open | Composition / SKILL.md | Not started |
 
@@ -59,19 +62,19 @@ Status: **ahead** / **on-par** / **thin** / **gap** / **leave** (intentional non
 | Typed turns + parts | `llm-turn` / `llm-part` | **on-par** |
 | Chat + Responses dual grain | `generate` + `respond` | **on-par** |
 | HTTP streaming | OpenAI `stream-generate` / `stream-respond`; llama.cpp `stream-generate` | **on-par** (shipped) |
-| Embeddings | `embed` / `embed-query`; OpenAI `/embeddings`; llama.cpp GGUF | **on-par** (shipped). RAG still **gap** |
+| Embeddings | `embed` / `embed-query`; OpenAI `/embeddings`; llama.cpp GGUF | **on-par** (shipped) |
 | Structured output | `:output` + `schema-protocol`; llama.cpp → GBNF | **thin** — parse + `use-value`; no `ModelRetry` (locked) |
 | Native GGUF | `llama-cpp` ABI 4 + backend | **thin** — no tools |
 | Provider catalog | OpenAI-compat + llama.cpp | **gap** (P1) — no Anthropic native; compat covers Groq/OpenRouter/vLLM *if* they speak the same JSON |
 | Fallback / router / budget | `with-auto-retry` on 429/5xx only | **gap** |
-| RAG / vector / chunk / rerank | absent | **gap** (P1) — new protocol, do not stuff into `llm-protocol` |
+| RAG / vector / chunk / rerank | `rag-protocol` **0.1.0** + memory store + text splitter | **thin** — in-process cosine + recursive char split; no hosted store / rerank model |
 | Conversation memory / window | `prepare-agent-turns` hook only | **gap** |
 | Token count / context mgmt | `llm-usage` after the fact | **gap** |
 | Prompt cache | no `cache_control` / `prompt_cache_key` | **gap** (P2) |
 | Image / audio / speech / realtime | `llm-image-part` only | **gap** (P2) |
-| Batch / files / vector stores | no | **leave** until a RAG protocol exists |
+| Batch / files / vector stores | no | **leave** — hosted OpenAI vector stores still out; in-process store is `rag-backend-memory` |
 | Agent loop (HITL / handoff / nested) | `ai-agent-protocol` | **on-par** |
 | MCP / A2A / AG-UI wire | dual-era + 3 A2A + 36-event AG-UI | **on-par** / **ahead** on AG-UI typing |
 | Evals / skills / graph | absent | **gap** — [#198](https://github.com/egao1980/cl-stack/issues/198); not LangGraph |
 
-Hub cookbooks: [llm](cookbooks/llm.md) · [ai-agent](cookbooks/ai-agent.md) · [mcp](cookbooks/mcp.md) · [a2a](cookbooks/a2a.md) · [ag-ui](cookbooks/ag-ui.md).
+Hub cookbooks: [llm](cookbooks/llm.md) · [rag](cookbooks/rag.md) · [ai-agent](cookbooks/ai-agent.md) · [mcp](cookbooks/mcp.md) · [a2a](cookbooks/a2a.md) · [ag-ui](cookbooks/ag-ui.md).

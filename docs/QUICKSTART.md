@@ -145,6 +145,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `schema-protocol-avro` | **0.1.1** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.2.0** | turns + parts + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `rag-protocol` | **0.1.0** | chunk / store / rerank / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
+| `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
+| `rag-backend-text` | **0.1.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
 | `llama-cpp` | **0.1.5** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.2** | native generate / stream-generate / embed; `:output` → GBNF; no tools |
