@@ -76,7 +76,7 @@ Product/agent loop, tool *execution*, UI transcripts stay out. Those are [ai-age
 
 Env: `OPENAI_API_KEY` / `LM_API_TOKEN` · `OPENAI_BASE_URL` · `OPENAI_MODEL` · `OPENAI_EMBEDDING_MODEL` · `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` · `ANTHROPIC_BASE_URL` · `ANTHROPIC_MODEL` · `LLAMA_MODEL_PATH`. Tests inject `request-fn` plus an async×libuv fixture; live OpenAI behind `LLM_OPENAI_LIVE=1`. Embed smoke: `cl-stack-llm-demo` `scripts/smoke-embed.lisp` (local product, **not** on GHCR).
 
-vLLM / llama-server Anthropic: same `anthropic-backend`, `make-vllm-anthropic-backend` (`http://127.0.0.1:8000/v1`) / `make-llama-server-anthropic-backend` (`http://127.0.0.1:8080/v1`). Not CFFI `llm-backend-llama-cpp`. vLLM tools need `--enable-auto-tool-choice`.
+vLLM / llama-server Anthropic: same `anthropic-backend`, `make-vllm-anthropic-backend` (`http://127.0.0.1:8000/v1`) / `make-llama-server-anthropic-backend` (`http://127.0.0.1:8080/v1`), **`:dialect :compat`**. Compat flattens native `type`s to `{name, input_schema}` and rewrites outbound `server_tool_use` → `tool_use`. `:native-tools` is official only (`make-web-search-tool`, `make-bash-tool`, …). Server tools finish `:stop`; stream `:tool-use` only for client calls. Not CFFI `llm-backend-llama-cpp`. vLLM tools need `--enable-auto-tool-choice`.
 
 ---
 

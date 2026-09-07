@@ -100,7 +100,16 @@ Same class. Official default `https://api.anthropic.com/v1`. Bind async × libuv
 (stack-llm-anthropic:make-llama-server-anthropic-backend)  ; http://127.0.0.1:8080/v1
 ```
 
-vLLM tools need `--enable-auto-tool-choice`. Env: `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL`. `list-models` 404 → default model. Thinking + `signature` round-trip. Not CFFI `llm-backend-llama-cpp`.
+vLLM / llama-server use **`:dialect :compat`**: native Anthropic `type`s flatten to `{name, input_schema}`; outbound `server_tool_use` → `tool_use`. `:native-tools` is **official only**. vLLM tools need `--enable-auto-tool-choice`. Env: `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_BASE_URL` / `ANTHROPIC_MODEL` / `ANTHROPIC_VERSION` / `ANTHROPIC_BETA`. `list-models` 404 → default model. Thinking + `signature` round-trip. Not CFFI `llm-backend-llama-cpp`.
+
+Official native tools (`web_search` / `web_fetch` / `code_execution` are **server**; `bash` / `text_editor` / `computer` / `memory` are **client** — you execute `tool_use`):
+
+```lisp
+(stack-llm-anthropic:make-web-search-tool :max-uses 3)
+(stack-llm-anthropic:make-bash-tool)
+```
+
+Server tools land as `server_tool_use` + `*_tool_result` in the same assistant message (finish usually `:stop`). Stream finish is `:tool-use` **only** for a client call. `tool_choice`: `:auto` / `:none` / `:required` → `any` / string → `{type:tool,name}`.
 
 Provider catalog (not LiteLLM, not a router):
 
