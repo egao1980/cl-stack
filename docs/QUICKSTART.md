@@ -205,6 +205,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `compression-protocol` | **0.2.0** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.1.2** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
 | `mime-protocol` | **0.1.4** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
+| `mail-protocol` | **0.1.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
+| `mail-backend-memory` | **0.1.0** | record sent messages |
+| `mail-backend-smtp` | **0.1.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
 | `avro-protocol` | **0.1.0** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
