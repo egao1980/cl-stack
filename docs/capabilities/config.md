@@ -14,7 +14,7 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (Co
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **System name** | **`cl-stack-config`** (nick `stack-config`) | Matches `cl-stack-http` / pathlib facade naming |
-| **File format (default)** | **TOML** | Human-friendly for service config; maps cleanly to hash-tables/vectors (same shape as `json-protocol`) |
+| **File format (default)** | **TOML**; INI via `:format :ini` / `:auto` | Human-friendly for service config; maps cleanly to hash-tables/vectors (same shape as `json-protocol`) |
 | **Parser pin** | **[tomlet](https://github.com/fukamachi/tomlet)** | TOML **v1.0.0** compliance (official suite), MIT, **pure Lisp** (only `cl-ppcre`) — no native overlay |
 | **Not default** | **YAML** (`cl-yaml` / libyaml) | Needs **libyaml** CFFI + overlays; YAML 1.1 footguns; heavier than config needs |
 | **Also considered** | **cl-toml** (cxxxr) | On QL; older / esrap-based; weaker compliance story vs tomlet |
@@ -28,7 +28,7 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (Co
 | **Reload** | Explicit `load` / `reload` — no file watch in wave-2 | Keep MVP small |
 | **Secrets** | Out of scope (see crypto/secrets P2) | Env may carry secrets; no vault |
 
-Selection: ASDF load `cl-stack-config` (depends on tomlet). No backend registry — one format for the pin set. Escape hatch: apps may still parse YAML themselves; not curated.
+Selection: ASDF load `cl-stack-config` (depends on tomlet). No `config-protocol` — INI is a facade parser (`parse-ini`), TOML stays the default. Escape hatch: apps may still parse YAML themselves; not curated.
 
 ---
 

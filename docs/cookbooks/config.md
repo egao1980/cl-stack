@@ -1,4 +1,4 @@
-# Cookbook: Config (env + TOML)
+# Cookbook: Config (env + TOML / INI)
 
 **Audience:** apps that need a file + environment overlay (12-factor-ish).
 
@@ -57,4 +57,21 @@ Precedence: **file < env < `:overrides`**.
 (stack-config:get *cfg* "cache.ttl" :default 60)
 (let ((db (stack-config:section *cfg* "database")))
   (stack-config:get db "host"))
+```
+
+---
+
+## 4. INI
+
+`.ini` / `.cfg` / `.conf` autodetect; or `:format :ini`. No interpolation.
+
+```ini
+[database]
+host = localhost
+port = 5432
+```
+
+```lisp
+(stack-config:load #p"config.ini" :prefix "APP")
+(stack-config:get-integer *cfg* "database.port")
 ```

@@ -74,6 +74,7 @@ Associated data (authenticated, not encrypted):
 (token-hex 32)
 (token-urlsafe 32)
 (uuid :version :v4)
+(uuid :version :v7)   ; RFC 9562, secrets-protocol:make-uuid-v7
 
 (constant-time-equal mac1 mac2)
 

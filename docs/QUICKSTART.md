@@ -85,6 +85,15 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
+| `closer-mop` | **1.0.0** | MOP portability |
+| `usocket` | **0.8.9** | portable sockets |
+| `cl-ppcre` | **2.1.2** | regex |
+| `serapeum` | **0.1.0** | utilities (collections / itertools slice) |
+| `string-case` | **0.0.2** | serapeum dep |
+| `parse-number` | **1.8** | serapeum dep |
+| `trivial-file-size` | **0.1.0** | serapeum dep |
+| `trivial-macroexpand-all` | **0.1.0** | serapeum dep |
+| `parse-declarations-1.0` | **1.0** | serapeum dep |
 | `unicode-protocol` | **0.1.2** | UCD/normalize/case/IDNA/breaks/uset (`stack-unicode`) · [cookbook](cookbooks/unicode.md) |
 | `unicode-backend-cl-unicode` | **0.1.0** | portable default unicode backend |
 | `unicode-backend-sbcl` | **0.1.0** | SBCL `sb-unicode` (no `:idna`) |
@@ -100,11 +109,11 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `l10n-backend-icu4j` | **0.1.2** | ICU4J l10n (auto-bind `#+abcl`) |
 | `cl-stack-idna` | **0.1.0** | `to-ascii` / `to-unicode` facade (`stack-idna`) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
-| `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
+| `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.7** | wire client; `http-body-pipe` + H2 request DATA; `:auto` uses registered MIME/CBOR/msgpack/Avro codecs; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
+| `cl-stack-pathlib` | **0.3.0** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
@@ -120,8 +129,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `crypto-protocol` | **0.2.0** | seal/unseal + hazmat + **sign/verify** (`stack-crypto`) |
-| `crypto-backend-ironclad` | **0.2.0** | digest/HMAC/AEAD/sign + secrets (Ironclad) |
-| `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
+| `crypto-backend-ironclad` | **0.2.1** | digest/HMAC/AEAD/sign + secrets (Ironclad; UUID v7) |
+| `secrets-protocol` | **0.1.2** | CSPRNG/tokens/UUID v4+v7/password KDF API |
 | `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
@@ -162,7 +171,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `llm-backend-llama-cpp` | **0.1.4** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.2.2** | async-first loop + `:memory` + `:steering` (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
-| `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |
+| `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
 | `http-backend-async` | **0.2.8** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
 | `http-backend-dexador` | **0.1.3** | sync HTTP/1.1 (soft-loads CE codecs) |
@@ -188,9 +197,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
 | `encoding-protocol` | **0.1.2** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
-| `compression-protocol` | **0.1.1** | codec + zip GFs (`compress` / `decompress`); HTTP CE goes through this |
-| `compression-backend-chipz` | **0.1.1** | `:gzip` `:zlib` `:deflate` (chipz + salza2) |
-| `mime-protocol` | **0.1.0** | serdes `:mime` / `:multipart` · [mime-protocol](capabilities/mime-protocol.md) |
+| `compression-protocol` | **0.2.0** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
+| `compression-backend-chipz` | **0.1.2** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
+| `mime-protocol` | **0.1.4** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
 | `avro-protocol` | **0.1.0** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
@@ -309,7 +318,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 
 ```lisp
 (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
-(cl-repo:load-system "cl-stack-jwt" :version "0.3.0")
+(cl-repo:load-system "cl-stack-jwt" :version "0.3.3")
 
 ;; OAuth2 client-credentials → pass as :auth to stack-http
 (defvar *auth*

@@ -34,7 +34,7 @@ Hooks, reporters, and `run-test` see normal per-row tests.
 
 ## Non-goals (later gaps)
 
-Nested parametrize, fixture injection, markers — see [ROVE-GAPS.md](ROVE-GAPS.md).
+Nested parametrize. Fixtures / markers / JUnit / timeout / diffs / shard → [ROVE-GAPS.md](ROVE-GAPS.md) (shipped on the fork, 0.10.2).
 
 ## Pin
 
