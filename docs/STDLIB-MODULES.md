@@ -33,7 +33,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | `unicodedata` | `unicode-protocol` + ICU i18n/l10n (not gettext) |
 | `subprocess` | `process-protocol` |
 | `sqlite3` / SQLAlchemy | `sql-protocol` + `sql-query` + `sql-orm` |
-| `gzip` / zipfile | `compression-protocol` |
+| `gzip` / zipfile / `tarfile` / `bz2` | `compression-protocol` (xz overlay) |
 | pydantic-settings / pydantic models | `cl-stack-config` / `schema-protocol` |
 | websockets / SSE / grpcio | `ws-` / `sse-` / `grpc-protocol` |
 | FastMCP / a2a-sdk / AG-UI | MCP / A2A / AG-UI |
@@ -61,13 +61,13 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 1 | `html` / BeautifulSoup | `html-protocol` + plump | xml-protocol is strict Infoset. **CSS/JS = opaque text** (`<style>` / `<script>` / `style=` / `href`/`src`) — no cascade, no VM |
 | 2 | `email` + `smtplib` | `mail-protocol` | mime-protocol is not MUA/IMAP |
 | 3 | `ipaddress` | `ip-protocol` | Pure Lisp |
-| 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | ZIP+gzip shipped |
+| 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | **shipped** ustar + `:tar.gz`; `:bzip2` inflate (chipz). xz still overlay |
 | 5 | `struct` | `binary-protocol` | encodings stay RFC 4648/QP |
-| 6 | `tempfile` / `shutil` | extend `cl-stack-pathlib` | Audit before a new repo |
+| 6 | `tempfile` / `shutil` | extend `cl-stack-pathlib` | **shipped** `with-temp-*` / `rmtree` / `copytree` / `which` |
 | 7 | `signal` | process-protocol extension | Windows must not be later |
-| 8 | `configparser` INI | `cl-stack-config` backend | TOML+env shipped |
-| 9 | `mimetypes` | mime-protocol facade | Small |
-| 10 | UUID v7 | `secrets-protocol` | Brief already allows |
+| 8 | `configparser` INI | `cl-stack-config` backend | **shipped** `:format :ini` / `:auto` |
+| 9 | `mimetypes` | mime-protocol facade | **shipped** `guess-type` / `add-type` |
+| 10 | UUID v7 | `secrets-protocol` | **shipped** RFC 9562 `make-uuid-v7` |
 
 **Skip as new protocols:** `re` → pin `cl-ppcre`; collections/itertools → Serapeum; `decimal`/`fractions` → CL rationals; `pickle` → `io-protocol` (not CPython wire); CSS/JS engines (opaque in `html-protocol`).
 
@@ -108,10 +108,11 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 ## Wave order
 
 1. **Hygiene (P0):** Rove gaps + pin closer-mop/usocket/cl-ppcre + jwt 0.3.3; serapeum import.
-2. **Stdlib hole tranche:** html → mail → ip → compression tar/bz2/xz.
-3. **SQL product:** `sql-migrate`.
-4. **Web product:** OpenAPI emit.
-5. **Cache / watch / rrule** as demand appears.
-6. **AI-GAP** on its own track.
+2. **Stdlib hole tranche (this wave):** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7.
+3. **Remaining P1:** html → mail → ip → struct → signal.
+4. **SQL product:** `sql-migrate`.
+5. **Web product:** OpenAPI emit.
+6. **Cache / watch / rrule** as demand appears.
+7. **AI-GAP** on its own track.
 
 Each new domain: capability brief → protocol repo → one hero backend → Rove + license-clean corpus → pin + QUICKSTART row.

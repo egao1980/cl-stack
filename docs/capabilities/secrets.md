@@ -28,7 +28,7 @@ Conventions: [API.md](../API.md). Crypto: [crypto.md](crypto.md).
 | **Default backend (A)** | OS CSPRNG via **Ironclad** `:os` PRNG | Same entropy story as crypto |
 | **Tokens** | `token-bytes` / `token-hex` / `token-urlsafe` | Python `secrets` DX |
 | **Compare** | `constant-time-equal` on octet vectors | Timing-safe MAC/password checks |
-| **UUID** | v4 required; v7 when backend supports | uuid lib = v4; v7 follow-on OK |
+| **UUID** | v4 required; v7 when backend supports | uuid lib = v4; `make-uuid-v7` (RFC 9562) in secrets-protocol; ironclad 0.2.1 |
 | **Password hashing** | **Argon2id** preferred; bcrypt / PBKDF2 allowed | Ironclad has argon2i/d, bcrypt, pbkdf2 — default **argon2i** until argon2id lands |
 | **Not here** | AEAD / digests / HMAC | → crypto-protocol |
 | **Windows** | Required | Pure Lisp path |
@@ -79,3 +79,4 @@ Package nick: `stack-secrets`.
 - [x] `secrets-protocol` + `secrets-backend-os` (+ uuid) + Rove
 - [x] Cookbook section in [crypto.md](../cookbooks/crypto.md)
 - [x] OCI publish `secrets-protocol` **0.1.0**
+- [x] UUID v7 (`make-uuid-v7` + ironclad `backend-uuid`)
