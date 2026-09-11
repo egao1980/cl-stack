@@ -60,7 +60,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 |------|--------|------|-------|
 | 1 | `html` / BeautifulSoup | `html-protocol` + plump | **shipped** `parse` / `serialize` / `select`; CSS/JS = opaque text |
 | 2 | `email` + `smtplib` | `mail-protocol` | **shipped** `make-message` / `send`; SMTP no AUTH/STARTTLS; not IMAP |
-| 3 | `ipaddress` | `ip-protocol` | Pure Lisp |
+| 3 | `ipaddress` | `ip-protocol` | **shipped** `parse-ip` / `parse-network`; no IPv4-mapped IPv6 |
 | 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | **shipped** ustar + `:tar.gz`; `:bzip2` inflate (chipz). xz still overlay |
 | 5 | `struct` | `binary-protocol` | encodings stay RFC 4648/QP |
 | 6 | `tempfile` / `shutil` | extend `cl-stack-pathlib` | **shipped** `with-temp-*` / `rmtree` / `copytree` / `which` |
@@ -109,7 +109,7 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 
 1. **Hygiene (P0):** Rove gaps + pin closer-mop/usocket/cl-ppcre + jwt 0.3.3; serapeum import.
 2. **Stdlib hole tranche:** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7 — **shipped**.
-3. **Remaining P1:** html + mail + signal (**shipped**) → ip → struct.
+3. **Remaining P1:** html + mail + ip + signal (**shipped**) → struct.
 4. **SQL product:** `sql-migrate`.
 5. **Web product:** OpenAPI emit.
 6. **Cache / watch / rrule** as demand appears.
