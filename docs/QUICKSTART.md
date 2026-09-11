@@ -91,6 +91,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
 | `closer-mop` | **1.0.0** | MOP portability |
 | `usocket` | **0.8.9** | portable sockets |
+| `ip-protocol` | **0.1.0** | IPv4/IPv6 + CIDR (`stack-ip`); no IPv4-mapped IPv6 · [ip-protocol](capabilities/ip-protocol.md) |
 | `cl-ppcre` | **2.1.2** | regex |
 | `serapeum` | **0.1.0** | utilities (collections / itertools slice) |
 | `string-case` | **0.0.2** | serapeum dep |
