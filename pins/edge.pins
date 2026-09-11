@@ -55,6 +55,7 @@
   ("array-utils" "1.3.0")
   ("arrow-protocol" "0.1.0")
   ("encoding-protocol" "0.1.2")
+  ("binary-protocol" "0.1.0")
   ("mime-protocol" "0.1.4")
   ("cbor-protocol" "0.1.0")
   ("messagepack-protocol" "0.1.0")

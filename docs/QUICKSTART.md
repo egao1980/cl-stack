@@ -201,6 +201,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
 | `encoding-protocol` | **0.1.2** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
+| `binary-protocol` | **0.1.0** | Python `struct` pack/unpack (`stack-binary`); no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.2.0** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.1.2** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
 | `mime-protocol` | **0.1.4** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
