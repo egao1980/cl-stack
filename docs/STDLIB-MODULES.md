@@ -77,7 +77,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 
 | Rank | PyPI | Ship |
 |------|------|------|
-| 1 | Alembic | `sql-migrate` on sql-orm `schema-op` algebra |
+| 1 | Alembic | **shipped** `sql-migrate` **0.1.0** (linear runner on sql-orm `schema-op`) |
 | 2 | FastAPI OpenAPI | `openapi-protocol` emit from Clack + schema (no second app contract) |
 | 3 | lxml / html5lib | html-protocol depth (selectors OK; still no CSS/JS engines) |
 | 4 | redis | `cache-protocol` + memory/redis |
@@ -109,8 +109,8 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 
 1. **Hygiene (P0):** Rove gaps + pin closer-mop/usocket/cl-ppcre + jwt 0.3.3; serapeum import.
 2. **Stdlib hole tranche:** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7 — **shipped**.
-3. **Remaining P1:** html + mail + ip + struct + signal (**shipped**). Next: P2 `sql-migrate`.
-4. **SQL product:** `sql-migrate`.
+3. **Remaining P1:** html + mail + ip + struct + signal (**shipped**).
+4. **SQL product:** `sql-migrate` (**shipped** `0.1.0`). Next: OpenAPI emit.
 5. **Web product:** OpenAPI emit.
 6. **Cache / watch / rrule** as demand appears.
 7. **AI-GAP** on its own track.

@@ -129,6 +129,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
 | `sql-query-postgres` | **0.2.0** | postgres dialect |
 | `sql-orm` | **0.1.0** | CLOS ORM (`defmodel`) |
+| `sql-migrate` | **0.1.0** | Alembic-style revision runner (`stack-sql-migrate`) · [cookbook](cookbooks/sql.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |

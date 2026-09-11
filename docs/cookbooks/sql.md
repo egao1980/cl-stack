@@ -1,6 +1,6 @@
-# Cookbook: SQL (connectivity / Core / ORM)
+# Cookbook: SQL (connectivity / Core / ORM / migrate)
 
-**Audience:** people who know SQLAlchemy (Engine / Core / ORM) or JDBC + a query builder, and want the Lisp three-layer stack.
+**Audience:** people who know SQLAlchemy (Engine / Core / ORM) + Alembic, or JDBC + a query builder, and want the Lisp stack.
 
 **Packages:**
 
@@ -9,6 +9,7 @@
 | Connectivity | Engine / DB-API / JDBC | [`sql-protocol`](https://github.com/egao1980/sql-protocol) (`stack-sql`) + `sql-backend-*` |
 | Query DSL | SQLAlchemy Core / jOOQ | [`sql-query`](https://github.com/egao1980/sql-query) (`stack-sql-query`) + dialect backends |
 | ORM | SQLAlchemy ORM | [`sql-orm`](https://github.com/egao1980/sql-orm) (`stack-sql-orm`) — **not** Mito |
+| Migrations | Alembic | [`sql-migrate`](https://github.com/egao1980/sql-migrate) (`stack-sql-migrate`) — versions sql-orm ops |
 
 Capability brief: [sql.md](../capabilities/sql.md).
 
@@ -16,6 +17,7 @@ Capability brief: [sql.md](../capabilities/sql.md).
 (cl-repo:load-system "sql-backend-sqlite3" :version "0.1.0")
 (cl-repo:load-system "sql-query-sqlite3" :version "0.2.0")   ; pulls sql-query
 (cl-repo:load-system "sql-orm" :version "0.1.0")             ; pulls sql-protocol + sql-query
+(cl-repo:load-system "sql-migrate" :version "0.1.0")         ; revision runner (needs a sqlite/pg backend to apply)
 ```
 
 Postgres: load `sql-backend-postgres` + `sql-query-postgres` instead of (or as well as) the sqlite3 pair.
@@ -141,7 +143,7 @@ Execute through protocol (dialect auto via `dialect-for-connection` when backend
     (destroy u)))
 ```
 
-### Schema ops (reversible; not a migration runner)
+### Schema ops (reversible algebra)
 
 ```lisp
 (let* ((old (schema-snapshot 'user))
@@ -152,15 +154,30 @@ Execute through protocol (dialect auto via `dialect-for-connection` when backend
   (downgrade-schema c mig))
 ```
 
+`sql-orm` owns the op algebra. Version and apply a chain with `sql-migrate`:
+
+```lisp
+(asdf:load-system "sql-migrate")
+(let ((dir (stack-sql-migrate:make-script-directory)))
+  (stack-sql-migrate:make-revision dir nil snap-v1 :id "0001" :name "widgets")
+  (stack-sql-migrate:make-revision dir snap-v1 snap-v2 :id "0002" :name "add-color")
+  (stack-sql-migrate:upgrade c dir)              ; → head
+  (stack-sql-migrate:current-revision c dir)     ; "0002"
+  (stack-sql-migrate:downgrade c dir :count 1))  ; → "0001"
+```
+
+Linear history in 0.1.0 (`branch-not-supported` on forks). Version table: `sql_migrate_version`. File `versions/` layout later.
+
 | Want | Call |
 |------|------|
 | define model | `defmodel` (`:table` / `:has-many` / `:belongs-to` / `:compute`) |
 | CRUD | `persist` / `destroy` / `refresh` / `find-instance` / `select-instances` |
 | create tables from models | `ensure-schema` |
 | structural diff | `schema-snapshot` / `diff-schema` → `schema-op` list |
-| apply / roll back | `upgrade-schema` / `downgrade-schema` |
+| apply / roll back one migration | `upgrade-schema` / `downgrade-schema` |
+| version + walk a chain | `sql-migrate` `upgrade` / `downgrade` / `stamp` |
 
-No identity map, no Mito façade, no Alembic product — just the op algebra a runner can version.
+No identity map, no Mito façade. `sql-migrate` versions sql-orm ops — it does not invent a second DDL algebra.
 
 ---
 
@@ -171,5 +188,6 @@ No identity map, no Mito façade, no Alembic product — just the op algebra a r
 | execute SQL strings | `sql-protocol` only |
 | composable queries / DDL AST | + `sql-query` (+ dialect) |
 | models / DAO / schema diff | + `sql-orm` |
+| Alembic-style revisions | + `sql-migrate` |
 
 Apps pick the highest layer they need. Libs that only execute SQL should depend on **`sql-protocol`**.

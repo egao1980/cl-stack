@@ -66,6 +66,7 @@
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
   - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core checklist); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends (OCI **0.2.0**)  
   - `sql-orm` — first-party lispy CLOS ORM (`defmodel`; **not** Mito; OCI **0.1.0**) — cookbook [sql.md](cookbooks/sql.md)
+  - `sql-migrate` — Alembic-style revision runner (`stack-sql-migrate`; OCI **0.1.0**; linear; versions sql-orm ops)
 - `crypto-protocol` — recipes (`seal`/`unseal` AES-256-GCM) + hazmat digest/HMAC/AEAD; default **Ironclad**  
   **Brief:** [capabilities/crypto.md](capabilities/crypto.md) (#104) · cookbook [crypto.md](cookbooks/crypto.md)
 - `secrets-protocol` — CSPRNG / tokens / compare / UUID / password KDF; default OS via Ironclad  
