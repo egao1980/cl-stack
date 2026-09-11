@@ -88,6 +88,12 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `closer-mop` | **1.0.0** | MOP portability |
 | `usocket` | **0.8.9** | portable sockets |
 | `cl-ppcre` | **2.1.2** | regex |
+| `serapeum` | **0.1.0** | utilities (collections / itertools slice) |
+| `string-case` | **0.0.2** | serapeum dep |
+| `parse-number` | **1.8** | serapeum dep |
+| `trivial-file-size` | **0.1.0** | serapeum dep |
+| `trivial-macroexpand-all` | **0.1.0** | serapeum dep |
+| `parse-declarations-1.0` | **1.0** | serapeum dep |
 | `unicode-protocol` | **0.1.2** | UCD/normalize/case/IDNA/breaks/uset (`stack-unicode`) · [cookbook](cookbooks/unicode.md) |
 | `unicode-backend-cl-unicode` | **0.1.0** | portable default unicode backend |
 | `unicode-backend-sbcl` | **0.1.0** | SBCL `sb-unicode` (no `:idna`) |

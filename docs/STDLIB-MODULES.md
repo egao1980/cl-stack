@@ -48,7 +48,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 |------|--------|-------|
 | Rove vs pytest/JUnit | **this wave** | fixtures, markers, JUnit XML, timeout, diffs, shard — [ROVE-GAPS.md](ROVE-GAPS.md) |
 | Pin `closer-mop` / `usocket` / `cl-ppcre` | **this wave** | GHCR `1.0.0` / `0.8.9` / `2.1.2` |
-| Pin Serapeum | **import staged** | Deps first; pin after OCI publish |
+| Pin Serapeum | **done** | GHCR `0.1.0` + deps (`string-case` 0.0.2, `parse-number` 1.8, `trivial-file-size` 0.1.0, `trivial-macroexpand-all` 0.1.0, `parse-declarations-1.0` 1.0) |
 | `cl-stack-jwt` #6 | **done** | Closed; pin **0.3.3** |
 | Multi-impl CI #42 | **postponed** | Do not start |
 
