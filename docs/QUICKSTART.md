@@ -113,7 +113,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.7** | wire client; `http-body-pipe` + H2 request DATA; `:auto` uses registered MIME/CBOR/msgpack/Avro codecs; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.2.1** | CLOS path + FS (`stack-pathlib`; `zip://`; restarts) · [conditions](cookbooks/conditions.md) |
+| `cl-stack-pathlib` | **0.3.0** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
@@ -199,7 +199,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `encoding-protocol` | **0.1.2** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
 | `compression-protocol` | **0.1.1** | codec + zip GFs (`compress` / `decompress`); HTTP CE goes through this |
 | `compression-backend-chipz` | **0.1.1** | `:gzip` `:zlib` `:deflate` (chipz + salza2) |
-| `mime-protocol` | **0.1.0** | serdes `:mime` / `:multipart` · [mime-protocol](capabilities/mime-protocol.md) |
+| `mime-protocol` | **0.1.4** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
 | `avro-protocol` | **0.1.0** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
