@@ -2,7 +2,9 @@
 
 Canonical structural matrix for cl-stack prioritization. **Do not rediscover** that ANSI lacks threads/HTTP/i18n — see [Absent appendix](#absent-appendix).
 
-**Tags diagnose the CL ecosystem** (why a protocol or pin). They are not completeness. **Action** is the living scorecard — pins = [QUICKSTART](QUICKSTART.md) §2. LLM leftovers → [AI-GAP.md](AI-GAP.md).
+**Tags diagnose the CL ecosystem** (why a protocol or pin). They are not completeness. **Action** is the living scorecard — pins = [QUICKSTART](QUICKSTART.md) §2. Module-level backlog → [STDLIB-MODULES.md](STDLIB-MODULES.md). LLM leftovers → [AI-GAP.md](AI-GAP.md).
+
+**Postponed:** multi-impl CI ([#42](https://github.com/egao1980/cl-stack/issues/42)).
 
 ## Taxonomy
 
@@ -20,21 +22,21 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Category | Tag | Priority | cl-stack action |
 |----------|-----|----------|-----------------|
 | Conditions / restarts | Kernel-strong | P2 | **cookbook shipped** — [conditions.md](cookbooks/conditions.md) ([#107](https://github.com/egao1980/cl-stack/issues/107)) |
-| CLOS / MOP | Kernel-strong | P0 | GF protocols. `closer-mop` is not a `stable.pins` row |
-| Numbers / sequences | Kernel-strong | P2–P3 | Alexandria **1.0.1** pinned. Serapeum is not |
+| CLOS / MOP | Kernel-strong | P0 | GF protocols. `closer-mop` **1.0.0** pinned |
+| Numbers / sequences | Kernel-strong | P2–P3 | Alexandria **1.0.1** pinned. Serapeum import staged (pin after OCI) |
 | Concurrency | De-facto converged | P1 | bt2 **0.9.4** — **done** ([#95](https://github.com/egao1980/cl-stack/issues/95), [concurrency.md](capabilities/concurrency.md)) |
 | Async I/O / event loop | Wrong-shape | P0 | **shipped** — `event-protocol` **0.2.0** (`wake-call` / `submit`) + libuv **0.1.2** / libev **0.1.3** / nio **0.1.2** + `cl-stack-executors` **0.1.0** — [event-protocol.md](capabilities/event-protocol.md) |
-| Sockets / DNS | De-facto converged | P1 | Consumed by `http-protocol`. `usocket` is not a stack pin |
+| Sockets / DNS | De-facto converged | P1 | Consumed by `http-protocol`. `usocket` **0.8.9** pinned |
 | HTTP client | Fragmented | P0 | **shipped** — `http-protocol` **0.3.6** (`http-body-pipe` + H2 request DATA) + `cl-stack-http` **0.1.8**. First-party = `http-backend-async` **0.2.8** (H2 `:want-stream` + request streaming + `:protocol` HPACK) × libuv; also dexador (maintenance), winhttp, java. CE: gzip/deflate/br/zstd/**snappy** — [http-protocol.md](capabilities/http-protocol.md) · [cookbook](cookbooks/http-client.md) |
 | HTTP server | Fragmented | P1 | **shipped** — `http-server-protocol` **0.1.0**; Hunchentoot / Woo + **H2** (`http-server-backend-http2` **0.2.0** — `ENABLE_CONNECT_PROTOCOL`, CONNECT on `process-end-headers`) — [#93](https://github.com/egao1980/cl-stack/issues/93) · [cookbook](cookbooks/http-server.md) |
 | WebSocket | Fragmented | P0 | **shipped** — `ws-protocol` **0.4.0** + `ws-backend-websocket-driver` **0.4.0** (H1 Upgrade + **H2 Extended CONNECT server**) — [ws-protocol.md](capabilities/ws-protocol.md) · [cookbook](cookbooks/websocket.md) |
 | TLS / SSL | Wrong-shape | P0 | **shipped** — `cl-stack-ssl` **3.4.1** overlays + cl+ssl — [overlays.md](overlays.md) |
 | Crypto / secrets | De-facto converged | P2 | **shipped** — `crypto-protocol` **0.2.0** (sign/verify) · `secrets-protocol` **0.1.0** · Ironclad **0.2.0** — [#104](https://github.com/egao1980/cl-stack/issues/104) · [crypto.md](cookbooks/crypto.md) |
-| Auth | Fragmented | P1 | **shipped** — `cl-stack-oauth2` **0.1.0** · `cl-stack-jwt` **0.3.0** (RS/ES/EdDSA via crypto-protocol) |
+| Auth | Fragmented | P1 | **shipped** — `cl-stack-oauth2` **0.1.0** · `cl-stack-jwt` **0.3.3** (RS/ES/EdDSA; `expired-p` #6 closed) |
 | Octets / UTF-8 | De-facto converged | P1 | Babel **0.5.0** — [text-unicode.md](capabilities/text-unicode.md) ([#94](https://github.com/egao1980/cl-stack/issues/94)) |
 | Unicode | Fragmented | P1 | **shipped** — `unicode-protocol` **0.1.2** (UCD / normalize / IDNA / breaks / uset) + cl-unicode / sbcl / ICU4C **78.1.3** / ICU4J **78.1.3**; facade `cl-stack-idna` **0.1.0** — [unicode-protocol.md](capabilities/unicode-protocol.md) · [cookbook](cookbooks/unicode.md) |
 | i18n / l10n | Fragmented | P1 | **shipped** — ICU4C + ICU4J, [#151](https://github.com/egao1980/cl-stack/issues/151) **closed**. `i18n-protocol` **0.1.0** (locale / MF2 / plural / catalogs) · `l10n-protocol` **0.1.0** (collate / number / date / currency / list / relative-time / locale case). **Not** gettext. Locked ICU *app* surface, not every ICU header (no translit / bidi / `uregex` / spoof / MeasureFormat) — [i18n.md](capabilities/i18n.md) · [l10n.md](capabilities/l10n.md) |
-| Regex | De-facto converged | P2 | `cl-ppcre` is the QL answer; **not** a `stable.pins` row |
+| Regex | De-facto converged | P2 | `cl-ppcre` **2.1.2** pinned |
 | Pathnames / FS | Wrong-shape | P1 | **shipped** — `cl-stack-pathlib` **0.2.1** (`stack-pathlib`; local/memory/`zip://`; restarts) |
 | Subprocess | De-facto converged | P2 | **shipped** — `process-protocol` + `process-backend-uiop` **0.1.0** — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](cookbooks/process.md) |
 | RPC | Fragmented | P1 | **shipped** — `rpc-protocol` **0.2.0** + JSON-RPC / gRPC bindings + inprocess/stdio/http/sse — [#170](https://github.com/egao1980/cl-stack/issues/170) · [rpc.md](cookbooks/rpc.md) |

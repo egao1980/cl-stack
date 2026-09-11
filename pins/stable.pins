@@ -11,6 +11,9 @@
  (:systems
   ;; Core / FFI
   ("alexandria" "1.0.1")
+  ("closer-mop" "1.0.0")
+  ("usocket" "0.8.9")
+  ("cl-ppcre" "2.1.2")
   ("cffi" "0.24.1")
   ("babel" "0.5.0")
   ("bordeaux-threads" "0.9.4")
@@ -120,7 +123,7 @@
   ("secrets-protocol" "0.1.0")
   ("crypto-backend-ironclad" "0.2.0")
   ("jose" "0.1.0")
-  ("cl-stack-jwt" "0.3.0")
+  ("cl-stack-jwt" "0.3.3")
   ("cl-stack-oauth2" "0.1.0")
   ;; SQL
   ("sql-protocol" "0.1.0")

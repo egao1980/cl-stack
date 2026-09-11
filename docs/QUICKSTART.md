@@ -85,6 +85,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
+| `closer-mop` | **1.0.0** | MOP portability |
+| `usocket` | **0.8.9** | portable sockets |
+| `cl-ppcre` | **2.1.2** | regex |
 | `unicode-protocol` | **0.1.2** | UCD/normalize/case/IDNA/breaks/uset (`stack-unicode`) · [cookbook](cookbooks/unicode.md) |
 | `unicode-backend-cl-unicode` | **0.1.0** | portable default unicode backend |
 | `unicode-backend-sbcl` | **0.1.0** | SBCL `sb-unicode` (no `:idna`) |
@@ -162,7 +165,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `llm-backend-llama-cpp` | **0.1.4** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.2.2** | async-first loop + `:memory` + `:steering` (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
-| `cl-stack-jwt` | **0.3.0** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol |
+| `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
 | `http-backend-async` | **0.2.8** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
 | `http-backend-dexador` | **0.1.3** | sync HTTP/1.1 (soft-loads CE codecs) |
@@ -309,7 +312,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 
 ```lisp
 (cl-repo:load-system "cl-stack-oauth2" :version "0.1.0")
-(cl-repo:load-system "cl-stack-jwt" :version "0.3.0")
+(cl-repo:load-system "cl-stack-jwt" :version "0.3.3")
 
 ;; OAuth2 client-credentials → pass as :auth to stack-http
 (defvar *auth*
