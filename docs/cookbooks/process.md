@@ -4,14 +4,14 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-process`) | [`process-protocol`](https://github.com/egao1980/process-protocol) | **0.1.0** |
+| Protocol (`stack-process`) | [`process-protocol`](https://github.com/egao1980/process-protocol) | **0.2.0** |
 | Default backend | [`process-backend-uiop`](https://github.com/egao1980/process-backend-uiop) | **0.1.0** |
 
 Capability brief: [process.md](../capabilities/process.md) (#106). **Not** RPC — see [rpc.md](../capabilities/rpc.md).
 
 ```lisp
 (cl-repo:load-system "process-backend-uiop" :version "0.1.0")
-;; binds *process-backend*; nick stack-process via process-protocol
+;; binds *process-backend*; nick stack-process via process-protocol 0.2.0
 ```
 
 No competing process libs in default pins — UIOP only.
@@ -74,6 +74,9 @@ Streams while alive:
 |-----------|------|
 | `process-error` | no backend / bad command shape |
 | `process-timeout-error` | `:timeout` exceeded on `run` / `wait` |
+| `process-signal-error` | unknown / uncatchable signal |
+
+`set-signal` / `raise-signal` / `valid-signals` — Unix is OS signals; Windows is in-process (CRT `:int` `:term` `:break` `:abrt`). Child kill stays `kill`.
 
 ---
 
