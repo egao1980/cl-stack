@@ -83,6 +83,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `yaml-protocol` | **0.1.0** | YAML 1.2; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
 | `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
+| `html-protocol` | **0.1.0** | lenient HTML parse/serialize + tiny CSS `select`; nick `stack-html` · [html-protocol](capabilities/html-protocol.md) |
+| `html-backend-plump` | **0.1.0** | default HTML backend (plump) |
+| `plump` | **2.0.0** | lenient HTML/XML parser (html pin) |
+| `array-utils` | **1.3.0** | plump dep |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
 | `babel` | **0.5.0** | UTF-8 octets ↔ string ([text-unicode](capabilities/text-unicode.md)) |
 | `closer-mop` | **1.0.0** | MOP portability |
