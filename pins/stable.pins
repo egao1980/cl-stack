@@ -37,7 +37,7 @@
   ("json-backend-yason" "0.2.0")
   ("json-patch" "0.1.0")
   ("yaml-protocol" "0.1.0")
-  ("cl-stack-config" "0.1.0")
+  ("cl-stack-config" "0.2.0")
   ;; CLI / logging / serdes
   ("cli-protocol" "0.1.0")
   ("cli-backend-clingon" "0.1.0")
@@ -126,7 +126,7 @@
   ("woo" "0.12.0" :platforms (:unix))
   ;; Crypto / secrets / auth
   ("crypto-protocol" "0.2.0")
-  ("secrets-protocol" "0.1.0")
+  ("secrets-protocol" "0.1.2")
   ("crypto-backend-ironclad" "0.2.0")
   ("jose" "0.1.0")
   ("cl-stack-jwt" "0.3.3")

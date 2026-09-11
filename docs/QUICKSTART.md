@@ -109,7 +109,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `l10n-backend-icu4j` | **0.1.2** | ICU4J l10n (auto-bind `#+abcl`) |
 | `cl-stack-idna` | **0.1.0** | `to-ascii` / `to-unicode` facade (`stack-idna`) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
-| `cl-stack-config` | **0.1.0** | env + TOML ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
+| `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.7** | wire client; `http-body-pipe` + H2 request DATA; `:auto` uses registered MIME/CBOR/msgpack/Avro codecs; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
@@ -130,7 +130,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `crypto-protocol` | **0.2.0** | seal/unseal + hazmat + **sign/verify** (`stack-crypto`) |
 | `crypto-backend-ironclad` | **0.2.0** | digest/HMAC/AEAD/sign + secrets (Ironclad) |
-| `secrets-protocol` | **0.1.0** | CSPRNG/tokens/UUID/password KDF API |
+| `secrets-protocol` | **0.1.2** | CSPRNG/tokens/UUID v4+v7/password KDF API |
 | `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
