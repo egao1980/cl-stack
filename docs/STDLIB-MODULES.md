@@ -109,11 +109,7 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 
 1. **Hygiene (P0):** Rove gaps + pin closer-mop/usocket/cl-ppcre + jwt 0.3.3; serapeum import.
 2. **Stdlib hole tranche:** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7 — **shipped**.
-<<<<<<< HEAD
-3. **Remaining P1:** html + struct (**shipped**) → mail → ip → signal.
-=======
-3. **Remaining P1:** html + mail (**shipped**) → ip → struct → signal.
->>>>>>> origin/main
+3. **Remaining P1:** html + mail + struct (**shipped**) → ip → signal.
 4. **SQL product:** `sql-migrate`.
 5. **Web product:** OpenAPI emit.
 6. **Cache / watch / rrule** as demand appears.
