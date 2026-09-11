@@ -127,7 +127,7 @@
   ;; Crypto / secrets / auth
   ("crypto-protocol" "0.2.0")
   ("secrets-protocol" "0.1.2")
-  ("crypto-backend-ironclad" "0.2.0")
+  ("crypto-backend-ironclad" "0.2.1")
   ("jose" "0.1.0")
   ("cl-stack-jwt" "0.3.3")
   ("cl-stack-oauth2" "0.1.0")

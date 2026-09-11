@@ -129,7 +129,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
 | `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `crypto-protocol` | **0.2.0** | seal/unseal + hazmat + **sign/verify** (`stack-crypto`) |
-| `crypto-backend-ironclad` | **0.2.0** | digest/HMAC/AEAD/sign + secrets (Ironclad) |
+| `crypto-backend-ironclad` | **0.2.1** | digest/HMAC/AEAD/sign + secrets (Ironclad; UUID v7) |
 | `secrets-protocol` | **0.1.2** | CSPRNG/tokens/UUID v4+v7/password KDF API |
 | `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
