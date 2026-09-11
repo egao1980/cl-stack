@@ -32,7 +32,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | `datetime` / `zoneinfo` | `datetime-protocol` + tzdata + calendars |
 | `unicodedata` | `unicode-protocol` + ICU i18n/l10n (not gettext) |
 | `subprocess` | `process-protocol` |
-| `sqlite3` / SQLAlchemy | `sql-protocol` + `sql-query` + `sql-orm` |
+| `sqlite3` / SQLAlchemy | `sql-protocol` + `sql-query` + `sql-orm` + `sql-migrate` |
 | `gzip` / zipfile / `tarfile` / `bz2` | `compression-protocol` (xz overlay) |
 | pydantic-settings / pydantic models | `cl-stack-config` / `schema-protocol` |
 | websockets / SSE / grpcio | `ws-` / `sse-` / `grpc-protocol` |
