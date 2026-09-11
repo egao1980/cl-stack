@@ -136,7 +136,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `crypto-protocol` | **0.2.0** | seal/unseal + hazmat + **sign/verify** (`stack-crypto`) |
 | `crypto-backend-ironclad` | **0.2.1** | digest/HMAC/AEAD/sign + secrets (Ironclad; UUID v7) |
 | `secrets-protocol` | **0.1.2** | CSPRNG/tokens/UUID v4+v7/password KDF API |
-| `process-protocol` | **0.1.0** | subprocess `run`/`launch` (`stack-process`) · [cookbook](cookbooks/process.md) |
+| `process-protocol` | **0.2.0** | subprocess `run`/`launch` + `set-signal`/`raise-signal` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
 | `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |

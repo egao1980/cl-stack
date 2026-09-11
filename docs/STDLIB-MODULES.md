@@ -64,7 +64,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | **shipped** ustar + `:tar.gz`; `:bzip2` inflate (chipz). xz still overlay |
 | 5 | `struct` | `binary-protocol` | **shipped** `pack` / `unpack` / `calcsize`; encodings stay RFC 4648/QP |
 | 6 | `tempfile` / `shutil` | extend `cl-stack-pathlib` | **shipped** `with-temp-*` / `rmtree` / `copytree` / `which` |
-| 7 | `signal` | process-protocol extension | Windows must not be later |
+| 7 | `signal` | process-protocol extension | **shipped** `set-signal` / `raise-signal` (Windows in-process; Unix OS) |
 | 8 | `configparser` INI | `cl-stack-config` backend | **shipped** `:format :ini` / `:auto` |
 | 9 | `mimetypes` | mime-protocol facade | **shipped** `guess-type` / `add-type` |
 | 10 | UUID v7 | `secrets-protocol` | **shipped** RFC 9562 `make-uuid-v7` |
@@ -109,7 +109,7 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 
 1. **Hygiene (P0):** Rove gaps + pin closer-mop/usocket/cl-ppcre + jwt 0.3.3; serapeum import.
 2. **Stdlib hole tranche:** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7 — **shipped**.
-3. **Remaining P1:** html + mail + ip + struct (**shipped**) → signal.
+3. **Remaining P1:** html + mail + ip + struct + signal (**shipped**). Next: P2 `sql-migrate`.
 4. **SQL product:** `sql-migrate`.
 5. **Web product:** OpenAPI emit.
 6. **Cache / watch / rrule** as demand appears.
