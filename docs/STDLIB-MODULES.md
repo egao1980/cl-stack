@@ -58,7 +58,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 
 | Rank | Python | Ship | Notes |
 |------|--------|------|-------|
-| 1 | `html` / BeautifulSoup | `html-protocol` + plump | xml-protocol is strict Infoset |
+| 1 | `html` / BeautifulSoup | `html-protocol` + plump | xml-protocol is strict Infoset. **CSS/JS = opaque text** (`<style>` / `<script>` / `style=` / `href`/`src`) — no cascade, no VM |
 | 2 | `email` + `smtplib` | `mail-protocol` | mime-protocol is not MUA/IMAP |
 | 3 | `ipaddress` | `ip-protocol` | Pure Lisp |
 | 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | ZIP+gzip shipped |
@@ -69,7 +69,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 9 | `mimetypes` | mime-protocol facade | Small |
 | 10 | UUID v7 | `secrets-protocol` | Brief already allows |
 
-**Skip as new protocols:** `re` → pin `cl-ppcre`; collections/itertools → Serapeum; `decimal`/`fractions` → CL rationals; `pickle` → `io-protocol` (not CPython wire).
+**Skip as new protocols:** `re` → pin `cl-ppcre`; collections/itertools → Serapeum; `decimal`/`fractions` → CL rationals; `pickle` → `io-protocol` (not CPython wire); CSS/JS engines (opaque in `html-protocol`).
 
 ---
 
@@ -79,7 +79,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 |------|------|------|
 | 1 | Alembic | `sql-migrate` on sql-orm `schema-op` algebra |
 | 2 | FastAPI OpenAPI | `openapi-protocol` emit from Clack + schema (no second app contract) |
-| 3 | lxml / html5lib | html-protocol depth |
+| 3 | lxml / html5lib | html-protocol depth (selectors OK; still no CSS/JS engines) |
 | 4 | redis | `cache-protocol` + memory/redis |
 | 5 | dateutil `rrule` | `cl-stack-calendars` recurrence |
 | 6 | watchdog | `watch-protocol` (Windows required) |
