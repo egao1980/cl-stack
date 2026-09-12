@@ -40,6 +40,7 @@ Conventions: [API.md](../API.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md). l10n d
 | **Zones** | `+utc+` + fixed offsets always. Named IANA via `cl-stack-tzdata` (ASDF soft dep). `moment-in-zone` defaults `:on-gap :later` / `:on-overlap :earlier`; `:strict` signals. |
 | **tzdata ship** | Lisp-loadable TZif + aliases — **no** OS zoneinfo package. OCI version tracks tzdb (`2026c` → `2026.3.0`). |
 | **Calendars (computus)** | `datetime-protocol/calendars` — Easter / Hebrew / Islamic / Chinese. Enough to drive holiday rules. |
+| **Recurrence** | `schedule` / `event-schedule` in `datetime-protocol` (date-level). RFC 5545 RECUR is interchange. Sunrise/sunset need an `astro-location`. Holiday/business-day methods live on `cl-stack-calendars`. |
 | **Holiday / trading** | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) — rule/data/composite, `:authority` citations, exchange MIC hours. |
 | **Windows** | Required. tzdata + calendars data ship in-tree / zip; no `/usr/share/zoneinfo`. |
 
@@ -49,10 +50,10 @@ Conventions: [API.md](../API.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md). l10n d
 
 | Layer | Repo | OCI |
 |-------|------|-----|
-| Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.1** |
+| Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.2** |
 | Computus subsystem | `datetime-protocol/calendars` | (same) |
 | IANA data (`stack-tzdata`) | [`cl-stack-tzdata`](https://github.com/egao1980/cl-stack-tzdata) | **2026.3.0** |
-| Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.0** |
+| Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.1** |
 | l10n demo | [`cl-stack-calendar-l10n`](https://github.com/egao1980/cl-stack-calendar-l10n) | **0.1.3** |
 
 ---
