@@ -112,7 +112,7 @@
   ("cl-stack-zstd" "1.5.7")
   ("cl-stack-snappy" "1.2.2")
   ;; HTTP
-  ("http-protocol" "0.3.7")
+  ("http-protocol" "0.3.8")
   ("compression-protocol" "0.2.0")
   ("compression-backend-chipz" "0.1.2")
   ("http-encoding-chipz" "0.1.1")
