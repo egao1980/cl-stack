@@ -116,7 +116,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.7** | wire client; `http-body-pipe` + H2 request DATA; `:auto` uses registered MIME/CBOR/msgpack/Avro codecs; CE gzip/br/zstd/**snappy** |
+| `http-protocol` | **0.3.8** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-pathlib` | **0.3.0** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.1** | instant / duration / period / date / zone (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
@@ -260,7 +260,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ### HTTP/2 preference (`http-protocol` 0.3.1+)
 
 ```lisp
-(cl-repo:load-system "http-protocol" :version "0.3.7")
+(cl-repo:load-system "http-protocol" :version "0.3.8")
 (cl-repo:load-system "http-backend-async" :version "0.2.8")
 (cl-repo:load-system "event-backend-libuv" :version "0.1.2")
 
