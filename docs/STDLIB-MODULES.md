@@ -46,8 +46,8 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Rove vs pytest/JUnit | **this wave** | fixtures, markers, JUnit XML, timeout, diffs, shard — [ROVE-GAPS.md](ROVE-GAPS.md) |
-| Pin `closer-mop` / `usocket` / `cl-ppcre` | **this wave** | GHCR `1.0.0` / `0.8.9` / `2.1.2` |
+| Rove vs pytest/JUnit | **in flight** | fixtures, markers, JUnit XML, timeout, diffs, shard — [ROVE-GAPS.md](ROVE-GAPS.md) · [egao1980/rove#4](https://github.com/egao1980/rove/pull/4) · upstream #76–#79 |
+| Pin `closer-mop` / `usocket` / `cl-ppcre` | **done** | GHCR `1.0.0` / `0.8.9` / `2.1.2` |
 | Pin Serapeum | **done** | GHCR `0.1.0` + deps (`string-case` 0.0.2, `parse-number` 1.8, `trivial-file-size` 0.1.0, `trivial-macroexpand-all` 0.1.0, `parse-declarations-1.0` 1.0) |
 | `cl-stack-jwt` #6 | **done** | Closed; pin **0.3.3** |
 | Multi-impl CI #42 | **postponed** | Do not start |
@@ -93,6 +93,8 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 
 HTTP client cache (RFC 9111), WS permessage-deflate, SSE foreign resume, A2A canary beyond JSON-RPC, Arrow/XSD 1.1 depth, MySQL dialect. **HTTP/3: do not start.** gettext: no. CFFI enum refs: P2 upstream, no fork pin.
 
+Shipped depth (not a new wave): `http-protocol` **0.3.8** (Basic `:auth` via encoding-protocol; GHCR republished after the Sept 5 packager outage). `http-encoding-chipz` **0.1.1**.
+
 ### AI leftovers
 
 Stay in [AI-GAP.md](AI-GAP.md). Not this file.
@@ -107,11 +109,11 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 
 ## Wave order
 
-1. **Hygiene (P0):** Rove gaps + pin closer-mop/usocket/cl-ppcre + jwt 0.3.3; serapeum import.
+1. **Hygiene (P0):** closer-mop/usocket/cl-ppcre + jwt 0.3.3 + serapeum — **shipped**. Rove gaps still **in flight** (does not block P2).
 2. **Stdlib hole tranche:** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7 — **shipped**.
-3. **Remaining P1:** html + mail + ip + struct + signal (**shipped**).
-4. **SQL product:** `sql-migrate` (**shipped** `0.1.0`). Next: OpenAPI emit.
-5. **Web product:** OpenAPI emit.
+3. **Remaining P1:** html + mail + ip + struct + signal — **shipped**.
+4. **SQL product:** `sql-migrate` **0.1.0** — **shipped** (GHCR + pin).
+5. **Next:** OpenAPI emit (`openapi-protocol` from Clack + schema). Do not start cache / watch / rrule until this ships.
 6. **Cache / watch / rrule** as demand appears.
 7. **AI-GAP** on its own track.
 
