@@ -4,7 +4,7 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.1** |
+| Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.2** |
 | Easter / Hebrew / Islamic / Chinese | `datetime-protocol/calendars` | (same) |
 | IANA tzdb (`stack-tzdata`) | [`cl-stack-tzdata`](https://github.com/egao1980/cl-stack-tzdata) | **2026.3.0** |
 | Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.0** |
@@ -12,7 +12,7 @@
 Brief: [datetime.md](../capabilities/datetime.md) (#105). Localized print → [unicode.md](unicode.md) (`l10n-protocol`).
 
 ```lisp
-(cl-repo:load-system "datetime-protocol" :version "0.1.1")
+(cl-repo:load-system "datetime-protocol" :version "0.1.2")
 (cl-repo:load-system "cl-stack-tzdata" :version "2026.3.0")   ; named IANA zones
 ```
 
@@ -87,7 +87,30 @@ No `/usr/share/zoneinfo`. Windows is a first-class consumer.
 
 ---
 
-## 5. Holiday + trading calendars
+## 5. Recurrence / solar events
+
+Lisp DX is `schedule`, not dateutil names. RFC 5545 RECUR is interchange (`parse-rrule` / `print-rrule`). Query windows are half-open `[from, to)`. COUNT xor UNTIL. `FREQ=YEARLY;BYDAY=2FR` is the 2nd Friday of the **year**.
+
+```lisp
+(weekly :on '(:monday :wednesday) :every 2 :from (make-date 2024 1 1))
+(yearly :on '(:month 11 :weekday :thursday :nth 4))   ; Thanksgiving
+(parse-rrule "FREQ=WEEKLY;BYDAY=MO,WE;INTERVAL=2" :from (make-date 2024 1 1))
+
+(next-occurrence (event-schedule +tokyo+ :sunset) (today))
+(event-schedule +tokyo+ :dawn :depression 12d0)
+(event-schedule +jerusalem+ :jewish-sunset)
+(event-schedule +mecca+ :islamic-fajr)
+(event-schedule :computus :easter-western)
+(offset-schedule (event-schedule :computus :easter-western) -2)  ; Good Friday
+(next-occurrence (event-schedule (us-federal-holidays-calendar) :holiday)
+                 (make-date 2024 5 1) :inclusive t)
+```
+
+Solar events yield `moment`s (location standard zone); polar night is skipped. `:holiday` / `:business-day` / `:weekend` need `cl-stack-calendars` 0.4.1.
+
+---
+
+## 6. Holiday + trading calendars
 
 ```lisp
 (asdf:load-system "cl-stack-calendars")
@@ -116,3 +139,4 @@ Demo that also hits ICU l10n: [`cl-stack-calendar-l10n`](https://github.com/egao
 - Don't claim DST gaps signal by default — pass `:on-gap :strict`.
 - Don't depend on OS tzdata for CI / Windows.
 - Don't put holiday observance hacks in `datetime-protocol` — that's `cl-stack-calendars`.
+- Don't clone dateutil names (`between`, `byweekday`, `rrulestr`) — `schedule` / `event-schedule` / `parse-rrule`.

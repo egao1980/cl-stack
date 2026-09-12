@@ -81,7 +81,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 2 | FastAPI OpenAPI | **shipped** `openapi-protocol` **0.1.0** — emit + Clack `document-app`; dogfood lock below |
 | 3 | lxml / html5lib | html-protocol depth (selectors OK; still no CSS/JS engines) |
 | 4 | redis | `cache-protocol` + memory/redis |
-| 5 | dateutil `rrule` | `cl-stack-calendars` recurrence |
+| 5 | dateutil `rrule` | **shipped** `datetime-protocol` **0.1.2** (`schedule` / `event-schedule`; RFC 5545 interchange) |
 | 6 | watchdog | `watch-protocol` (Windows required) |
 | 7 | IMAP / async SMTP | mail-protocol backends |
 | 8 | pillow / openpyxl | leave unless a demo forces it |

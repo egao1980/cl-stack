@@ -79,7 +79,7 @@
   ("schema-protocol-avro" "0.1.1")
   ;; Paths / time
   ("cl-stack-pathlib" "0.3.0")
-  ("datetime-protocol" "0.1.1")
+  ("datetime-protocol" "0.1.2")
   ("cl-stack-tzdata" "2026.3.0")
   ("cl-stack-calendars" "0.4.0")
   ("cl-stack-calendar-l10n" "0.1.3")
