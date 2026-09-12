@@ -1,9 +1,11 @@
-# SQL stack (P2) — three layers
+# SQL stack (P2) — three layers + runner
 
 **Issues:** [#101](https://github.com/egao1980/cl-stack/issues/101)  
-**Status:** three layers **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** (first-party CLOS; no Mito). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
+**Status:** three layers + runner **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** · `sql-migrate` **0.1.0** (linear Alembic-style; no second DDL). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
 
 ```text
+sql-migrate          ← revision runner                ~ Alembic (linear 0.1.0)
+    │
 sql-orm              ← first-party CLOS ORM           ~ SQLAlchemy ORM (checklist only)
     │
 sql-query            ← CLOS DSL + ANSI dialect        ~ SQLAlchemy Core
@@ -263,6 +265,7 @@ Does **not** wrap Mito. Filters are **sql-query** expressions.
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` | OCI **0.1.0** |
 | Core / query | `egao1980/sql-query` · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` | OCI **0.2.0** (query + sqlite/pg; csv separate) |
 | ORM | `egao1980/sql-orm` | OCI **0.1.0** |
+| Migrate | `egao1980/sql-migrate` | OCI **0.1.0** |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, … as needed. SxQL/Mito are **not** required by the first-party SQL stack.
 
@@ -283,6 +286,7 @@ See [cookbooks/sql.md](../cookbooks/sql.md).
 1. Connectivity: SQLite connect / execute / txn / pool — **done** with `sql-protocol`  
 2. Core: composable select/insert + DDL + `sql-fragment` on protocol connection  
 3. ORM: `defmodel` CRUD + schema-op upgrade/downgrade (SQLite CI)
+4. Migrate: `sql-migrate` linear `upgrade` / `downgrade` / `stamp` on those ops
 
 ---
 
@@ -304,5 +308,6 @@ See [cookbooks/sql.md](../cookbooks/sql.md).
 - [x] `sql-query` ANSI Core DSL + dialect backends (wave-1 on `main`) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
 - [x] OCI publish `sql-query{,-sqlite3,-postgres}` **0.2.0**  
 - [x] `sql-orm` merge + OCI **0.1.0** + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
+- [x] `sql-migrate` **0.1.0** linear runner + OCI — [sql-migrate#1](https://github.com/egao1980/sql-migrate/pull/1)
 
-**Impl order:** ~~imports → connectivity → query → ORM~~ — **wave-1 complete**.
+**Impl order:** ~~imports → connectivity → query → ORM → migrate~~ — **wave-1 complete**. OpenAPI next.

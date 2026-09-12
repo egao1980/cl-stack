@@ -17,7 +17,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [HTTP server](http-server.md) | `http-server-protocol` / Hunchentoot · Woo · Clack env |
 | [CLI](cli.md) | `cli-protocol` / clingon · adopt · Windows dialects |
 | [Logging](logging.md) | `log-protocol` / `log-backend-log4cl` · `log-backend-vom` · text + structured |
-| [SQL](sql.md) | `sql-protocol` / `sql-query` / `sql-orm` (Engine · Core · ORM) |
+| [SQL](sql.md) | `sql-protocol` / `sql-query` / `sql-orm` / `sql-migrate` (Engine · Core · ORM · Alembic) |
 | [Crypto & secrets](crypto.md) | `crypto-protocol` / `secrets-protocol` (seal · digest · tokens · Argon2) |
 | [Subprocess](process.md) | `process-protocol` / `process-backend-uiop` (`run` · `launch`) |
 | [RPC](rpc.md) | `rpc-protocol` / JSON-RPC · in-process · stdio · HTTP · SSE |
