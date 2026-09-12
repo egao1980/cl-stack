@@ -122,7 +122,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-pathlib` | **0.3.0** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.2** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
-| `cl-stack-calendars` | **0.4.0** | holidays / business days / exchange sessions |
+| `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
 | `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
 | `schema-protocol` | **0.2.0** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |

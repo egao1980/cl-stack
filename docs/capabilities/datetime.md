@@ -53,7 +53,7 @@ Conventions: [API.md](../API.md). Gap: [STDLIB-GAP.md](../STDLIB-GAP.md). l10n d
 | Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.2** |
 | Computus subsystem | `datetime-protocol/calendars` | (same) |
 | IANA data (`stack-tzdata`) | [`cl-stack-tzdata`](https://github.com/egao1980/cl-stack-tzdata) | **2026.3.0** |
-| Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.0** |
+| Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.1** |
 | l10n demo | [`cl-stack-calendar-l10n`](https://github.com/egao1980/cl-stack-calendar-l10n) | **0.1.3** |
 
 ---

@@ -7,7 +7,7 @@
 | Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.2** |
 | Easter / Hebrew / Islamic / Chinese | `datetime-protocol/calendars` | (same) |
 | IANA tzdb (`stack-tzdata`) | [`cl-stack-tzdata`](https://github.com/egao1980/cl-stack-tzdata) | **2026.3.0** |
-| Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.0** |
+| Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.1** |
 
 Brief: [datetime.md](../capabilities/datetime.md) (#105). Localized print → [unicode.md](unicode.md) (`l10n-protocol`).
 
@@ -106,7 +106,7 @@ Lisp DX is `schedule`, not dateutil names. RFC 5545 RECUR is interchange (`parse
                  (make-date 2024 5 1) :inclusive t)
 ```
 
-Solar events yield `moment`s (location standard zone); polar night is skipped. `:holiday` / `:business-day` / `:weekend` need `cl-stack-calendars` 0.4.1.
+Solar events yield `moment`s (location standard zone); polar night is skipped. `:holiday` / `:business-day` / `:weekend` are on `cl-stack-calendars` **0.4.1**.
 
 ---
 

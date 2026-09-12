@@ -52,7 +52,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Config | Fragmented | P1 | **shipped** — `cl-stack-config` **0.1.0** + tomlet (env overlay) — [#98](https://github.com/egao1980/cl-stack/issues/98) / [#99](https://github.com/egao1980/cl-stack/issues/99) · [config.md](cookbooks/config.md) |
 | Packaging | Fragmented | P0 | **cl-repository** + GHCR overlays + `pins/stable.pins` |
 | FFI | De-facto converged | P0 | CFFI **0.24.1** + overlays |
-| Time / TZ | Fragmented | P2 | **shipped** — `datetime-protocol` **0.1.2** + `cl-stack-tzdata` **2026.3.0** + `cl-stack-calendars` **0.4.0** — **not** a `local-time` pin — [#105](https://github.com/egao1980/cl-stack/issues/105) · [datetime.md](cookbooks/datetime.md) |
+| Time / TZ | Fragmented | P2 | **shipped** — `datetime-protocol` **0.1.2** + `cl-stack-tzdata` **2026.3.0** + `cl-stack-calendars` **0.4.1** — **not** a `local-time` pin — [#105](https://github.com/egao1980/cl-stack/issues/105) · [datetime.md](cookbooks/datetime.md) |
 | Testing | Fragmented | P0 | **Rove** + license-clean corpus — [ROVE-GAPS.md](ROVE-GAPS.md) |
 | LLM / agents / wire | Fragmented | P1 | **shipped** as protocols (not an ANSI hole). generate/stream/embed + MCP/A2A/AG-UI + agent loop. Leftovers (RAG / memory / providers) → [AI-GAP.md](AI-GAP.md) |
 | Gray streams | De-facto converged | P1 | trivial-gray-streams (via I/O / serdes). Not a `stable.pins` row |
