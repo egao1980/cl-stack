@@ -80,7 +80,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
-| `yaml-protocol` | **0.1.0** | YAML 1.2; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
+| `yaml-protocol` | **0.2.0** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
+| `openapi-protocol` | **0.1.0** | OpenAPI 3.1 emit + Clack `document-app` (`stack-openapi`) |
 | `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
 | `html-protocol` | **0.1.0** | lenient HTML parse/serialize + tiny CSS `select`; nick `stack-html` · [html-protocol](capabilities/html-protocol.md) |

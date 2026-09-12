@@ -78,7 +78,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | Rank | PyPI | Ship |
 |------|------|------|
 | 1 | Alembic | **shipped** `sql-migrate` **0.1.0** (linear runner on sql-orm `schema-op`) |
-| 2 | FastAPI OpenAPI | `openapi-protocol` — **dogfood** existing stack (lock below). No second schema/YAML/app layer |
+| 2 | FastAPI OpenAPI | **shipped** `openapi-protocol` **0.1.0** — emit + Clack `document-app`; dogfood lock below |
 | 3 | lxml / html5lib | html-protocol depth (selectors OK; still no CSS/JS engines) |
 | 4 | redis | `cache-protocol` + memory/redis |
 | 5 | dateutil `rrule` | `cl-stack-calendars` recurrence |
@@ -95,7 +95,7 @@ Do **not** invent a JSON Schema dialect, YAML parser, or CLOS model layer. Prece
 
 | Layer | Use |
 |-------|-----|
-| Document envelope | `json-protocol` `:json` / `yaml-protocol` `:yaml` — YAML lives in the **json-protocol** repo; same Lisp mapping (JSON ⊂ YAML) |
+| Document envelope | `json-protocol` `:json` / `yaml-protocol` `:yaml` — **own repo**. YAML **extends** JSON (`yaml-backend` ⊆ `json-backend`). Default emit is **block**; `:style :json` is optional. JSON backends are optional for YAML. Do **not** invert (`json-protocol` must not depend on YAML) |
 | Components / schemas | `schema-protocol` models + `schema-protocol-json` draft-07 (already emits OpenAPI `oneOf` + `discriminator`) |
 | App contract | Clack env (`http-server-protocol`) |
 
@@ -123,7 +123,7 @@ Stay in [AI-GAP.md](AI-GAP.md). Not this file.
 2. **Stdlib hole tranche:** compression tar/bz2, pathlib tempfile/shutil, INI, mimetypes, UUID v7 — **shipped**.
 3. **Remaining P1:** html + mail + ip + struct + signal — **shipped**.
 4. **SQL product:** `sql-migrate` **0.1.0** — **shipped** (GHCR + pin).
-5. **Next:** OpenAPI emit (`openapi-protocol`). Dogfood `schema-protocol-json` (JSON Schema / discriminator) and `json-protocol`/`yaml-protocol` for the document. No second app contract (Clack). Do not start cache / watch / rrule until this ships.
+5. **OpenAPI emit:** `openapi-protocol` **0.1.0** — **shipped** (emit + Clack document endpoints).
 6. **Cache / watch / rrule** as demand appears.
 7. **AI-GAP** on its own track.
 
