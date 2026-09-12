@@ -95,7 +95,7 @@ Do **not** invent a JSON Schema dialect, YAML parser, or CLOS model layer. Prece
 
 | Layer | Use |
 |-------|-----|
-| Document envelope | `json-protocol` `:json` / `yaml-protocol` `:yaml` — YAML **extends** JSON (`yaml-backend` ⊆ `json-backend`). Same repo. JSON ⊂ YAML at the document level. Do **not** invert (`json-protocol` must not depend on YAML) |
+| Document envelope | `json-protocol` `:json` / `yaml-protocol` `:yaml` — **own repo**. YAML **extends** JSON (`yaml-backend` ⊆ `json-backend`). Default emit is **block**; `:style :json` is optional. JSON backends are optional for YAML. Do **not** invert (`json-protocol` must not depend on YAML) |
 | Components / schemas | `schema-protocol` models + `schema-protocol-json` draft-07 (already emits OpenAPI `oneOf` + `discriminator`) |
 | App contract | Clack env (`http-server-protocol`) |
 
