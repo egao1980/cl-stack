@@ -31,6 +31,7 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 | **[docs/QUICKSTART.md](docs/QUICKSTART.md)** | **Start here** — cl-repository bootstrap + current pins + minimal HTTP/event |
 | [docs/STDLIB-GAP.md](docs/STDLIB-GAP.md) | ANSI/CDR/CL21 vs Python/Java structural matrix |
 | [docs/AI-GAP.md](docs/AI-GAP.md) | LLM / agent / wire gaps vs 2026 Python / Node / Java |
+| [docs/DEMIURGE-EPICS.md](docs/DEMIURGE-EPICS.md) | Paste-ready issue bodies for eval / router / task / enterprise / [#197](https://github.com/egao1980/cl-stack/issues/197) |
 | [docs/API.md](docs/API.md) | Protocol / facade / backend conventions |
 | [docs/capabilities/event-protocol.md](docs/capabilities/event-protocol.md) | Event loop protocol brief + backend picks (libuv/libev) |
 | [docs/capabilities/http-protocol.md](docs/capabilities/http-protocol.md) | HTTP client facade brief |
