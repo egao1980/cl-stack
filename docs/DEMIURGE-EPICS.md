@@ -1,5 +1,7 @@
 # Draft cl-stack epics (paste-ready)
 
+**Status (2026-09-14):** Tracks A, B, and C1–C4 shipped 2026-09-13/14 (`demiurge` **0.3.5**, `demiurge-parity` **0.1.3** S1–S8). **C5 is HOLD** (GraphQL, SCIM, ssh/sftp, WebDAV/CalDAV, OpenSearch, webhooks — do not spec further). Wrap-up left: B7c S9-corporate, B8 v2 demos, 0.4.0 MVP tag. Bodies below are historical paste-ready drafts — leftover checkboxes are not current status.
+
 Plan of record: workspace `docs/DEMIURGE-PLAN.md` (2026-09-13). Rows: [AI-GAP.md](AI-GAP.md).
 
 Existing issues — do **not** duplicate:
