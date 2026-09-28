@@ -28,6 +28,16 @@
         (format out "~a=~a~%" env-var ver))
       (format t "~&; ci: ~a=~a~%" env-var ver))))
 
+;;; ci-base exports CL_REPOSITORY_DEST and does not export CL_SOURCE_REGISTRY
+;;; (GHA remaps HOME). Register that tree or the client is invisible.
+(let ((dest (uiop:getenv "CL_REPOSITORY_DEST")))
+  (when (and dest (plusp (length dest)))
+    (asdf:initialize-source-registry
+     `(:source-registry
+       (:tree ,(uiop:ensure-directory-pathname dest))
+       (:tree ,(uiop:getcwd))
+       :inherit-configuration))))
+
 (call-with-ci-muffles (lambda () (asdf:load-system "cl-repository-client")))
 (call-with-ci-muffles (lambda () (asdf:load-system "cl-stack/pins")))
 
