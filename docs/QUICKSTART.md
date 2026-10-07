@@ -140,6 +140,12 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `secrets-protocol` | **0.1.2** | CSPRNG/tokens/UUID v4+v7/password KDF API |
 | `process-protocol` | **0.2.0** | subprocess `run`/`launch` + `set-signal`/`raise-signal` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
+| `named-readtables` | **0.9** | fset dep (SBCL 2.6 pin, not QL 20250622) |
+| `fset` | **2.4.4** | functional sets/maps (`fset2`); spec-protocol runtime |
+| `misc-extensions` | **4.3.2** | fset |
+| `mt19937` | **1.1** | fset |
+| `spec-protocol` | **0.1.0** | `defspec` = CLOS protocol + Quint/TLA+ spec (`stack-spec`); ITF + MBT |
+| `spec-backend-quint` | **0.1.0** | Quint emit + typecheck/run/test/verify/compile |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
 | `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |
 | `rpc-protocol-grpc` | **0.1.1** | gRPC binding; `:call-stream` / `:bidi-stream` → `grpc-stream` |

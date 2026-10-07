@@ -154,6 +154,12 @@
   ;; Process / RPC / SSE
   ("process-protocol" "0.2.0")
   ("process-backend-uiop" "0.1.0")
+  ("named-readtables" "0.9")
+  ("fset" "2.4.4")
+  ("misc-extensions" "4.3.2")
+  ("mt19937" "1.1")
+  ("spec-protocol" "0.1.0")
+  ("spec-backend-quint" "0.1.0")
   ("rpc-protocol" "0.2.0")
   ("rpc-protocol-json" "0.1.0")
   ("rpc-protocol-grpc" "0.1.0")

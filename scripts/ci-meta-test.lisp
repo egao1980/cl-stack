@@ -24,6 +24,15 @@
   #-sbcl
   (funcall fn))
 
+;;; ci-base exports CL_REPOSITORY_DEST and does not export CL_SOURCE_REGISTRY.
+(let ((dest (uiop:getenv "CL_REPOSITORY_DEST")))
+  (when (and dest (plusp (length dest)))
+    (asdf:initialize-source-registry
+     `(:source-registry
+       (:tree ,(uiop:ensure-directory-pathname dest))
+       (:tree ,(uiop:getcwd))
+       :inherit-configuration))))
+
 (call-with-ci-muffles (lambda () (asdf:load-system "cl-repository-client")))
 
 (cl-repository-client/asdf-integration:configure-asdf-source-registry)
