@@ -33,7 +33,7 @@ Prefer the **`cl-repository/`** GHCR namespace (not the old `cl-systems/cl-repos
 IMG=ghcr.io/egao1980/cl-repository/cl-repository-client
 CLIENT_VER=$(oras manifest fetch "${IMG}:latest" \
   | python3 -c 'import sys,json; print(json.load(sys.stdin)["annotations"]["org.opencontainers.image.version"])')
-# Or pin explicitly: CLIENT_VER=0.13.0
+# Or pin explicitly: CLIENT_VER=0.18.0
 DEST="${HOME}/.local/share/cl-repository-client"
 rm -rf /tmp/cl-repo-pull "$DEST"
 mkdir -p /tmp/cl-repo-pull "$DEST"
@@ -77,10 +77,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 
 | System | OCI tag | Notes |
 |--------|---------|--------|
-| `cl-repository-client` | **0.11.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
+| `cl-repository-client` | **0.18.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
-| `json-protocol` | **0.2.0** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
-| `yaml-protocol` | **0.2.0** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
+| `json-protocol` | **0.2.1** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
+| `yaml-protocol` | **0.2.1** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
 | `openapi-protocol` | **0.1.0** | OpenAPI 3.1 emit + Clack `document-app` (`stack-openapi`) |
 | `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
@@ -118,13 +118,13 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.8** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** |
-| `cl-stack-http` | **0.1.8** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
+| `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-pathlib` | **0.3.0** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
-| `datetime-protocol` | **0.1.2** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
+| `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
 | `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
-| `schema-protocol` | **0.2.0** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
+| `schema-protocol` | **0.2.1** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
@@ -134,10 +134,10 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
-| `cl-stack-oauth2` | **0.1.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
+| `cl-stack-oauth2` | **0.2.0** | OAuth2 scopes/grants/PKCE/401 refresh (`stack-oauth2`) |
 | `crypto-protocol` | **0.2.0** | seal/unseal + hazmat + **sign/verify** (`stack-crypto`) |
 | `crypto-backend-ironclad` | **0.2.1** | digest/HMAC/AEAD/sign + secrets (Ironclad; UUID v7) |
-| `secrets-protocol` | **0.1.2** | CSPRNG/tokens/UUID v4+v7/password KDF API |
+| `secrets-protocol` | **0.1.3** | CSPRNG/tokens/UUID v4+v7/password KDF API |
 | `process-protocol` | **0.2.0** | subprocess `run`/`launch` + `set-signal`/`raise-signal` (`stack-process`) · [cookbook](cookbooks/process.md) |
 | `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
 | `named-readtables` | **0.9** | fset dep (SBCL 2.6 pin, not QL 20250622) |
@@ -148,28 +148,28 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `spec-backend-quint` | **0.1.0** | Quint emit + typecheck/run/test/verify/compile |
 | `rpc-protocol` | **0.2.0** | RPC modes (`stack-rpc`) · [cookbook](cookbooks/rpc.md) |
 | `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |
-| `rpc-protocol-grpc` | **0.1.1** | gRPC binding; `:call-stream` / `:bidi-stream` → `grpc-stream` |
+| `rpc-protocol-grpc` | **0.2.0** | gRPC binding; `:call-stream` / `:bidi-stream` → `grpc-stream` |
 | `rpc-backend-inprocess` | **0.1.0** | in-process unary |
 | `rpc-backend-stdio` | **0.1.1** | newline JSON-RPC over process-protocol |
-| `rpc-backend-http` | **0.1.1** | JSON-RPC POST (client + Clack) |
+| `rpc-backend-http` | **0.1.2** | JSON-RPC POST (client + Clack) |
 | `rpc-backend-sse` | **0.1.1** | JSON-RPC as SSE `data:` |
-| `sse-protocol` | **0.1.0** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
-| `sse-backend-http` | **0.1.0** | SSE client via http-protocol |
-| `sse-backend-clack` | **0.1.0** | SSE server (Clack) |
+| `sse-protocol` | **0.1.1** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
+| `sse-backend-http` | **0.1.1** | SSE client via http-protocol |
+| `sse-backend-clack` | **0.1.1** | SSE server (Clack) |
 | `mcp-protocol` | **0.2.0** | dual-era MCP (`2026-07-28` / `2025-11-25`) · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.1.1** | newline JSON-RPC MCP |
 | `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
-| `blackboard-protocol` | **0.1.1** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
-| `capability-protocol` | **0.2.1** | `defcapability` + registry (`stack-capability`) |
+| `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
+| `capability-protocol` | **0.2.2** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
-| `schema-protocol-xsd` | **0.1.3** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
+| `schema-protocol-xsd` | **0.1.4** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
 | `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
-| `schema-protocol-avro` | **0.1.1** | `:avro` emit/parse (`stack-schema-avro`) |
+| `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.2.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `conversation-protocol` | **0.1.0** | session store + buffer / window (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
-| `steer-protocol` | **0.1.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) · [cookbook](cookbooks/steer.md) |
-| `rag-protocol` | **0.1.2** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
+| `llm-protocol` | **0.3.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `conversation-protocol` | **0.2.0** | session store + buffer / window (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
+| `steer-protocol` | **0.2.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) · [cookbook](cookbooks/steer.md) |
+| `rag-protocol` | **0.1.3** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
 | `rag-backend-sql` | **0.1.0** | persist via `sql-protocol`; Lisp cosine (not ANN) |
 | `rag-backend-pgvector` | **0.1.0** | Postgres `<=>` ANN; text `'[1,0]'::vector` wire |
@@ -177,53 +177,53 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `rag-backend-tsvector` | **0.1.0** | Postgres `tsvector` / `ts_rank` lexical store |
 | `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
-| `rag-backend-text` | **0.1.0** | recursive character splitter |
-| `llm-protocol-openai` | **0.3.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
+| `rag-backend-text` | **0.2.0** | recursive character splitter |
+| `llm-protocol-openai` | **0.3.1** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
 | `llm-protocol-anthropic` | **0.1.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server |
 | `llama-cpp` | **0.1.5** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.4** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.2.2** | async-first loop + `:memory` + `:steering` (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
+| `ai-agent-protocol` | **0.3.1** | async-first loop + `:memory` + `:steering` (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.8** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
-| `http-backend-dexador` | **0.1.3** | sync HTTP/1.1 (soft-loads CE codecs) |
-| `http-backend-winhttp` | **0.1.3** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
-| `http-backend-java` | **0.1.0** | ABCL `java.net.http` |
-| `ws-protocol` | **0.4.0** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
-| `ws-backend-websocket-driver` | **0.4.0** | H1 Upgrade + **H2 Extended CONNECT server** (`make-ws-server :transport :http/2`); canary [`ws-parity`](https://github.com/egao1980/ws-parity) |
-| `ag-ui-protocol` | **0.3.0** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
+| `http-backend-async` | **0.2.9** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
+| `http-backend-dexador` | **0.1.4** | sync HTTP/1.1 (soft-loads CE codecs) |
+| `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
+| `http-backend-java` | **0.1.1** | ABCL `java.net.http` |
+| `ws-protocol` | **0.4.2** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
+| `ws-backend-websocket-driver` | **0.4.3** | H1 Upgrade + **H2 Extended CONNECT server** (`make-ws-server :transport :http/2`); canary [`ws-parity`](https://github.com/egao1980/ws-parity) |
+| `ag-ui-protocol` | **0.4.1** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
-| `a2a-backend-jsonrpc` | **0.2.1** | JSON-RPC 2.0 + SSE |
-| `a2a-backend-httpjson` | **0.2.0** | HTTP+JSON REST |
+| `a2a-backend-jsonrpc` | **0.2.2** | JSON-RPC 2.0 + SSE |
+| `a2a-backend-httpjson` | **0.2.1** | HTTP+JSON REST |
 | `a2a-backend-grpc` | **0.2.0** | `/lf.a2a.v1.A2AService/*` via `rpc-protocol-grpc` |
 | `ag-ui-backend-sse` | **0.2.1** | POST `RunAgentInput` → SSE |
-| `ag-ui-backend-protobuf` | **0.3.0** | JSON-as-WKT (`google.protobuf.Value`), not official `Event` oneof |
+| `ag-ui-backend-protobuf` | **0.4.0** | JSON-as-WKT (`google.protobuf.Value`), not official `Event` oneof |
 | `ag-ui-backend-tui` | **0.1.0** | event sink + transcript (not a wire client) |
-| `http-server-protocol` | **0.1.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
-| `http-server-backend-hunchentoot` | **0.1.0** | default server backend (Windows + Unix) |
-| `http-server-backend-woo` | **0.1.0** | Unix / libev second backend |
+| `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
+| `http-server-backend-hunchentoot` | **0.2.0** | default server backend (Windows + Unix) |
+| `http-server-backend-woo` | **0.2.0** | Unix / libev second backend |
 | `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
 | `cli-backend-clingon` | **0.1.0** | default CLI backend |
 | `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
 | `serdes-protocol` | **0.2.2** | format encode/decode + Gray/JSONL/events + media types · [cookbook](cookbooks/serdes.md) |
-| `sexp-protocol` | **0.2.0** | serdes `:sexp` implementor |
+| `sexp-protocol` | **0.2.2** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
-| `encoding-protocol` | **0.1.2** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
+| `encoding-protocol` | **0.2.0** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
 | `binary-protocol` | **0.1.0** | Python `struct` pack/unpack (`stack-binary`); no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.2.0** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
-| `compression-backend-chipz` | **0.1.2** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
+| `compression-backend-chipz` | **0.2.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
 | `mime-protocol` | **0.1.4** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
-| `mail-protocol` | **0.1.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
-| `mail-backend-memory` | **0.1.0** | record sent messages |
-| `mail-backend-smtp` | **0.1.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS) |
+| `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
+| `mail-backend-memory` | **0.2.0** | record sent messages |
+| `mail-backend-smtp` | **0.2.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
-| `avro-protocol` | **0.1.0** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
-| `arrow-protocol` | **0.1.0** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
+| `avro-protocol` | **0.1.2** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
+| `arrow-protocol` | **0.1.1** | serdes `:arrow` / `:parquet` (`stack-arrow`) · [arrow](capabilities/arrow.md) |
 | `log-protocol` | **0.1.2** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
-| `telemetry-protocol` | **0.1.0** | traces / spans + thin metrics (`stack-telemetry`) |
-| `telemetry-backend-otlp` | **0.1.0** | OTLP/HTTP JSON |
+| `telemetry-protocol` | **0.2.0** | traces / spans + thin metrics (`stack-telemetry`) |
+| `telemetry-backend-otlp` | **0.2.0** | OTLP/HTTP JSON |
 | `cl-stack-snappy` | **1.2.2** | Snappy raw + framed; HTTP CE uses raw |
 | `http-encoding-chipz` | **0.1.1** | `gzip` / `deflate` Content-Encoding |
 | `http-encoding-brotli` | **0.1.1** | `br` |
@@ -231,12 +231,12 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `http-encoding-snappy` | **0.1.1** | `snappy` (raw, not framed) |
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
-| `grpc-protocol` | **0.1.1** | gRPC wire / channel (`:compression` facade) |
-| `grpc-backend-http2` | **0.3.1** | unary + interleaved bidi + gzip/deflate frames (`http-body-pipe`); canary [`grpc-parity`](https://github.com/egao1980/grpc-parity) |
+| `grpc-protocol` | **0.2.0** | gRPC wire / channel (`:compression` facade) |
+| `grpc-backend-http2` | **0.4.0** | unary + interleaved bidi + gzip/deflate frames (`http-body-pipe`); canary [`grpc-parity`](https://github.com/egao1980/grpc-parity) |
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
-| `event-protocol` | **0.2.0** | event-loop generics (`wake-call` / `submit`) |
+| `event-protocol` | **0.2.1** | event-loop generics (`wake-call` / `submit`) |
 | `event-backend-libuv` | **0.1.2** | default (Windows-primary); per-loop submit pool |
 | `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
 | `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
