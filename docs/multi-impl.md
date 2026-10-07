@@ -214,4 +214,4 @@ Policy while ramping: ECL + CCL + ABCL smoke are merge signals for crypto/secret
 - [x] CCL job present (strongly recommended; linux/`ccl-bin`) — local Rosetta green; GHA fragment above
 - [x] Known impl-specific failures tracked — **CLISP**: clean Ubuntu MT bootstrap hang (arm64) / SIGSEGV (amd64); packaged `MT=NIL`
 - [x] Sibling-lib guidance copyable (fragments above)
-- [ ] README claim matches CI reality
+- [x] README markets SBCL / ECL / ABCL as supported implementations. The metapackage CI contract is **SBCL** only (`Metapackage E2E` is an SBCL lane); ECL / ABCL are not metapackage CI lanes, and this checkbox does not add any.

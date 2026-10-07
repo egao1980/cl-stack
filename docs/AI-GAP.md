@@ -32,7 +32,7 @@ Do **not** clone LangChain. Locked split: protocol GFs + thin backends + product
 
 Blackboard KSAR is a *different* orchestration model (not a missing LangGraph).
 [#196](https://github.com/egao1980/cl-stack/issues/196) wire adapters shipped as [`blackboard-wire`](https://github.com/egao1980/blackboard-wire) **0.1.0**.
-[#197](https://github.com/egao1980/cl-stack/issues/197) product rewrite: B1–B6 + C4 shipped (`demiurge` **0.3.5**). Remaining wrap-up = B7c S9-corporate + B8 v2 demos + **0.4.0** MVP tag — not the product hole.
+[#197](https://github.com/egao1980/cl-stack/issues/197) product rewrite: B1–B6 + C4 shipped (`demiurge` **0.4.2**, decision KS + memory chronicle adapter, published). Remaining wrap-up = B7c S9-corporate + B8 v2 demos — not the product hole.
 
 **Shipped leftovers:** A6b durability, A6d CI, A7b GenAI spans, C2b parity canaries, C3b pdfium source (`doc-extract-backend-pdf` **0.1.1**). **C3b residue:** pdfium native OCI overlay (`publish-oci` in flight). **C5 HOLD** (GraphQL, SCIM, ssh/sftp, WebDAV/CalDAV, OpenSearch, webhooks — do not spec further).
 
@@ -71,8 +71,8 @@ Blackboard KSAR is a *different* orchestration model (not a missing LangGraph).
 | Cache | [`cache-protocol`](https://github.com/egao1980/cache-protocol) **0.1.0** + redis | get/put/ttl/cas; in-memory + RESP3; Valkey canary (C2b) | — |
 | RAG | [`rag-protocol`](https://github.com/egao1980/rag-protocol) **0.1.2** + memory / sql / pgvector / hybrid **0.1.0** / tsvector / splade / cross-encoder / text **0.2.0** | chunk / store / rerank / `ingest` / `retrieve`; ANN + BM25 + FTS + sparse; `block-tree-chunker` (C3d2) | Cross-encoder default is token overlap, not a CE model |
 | Product TUI | [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui) **0.1.0**, [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) **0.1.0** | desk chat + transcript sink | Not a protocol. `cl-stack-llm-demo` is local (no GHCR) |
-| Product | [`demiurge`](https://github.com/egao1980/demiurge) **0.3.5** + [`demiurge-parity`](https://github.com/egao1980/demiurge-parity) **0.1.3** | core / improve / observe / serve / ingest / workflows / bundle + C4 corporate; S1–S8 run | B7c S9-corporate still skipped; B8 v2 demos; **0.4.0** MVP tag |
-| Leftover | [#196](https://github.com/egao1980/cl-stack/issues/196) shipped (`blackboard-wire`); [#197](https://github.com/egao1980/cl-stack/issues/197) wrap-up | B7c / B8 / 0.4.0 | C5 HOLD. A11 P2 (prompt cache + audio/realtime). pdfium native OCI | [#198](https://github.com/egao1980/cl-stack/issues/198) → `steer-protocol` **0.2.0** |
+| Product | [`demiurge`](https://github.com/egao1980/demiurge) **0.4.2** + [`demiurge-parity`](https://github.com/egao1980/demiurge-parity) **0.1.3** | core / improve / observe / serve / ingest / workflows / bundle + C4 corporate; S1–S8 run; decision KS + memory chronicle adapter, published | B7c S9-corporate still skipped; B8 v2 demos |
+| Leftover | [#196](https://github.com/egao1980/cl-stack/issues/196) shipped (`blackboard-wire`); [#197](https://github.com/egao1980/cl-stack/issues/197) wrap-up | B7c / B8 (`demiurge` **0.4.2** published) | C5 HOLD. A11 P2 (prompt cache + audio/realtime). pdfium native OCI | [#198](https://github.com/egao1980/cl-stack/issues/198) → `steer-protocol` **0.2.0** |
 
 Parity canaries: [`mcp-parity`](https://github.com/egao1980/mcp-parity), [`a2a-parity`](https://github.com/egao1980/a2a-parity), [`ag-ui-parity`](https://github.com/egao1980/ag-ui-parity) (SSE JSON full; WKT Lisp-only).
 
@@ -105,7 +105,7 @@ Status: **ahead** / **on-par** / **thin** / **gap** / **leave** (intentional non
 | Evals / graph | `eval-protocol` **0.1.0** | **on-par** on evals — not LangGraph (leave) |
 | GenAI spans | `llm-protocol/telemetry` **0.3.0** + agent/task `/telemetry` | **on-par** (A7b) |
 | Identity / MQ / S3 / IMAP / cache / extract | ldap / mq / object-store / mail 0.2 / cache / doc-extract **0.2.0** + pdfium **0.1.1** | **on-par** — C2b canaries + C3b source shipped; pdfium native OCI still open |
-| Demiurge product | [`demiurge`](https://github.com/egao1980/demiurge) **0.3.5** ([#197](https://github.com/egao1980/cl-stack/issues/197)) | **on-par** — B1–B6 + C4 shipped; wrap-up = B7c S9 + B8 v2 + 0.4.0 |
+| Demiurge product | [`demiurge`](https://github.com/egao1980/demiurge) **0.4.2** ([#197](https://github.com/egao1980/cl-stack/issues/197)) | **on-par** — B1–B6 + C4 shipped; decision KS + memory chronicle adapter, published; wrap-up = B7c S9 + B8 v2 |
 | Corporate profile / tier 2 | C4 shipped in 0.3.5; C5 HOLD | **thin** — S9 live-corporate still skipped; C5 not started |
 
 Hub cookbooks: [llm](cookbooks/llm.md) · [conversation](cookbooks/conversation.md) · [steer](cookbooks/steer.md) · [rag](cookbooks/rag.md) · [ai-agent](cookbooks/ai-agent.md) · [mcp](cookbooks/mcp.md) · [a2a](cookbooks/a2a.md) · [ag-ui](cookbooks/ag-ui.md).
