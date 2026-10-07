@@ -33,7 +33,7 @@ Prefer the **`cl-repository/`** GHCR namespace (not the old `cl-systems/cl-repos
 IMG=ghcr.io/egao1980/cl-repository/cl-repository-client
 CLIENT_VER=$(oras manifest fetch "${IMG}:latest" \
   | python3 -c 'import sys,json; print(json.load(sys.stdin)["annotations"]["org.opencontainers.image.version"])')
-# Or pin explicitly: CLIENT_VER=0.18.0
+# Or pin explicitly: CLIENT_VER=0.22.0
 DEST="${HOME}/.local/share/cl-repository-client"
 rm -rf /tmp/cl-repo-pull "$DEST"
 mkdir -p /tmp/cl-repo-pull "$DEST"
@@ -77,7 +77,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 
 | System | OCI tag | Notes |
 |--------|---------|--------|
-| `cl-repository-client` | **0.18.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
+| `cl-repository-client` | **0.22.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.1** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
 | `yaml-protocol` | **0.2.1** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
