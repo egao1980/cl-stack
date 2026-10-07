@@ -121,7 +121,7 @@
   ("http-encoding-zstd" "0.1.1")
   ("http-encoding-snappy" "0.1.1")
   ("http-backend-dexador" "0.1.5")
-  ("http-backend-async" "0.2.9")
+  ("http-backend-async" "0.2.12")
   ("http-backend-winhttp" "0.1.4" :platforms (:windows))
   ("http-backend-java" "0.1.1")
   ("cl-stack-http" "0.1.11")
