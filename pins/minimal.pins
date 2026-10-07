@@ -6,4 +6,4 @@
  (:systems
   ("alexandria" "1.0.1")
   ("event-protocol" "0.2.0")
-  ("event-backend-libuv" "0.1.2")))
+  ("event-backend-libuv" "0.1.3")))
