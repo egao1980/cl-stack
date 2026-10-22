@@ -186,8 +186,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.9** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS |
-| `http-backend-dexador` | **0.1.4** | sync HTTP/1.1 (soft-loads CE codecs) |
+| `http-backend-async` | **0.2.12** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; sequential h2 session reuse |
+| `http-backend-dexador` | **0.1.5** | sync HTTP/1.1 (soft-loads CE codecs) |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.1** | ABCL `java.net.http` |
 | `ws-protocol` | **0.4.2** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
@@ -232,7 +232,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `log-backend-log4cl` | **0.1.1** | default log backend — **separate repo** |
 | `log-backend-vom` | **0.1.1** | alternate log backend — **separate repo** |
 | `grpc-protocol` | **0.2.0** | gRPC wire / channel (`:compression` facade) |
-| `grpc-backend-http2` | **0.4.0** | unary + interleaved bidi + gzip/deflate frames (`http-body-pipe`); canary [`grpc-parity`](https://github.com/egao1980/grpc-parity) |
+| `grpc-backend-http2` | **0.4.1** | unary + server-stream + interleaved bidi (streams run on the owned loop thread) + gzip/deflate frames (`http-body-pipe`); canary [`grpc-parity`](https://github.com/egao1980/grpc-parity) |
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
