@@ -122,6 +122,7 @@
   ("http-encoding-snappy" "0.1.1")
   ("http-backend-dexador" "0.1.5")
   ("http-backend-async" "0.2.13")
+  ("http2" "2.1.4")
   ("http-backend-winhttp" "0.1.4" :platforms (:windows))
   ("http-backend-java" "0.1.1")
   ("cl-stack-http" "0.1.11")
@@ -175,7 +176,7 @@
   ("protobuf-protocol" "0.2.0")
   ("protobuf-backend-cl-protobufs" "0.2.0")
   ("grpc-protocol" "0.2.0")
-  ("grpc-backend-http2" "0.4.1")
+  ("grpc-backend-http2" "0.4.2")
   ("grpc-backend-native" "0.1.0" :platforms (:unix))
   ;; WebSocket
   ("ws-protocol" "0.4.2")
