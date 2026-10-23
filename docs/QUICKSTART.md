@@ -119,9 +119,9 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.8** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.3.0** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
+| `cl-stack-pathlib` | **0.3.1** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
-| `cl-stack-tzdata` | **2026.3.0** | IANA tzdb (TZif) — no OS zoneinfo |
+| `cl-stack-tzdata` | **2026.5.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
 | `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
 | `schema-protocol` | **0.2.1** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
