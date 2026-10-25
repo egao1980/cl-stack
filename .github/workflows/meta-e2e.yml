@@ -35,27 +35,13 @@ env:
 
 jobs:
   pins-unit:
-    runs-on: ubuntu-latest
+    uses: egao1980/cl-repository/.github/workflows/test-system.yml@main
+    with:
+      system: cl-stack/pins-test
+      os-json: '["ubuntu-latest"]'
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Roswell
-        run: |
-          curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
-          echo "$HOME/.roswell/bin" >> "$GITHUB_PATH"
-
-      - name: Install SBCL
-        run: |
-          ros install "sbcl-bin/$SBCL_VERSION"
-          ros use "sbcl-bin/$SBCL_VERSION"
-
-      - name: Pin parse tests (no network / no client)
-        run: |
-          export CL_SOURCE_REGISTRY="$(pwd)//:"
-          ros -e '(ql:quickload (quote ("rove" "uiop")) :silent t)' \
-              -e '(asdf:test-system "cl-stack/pins-test")' -q
+      packages: read
 
   meta-e2e:
     needs: pins-unit

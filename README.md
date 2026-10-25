@@ -9,11 +9,8 @@ MIT-licensed, Anaconda-style curated Common Lisp stack: coherent libraries for m
 ASDF umbrella over the stable channel roots (HTTP facade + backends, event, WS, encodings, pathlib, OAuth2/JWT). Versions come from [`pins/stable.pins`](pins/stable.pins).
 
 ```bash
-# after bootstrapping cl-repository-client (see docs/QUICKSTART.md)
-export CL_SOURCE_REGISTRY="$PWD//:$CLIENT_DIR//:"
-ros -e '(asdf:load-system "cl-stack/pins")' \
-    -e '(cl-stack:apply-pins #p"pins/stable.pins")' \
-    -e '(asdf:load-system "cl-stack/meta")' -q
+# see docs/QUICKSTART.md — cl-repo sync / test. No CL_SOURCE_REGISTRY.
+cl-repo sync
 ```
 
 E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, oras client, apply pins, load meta (no grovel).

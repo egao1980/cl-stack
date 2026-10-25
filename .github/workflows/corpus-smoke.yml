@@ -19,20 +19,10 @@ on:
 
 jobs:
   smoke:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Roswell
-        run: curl -sL https://raw.githubusercontent.com/roswell/roswell/master/scripts/install-for-ci.sh | bash
-
-      - name: Install qlot + deps
-        run: |
-          ros install qlot
-          export PATH="$HOME/.roswell/bin:$PATH"
-          qlot install
-
-      - name: Run corpus-smoke
-        run: |
-          export PATH="$HOME/.roswell/bin:$PATH"
-          qlot exec ros -e '(asdf:test-system "cl-stack/corpus-smoke")'
+    uses: egao1980/cl-repository/.github/workflows/test-system.yml@main
+    with:
+      system: cl-stack/corpus-smoke
+      os-json: '["ubuntu-latest"]'
+    permissions:
+      contents: read
+      packages: read
