@@ -22,8 +22,8 @@ Briefs: [unicode-protocol](../capabilities/unicode-protocol.md) · [i18n](../cap
 |-------------|------|
 | Portable default | `unicode-backend-cl-unicode` **0.1.0** |
 | SBCL built-in (no IDNA) | `unicode-backend-sbcl` **0.1.0** |
-| ICU4C (CFFI + overlays) | `unicode-backend-icu` **0.1.1** (+ `cl-stack-icu` **78.1.3**) |
-| ABCL / JVM | `unicode-backend-icu4j` **0.1.2** (+ `cl-stack-icu4j` **78.1.3**) — auto-binds on `#+abcl` |
+| ICU4C (CFFI + overlays) | `unicode-backend-icu` **0.1.1** (+ `cl-stack-icu` **79.1.0**) |
+| ABCL / JVM | `unicode-backend-icu4j` **0.1.2** (+ `cl-stack-icu4j` **79.1.0**) — auto-binds on `#+abcl` |
 | i18n / l10n ICU4C | `i18n-backend-icu` / `l10n-backend-icu` **0.1.1** |
 | i18n / l10n ABCL | `i18n-backend-icu4j` **0.1.1** / `l10n-backend-icu4j` **0.1.2** — auto-binds on `#+abcl` |
 

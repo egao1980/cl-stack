@@ -37,7 +37,7 @@ Related: [overlays.md](overlays.md), [LICENSE-POLICY.md](LICENSE-POLICY.md).
   ("event-backend-libuv" "0.1.0")
   ("ws-protocol" "0.1.0")
   ("ws-backend-websocket-driver" "0.1.0")
-  ("cl-stack-ssl" "3.4.1")
+  ("cl-stack-ssl" "3.5.9")
   ;; Unix-only second event backend — omit on Windows consumers
   ("event-backend-libev" "0.1.0" :platforms (:unix))))
 ```

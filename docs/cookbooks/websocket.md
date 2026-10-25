@@ -95,7 +95,7 @@ Wrong transport → `ws-transport-not-available` (e.g. WinHTTP + `:http/2`, asyn
 
 ```lisp
 (cl-repo:load-system "http-backend-async" :version "0.2.8")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.2")
+(cl-repo:load-system "event-backend-libuv" :version "0.1.4")
 
 (setf http-backend-async:*event-backend-maker*
       (lambda () (event-backend-libuv:make-libuv-backend)))

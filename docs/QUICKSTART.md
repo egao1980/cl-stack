@@ -105,8 +105,8 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `unicode-backend-sbcl` | **0.1.0** | SBCL `sb-unicode` (no `:idna`) |
 | `unicode-backend-icu` | **0.1.1** | ICU4C CFFI backend |
 | `unicode-backend-icu4j` | **0.1.2** | ICU4J / ABCL (auto-bind `#+abcl`) |
-| `cl-stack-icu` | **78.1.3** | ICU4C overlays + CFFI (linux/darwin/windows) |
-| `cl-stack-icu4j` | **78.1.3** | ICU4J jar + ABCL bridge |
+| `cl-stack-icu` | **79.1.0** | ICU4C 79.1 overlays + CFFI (linux/darwin/windows) |
+| `cl-stack-icu4j` | **79.1.0** | ICU4J 79.1 jar + ABCL bridge |
 | `i18n-protocol` | **0.1.0** | locale / MF2 / plural / catalogs (`stack-i18n`) |
 | `i18n-backend-icu` | **0.1.1** | ICU4C i18n |
 | `i18n-backend-icu4j` | **0.1.1** | ICU4J i18n (auto-bind `#+abcl`) |
@@ -226,7 +226,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `log-protocol` | **0.1.2** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
 | `telemetry-protocol` | **0.2.0** | traces / spans + thin metrics (`stack-telemetry`) |
 | `telemetry-backend-otlp` | **0.2.0** | OTLP/HTTP JSON |
-| `cl-stack-snappy` | **1.2.2** | Snappy raw + framed; HTTP CE uses raw |
+| `cl-stack-snappy` | **1.3.1** | Snappy raw + framed; HTTP CE uses raw |
 | `http-encoding-chipz` | **0.1.1** | `gzip` / `deflate` Content-Encoding |
 | `http-encoding-brotli` | **0.1.1** | `br` |
 | `http-encoding-zstd` | **0.1.1** | `zstd` |
@@ -239,7 +239,7 @@ Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
 | `event-protocol` | **0.2.1** | event-loop generics (`wake-call` / `submit`) |
-| `event-backend-libuv` | **0.1.2** | default (Windows-primary); per-loop submit pool |
+| `event-backend-libuv` | **0.1.4** | default (Windows-primary); libuv 1.53.0; per-loop submit pool |
 | `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
 | `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
 | `cl-stack-executors` | **0.1.0** | BT pools backends *may* plug into `submit` |
@@ -271,7 +271,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ```lisp
 (cl-repo:load-system "http-protocol" :version "0.3.8")
 (cl-repo:load-system "http-backend-async" :version "0.2.8")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.2")
+(cl-repo:load-system "event-backend-libuv" :version "0.1.4")
 
 (setf http-backend-async:*event-backend-maker*
       (lambda () (event-backend-libuv:make-libuv-backend)))
@@ -358,7 +358,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 
 ```lisp
 (cl-repo:load-system "event-protocol" :version "0.2.0")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.2")
+(cl-repo:load-system "event-backend-libuv" :version "0.1.4")
 
 (let* ((eb (event-backend-libuv:make-libuv-backend))
        (el (event-protocol:make-event-loop eb)))
