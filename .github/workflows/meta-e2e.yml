@@ -109,7 +109,7 @@ jobs:
           esac
           echo "${GITHUB_TOKEN}" | oras login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
           mkdir -p /tmp/ssl-pull /tmp/ssl-native
-          : "${CL_STACK_SSL_VERSION:=3.4.1}"
+          : "${CL_STACK_SSL_VERSION:=3.5.9}"
           REF="ghcr.io/egao1980/cl-systems/cl-stack-ssl:${CL_STACK_SSL_VERSION}"
           ok=0
           for attempt in 1 2 3 4 5; do
