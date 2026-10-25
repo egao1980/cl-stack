@@ -17,59 +17,25 @@ Layering: **protocol** (generics) → **backend** (wire/OS) → **facade** (`cl-
 | Tool | Notes |
 |------|--------|
 | [Roswell](https://roswell.github.io/) + SBCL | `ros install sbcl-bin` |
-| Quicklisp | only to bootstrap the **client** |
-| [oras](https://oras.land/) | preferred way to pull `cl-repository-client` |
+| `cl-repo` | the only interface, locally and in CI |
 
 No C toolchain needed for consumer installs — natives ship in overlays.
 
 ---
 
-## 1. Bootstrap `cl-repository-client`
+## 1. Use the project
 
-Prefer the **`cl-repository/`** GHCR namespace (not the old `cl-systems/cl-repository-client` mirror).
-
-```bash
-# :latest is a system-name *anchor* (not a package). Resolve the semver, then pull.
-IMG=ghcr.io/egao1980/cl-repository/cl-repository-client
-CLIENT_VER=$(oras manifest fetch "${IMG}:latest" \
-  | python3 -c 'import sys,json; print(json.load(sys.stdin)["annotations"]["org.opencontainers.image.version"])')
-# Or pin explicitly: CLIENT_VER=0.22.0
-DEST="${HOME}/.local/share/cl-repository-client"
-rm -rf /tmp/cl-repo-pull "$DEST"
-mkdir -p /tmp/cl-repo-pull "$DEST"
-oras pull "${IMG}:${CLIENT_VER}" -o /tmp/cl-repo-pull
-for f in /tmp/cl-repo-pull/*.tar.gz; do tar -xzf "$f" -C "$DEST"; done
-CLIENT_DIR="$(find "$DEST" -maxdepth 1 -type d -name 'cl-oci-*' | head -1)"
-echo "Client tree: $CLIENT_DIR (resolved ${CLIENT_VER})"
-```
-
-One-time QL deps for the **client only** (not your app):
+A directory with an `.asd` or a `qlfile` is a project. Defaults are `https://ghcr.io` / `egao1980/cl-systems`.
 
 ```bash
-ros -e '(ql:quickload '("yason" "ironclad" "babel" "dexador" "quri" "chipz"
-                        "flexi-streams" "cl-ppcre" "cl-base64" "trivial-features"
-                        "salza2" "archive") :silent t)' -q
+cl-repo sync
+cl-repo test
+cl-repo publish
 ```
 
-Then in Lisp (set `*client-dir*` to the `cl-oci-*` path printed above):
+No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile name is published, then installed.
 
-```lisp
-(defparameter *client-dir*
-  #P"/Users/you/.local/share/cl-repository-client/cl-oci-…/") ; ← paste path
-
-(asdf:initialize-source-registry
- `(:source-registry
-   (:tree ,*client-dir*)
-   :inherit-configuration))
-(asdf:load-system "cl-repository-client")
-(cl-repo:add-registry "https://ghcr.io"
-                      :namespace "egao1980/cl-systems"
-                      :priority :prepend)
-```
-
-`cl-repo:load-system` pulls the OCI package (and matching overlay), installs deps, then `asdf:load-system`.
-
-**CI pattern:** same bootstrap via `oras` in the job; `actions/checkout` **only** the repo under test — never sibling-checkout deps. See any first-party `scripts/ci-install.lisp`.
+`cl-repo install alexandria` pulls one system outside a project. CI checks out only the repo under test and calls `test-system.yml@main`.
 
 ---
 
@@ -375,14 +341,9 @@ Default backend = **libuv** (Windows-primary). Unix second = **libev**. Brief: [
 ## 5. Consumer CI skeleton
 
 ```yaml
-# checkout ONLY this repo
-- uses: actions/checkout@v4
-- uses: oras-project/setup-oras@v1
-- run: |
-    oras pull ghcr.io/egao1980/cl-repository/cl-repository-client:0.10.0 -o /tmp/cl-repo-pull
-    # extract → CL_SOURCE_REGISTRY includes client tree + $(pwd)//:
-    ros -l scripts/ci-install.lisp   # cl-repo:add-registry + install pins
-    ros -l scripts/ci-test.lisp
+jobs:
+  test:
+    uses: egao1980/cl-repository/.github/workflows/test-system.yml@main
 ```
 
 Rules (non-negotiable):

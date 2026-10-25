@@ -12,17 +12,28 @@
 (defun %file-bytes (path)
   (alexandria:read-file-into-byte-vector path))
 
-(defun system-installed-via-oci-p (name)
-  "True when ASDF locates NAME under the cl-repository systems root."
-  (let* ((sys (asdf:find-system name nil))
-         (path (and sys (asdf:system-source-directory sys)))
-         (root (ignore-errors (cl-repository-client/installer:systems-root))))
-    (unless (and sys path root)
-      (return-from system-installed-via-oci-p nil))
+(defun %under-root-p (path root)
+  (when (and path root)
     (let ((p (namestring (uiop:ensure-directory-pathname path)))
           (r (namestring (uiop:ensure-directory-pathname root))))
       (and (>= (length p) (length r))
            (string= r p :end2 (length r))))))
+
+(defun oci-install-roots ()
+  "Systems root, plus the OCI client tree ci-base already extracted."
+  (let* ((dest (uiop:getenv-absolute-directory "CL_REPOSITORY_DEST"))
+         (client (uiop:getenv-absolute-directory "CL_REPOSITORY_CLIENT_DIR"))
+         (client-parent (and client
+                             (uiop:pathname-parent-directory-pathname
+                              (uiop:ensure-directory-pathname client)))))
+    (remove nil (list (ignore-errors (cl-repository-client/installer:systems-root))
+                      dest client client-parent))))
+
+(defun system-installed-via-oci-p (name)
+  "True when ASDF locates NAME in the systems root or the OCI client tree."
+  (let* ((sys (asdf:find-system name nil))
+         (path (and sys (asdf:system-source-directory sys))))
+    (and path (some (lambda (root) (%under-root-p path root)) (oci-install-roots)))))
 
 (deftest oci-packages-from-ghcr
   "http-protocol / encoding / dexador resolve under cl-repository systems root."
