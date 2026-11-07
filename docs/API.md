@@ -110,7 +110,7 @@ Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal 
 
 MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`.
 
-## Terminal emulation (P2 — brief draft)
+## Terminal emulation (P2 — brief locked)
 
 - `terminal-protocol` — headless emulator: `terminal-feed` octets → frames / cells / cursor; `encode-key` / `encode-mouse` / `encode-paste`; effects via `terminal-host`. Default **libghostty-vt 1.0** (`ghostty-vt` CFFI), second pure-Lisp. **No PTY** — separate brief later.
   **Brief:** [capabilities/terminal.md](capabilities/terminal.md) ([#264](https://github.com/egao1980/cl-stack/issues/264))

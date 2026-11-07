@@ -1,7 +1,7 @@
 # terminal-protocol (P2) — terminal emulation
 
 **Issues:** [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **draft** — no code yet
+**Status:** brief **locked** — no code yet
 
 A CLOS protocol for a **headless terminal emulator**. You feed it the bytes a program writes, and it keeps the screen state. You query cells, the cursor, modes and the title, and you encode user input (keys, mouse, focus, paste) into the bytes the program expects back.
 
@@ -51,6 +51,8 @@ Conventions: [API.md](../API.md). Errors: [conditions.md](conditions.md).
 | **Reentrancy** | `terminal-feed` on the same terminal from inside a host method signals **`terminal-reentrant-feed`** | libghostty-vt doesn't check for this and corrupts the parse. The guard is a special binding in the protocol `:around`. |
 | **Non-local exits** | Never through C frames | A condition in a host method is caught in the callback trampoline. The native call finishes, then the condition is re-signalled as `terminal-host-error` with `continue`. |
 | **Native shim** | **None.** Bind `ghostty/vt.h` directly. | Unlike `llama.h`, this ABI is frozen. `GHOSTTY_UNSUPPORTED` maps to `terminal-unsupported`. |
+| **Wave-1 backends** | ghostty **and** pure Lisp ship together | Parity corpus gates both from day one |
+| **Overlays** | `linux/amd64` `linux/arm64` `darwin/arm64` `windows/amd64` — no `darwin/amd64` | Matches other cl-stack natives |
 | **Resources** | `with-terminal` / `terminal-close`; a finalizer as backstop only | [API.md](../API.md) rule |
 
 ---
@@ -230,17 +232,9 @@ It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and
 
 ---
 
-## Open questions
-
-1. CFFI repo name: `ghostty-vt` (matches `llama-cpp`) or `libghostty-vt`?
-2. Pure-Lisp backend in wave-1, or P1 after the ghostty backend ships?
-3. Is a `darwin/amd64` overlay needed? libghostty-vt tests macOS x86_64, but no other cl-stack native ships it.
-
----
-
 ## Implementation tasks
 
-- [ ] Brief lock — this doc ([#264](https://github.com/egao1980/cl-stack/issues/264))
+- [x] Brief lock — this doc ([#264](https://github.com/egao1980/cl-stack/issues/264))
 - [ ] `terminal-protocol` + Rove (host protocol, reentrancy guard, value types)
 - [ ] `ghostty-vt` — CFFI + overlay build (Zig 0.17, signed tarballs) + `publish-oci.yml`
 - [ ] `terminal-backend-ghostty` + Rove
