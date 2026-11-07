@@ -1,17 +1,17 @@
 # Cookbook: MCP (tools / resources / prompts)
 
-**Audience:** speak [MCP](https://modelcontextprotocol.io/specification/2026-07-28/) as a host or a server. **Not** a wrap of `cl-mcp` (that stays the Lisp-tools product).
+**Audience:** speak [MCP](https://modelcontextprotocol.io/specification/2026-07-28/) as a host or a server. For the Common Lisp tools server built on it, see [lisp-mcp.md](lisp-mcp.md).
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | **0.2.0** |
-| stdio | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) | **0.1.1** |
-| Streamable HTTP | [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.2.0** |
+| Protocol | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | **0.3.0** |
+| stdio | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) | **0.2.0** |
+| Streamable HTTP | [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.0** |
 
 Brief: [mcp.md](../capabilities/mcp.md) (#185). JSON-RPC via [`rpc-protocol`](rpc.md) — do not invent a second codec. Dual-era: modern **`2026-07-28`** (default) and legacy **`2025-11-25`**. Do **not** treat `2025-06-18` as supported.
 
 ```lisp
-(cl-repo:load-system "mcp-protocol" :version "0.2.0")
+(cl-repo:load-system "mcp-protocol" :version "0.3.0")
 (cl-repo:load-system "rpc-backend-inprocess" :version "0.1.0")
 ```
 
@@ -109,6 +109,39 @@ MUST-gaps: present `Origin` not allowed → **403** (`:allowed-origins` on `make
 
 ---
 
+## 4. Server notifications, templated resources (0.3.0)
+
+A server sends notifications through whatever path its backend gives it. On stdio that is the serving stream, from any thread. Over HTTP it is the SSE response of the current request.
+
+```lisp
+;; inside a tool handler: progress for the request's _meta.progressToken
+(mcp-protocol:send-progress server 1 :total 3 :message "indexing")
+;; log messages, filtered by the level the client set with logging/setLevel
+(mcp-protocol:mcp-log server "warning" "image entered the debugger" :logger "repl")
+;; sent only if the client subscribed (resources/subscribe or subscriptions/listen)
+(mcp-protocol:notify-resources-updated server "memo://7/body")
+```
+
+A resource template with a `:handler` serves `resources/read` for every URI that matches it (`{var}` matches no `/`; `{+var}` matches anything; values are percent-decoded):
+
+```lisp
+(mcp-protocol:register-resource-template
+ server (mcp-protocol:make-mcp-resource-template
+         "memo://{id}/body" :name "memo" :mime-type "text/plain"
+         :handler (lambda (uri vars)
+                    (declare (ignore uri))
+                    (format nil "memo ~A" (cdr (assoc "id" vars :test #'string=))))))
+```
+
+| Backend | Out-of-request notifications | In-request notifications |
+|---------|------------------------------|--------------------------|
+| `mcp-backend-stdio` ≥ 0.2.0 | yes (`mcp-server-notifier`; lines are written under one lock) | yes |
+| `mcp-backend-streamable-http` ≥ 0.3.0 | no (no GET stream) | SSE `message` events before the result; dropped for a JSON response |
+
+Your own backend sets `mcp-server-notifier` while it serves, or binds `*mcp-notifier*` around one request.
+
+---
+
 ## Dual-era
 
 | Era | Revision | Handshake |
@@ -128,7 +161,7 @@ tools / resources / prompts / templates · completions · subscriptions · sampl
 
 ## What not to do
 
-- Don’t wrap `cl-mcp` — this protocol is the reusable wire; that product may consume it later.
+- Don’t wrap `cl-mcp` — this protocol is the reusable wire. The Lisp tools server is [`lisp-mcp`](lisp-mcp.md), built on it.
 - Don’t invent a second JSON-RPC — `rpc-protocol` + `rpc-backend-*`.
 - Don’t treat `2025-06-18` as a supported era.
 - Don’t put blackboard / KSAR / workspaces here — [blackboard.md](../capabilities/blackboard.md).
