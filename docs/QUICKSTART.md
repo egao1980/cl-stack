@@ -127,7 +127,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
 | `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
 | `lisp-source-protocol` | **0.2.0** | Eclector CST, recovery, lint, structural edits, indenter (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
-| `repl-protocol` | **0.2.0** | live image: eval, debugger, stepping, inspector, channels (`stack-repl`) |
+| `repl-protocol` | **0.2.1** | live image: eval, debugger, stepping, inspector, channels (`stack-repl`) |
 | `repl-backend-swank` | **0.2.0** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.0** | Sly Slynk wire (+ mrepl channels) |
 | `lisp-mcp` | **0.2.0** | Common Lisp MCP server (source / edit / live image) · [cookbook](cookbooks/lisp-mcp.md) |
