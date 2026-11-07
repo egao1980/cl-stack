@@ -1,7 +1,7 @@
 # terminal-protocol (P2) — terminal emulation
 
 **Issues:** [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **locked** — no code yet
+**Status:** brief **locked**. Shipped: [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) 0.1.0, [`ghostty-vt`](https://github.com/egao1980/ghostty-vt) 0.1.0 (linux amd64/arm64, darwin arm64, windows amd64 green), [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) 0.1.0, [`terminal-parity`](https://github.com/egao1980/terminal-parity) (98 fixtures). In progress: `terminal-backend-lisp`.
 
 A CLOS protocol for a **headless terminal emulator**. You feed it the bytes a program writes, and it keeps the screen state. You query cells, the cursor, modes and the title, and you encode user input (keys, mouse, focus, paste) into the bytes the program expects back.
 
@@ -50,7 +50,7 @@ Conventions: [API.md](../API.md). Errors: [conditions.md](conditions.md).
 | **Threads** | One owner thread per terminal. The protocol does **not** lock. | libghostty-vt is not thread-safe per terminal. Locks are policy. |
 | **Reentrancy** | `terminal-feed` on the same terminal from inside a host method signals **`terminal-reentrant-feed`** | libghostty-vt doesn't check for this and corrupts the parse. The guard is a special binding in the protocol `:around`. |
 | **Non-local exits** | Never through C frames | A condition in a host method is caught in the callback trampoline. The native call finishes, then the condition is re-signalled as `terminal-host-error` with `continue`. |
-| **Native shim** | **None.** Bind `ghostty/vt.h` directly. | Unlike `llama.h`, this ABI is frozen. `GHOSTTY_UNSUPPORTED` maps to `terminal-unsupported`. |
+| **Native shim** | **Struct-by-value calls only.** Everything else binds `ghostty/vt.h` directly, generated from `ghostty_type_json()`. | Five calls the backend needs pass `GhosttyString` / `GhosttyMousePosition` / `GhosttyTerminalScrollViewport` by value; their register classes differ across SysV, AAPCS64 and Win64, so `native/ghostty-vt-cl.c` flattens them. At load, every struct size is checked against the loaded library's own type JSON. |
 | **Wave-1 backends** | ghostty **and** pure Lisp ship together | Parity corpus gates both from day one |
 | **Overlays** | `linux/amd64` `linux/arm64` `darwin/arm64` `windows/amd64` — no `darwin/amd64` | Matches other cl-stack natives |
 | **Resources** | `with-terminal` / `terminal-close`; a finalizer as backstop only | [API.md](../API.md) rule |
@@ -100,12 +100,14 @@ Each repo is its own `egao1980/<name>`, created the day its tree is created (`cr
 (defgeneric terminal-title (terminal))          ; OSC 0/2 → string or nil
 (defgeneric terminal-pwd (terminal))            ; OSC 7 → string or nil
 (defgeneric terminal-active-screen (terminal))  ; → :primary | :alternate
-(defgeneric terminal-mode (terminal mode))      ; mode = (:dec 25) | (:ansi 4) | :bracketed-paste …
-(defgeneric (setf terminal-mode) (value terminal mode))
+(defun terminal-mode (terminal mode))           ; mode = (:dec 25) | (:ansi 4) | :bracketed-paste …
+(defun (setf terminal-mode) (value terminal mode))
+(defgeneric backend-mode (terminal kind number)) ; backends implement this (+ setf); kind = :dec | :ansi
 (defgeneric terminal-mouse-tracking (terminal)) ; → :none :x10 :normal :button :any
 (defgeneric terminal-scroll-viewport (terminal &key to delta)) ; to = :top | :bottom
 (defgeneric terminal-text (terminal &key format region))
 ;; format = :plain | :vt | :html ; region = :viewport | :screen | :scrollback → string
+;; A backend that can't format a combination signals terminal-unsupported (ghostty: :vt / :html need :screen)
 
 ;;; Frames (pull-based rendering)
 (defgeneric make-frame (terminal))              ; reusable snapshot
@@ -123,7 +125,8 @@ Each repo is its own `egao1980/<name>`, created the day its tree is created (`cr
 
 ;;; Terminal → program: input encoding (reads live modes) → octets, empty if none
 (defgeneric encode-key (terminal key &key text modifiers action))
-;; key  = :a … :z :enter :tab :escape :backspace :up :f1 … (W3C KeyboardEvent.code names)
+;; key  = W3C KeyboardEvent.code, kebab-cased: :a :digit-1 :enter :arrow-up :numpad-enter :f1 … (+key-names+)
+;; :alt is Alt on every OS (ESC prefix), not macOS Option-composes
 ;; text = string the key produces (layout-resolved) ; modifiers ⊆ (:shift :ctrl :alt :super)
 ;; action = :press | :repeat | :release
 (defgeneric encode-mouse (terminal button action x y &key modifiers pixel-x pixel-y))
@@ -143,7 +146,11 @@ Each repo is its own `egao1980/<name>`, created the day its tree is created (`cr
 (defgeneric host-notify (host terminal title body))                ; OSC 9 / 777
 (defgeneric host-color-scheme (host terminal))                     ; → :light | :dark | nil
 (defgeneric host-prompt-mark (host terminal kind))                 ; OSC 133 A/B/C/D
-(defgeneric terminal-take-replies (terminal))   ; buffering-host only → octets
+(defun terminal-take-replies (terminal))        ; buffering-host only → octets
+(defun call-host (terminal function &rest args)) ; backends deliver every effect through this
+
+;;; Snapshot (backend-neutral, built from the GFs above; parity compares these)
+(defun terminal-snapshot (terminal &key cells))  ; → (:cols :rows :cursor :title :pwd :screen :lines :cells)
 ```
 
 ### Value types
@@ -166,7 +173,7 @@ terminal-error (error)
 ├── terminal-invalid-argument
 ├── terminal-out-of-memory       (storage-condition mixin)
 ├── terminal-reentrant-feed
-└── terminal-host-error          ; wraps original; restarts continue, abort-feed
+└── terminal-host-error          ; wraps original; restart continue (signalled after the feed returns)
 terminal-native-unavailable      ; overlay missing at ASDF load — restart use-value (path)
 ```
 
@@ -202,6 +209,7 @@ It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and
 ## Conformance (`terminal-parity`)
 
 - A fixture is `(bytes, cols×rows, expected snapshot)`. The snapshot holds cell text, widths, styles, cursor, title, modes and replies.
+- Inputs live in `corpus/inputs.sexp` (UTF-8 plus `{esc}` `{csi}` `{osc}` `{xHH}` … escapes). `corpus/expected.sexp` and `corpus/palette.sexp` (the oracle's default colours) are generated. Backends' tests call `(terminal-parity/rove:define-parity-tests name backend-form)`.
 - The corpus is **generated once with the ghostty backend as oracle**, reviewed, frozen as S-expressions, and replayed against every backend. Each fixture is tagged with the features it needs and skipped when a backend lacks them.
 - Seed sources: vttest-style sequences, recordings of `vim` / `htop` / `less` / the cl-stack TUIs, and split-read fuzzing (the same bytes fed in random chunk sizes must give an identical snapshot).
 
