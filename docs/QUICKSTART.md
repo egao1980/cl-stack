@@ -117,15 +117,20 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rpc-protocol-json` | **0.1.0** | JSON-RPC 2.0 codec |
 | `rpc-protocol-grpc` | **0.2.0** | gRPC binding; `:call-stream` / `:bidi-stream` → `grpc-stream` |
 | `rpc-backend-inprocess` | **0.1.0** | in-process unary |
-| `rpc-backend-stdio` | **0.1.1** | newline JSON-RPC over process-protocol |
+| `rpc-backend-stdio` | **0.1.2** | newline JSON-RPC over process-protocol; one write lock per transport |
 | `rpc-backend-http` | **0.1.2** | JSON-RPC POST (client + Clack) |
 | `rpc-backend-sse` | **0.1.1** | JSON-RPC as SSE `data:` |
 | `sse-protocol` | **0.1.1** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
 | `sse-backend-http` | **0.1.1** | SSE client via http-protocol |
 | `sse-backend-clack` | **0.1.1** | SSE server (Clack) |
-| `mcp-protocol` | **0.2.0** | dual-era MCP (`2026-07-28` / `2025-11-25`) · [cookbook](cookbooks/mcp.md) |
-| `mcp-backend-stdio` | **0.1.1** | newline JSON-RPC MCP |
-| `mcp-backend-streamable-http` | **0.2.0** | Streamable HTTP (POST JSON/SSE; GET 405) |
+| `mcp-protocol` | **0.3.0** | dual-era MCP (`2026-07-28` / `2025-11-25`); server notifications, templated resources · [cookbook](cookbooks/mcp.md) |
+| `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
+| `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
+| `lisp-source-protocol` | **0.2.0** | Eclector CST, recovery, lint, structural edits, indenter (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
+| `repl-protocol` | **0.2.0** | live image: eval, debugger, stepping, inspector, channels (`stack-repl`) |
+| `repl-backend-swank` | **0.2.0** | SLIME Swank wire |
+| `repl-backend-slynk` | **0.2.0** | Sly Slynk wire (+ mrepl channels) |
+| `lisp-mcp` | **0.2.0** | Common Lisp MCP server (source / edit / live image) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.2** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
@@ -361,6 +366,7 @@ Rules (non-negotiable):
 | requests/httpx recipes | [cookbooks/http-client.md](cookbooks/http-client.md) |
 | WebSocket recipes / demos | [cookbooks/websocket.md](cookbooks/websocket.md) |
 | RPC / SSE / MCP | [cookbooks/rpc.md](cookbooks/rpc.md) · [sse.md](cookbooks/sse.md) · [mcp.md](cookbooks/mcp.md) |
+| Lisp tools for agents (MCP) | [cookbooks/lisp-mcp.md](cookbooks/lisp-mcp.md) |
 | A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
 | AI agent loop | [cookbooks/ai-agent.md](cookbooks/ai-agent.md) |
 | Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
