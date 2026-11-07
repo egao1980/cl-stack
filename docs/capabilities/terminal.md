@@ -1,7 +1,7 @@
 # terminal-protocol (P2) — terminal emulation
 
 **Issues:** [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **locked**. Shipped: [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) 0.1.0, [`ghostty-vt`](https://github.com/egao1980/ghostty-vt) 0.1.0 (linux amd64/arm64, darwin arm64, windows amd64 green), [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) 0.1.0, [`terminal-parity`](https://github.com/egao1980/terminal-parity) (98 fixtures). In progress: `terminal-backend-lisp`.
+**Status:** brief **locked**. Shipped: [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) 0.1.0, [`ghostty-vt`](https://github.com/egao1980/ghostty-vt) 0.1.0 (linux amd64/arm64, darwin arm64, windows amd64 green), [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) 0.1.0, [`terminal-backend-lisp`](https://github.com/egao1980/terminal-backend-lisp) 0.1.0 (all 98 parity fixtures), [`terminal-parity`](https://github.com/egao1980/terminal-parity) 0.1.0 (98 fixtures). All green on linux, macOS and Windows, and published.
 
 A CLOS protocol for a **headless terminal emulator**. You feed it the bytes a program writes, and it keeps the screen state. You query cells, the cursor, modes and the title, and you encode user input (keys, mouse, focus, paste) into the bytes the program expects back.
 
@@ -204,7 +204,7 @@ Wave-1 scope is the VT core every TUI uses:
 - UTF-8 with East Asian Width
 - Legacy and xterm modifier key encoding
 
-It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and `:format-html`.
+It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and `:format-html`. Where the corpus is silent, it differs from ghostty: no reflow on column resize, SU/SD and ED 2 never add to scrollback, invalid UTF-8 becomes U+FFFD, and 8-bit C1 bytes are not controls.
 
 ## Conformance (`terminal-parity`)
 
@@ -243,10 +243,10 @@ It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and
 ## Implementation tasks
 
 - [x] Brief lock — this doc ([#264](https://github.com/egao1980/cl-stack/issues/264))
-- [ ] `terminal-protocol` + Rove (host protocol, reentrancy guard, value types)
-- [ ] `ghostty-vt` — CFFI + overlay build (Zig 0.17, signed tarballs) + `publish-oci.yml`
-- [ ] `terminal-backend-ghostty` + Rove
-- [ ] `terminal-parity` corpus (ghostty oracle)
-- [ ] `terminal-backend-lisp` against the parity corpus
+- [x] `terminal-protocol` + Rove (host protocol, reentrancy guard, value types)
+- [x] `ghostty-vt` — CFFI + overlay build (Zig 0.17, signed tarballs) + `publish-oci.yml`
+- [x] `terminal-backend-ghostty` + Rove
+- [x] `terminal-parity` corpus (ghostty oracle)
+- [x] `terminal-backend-lisp` against the parity corpus
 - [ ] Cookbook `cookbooks/terminal.md` (headless TUI test; PTY glue loop)
-- [ ] OCI publish
+- [x] OCI publish
