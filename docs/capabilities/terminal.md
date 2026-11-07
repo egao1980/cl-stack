@@ -232,7 +232,7 @@ It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and
 
 ## Non-goals
 
-- **PTY / shell spawning.** `process-protocol` excludes PTYs in wave-1. A separate `pty-protocol` brief (forkpty / ConPTY) comes later; the cookbook shows the glue loop.
+- **PTY / shell spawning.** `process-protocol` excludes PTYs in wave-1. That is [`pty-protocol`](pty.md) (forkpty / ConPTY); the cookbook shows the glue loop.
 - Glyph rendering, fonts, shaping, GPU
 - Kitty graphics, search and selection (P1; libghostty-vt has them)
 - A tmux-like multiplexer or session server
