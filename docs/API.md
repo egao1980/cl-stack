@@ -121,6 +121,9 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `tui-protocol` — full-screen terminal programs: `init` / `update` / `view` over a canvas of `terminal-protocol` cells; diff renderer and input decoder; headless (`terminal-protocol`) and real-tty backends. **Draft.**
   **Brief:** [capabilities/tui.md](capabilities/tui.md) ([#274](https://github.com/egao1980/cl-stack/issues/274))
 
+- `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
+  **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
+
 ## Blackboard core (P2 — AI-agnostic)
 
 Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.1** / capability **0.2.1**).
