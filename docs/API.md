@@ -115,6 +115,9 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `terminal-protocol` — headless emulator: `terminal-feed` octets → frames / cells / cursor; `encode-key` / `encode-mouse` / `encode-paste`; effects via `terminal-host`. Default **libghostty-vt 1.0** (`ghostty-vt` CFFI), second pure-Lisp. **No PTY** — separate brief later.
   **Brief:** [capabilities/terminal.md](capabilities/terminal.md) ([#264](https://github.com/egao1980/cl-stack/issues/264))
 
+-  — spawn a program on a pseudo-terminal: read / write octets, resize, signal, wait. One native backend over a small C ABI (forkpty-style on Unix, ConPTY on Windows).
+  **Brief:** [capabilities/pty.md](capabilities/pty.md) ([#270](https://github.com/egao1980/cl-stack/issues/270))
+
 ## Blackboard core (P2 — AI-agnostic)
 
 Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.1** / capability **0.2.1**).
