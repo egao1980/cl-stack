@@ -1,7 +1,7 @@
 # terminal-protocol (P2) — terminal emulation
 
 **Issues:** [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **locked**. Shipped: [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) 0.1.0, [`ghostty-vt`](https://github.com/egao1980/ghostty-vt) 0.1.0 (linux amd64/arm64, darwin arm64, windows amd64 green), [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) 0.1.0, [`terminal-backend-lisp`](https://github.com/egao1980/terminal-backend-lisp) 0.1.0 (all 98 parity fixtures), [`terminal-parity`](https://github.com/egao1980/terminal-parity) 0.1.0 (98 fixtures). All green on linux, macOS and Windows, and published.
+**Status:** brief **locked**. Cookbook [terminal.md](../cookbooks/terminal.md). Shipped: [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) 0.1.0, [`ghostty-vt`](https://github.com/egao1980/ghostty-vt) 0.1.0 (linux amd64/arm64, darwin arm64, windows amd64 green), [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) 0.1.0, [`terminal-backend-lisp`](https://github.com/egao1980/terminal-backend-lisp) 0.1.0 (all 98 parity fixtures), [`terminal-parity`](https://github.com/egao1980/terminal-parity) 0.1.0 (98 fixtures). All green on linux, macOS and Windows, and published.
 
 A CLOS protocol for a **headless terminal emulator**. You feed it the bytes a program writes, and it keeps the screen state. You query cells, the cursor, modes and the title, and you encode user input (keys, mouse, focus, paste) into the bytes the program expects back.
 
@@ -248,5 +248,5 @@ It reports `nil` from `backend-supports-p` for `:kitty-keyboard`, `:osc-133` and
 - [x] `terminal-backend-ghostty` + Rove
 - [x] `terminal-parity` corpus (ghostty oracle)
 - [x] `terminal-backend-lisp` against the parity corpus
-- [ ] Cookbook `cookbooks/terminal.md` (headless TUI test; PTY glue loop)
+- [x] Cookbook [`cookbooks/terminal.md`](../cookbooks/terminal.md) (headless TUI test; PTY glue loop)
 - [x] OCI publish
