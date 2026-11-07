@@ -118,6 +118,9 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `pty-protocol` — spawn a program on a pseudo-terminal: read / write octets, resize, signal, wait. One native backend over a small C ABI (forkpty-style on Unix, ConPTY on Windows).
   **Brief:** [capabilities/pty.md](capabilities/pty.md) ([#270](https://github.com/egao1980/cl-stack/issues/270))
 
+- `tui-protocol` — full-screen terminal programs: `init` / `update` / `view` over a canvas of `terminal-protocol` cells; diff renderer and input decoder; headless (`terminal-protocol`) and real-tty backends. **Draft.**
+  **Brief:** [capabilities/tui.md](capabilities/tui.md) ([#274](https://github.com/egao1980/cl-stack/issues/274))
+
 ## Blackboard core (P2 — AI-agnostic)
 
 Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.1** / capability **0.2.1**).
