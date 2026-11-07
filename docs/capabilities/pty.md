@@ -126,4 +126,4 @@ void pty_cl_close(pty_cl_t *p);
 - [ ] `pty-protocol` + Rove (mock backend)
 - [ ] `pty-backend-native` — `pty-cl.c` (Unix + ConPTY), Zig cross builds, CFFI, Rove (real shells)
 - [ ] OCI publish
-- [ ] Terminal cookbook: PTY ↔ `terminal-protocol` loop
+- [x] Terminal cookbook: PTY ↔ `terminal-protocol` loop ([terminal.md](../cookbooks/terminal.md) §5–6)

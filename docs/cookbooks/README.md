@@ -20,6 +20,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [SQL](sql.md) | `sql-protocol` / `sql-query` / `sql-orm` / `sql-migrate` (Engine · Core · ORM · Alembic) |
 | [Crypto & secrets](crypto.md) | `crypto-protocol` / `secrets-protocol` (seal · digest · tokens · Argon2) |
 | [Subprocess](process.md) | `process-protocol` / `process-backend-uiop` (`run` · `launch`) |
+| [Headless terminals](terminal.md) | `terminal-protocol` (ghostty / pure-Lisp backends) + `pty-protocol` (`with-terminal` · `with-pty`) |
 | [RPC](rpc.md) | `rpc-protocol` / JSON-RPC · in-process · stdio · HTTP · SSE |
 | [SSE](sse.md) | `sse-protocol` / http client · Clack server (`text/event-stream`) |
 | [MCP](mcp.md) | `mcp-protocol` **0.3.0** / stdio · Streamable HTTP (tools / resources / prompts / notifications) |
