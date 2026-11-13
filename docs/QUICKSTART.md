@@ -126,11 +126,11 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `mcp-protocol` | **0.3.0** | dual-era MCP (`2026-07-28` / `2025-11-25`); server notifications, templated resources · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
 | `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
-| `lisp-source-protocol` | **0.2.0** | Eclector CST, recovery, lint, structural edits, indenter (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
-| `repl-protocol` | **0.2.2** | live image: eval, debugger, stepping, inspector, channels (`stack-repl`) |
-| `repl-backend-swank` | **0.2.0** | SLIME Swank wire |
-| `repl-backend-slynk` | **0.2.0** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.2.0** | Common Lisp MCP server (source / edit / live image) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-source-protocol` | **0.2.2** | Eclector CST, recovery, lint, structural edits, indenter (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
+| `repl-protocol` | **0.2.4** | live image: eval, debugger, stepping, inspector, channels (`stack-repl`) |
+| `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
+| `repl-backend-slynk` | **0.2.1** | Sly Slynk wire (+ mrepl channels) |
+| `lisp-mcp` | **0.2.3** | Common Lisp MCP server (source / edit / live image) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.2** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
