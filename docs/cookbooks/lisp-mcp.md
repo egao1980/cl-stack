@@ -4,11 +4,11 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.2.0** |
-| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.0** |
-| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.2** |
-| SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.0** |
-| Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.0** |
+| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.2.3** |
+| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.2** |
+| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.4** |
+| SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.2** |
+| Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.1** |
 | MCP | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) / [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) / [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.0** / **0.2.0** / **0.3.0** |
 
 | If you know | Here |
@@ -42,7 +42,7 @@ claude mcp add lisp-mcp -- lisp-mcp --root "$PWD"
 | Flag | Effect |
 |------|--------|
 | `--root DIR` (or `MCP_PROJECT_ROOT`) | every path is resolved inside DIR; `..` and symlinks out are refused |
-| `--spawn swank` / `--spawn slynk` | start with a fresh SBCL image attached |
+| `--spawn swank` / `--spawn slynk` | start with a fresh SBCL image attached (`ros +Q run`, no Quicklisp; Swank/Slynk load with ASDF from the server's cl-repo tree: GHCR `swank` 2.32 / `slynk` 1.0.43, installed as `:ci :with` roots) |
 | `--attach 127.0.0.1:4005 [--backend slynk]` | attach to your running SLIME / Sly |
 | `--transport http --port 3000` | Streamable HTTP instead of stdio |
 
