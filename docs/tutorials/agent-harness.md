@@ -54,6 +54,28 @@ For a live run, use Anthropic:
 
 **API-side compaction** (beta `compact-2026-01-12`) lets Anthropic summarize in place. It combines with the agent-side compaction in step 3. The agent's threshold then only matters for backends without it.
 
+**Another provider.** The agent takes any `llm-protocol` backend in `:backend`, and the model is that backend's default model. Pick the provider by building the matching backend:
+
+| Provider | Backend | Credentials / endpoint |
+|----------|---------|------------------------|
+| Anthropic | `(stack-llm-anthropic:make-anthropic-backend :default-model "claude-opus-5-5")` | `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL` |
+| OpenAI | `(stack-llm-openai:make-openai-compat-backend :base-url "https://api.openai.com/v1" :default-model "gpt-4o")` | `OPENAI_API_KEY` |
+| OpenRouter | `(stack-llm-openai:make-openai-compat-backend :base-url "https://openrouter.ai/api/v1" :api-key (uiop:getenv "OPENROUTER_API_KEY") :default-model "anthropic/claude-sonnet-4.5")` | `OPENROUTER_API_KEY` |
+| LM Studio | `(stack-llm-openai:make-openai-compat-backend :default-model "qwen/qwen3-coder-30b")` | default base `127.0.0.1:1234/v1`; `LM_API_TOKEN` when server auth is on |
+| Ollama / vLLM | `make-openai-compat-backend :base-url "http://127.0.0.1:11434/v1"` (vLLM: `:8000/v1`) | none |
+| vLLM / llama-server, Anthropic wire | `make-vllm-anthropic-backend`, `make-llama-server-anthropic-backend` | local |
+| llama.cpp in-process | `(llm-backend-llama-cpp:make-llama-cpp-backend :model-path #p"…gguf")` | none |
+| Tests | `(stack-llm:make-mock-llm-backend :handler …)` | none |
+
+Omitted initargs come from the environment: `OPENAI_BASE_URL`, `OPENAI_API_KEY` or `LM_API_TOKEN`, and `OPENAI_MODEL`, which defaults to `gpt-4o-mini`. A provider catalog (`stack-llm:make-in-memory-provider-catalog`, `register-provider`, `resolve-backend "anthropic:claude"`) maps names to backends; an unknown name signals `llm-unknown-provider` with a `use-value` restart. The [sample project](https://github.com/egao1980/cl-stack-sample#choose-the-model-provider) wraps this in a `"provider:model"` designator chosen with `SAMPLE_LLM`. The model must support tool calls.
+
+The OpenAI-compatible and Anthropic backends talk HTTP through `http-protocol`. Bind the async backend once:
+
+```lisp
+(setf http-backend-async:*event-backend-maker* #'event-backend-libuv:make-libuv-backend
+      http-protocol:*http-backend* (http-backend-async:make-async-backend))
+```
+
 ---
 
 ## 2. Retry by failure class
