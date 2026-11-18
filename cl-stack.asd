@@ -94,3 +94,35 @@
   :perform (test-op (o c)
              (unless (symbol-call :rove :run c)
                (error "meta-e2e failed"))))
+
+(defsystem "cl-stack/examples"
+  :description "Runnable examples for docs/tutorials (agent harness, mock LLM)"
+  :license "MIT"
+  :version "0.1.0"
+  :depends-on ((:version "ai-agent-protocol" "0.6.0")
+               (:version "llm-protocol" "0.4.0")
+               (:version "conversation-protocol" "0.3.0")
+               "conversation-protocol/summary"
+               (:version "steer-protocol" "0.3.0")
+               "event-protocol" "event-backend-libuv"
+               ;; the subagent tool parses its JSON arguments
+               "json-backend-jzon"
+               "uiop")
+  :pathname "examples/agents"
+  :serial t
+  :components ((:file "package")
+               (:file "long-runs")
+               (:file "permissions")
+               (:file "subagents")
+               (:file "instructions"))
+  :in-order-to ((test-op (test-op "cl-stack/examples-test"))))
+
+(defsystem "cl-stack/examples-test"
+  :description "Rove: every tutorial example runs and returns what the docs say"
+  :depends-on ("rove" "cl-stack/examples")
+  :pathname "tests/examples"
+  :serial t
+  :components ((:file "examples-test"))
+  :perform (test-op (o c)
+             (unless (symbol-call :rove :run c)
+               (error "examples-test failed"))))

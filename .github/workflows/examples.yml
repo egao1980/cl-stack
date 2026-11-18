@@ -1,0 +1,27 @@
+name: Tutorial examples
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/**'
+      - 'tests/examples/**'
+      - 'cl-stack.asd'
+      - '.github/workflows/examples.yml'
+  pull_request:
+    paths:
+      - 'examples/**'
+      - 'tests/examples/**'
+      - 'cl-stack.asd'
+      - '.github/workflows/examples.yml'
+  workflow_dispatch:
+
+jobs:
+  examples:
+    uses: egao1980/cl-repository/.github/workflows/test-system.yml@main
+    with:
+      system: cl-stack/examples
+      os-json: '["ubuntu-latest", "macos-latest"]'
+    permissions:
+      contents: read
+      packages: read

@@ -4,12 +4,12 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.2.3** |
+| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.4.0** |
 | Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.2** |
-| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.4** |
+| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.6** |
 | SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.2** |
 | Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.1** |
-| MCP | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) / [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) / [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.0** / **0.2.0** / **0.3.0** |
+| MCP | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) / [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) / [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.1** / **0.2.0** / **0.3.0** |
 
 | If you know | Here |
 |-------------|------|
@@ -216,7 +216,43 @@ On stdio these arrive at any time. Over HTTP they arrive in the SSE response of 
 
 ---
 
-## 9. The libraries without MCP
+## 9. Keeping the context small (0.3.1+)
+
+For a walkthrough, see [tutorials/lisp-mcp-session.md](../tutorials/lisp-mcp-session.md).
+
+| Feature | What the agent sees |
+|---------|---------------------|
+| **Terse by default** (0.3.2) | Written edits show `(+a -b lines)`; dry runs still show the diff. The debugger shows 4 frames and no next-step hints. Rove's passing checks are dropped. `"verbose": true` on one call, or `--verbose`, brings the full output back (and 4× the output limits). |
+| **Long output stored** (0.3.1) | Results over 120 lines or 10,000 characters are cut to head and tail, with a note: `Stored as oN: output-read id=oN offset=… or grep=…`. `output-read` pages through it (`offset`/`limit`) or greps it (`grep`, `context`). |
+| **Edit hints** (0.3.1) | A missed locator lists the closest definitions. A stale hash shows the current form and the hash to retry with. `"compile": true` compiles the changed forms and appends the notes. |
+| **Argument repair** (mcp-protocol 0.3.1) | Another spelling of an argument name (camelCase, snake_case, kebab-case) is renamed, and `"20"` or `"false"` is coerced to the schema type. Anything with more than one reading is still rejected. |
+| **Short catalog** (0.4.0) | Every tool description is 120 characters or fewer. The workflow is in the server instructions once. |
+
+---
+
+## 10. Long runs become jobs (0.4.0)
+
+`repl-eval`, `repl-compile`, `repl-load-system`, `repl-run-tests`, `debug-invoke-restart` and `debug-step` wait up to `timeout`: 60 s by default, 300 s for load-system and 600 s for run-tests. After that the evaluation keeps running and the call returns:
+
+```text
+Still running as job j1; do not start another copy while it is running;
+the result is reported when done (or call job-status / job-wait).
+```
+
+| Tool | |
+|------|--|
+| `job-list` | all jobs with status |
+| `job-status {"id": "j1"}` | the result once done, cut to the output limits like any result |
+| `job-wait {"id": "j1", "timeout": 120}` | block up to 300 s (default 60) |
+| `job-cancel {"id": "j1"}` | `repl-interrupt`; the job then reports the debugger state |
+
+- **No duplicates.** The same tool with the same arguments, ignoring `timeout` and `verbose`, returns the running job's id instead of starting a copy.
+- **Completion.** When a job ends, the server sends a log message (logger `lisp-mcp/jobs`).
+- **One connection, several requests.** repl-protocol 0.2.6 gives each debugger level to the request it belongs to, so a job and another call can share one connection.
+
+---
+
+## 11. The libraries without MCP
 
 ```lisp
 (asdf:load-system "lisp-source-protocol")

@@ -2,7 +2,7 @@
 
 Task-oriented recipes (Python/Java analogues → stack packages).
 
-**New here?** Install path + pins → [QUICKSTART.md](../QUICKSTART.md).
+**New here?** Install path + pins → [QUICKSTART.md](../QUICKSTART.md). End-to-end walkthroughs → [tutorials](../tutorials/README.md).
 
 | Cookbook | Package(s) |
 |----------|------------|
@@ -24,14 +24,14 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [RPC](rpc.md) | `rpc-protocol` / JSON-RPC · in-process · stdio · HTTP · SSE |
 | [SSE](sse.md) | `sse-protocol` / http client · Clack server (`text/event-stream`) |
 | [MCP](mcp.md) | `mcp-protocol` **0.3.0** / stdio · Streamable HTTP (tools / resources / prompts / notifications) |
-| [lisp-mcp](lisp-mcp.md) | `lisp-mcp` **0.2.0** / `lisp-source-protocol` / `repl-protocol` (static analysis · structural edits · Swank/Slynk images) |
+| [lisp-mcp](lisp-mcp.md) | `lisp-mcp` **0.4.0** / `lisp-source-protocol` / `repl-protocol` (static analysis · structural edits · Swank/Slynk images) |
 | [AG-UI](ag-ui.md) | `ag-ui-protocol` **0.3.0** / SSE · WKT proto · TUI sink (`RunAgentInput` → 36 events) |
 | [A2A](a2a.md) | `a2a-protocol` / JSON-RPC · REST · gRPC (Agent Card + tasks) |
-| [AI agent](ai-agent.md) | `ai-agent-protocol` **0.2.2** (`run-ai-agent`; `:memory` + `:steering`; `/mcp` sampling; not `run-agent`) |
+| [AI agent](ai-agent.md) | `ai-agent-protocol` **0.6.0** (`run-ai-agent`; `:memory` + `:steering`; retries · compaction · permissions · subagents; `/mcp` sampling; not `run-agent`) |
 | [Blackboard](blackboard.md) | `blackboard-protocol` / `capability-protocol` (KSAR + COW, no AI wire) |
-| [LLM](llm.md) | `llm-protocol` **0.2.1** / OpenAI **0.3.0** / Anthropic **0.1.0** / llama.cpp (generate · stream · embed) |
-| [Conversation memory](conversation.md) | `conversation-protocol` **0.1.0** (buffer · window) + agent `:memory` |
-| [Steer](steer.md) | `steer-protocol` **0.1.0** (rules · `SKILL.md`) + agent `:steering` |
+| [LLM](llm.md) | `llm-protocol` **0.4.0** / OpenAI **0.3.1** / Anthropic **0.2.0** / llama.cpp (generate · stream · embed) |
+| [Conversation memory](conversation.md) | `conversation-protocol` **0.3.0** (buffer · window · summary + `compact-turns`) + agent `:memory` |
+| [Steer](steer.md) | `steer-protocol` **0.3.0** (rules · `SKILL.md` · `AGENTS.md` discovery · base prompt) + agent `:steering` |
 | [RAG](rag.md) | `rag-protocol` **0.1.2** / memory · sql · pgvector · hybrid · tsvector · splade · CE / text splitter |
 | [Schema](schema.md) | `schema-protocol` / `schema-protocol-json` / `schema-protocol-xsd` (`defschema` · JSON Schema · XSD) |
 | [Date / time / TZ](datetime.md) | `datetime-protocol` / `cl-stack-tzdata` / `cl-stack-calendars` |

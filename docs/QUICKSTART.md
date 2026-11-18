@@ -123,14 +123,14 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sse-protocol` | **0.1.1** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
 | `sse-backend-http` | **0.1.1** | SSE client via http-protocol |
 | `sse-backend-clack` | **0.1.1** | SSE server (Clack) |
-| `mcp-protocol` | **0.3.0** | dual-era MCP (`2026-07-28` / `2025-11-25`); server notifications, templated resources · [cookbook](cookbooks/mcp.md) |
+| `mcp-protocol` | **0.3.1** | dual-era MCP (`2026-07-28` / `2025-11-25`); argument repair; server notifications, templated resources · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
 | `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
 | `lisp-source-protocol` | **0.2.2** | Eclector CST, recovery, lint, structural edits, indenter (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
-| `repl-protocol` | **0.2.4** | live image: eval, debugger, stepping, inspector, channels (`stack-repl`) |
+| `repl-protocol` | **0.2.6** | live image: eval, debugger, stepping, inspector, channels; debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.1** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.2.3** | Common Lisp MCP server (source / edit / live image) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-mcp` | **0.4.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.2** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
@@ -138,8 +138,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.3.1** | turns + parts + catalog + `embed` / `respond` / stream (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `conversation-protocol` | **0.2.0** | session store + buffer / window (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
+| `llm-protocol` | **0.4.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `conversation-protocol` | **0.3.0** | session store + buffer / window / summary; `compact-turns` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
 | `steer-protocol` | **0.3.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) + path-scoped `AGENTS.md` discovery, base prompt builder · [cookbook](cookbooks/steer.md) |
 | `rag-protocol` | **0.1.3** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
@@ -151,14 +151,14 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.3.1** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
-| `llm-protocol-anthropic` | **0.1.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server |
+| `llm-protocol-anthropic` | **0.2.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, API-side compaction |
 | `llama-cpp` | **0.1.6** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.6.0** | async-first loop + `:memory` + `:steering` + permissions, background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) |
+| `ai-agent-protocol` | **0.6.0** | async-first loop + `:memory` + `:steering` + permissions, background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.13** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2) |
+| `http-backend-async` | **0.2.17** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2) |
 | `http2` | **2.1.4** | fork; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers |
 | `http-backend-dexador` | **0.1.5** | sync HTTP/1.1 (soft-loads CE codecs) |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
@@ -209,9 +209,9 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
-| `event-protocol` | **0.2.1** | event-loop generics (`wake-call` / `submit`) |
-| `event-backend-libuv` | **0.1.4** | default (Windows-primary); libuv 1.53.0; per-loop submit pool |
-| `event-backend-libev` | **0.1.3** | Unix second backend; per-loop submit pool |
+| `event-protocol` | **0.2.2** | event-loop generics (`wake-call` / `submit` / `close-event-loop`) |
+| `event-backend-libuv` | **0.2.2** | default (Windows-primary); libuv 1.53.0; per-loop submit pool |
+| `event-backend-libev` | **0.2.2** | Unix second backend; per-loop submit pool |
 | `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
 | `cl-stack-executors` | **0.1.0** | BT pools backends *may* plug into `submit` |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
@@ -366,9 +366,9 @@ Rules (non-negotiable):
 | requests/httpx recipes | [cookbooks/http-client.md](cookbooks/http-client.md) |
 | WebSocket recipes / demos | [cookbooks/websocket.md](cookbooks/websocket.md) |
 | RPC / SSE / MCP | [cookbooks/rpc.md](cookbooks/rpc.md) · [sse.md](cookbooks/sse.md) · [mcp.md](cookbooks/mcp.md) |
-| Lisp tools for agents (MCP) | [cookbooks/lisp-mcp.md](cookbooks/lisp-mcp.md) |
+| Lisp tools for agents (MCP) | [cookbooks/lisp-mcp.md](cookbooks/lisp-mcp.md) · [tutorial](tutorials/lisp-mcp-session.md) |
 | A2A / AG-UI | [cookbooks/a2a.md](cookbooks/a2a.md) · [ag-ui.md](cookbooks/ag-ui.md) |
-| AI agent loop | [cookbooks/ai-agent.md](cookbooks/ai-agent.md) |
+| AI agent loop | [cookbooks/ai-agent.md](cookbooks/ai-agent.md) · [tutorial: long runs](tutorials/agent-harness.md) |
 | Blackboard / capabilities | [cookbooks/blackboard.md](cookbooks/blackboard.md) |
 | LLM generate / stream / embed | [cookbooks/llm.md](cookbooks/llm.md) |
 | Schema / datetime / conditions | [schema.md](cookbooks/schema.md) · [datetime.md](cookbooks/datetime.md) · [conditions.md](cookbooks/conditions.md) |
