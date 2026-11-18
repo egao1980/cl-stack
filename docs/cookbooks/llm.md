@@ -4,16 +4,16 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol + mock + catalog (`stack-llm`) | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
-| OpenAI-compat (`stack-llm-openai`) | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.0** |
-| Anthropic Messages (`stack-llm-anthropic`) | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.1.0** |
+| Protocol + mock + catalog (`stack-llm`) | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** |
+| OpenAI-compat (`stack-llm-openai`) | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.1** |
+| Anthropic Messages (`stack-llm-anthropic`) | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.2.0** |
 | llama.cpp native | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.4** |
 | CFFI + overlays | [`llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.1.5** |
 
 Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboard-protocol` dep. Demiurge **consumes** this. Sampling → [ai-agent.md](ai-agent.md). Conversation memory → [conversation.md](conversation.md). Rules / skills → [steer.md](steer.md). RAG / chunk / retrieve → [rag.md](rag.md).
 
 ```lisp
-(cl-repo:load-system "llm-protocol" :version "0.2.1")
+(cl-repo:load-system "llm-protocol" :version "0.4.0")
 (cl-repo:load-system "llm-protocol-openai" :version "0.3.0")
 (cl-repo:load-system "llm-protocol-anthropic" :version "0.1.0")
 ```
@@ -125,6 +125,33 @@ Provider catalog (not LiteLLM, not a router):
 ```
 
 Refs: `"anthropic:claude"` / `:vllm` / `("openai" "gpt-4o")`. Missing name → `llm-unknown-provider` (`use-value`).
+
+**Long runs (Anthropic 0.2.0):**
+
+```lisp
+(stack-llm-anthropic:make-anthropic-backend
+ :prompt-cache :auto          ; 4 breakpoints: last tool, system, last two messages (official API)
+ :server-compaction 150000)   ; API-side compaction (beta compact-2026-01-12); t, an integer ≥ 50000, or a plist
+```
+
+- **Cache usage.** `llm-usage-cache-read-tokens` and `llm-usage-cache-write-tokens` report it. `llm-usage-prompt-tokens` is input plus cache read plus cache write.
+- **Context overflow.** A 400 or 413 "prompt is too long" signals `llm-context-overflow`.
+- **Retry-After.** The header reaches `llm-http-error-retry-after`.
+- **Mid-stream errors.** A mid-stream `overloaded_error` is a retryable 529.
+
+---
+
+## 3b. Retries and token counts (`llm-protocol` 0.4)
+
+```lisp
+(stack-llm:llm-retry-class c)        ; → :rate-limit | :overloaded | :transient | :context-overflow | NIL
+(stack-llm:with-retry-policy (:policy (stack-llm:make-retry-policy :max-attempts 5 :base-delay 2 :max-delay 30))
+  (stack-llm:generate b "ping"))     ; sleeps per retry-delay between attempts
+(stack-llm:anchored-token-count b turns :usage last-usage :anchor-count n)
+;; measured usage for the first N turns + count-tokens estimate for the rest
+```
+
+`retry-delay` is `min(max-delay, Retry-After or base·2^(attempt-1), doubled when :overloaded)`. The agent loop uses the same policy without blocking the event loop; see [ai-agent.md](ai-agent.md) §6.
 
 ---
 

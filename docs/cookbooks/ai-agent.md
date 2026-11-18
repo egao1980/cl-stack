@@ -4,7 +4,7 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-ai-agent`) | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** |
+| Protocol (`stack-ai-agent`) | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
 | MCP sampling + peer | `ai-agent-protocol/mcp` | **0.1.0** |
 | AG-UI encode | `ai-agent-protocol/ag-ui` | **0.2.0** |
 | A2A expose | `ai-agent-protocol/a2a` | **0.1.0** |
@@ -12,7 +12,7 @@
 Brief: [ai-agent.md](../capabilities/ai-agent.md). Do **not** call this `run-agent` — that's `ag-ui-protocol:run-agent`.
 
 ```lisp
-(cl-repo:load-system "ai-agent-protocol" :version "0.2.2")
+(cl-repo:load-system "ai-agent-protocol" :version "0.6.0")
 ```
 
 ---
@@ -98,6 +98,62 @@ Bind **async × libuv**. `scripts/demo.lisp` in `ai-agent-protocol`.
 set -a && source ../.env && set +a   # LM_API_TOKEN / OPENAI_MODEL
 CL_SOURCE_REGISTRY="$PWD/../:" ros -l scripts/demo.lisp
 ```
+
+---
+
+## 6. Long runs: retries, compaction, wrap-up, tool failures (0.4)
+
+All of these are settings `:extra` keys. For a walkthrough with runnable code, see [tutorials/agent-harness.md](../tutorials/agent-harness.md).
+
+```lisp
+(make-ai-agent :name "coder" :backend backend
+               :settings (make-agent-settings
+                          :max-steps 40
+                          :extra (list :retry-policy (stack-llm:make-retry-policy :max-attempts 6)
+                                       :compaction (stack-conversation:make-summary-memory
+                                                    :backend backend :tail-tokens 15000))))
+```
+
+| Key | Does |
+|-----|------|
+| `:retry-policy` | retries `:rate-limit`, `:overloaded` and `:transient` failures with backoff, honouring `Retry-After`; the retry is scheduled on the loop (event `:retry`) |
+| `:compaction` / `:compact-at` | summarizes old turns before a step over the threshold, and once on `llm-context-overflow` (event `:compacted`) |
+| `:max-steps-wrap-up` / `:max-steps-prompt` | at `max-steps`, makes one more generate with `tool-choice :none` that summarizes what is done, what is left and what comes next |
+
+Tool handlers can signal `tool-input-error`, `tool-unavailable` or `tool-timeout`. The model then reads what to do next (`tool-failure-text`).
+
+---
+
+## 7. Permissions (0.5)
+
+```lisp
+(make-ai-agent :name "coder" :backend backend
+               :permissions '(("*" "*" :ask) ("edit" "src/*" :allow) ("bash" "rm *" :deny)))
+```
+
+- For each resource, the last matching rule wins. A deny on any resource wins over the rest.
+- `:permission-policy` can only make the result stricter.
+- `:ask` is the approval pause.
+- A deny becomes an error tool result carrying `:feedback`; it does not abort the run.
+- Resources come from `tool-permission-resources` or `make-function-tool :permission-resources`.
+
+---
+
+## 8. Background subagents (0.5)
+
+`(make-subagent-tool (list researcher))`:
+- Starting returns an id such as `sub-1` at once.
+- The reply arrives as `<subagent id="sub-1" …>` before the parent's next generate.
+- `{"id": "sub-1", "prompt": …}` continues the same child.
+- Only one level deep: a child cannot start its own subagents.
+- `:subagents-on-finish` is `:wait`, `:cancel` or `:detach`.
+- Needs a `json-protocol` backend.
+
+---
+
+## 9. `AGENTS.md` found as the agent reaches them (0.6)
+
+With `:extra (list :instructions-discovery #p"/work/proj/")`, paths in tool calls pull in the `AGENTS.md` files from that directory up to the root. Each file goes in once per run, and again after it changes or after a compaction. See [steer.md](steer.md).
 
 ---
 

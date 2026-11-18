@@ -4,14 +4,14 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol + buffer / window (`stack-conversation`) | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.1.0** |
-| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** |
-| Turns | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
+| Protocol + buffer / window (`stack-conversation`) | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** |
+| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
+| Turns | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** |
 
 Brief: [conversation.md](../capabilities/conversation.md).
 
 ```lisp
-(cl-repo:load-system "conversation-protocol" :version "0.1.0")
+(cl-repo:load-system "conversation-protocol" :version "0.3.0")
 ```
 
 ---
@@ -61,9 +61,26 @@ Hand-wire without the slot:
 
 ---
 
+## 3. Compaction: summary + verbatim tail (0.3)
+
+```lisp
+(asdf:load-system "conversation-protocol/summary")
+
+(let ((mem (stack-conversation:make-summary-memory :backend backend :tail-tokens 15000)))
+  (stack-conversation:compact-turns mem turns :backend backend))
+;; → (values new-turns compacted-p): system turns, one summary turn, the newest ~15k tokens verbatim
+```
+
+- **Prompt.** `+compaction-prompt+` asks for fixed headings: Objective, Requirements, Decisions, Work State, Next Move, Relevant Files, Important Context. An earlier summary is merged in, not started over.
+- **Transcript.** The history goes as one plain-text transcript (`render-transcript`). Tool results are clipped to `*summary-part-chars*` and thinking is dropped.
+- **Tool pairs.** The cut never leaves a tool result without its call.
+- **In the agent loop.** Settings `:extra (list :compaction mem)` compacts before a step over the threshold and once on context overflow ([ai-agent.md](ai-agent.md) §6). API-side compaction is a backend option instead ([llm.md](llm.md) §3).
+
+---
+
 ## What not to do
 
 - Don’t put this on `rag-protocol` or `llm-protocol`.
-- Don’t window by tokens — no tokenizer protocol yet.
+- Don’t window by tokens with `window-memory`: windows count turns. Use `summary-memory` `:tail-tokens`, which uses the backend's `count-tokens`.
 - Don’t treat `remember` of a full `agent-run-turns` as append (use `:replace t`).
 - Don’t put rules / `SKILL.md` here — [steer.md](steer.md).
