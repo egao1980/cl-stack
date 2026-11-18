@@ -1,7 +1,7 @@
 # llm-protocol (P2)
 
 **Issues:** [#195](https://github.com/egao1980/cl-stack/issues/195) · parent [#192](https://github.com/egao1980/cl-stack/issues/192)
-**Status:** `llm-protocol` **0.2.1** + [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0** + [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.4** · cookbook [llm.md](../cookbooks/llm.md)
+**Status:** shipped at `llm-protocol` **0.2.1** + [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) **0.3.0** + [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) **0.1.0** + [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) **0.1.4**. Current: `llm-protocol` **0.4.0** (`/router`, token counting, `/telemetry` in 0.3; `retry-policy` by failure class, `llm-context-overflow`, cache-aware usage, `anchored-token-count` in 0.4) · OpenAI **0.3.2** · Anthropic **0.2.0** (prompt-cache breakpoints, API-side compaction, `Retry-After`) · llama.cpp **0.1.5** over `llama-cpp` **0.2.0** · cookbook [llm.md](../cookbooks/llm.md)
 
 CLOS generation + embeddings protocol. **Not** a `blackboard-protocol` dependency. **Demiurge is a consumer**, not the driver.
 

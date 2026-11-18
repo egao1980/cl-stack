@@ -24,14 +24,16 @@ Every step has a runnable example in [`examples/agents/`](../../examples/agents/
 (in-package #:cl-stack-examples/agents)
 ```
 
-All runs below need a bound event loop. `with-agent-loop` from [`package.lisp`](../../examples/agents/package.lisp) binds a libuv loop:
+All runs below need a bound event loop. `with-agent-loop` from [`package.lisp`](../../examples/agents/package.lisp) binds a libuv loop and closes it on exit (`close-event-loop`, event-protocol 0.2.2):
 
 ```lisp
 (defmacro with-agent-loop (&body body)
   `(let* ((eb (event-backend-libuv:make-libuv-backend))
           (el (event-protocol:make-event-loop eb)))
-     (event-protocol:with-event-backend (eb)
-       (event-protocol:with-event-loop-var (el) ,@body))))
+     (unwind-protect
+          (event-protocol:with-event-backend (eb)
+            (event-protocol:with-event-loop-var (el) ,@body))
+       (event-protocol:close-event-loop eb el))))   ; whoever makes a loop closes it
 ```
 
 ---

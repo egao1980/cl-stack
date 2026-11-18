@@ -4,8 +4,8 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.4.0** |
-| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.2** |
+| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.4.1** |
+| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.4** |
 | Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.6** |
 | SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.2** |
 | Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.1** |

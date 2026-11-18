@@ -1,7 +1,7 @@
 # image-protocol (P2) — image decoding and encoding
 
 **Issues:** [#275](https://github.com/egao1980/cl-stack/issues/275) · terminal [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **locked** — no code yet · research: [image-libraries.md](../research/image-libraries.md)
+**Status:** brief **locked**. Shipped: [`image-protocol`](https://github.com/egao1980/image-protocol) 0.1.0 (`stack-image`: `decode-image` / `probe-image` / `encode-image` / `convert-image`; header limits checked before any backend) + [`image-backend-stb`](https://github.com/egao1980/image-backend-stb) 0.2.1 (stb_image with Fedora's patch set, through `asdf-native`). No cookbook yet; see the repo READMEs · research: [image-libraries.md](../research/image-libraries.md)
 
 Decode PNG, JPEG, GIF, BMP and friends into pixels, and encode pixels back, behind one CLOS API over several backends at once. Each backend declares the formats it handles and with what priority. Inputs are untrusted by default: limits are checked before pixels are allocated, unusual formats must be enabled explicitly, and both backends are fuzzed.
 

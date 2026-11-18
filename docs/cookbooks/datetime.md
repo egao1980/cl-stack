@@ -4,16 +4,16 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.2** |
+| Protocol (`stack-datetime`) | [`datetime-protocol`](https://github.com/egao1980/datetime-protocol) | **0.1.3** |
 | Easter / Hebrew / Islamic / Chinese | `datetime-protocol/calendars` | (same) |
-| IANA tzdb (`stack-tzdata`) | [`cl-stack-tzdata`](https://github.com/egao1980/cl-stack-tzdata) | **2026.3.0** |
+| IANA tzdb (`stack-tzdata`) | [`cl-stack-tzdata`](https://github.com/egao1980/cl-stack-tzdata) | **2026.6.0** |
 | Holidays / sessions (`stack-calendars`) | [`cl-stack-calendars`](https://github.com/egao1980/cl-stack-calendars) | **0.4.1** |
 
 Brief: [datetime.md](../capabilities/datetime.md) (#105). Localized print → [unicode.md](unicode.md) (`l10n-protocol`).
 
 ```lisp
-(cl-repo:load-system "datetime-protocol" :version "0.1.2")
-(cl-repo:load-system "cl-stack-tzdata" :version "2026.3.0")   ; named IANA zones
+(cl-repo:load-system "datetime-protocol" :version "0.1.3")
+(cl-repo:load-system "cl-stack-tzdata" :version "2026.6.0")   ; named IANA zones
 ```
 
 ---

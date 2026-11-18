@@ -15,8 +15,8 @@
 Brief: [http-server.md](../capabilities/http-server.md). App contract = **Clack env** → `(status headers body)`.
 
 ```lisp
-(cl-repo:load-system "http-server-backend-hunchentoot" :version "0.1.0")
-(cl-repo:load-system "json-backend-jzon" :version "0.2.0")
+(cl-repo:load-system "http-server-backend-hunchentoot" :version "0.2.0")
+(cl-repo:load-system "json-backend-jzon" :version "0.2.1")
 ;; nick: stack-http-server
 ```
 
@@ -90,7 +90,7 @@ Needs system **libev** (`libev4` / Homebrew `libev`). Does **not** auto-bind —
                          :ssl-cert "cert.pem" :ssl-key "key.pem")
 ```
 
-CONNECT (RFC 8441) is dispatched when headers end — the client does not `END_STREAM`. WebSocket framing on that stream is `ws-backend-websocket-driver` **0.4.0**, not this backend.
+CONNECT (RFC 8441) is dispatched when headers end — the client does not `END_STREAM`. WebSocket framing on that stream is `ws-backend-websocket-driver` **0.4.3**, not this backend.
 
 ## 5. Errors
 

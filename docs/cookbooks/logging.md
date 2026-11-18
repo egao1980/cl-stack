@@ -17,7 +17,7 @@ Brief: [logging.md](../capabilities/logging.md).
 
 ```lisp
 (cl-repo:load-system "log-backend-log4cl" :version "0.1.1")
-(cl-repo:load-system "sexp-protocol" :version "0.2.0")  ; for structured :sexp
+(cl-repo:load-system "sexp-protocol" :version "0.2.2")  ; for structured :sexp
 ```
 
 ---

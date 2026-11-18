@@ -4,14 +4,14 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-sse`) | [`sse-protocol`](https://github.com/egao1980/sse-protocol) | **0.1.0** |
-| Client | [`sse-backend-http`](https://github.com/egao1980/sse-backend-http) | **0.1.0** |
-| Server | [`sse-backend-clack`](https://github.com/egao1980/sse-backend-clack) | **0.1.0** |
+| Protocol (`stack-sse`) | [`sse-protocol`](https://github.com/egao1980/sse-protocol) | **0.1.1** |
+| Client | [`sse-backend-http`](https://github.com/egao1980/sse-backend-http) | **0.1.1** |
+| Server | [`sse-backend-clack`](https://github.com/egao1980/sse-backend-clack) | **0.1.1** |
 
 Brief: [sse.md](../capabilities/sse.md) (#184). SSE is **framing**, not a serdes format. `data:` is already-encoded JSON (JSON-RPC, AG-UI events, …).
 
 ```lisp
-(cl-repo:load-system "sse-protocol" :version "0.1.0")
+(cl-repo:load-system "sse-protocol" :version "0.1.1")
 ```
 
 ---

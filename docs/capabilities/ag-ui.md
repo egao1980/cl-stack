@@ -1,7 +1,7 @@
 # ag-ui-protocol (P1)
 
 **Issues:** [#187](https://github.com/egao1980/cl-stack/issues/187)
-**Status:** `ag-ui-protocol` **0.3.0** + SSE **0.2.1** + protobuf **0.3.0** + TUI **0.1.0** — typed events, **not** JSON-RPC
+**Status:** shipped at `ag-ui-protocol` **0.3.0** + SSE **0.2.1** + protobuf **0.3.0** + TUI **0.1.0**; current `ag-ui-protocol` **0.4.1** + protobuf **0.4.0** add the official `@ag-ui/proto` `Event` oneof (`ag-ui-protocol/proto`) — typed events, **not** JSON-RPC
 
 [AG-UI](https://docs.ag-ui.com/concepts/events). Agent ↔ UI. Client POSTs `RunAgentInput`; server streams events. All **36** upstream event types decode (`every-upstream-event-type-is-modelled`).
 
@@ -16,7 +16,7 @@ The **agent loop** is [ai-agent.md](ai-agent.md) (`run-ai-agent`). This package 
 | **Shape** | `schema-protocol` `defschema` events + `run-agent` GF; transports are backends |
 | **JSON Schema** | `schema-protocol-json` — draft-07 emit (`ag-ui-json-schema`), validate incoming JSON (`validate-ag-ui-json`), tool `parameters` (`validate-tool-arguments`) |
 | **Default backend (A)** | `ag-ui-backend-sse` **0.2.1** — sse-protocol over http-server-protocol |
-| **Second backend (B)** | `ag-ui-backend-protobuf` **0.3.0** — JSON-as-WKT (`google.protobuf.Value` via serdes `:wkt`), length-prefixed `application/vnd.ag-ui.event+proto`. **Not** the official `Event` oneof. **Not** JSON octets in SSE. |
+| **Second backend (B)** | `ag-ui-backend-protobuf` **0.4.0** — JSON-as-WKT (`google.protobuf.Value` via serdes `:wkt`), length-prefixed `application/vnd.ag-ui.event+proto`; official `Event` oneof on its own media type `application/vnd.ag-ui.event+oneof` (`encode-ag-ui-event-oneof` / `decode-ag-ui-event-oneof` in `ag-ui-protocol/proto`). **Not** JSON octets in SSE. |
 | **TUI sink** | `ag-ui-backend-tui` **0.1.0** — fold events into a transcript. Not a wire client. Paint is optional (`/tuition`). |
 | **Client reducer** | `ag-ui-protocol/client` — `verify-events` + `apply-event` / `reduce-events`. `STATE_DELTA` via [`json-patch`](https://github.com/egao1980/json-patch) **0.1.0**. |
 | **Chunks** | `*_CHUNK` is a producer convenience. `expand-ag-ui-chunks` (or a `chunk-expander`) rewrites to START/CONTENT/END. |
@@ -90,5 +90,4 @@ Pinned by `every-upstream-event-type-is-modelled`.
 ## Non-goals
 
 - CopilotKit React kit
-- Official `Event` oneof proto (WKT Value is the shipped binary)
 - Putting `run-ai-agent` in this package

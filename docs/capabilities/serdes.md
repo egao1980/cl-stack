@@ -1,7 +1,7 @@
 # serdes-protocol (P2)
 
 **Issues:** [#132](https://github.com/egao1980/cl-stack/issues/132) · impl [#133](https://github.com/egao1980/cl-stack/issues/133)  
-**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.2** (media-type registry) / `sexp-protocol` **0.2.0**; `json-protocol` OCI **0.2.0** implements `:json` (JSONL + event pull). [`yaml-protocol`](json-protocol.md) (same repo) implements `:yaml` (JSON⊂YAML). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.0** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`. [`mime-protocol`](mime-protocol.md) **0.1.0** implements `:mime` / `:multipart`. [`cbor-protocol`](cbor-protocol.md) **0.1.0** implements `:cbor`. [`messagepack-protocol`](messagepack-protocol.md) **0.1.0** implements `:messagepack` / `:msgpack`. [`avro-protocol`](avro-protocol.md) **0.1.0** implements `:avro`. [`encoding-protocol`](encoding-protocol.md) **0.1.2** (`/serdes`) implements `:base64` / `:base64url` / `:base32` / `:base32hex` / `:base16` / `:quoted-printable` / `:rle`.
+**Status:** wave-1 **shipped** — `serdes-protocol` OCI **0.2.2** (media-type registry) / `sexp-protocol` **0.2.2**; `json-protocol` OCI **0.2.1** implements `:json` (JSONL + event pull). [`yaml-protocol`](https://github.com/egao1980/yaml-protocol) **0.2.1** (own repo) implements `:yaml` (JSON⊂YAML). [`csv-protocol`](csv-protocol.md) OCI **0.1.0** implements `:csv` / `:tsv`. [`xml-protocol`](xml-protocol.md) OCI **0.1.0** implements `:xml`. [`arrow-protocol`](arrow.md) OCI **0.1.1** implements `:arrow` / `:parquet`. [`protobuf-protocol`](protobuf.md) OCI **0.2.0** implements `:protobuf`. [`mime-protocol`](mime-protocol.md) **0.1.5** implements `:mime` / `:multipart`. [`cbor-protocol`](cbor-protocol.md) **0.1.0** implements `:cbor`. [`messagepack-protocol`](messagepack-protocol.md) **0.1.0** implements `:messagepack` / `:msgpack`. [`avro-protocol`](avro-protocol.md) **0.1.2** implements `:avro`. [`encoding-protocol`](encoding-protocol.md) **0.2.0** (`/serdes`) implements `:base64` / `:base64url` / `:base32` / `:base32hex` / `:base16` / `:quoted-printable` / `:rle`.
 
 
 Generic **ser**ialize / **des**erialize of Lisp values ↔ string, octets, or **streams**.
@@ -241,16 +241,16 @@ Same contract as json/sexp — **implement** serdes, don’t wrap it:
 
 | Format | Notes |
 |--------|-------|
-| **YAML** | **Shipped** — `yaml-protocol` **0.1.0** (in [`json-protocol`](json-protocol.md) repo); serdes `:yaml` |
+| **YAML** | **Shipped** — [`yaml-protocol`](https://github.com/egao1980/yaml-protocol) **0.2.1** (own repo; same Lisp mapping as [`json-protocol`](json-protocol.md)); serdes `:yaml` |
 | **CSV** | **Shipped** — [`csv-protocol`](csv-protocol.md) OCI **0.1.0**; dialects; row streams; events |
 | **XML** | **Shipped** — [`xml-protocol`](xml-protocol.md) **0.1.0** + `xml-backend-native` (Infoset + events + writer) |
-| **Protobuf** | **Shipped** — [`protobuf-protocol`](protobuf.md) **0.2.0** + cl-protobufs **0.2.0**; octets + proto3 JSON / WKT |
+| **Protobuf** | **Shipped** — [`protobuf-protocol`](protobuf.md) **0.2.0** + `protobuf-backend-cl-protobufs` **0.2.0**; octets + proto3 JSON / WKT |
 | **Apache Arrow** | **Shipped** — [`arrow-protocol`](arrow.md) (`stack-arrow`) native IPC + Parquet subset; serdes `:arrow` / `:parquet`. Flight / C Data Interface later. |
-| **MIME** | **Shipped** — [`mime-protocol`](mime-protocol.md) **0.1.0**; serdes `:mime` / `:multipart` |
+| **MIME** | **Shipped** — [`mime-protocol`](mime-protocol.md) **0.1.5**; serdes `:mime` / `:multipart` |
 | **CBOR** | **Shipped** — [`cbor-protocol`](cbor-protocol.md) **0.1.0**; serdes `:cbor` |
 | **MessagePack** | **Shipped** — [`messagepack-protocol`](messagepack-protocol.md) **0.1.0**; serdes `:messagepack` / `:msgpack` |
-| **Avro** | **Shipped** — [`avro-protocol`](avro-protocol.md) **0.1.0** + `schema-protocol-avro`; serdes `:avro` |
-| **Encodings** | **Shipped** — [`encoding-protocol`](encoding-protocol.md) **0.1.2**; `/serdes` registers RFC 4648 / QP / RLE |
+| **Avro** | **Shipped** — [`avro-protocol`](avro-protocol.md) **0.1.2** + `schema-protocol-avro`; serdes `:avro` |
+| **Encodings** | **Shipped** — [`encoding-protocol`](encoding-protocol.md) **0.2.0**; `/serdes` registers RFC 4648 / QP / RLE |
 | EDN / Cap’n Proto | Only if demand; same registration pattern |
 
 No second streaming façade — Arrow/protobuf **specialize** the wave-1 Gray GFs.

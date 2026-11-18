@@ -1,6 +1,6 @@
 # rag-protocol (P1)
 
-**Status:** `rag-protocol` **0.1.2** + memory / sql / pgvector / hybrid **0.1.1** / tsvector / splade / cross-encoder / text **0.1.0** · cookbook [rag.md](../cookbooks/rag.md)
+**Status:** `rag-protocol` **0.1.3** (time / kind filters on `retrieve`) + memory / sql / pgvector **0.1.0** / hybrid **0.1.1** / tsvector / splade / cross-encoder **0.1.0** / text **0.2.0** (`block-tree-chunker`) · cookbook [rag.md](../cookbooks/rag.md)
 
 CLOS chunk / store / rerank / retrieve. **Not** stuffed into `llm-protocol`. Embeddings stay `embed` / `embed-query` on an `llm-backend`.
 
@@ -64,7 +64,7 @@ Package nick: `stack-rag`.
 
 | Layer | Repo | OCI |
 |-------|------|-----|
-| Protocol + mock | [`egao1980/rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.2** |
+| Protocol + mock | [`egao1980/rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.3** |
 | Memory store | [`egao1980/rag-backend-memory`](https://github.com/egao1980/rag-backend-memory) | **0.1.0** |
 | SQL store | [`egao1980/rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) | **0.1.0** |
 | pgvector store | [`egao1980/rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) | **0.1.0** |
@@ -72,6 +72,6 @@ Package nick: `stack-rag`.
 | Postgres FTS | [`egao1980/rag-backend-tsvector`](https://github.com/egao1980/rag-backend-tsvector) | **0.1.0** |
 | Sparse / SPLADE | [`egao1980/rag-backend-splade`](https://github.com/egao1980/rag-backend-splade) | **0.1.0** |
 | Cross-encoder | [`egao1980/rag-backend-cross-encoder`](https://github.com/egao1980/rag-backend-cross-encoder) | **0.1.0** |
-| Text chunker | [`egao1980/rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.1.0** |
+| Text chunker | [`egao1980/rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.2.0** |
 
 Conditions: `rag-error` / `rag-missing-backend` (`use-value`) / `rag-dimension-mismatch` (`continue` / `use-value`) / `rag-not-found` (`continue`).

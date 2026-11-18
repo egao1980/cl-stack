@@ -1,6 +1,6 @@
 # avro-protocol (P2)
 
-**Status:** **shipped** — [`egao1980/avro-protocol`](https://github.com/egao1980/avro-protocol) OCI **0.1.0** (`stack-avro`) + `schema-protocol-avro` **0.1.1**
+**Status:** **shipped** — [`egao1980/avro-protocol`](https://github.com/egao1980/avro-protocol) OCI **0.1.2** (`stack-avro`) + `schema-protocol-avro` **0.1.2**
 
 Avro **binary** encoding. Writer schema required; optional reader schema (resolution + defaults). **Implements** [`serdes-protocol`](serdes.md) `:avro` (`application/avro`, `avro/binary`). `schema-protocol-avro` registers [`schema-protocol`](schema.md) `:avro` (`emit-schema` / `parse-schema`; `avro-schema` wraps emit). Soft-hooks `http-protocol` `:avro`.
 

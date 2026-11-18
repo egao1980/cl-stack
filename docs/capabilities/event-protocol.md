@@ -109,6 +109,7 @@ Tiny ASDF system `event-protocol`: generics, conditions, value types. Almost no 
 (defgeneric make-event-loop (backend &key))
 (defgeneric run (backend loop &key stop-when-idle))
 (defgeneric stop (backend loop))
+(defgeneric close-event-loop (backend loop))  ; 0.2.2: release natives after RUN; pending handles canceled; idempotent
 
 (defgeneric defer (backend loop function &key))           ; next tick
 (defgeneric call-soon (backend loop function &key))       ; alias / alias policy
@@ -165,9 +166,12 @@ Restarts (where useful): `retry`, `abort-loop`, `use-value` (for sleep/defer res
 (asdf:load-system "event-backend-libuv")
 (let* ((eb (event-backend-libuv:make-libuv-backend))
        (el (event-protocol:make-event-loop eb)))
-  (event-protocol:with-event-backend (eb)
-    (event-protocol:with-event-loop-var (el)
-      …)))
+  (unwind-protect
+       (event-protocol:with-event-backend (eb)
+         (event-protocol:with-event-loop-var (el)
+           …))
+    ;; the maker owns the loop: an unclosed libuv loop keeps its kqueue/epoll fd
+    (event-protocol:close-event-loop eb el)))
 
 ;; swap for conformance / Woo-adjacent deploy
 (asdf:load-system "event-backend-libev")
@@ -181,12 +185,12 @@ No central plugin registry. Metapackage (#21) may depend on the default backend 
 
 ## Overlay plan (feeds #16 / #17)
 
-| Backend | Native | GHCR (planned) | Matrix |
-|---------|--------|----------------|--------|
+| Backend | Native | GHCR | Matrix |
+|---------|--------|------|--------|
 | A libuv | `libuv` + grovel | `ghcr.io/egao1980/cl-systems/event-backend-libuv:<ver>` | linux/amd64+arm64, darwin/arm64, **windows/amd64** |
 | B libev | `libev` + grovel | `ghcr.io/egao1980/cl-systems/event-backend-libev:<ver>` | linux/amd64+arm64, darwin/arm64 (**no Windows**) |
 
-Same overlay policy as OpenSSL ([overlays.md](../overlays.md)): `native-library` + `cffi-grovel-output` per os/arch. Grovel runs on the builder only.
+Overlays per os/arch: `native-library` + `cffi-grovel-output` ([overlays.md](../overlays.md)). Grovel runs on the builder only; a checkout without `grovel-cache/` runs the grovel locally. Since 0.2.0 the library is an [`asdf-native`](https://github.com/egao1980/asdf-native) component, `(:native-library "uv" :versions ("1") :env "EVENT_PROTOCOL_NATIVE" :system t)` (libev: `"ev"`, `("4")`). It loads at ASDF load from `$EVENT_PROTOCOL_NATIVE`, the overlay's `native/`, `lib/<os>-<arch>/`, then the system library. Publish derives the native overlays from the component.
 
 ---
 

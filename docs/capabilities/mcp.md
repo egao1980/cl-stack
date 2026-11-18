@@ -1,7 +1,7 @@
 # mcp-protocol (P1)
 
 **Issues:** [#185](https://github.com/egao1980/cl-stack/issues/185)  
-**Status:** wave-1 **done** (`mcp-protocol` **0.2.0** + stdio **0.1.1** + Streamable HTTP **0.2.0**) · cookbook [mcp.md](../cookbooks/mcp.md)
+**Status:** wave-1 **done** (`mcp-protocol` **0.2.0** + stdio **0.1.1** + Streamable HTTP **0.2.0**). Current `mcp-protocol` **0.3.1** + stdio **0.2.0** + Streamable HTTP **0.3.0**: tool annotations, server notifications, templated resources + `resources/subscribe`, tool-argument repair · cookbook [mcp.md](../cookbooks/mcp.md)
 
 [MCP](https://modelcontextprotocol.io/specification/2026-07-28/) current revision **`2026-07-28`** (modern / stateless). Last handshake revision **`2025-11-25`** (legacy). JSON-RPC 2.0 via [`rpc-protocol`](rpc.md). **Not** a wrap of `cl-ai-project/cl-mcp`. Do **not** treat `2025-06-18` as a supported era.
 

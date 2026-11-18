@@ -43,7 +43,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 
 | System | OCI tag | Notes |
 |--------|---------|--------|
-| `cl-repository-client` | **0.22.0** | bootstrap from `ghcr.io/egao1980/cl-repository/…` |
+| `cl-repository-client` | **0.27.19** | bootstrap from `ghcr.io/egao1980/cl-repository/…`; installs `:defsystem-depends-on` (e.g. `asdf-native`) before reading the `.asd` |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.1** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
 | `yaml-protocol` | **0.2.1** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
@@ -71,7 +71,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `unicode-backend-sbcl` | **0.1.0** | SBCL `sb-unicode` (no `:idna`) |
 | `unicode-backend-icu` | **0.1.1** | ICU4C CFFI backend |
 | `unicode-backend-icu4j` | **0.1.2** | ICU4J / ABCL (auto-bind `#+abcl`) |
-| `cl-stack-icu` | **79.1.0** | ICU4C 79.1 overlays + CFFI (linux/darwin/windows) |
+| `cl-stack-icu` | **79.1.2** | ICU4C 79.1 overlays + CFFI (linux/darwin/windows); loads through `asdf-native`, keg-only Homebrew `icu4c` fallback |
 | `cl-stack-icu4j` | **79.1.0** | ICU4J 79.1 jar + ABCL bridge |
 | `i18n-protocol` | **0.1.0** | locale / MF2 / plural / catalogs (`stack-i18n`) |
 | `i18n-backend-icu` | **0.1.1** | ICU4C i18n |
@@ -83,14 +83,14 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.8** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** |
+| `http-protocol` | **0.3.10** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
 | `cl-stack-pathlib` | **0.3.1** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
-| `cl-stack-tzdata` | **2026.5.0** | IANA tzdb (TZif) — no OS zoneinfo |
+| `cl-stack-tzdata` | **2026.6.0** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
 | `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
-| `schema-protocol` | **0.2.1** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
+| `schema-protocol` | **0.2.2** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
@@ -119,21 +119,21 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rpc-backend-inprocess` | **0.1.0** | in-process unary |
 | `rpc-backend-stdio` | **0.1.2** | newline JSON-RPC over process-protocol; one write lock per transport |
 | `rpc-backend-http` | **0.1.2** | JSON-RPC POST (client + Clack) |
-| `rpc-backend-sse` | **0.1.1** | JSON-RPC as SSE `data:` |
+| `rpc-backend-sse` | **0.1.2** | JSON-RPC as SSE `data:` |
 | `sse-protocol` | **0.1.1** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
 | `sse-backend-http` | **0.1.1** | SSE client via http-protocol |
 | `sse-backend-clack` | **0.1.1** | SSE server (Clack) |
 | `mcp-protocol` | **0.3.1** | dual-era MCP (`2026-07-28` / `2025-11-25`); argument repair; server notifications, templated resources · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
 | `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
-| `lisp-source-protocol` | **0.2.2** | Eclector CST, recovery, lint, structural edits, indenter (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-source-protocol` | **0.2.4** | Eclector CST, recovery, lint, structural edits, table-driven indenter; skips a leading `#!` line (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
 | `repl-protocol` | **0.2.6** | live image: eval, debugger, stepping, inspector, channels; debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.1** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.4.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-mcp` | **0.4.1** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
-| `capability-protocol` | **0.2.2** | `defcapability` + registry (`stack-capability`) |
-| `schema-protocol-json` | **0.1.2** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
+| `capability-protocol` | **0.2.3** | `defcapability` + registry (`stack-capability`) |
+| `schema-protocol-json` | **0.1.3** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.4** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
 | `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
@@ -150,16 +150,16 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
-| `llm-protocol-openai` | **0.3.1** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
+| `llm-protocol-openai` | **0.3.2** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
 | `llm-protocol-anthropic` | **0.2.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, API-side compaction |
-| `llama-cpp` | **0.1.6** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); overlay must match |
+| `llama-cpp` | **0.2.0** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.6.0** | async-first loop + `:memory` + `:steering` + permissions, background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
 | `http-backend-async` | **0.2.17** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2) |
-| `http2` | **2.1.4** | fork; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers |
+| `http2` | **2.1.6** | fork; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers; ignore unknown SETTINGS; Homebrew `libssl` by absolute path on macOS |
 | `http-backend-dexador` | **0.1.5** | sync HTTP/1.1 (soft-loads CE codecs) |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.1** | ABCL `java.net.http` |
@@ -171,8 +171,17 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `a2a-backend-httpjson` | **0.2.1** | HTTP+JSON REST |
 | `a2a-backend-grpc` | **0.2.0** | `/lf.a2a.v1.A2AService/*` via `rpc-protocol-grpc` |
 | `ag-ui-backend-sse` | **0.2.1** | POST `RunAgentInput` → SSE |
-| `ag-ui-backend-protobuf` | **0.4.0** | JSON-as-WKT (`google.protobuf.Value`), not official `Event` oneof |
+| `ag-ui-backend-protobuf` | **0.4.0** | JSON-as-WKT (`google.protobuf.Value`, `+proto`) and official `Event` oneof (`application/vnd.ag-ui.event+oneof`) |
 | `ag-ui-backend-tui` | **0.1.0** | event sink + transcript (not a wire client) |
+| `terminal-protocol` | **0.2.0** | headless terminal emulator: feed octets, frames, input encoding, viewport search, selection (`stack-terminal`) · [cookbook](cookbooks/terminal.md) |
+| `terminal-backend-ghostty` | **0.3.0** | default emulator backend on libghostty-vt 1.0 (`ghostty-vt` **0.3.1** overlays) |
+| `terminal-backend-lisp` | **0.2.0** | pure-Lisp VT core backend; same parity corpus |
+| `pty-protocol` | **0.1.0** | run programs on pseudo-terminals: spawn, read/write, resize, signal (`stack-pty`) · [cookbook](cookbooks/terminal.md) |
+| `pty-backend-native` | **0.2.1** | forkpty-style on Unix, ConPTY on Windows (`libpty-cl`) |
+| `tui-protocol` | **0.1.0** | Elm-architecture TUIs on a cell canvas (`stack-tui`) · [tui](capabilities/tui.md) |
+| `tui-backend-terminal` | **0.1.0** | headless TUI driver on any `terminal-protocol` emulator (tests, agents) |
+| `image-protocol` | **0.1.0** | decode / encode / probe / convert images over several backends (`stack-image`) · [image](capabilities/image.md) |
+| `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
 | `http-server-backend-hunchentoot` | **0.2.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.2.0** | Unix / libev second backend |
@@ -186,7 +195,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `binary-protocol` | **0.1.0** | Python `struct` pack/unpack (`stack-binary`); no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.2.0** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.2.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
-| `mime-protocol` | **0.1.4** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
+| `mime-protocol` | **0.1.5** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
 | `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
 | `mail-backend-memory` | **0.2.0** | record sent messages |
 | `mail-backend-smtp` | **0.2.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS) |
@@ -197,7 +206,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `log-protocol` | **0.1.2** | level + filters + async; text/structured; stream sink ([cookbook](cookbooks/logging.md)) |
 | `telemetry-protocol` | **0.2.0** | traces / spans + thin metrics (`stack-telemetry`) |
 | `telemetry-backend-otlp` | **0.2.0** | OTLP/HTTP JSON |
-| `cl-stack-snappy` | **1.3.1** | Snappy raw + framed; HTTP CE uses raw |
+| `cl-stack-snappy` | **1.3.1.2** | Snappy raw + framed; HTTP CE uses raw; 4th part = package revision |
+| `cl-stack-ssl` | **3.5.9.3** | OpenSSL 3.5.9 LTS overlays for stock `cl+ssl` (linux/darwin/windows); staged `SSL_CERT_*` reach child images |
+| `cl-stack-brotli` | **1.2.1.2** | Brotli 1.2.1 overlays + thin CFFI (`br`) |
+| `cl-stack-zstd` | **1.5.7.2** | Zstandard 1.5.7 overlays + thin CFFI (`zstd`) |
 | `http-encoding-chipz` | **0.1.1** | `gzip` / `deflate` Content-Encoding |
 | `http-encoding-brotli` | **0.1.1** | `br` |
 | `http-encoding-zstd` | **0.1.1** | `zstd` |
@@ -215,6 +227,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
 | `cl-stack-executors` | **0.1.0** | BT pools backends *may* plug into `submit` |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
+| `asdf-native` | **0.3.1** | `(:native-library "foo")` ASDF component: natives load at ASDF load by absolute path (env override → `native/` overlay → `lib/<os>-<arch>/`); cl-repo derives overlays from it · [overlays](overlays.md) |
 
 Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](overlays.md).
 
@@ -223,7 +236,7 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ## 3. Minimal HTTP (facade)
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.8")
+(cl-repo:load-system "cl-stack-http" :version "0.1.11")
 ;; optional CE codecs: http-encoding-chipz / -brotli / -zstd / -snappy
 
 (defpackage #:demo (:use #:cl) (:local-nicknames (#:http #:cl-stack-http)))

@@ -11,7 +11,7 @@ Capability briefs: [crypto.md](../capabilities/crypto.md) · [secrets.md](../cap
 
 ```lisp
 ;; One backend system implements both crypto-protocol and secrets-protocol
-(cl-repo:load-system "crypto-backend-ironclad" :version "0.2.0")
+(cl-repo:load-system "crypto-backend-ironclad" :version "0.2.1")
 ;; binds *crypto-backend* and *secrets-backend*
 ```
 

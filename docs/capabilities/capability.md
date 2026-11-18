@@ -1,9 +1,9 @@
 # capability-protocol (P2)
 
 **Issues:** [#194](https://github.com/egao1980/cl-stack/issues/194) · parent [#192](https://github.com/egao1980/cl-stack/issues/192) · board [#193](https://github.com/egao1980/cl-stack/issues/193)  
-**Status:** wave-1 **done** (`capability-protocol` **0.2.1**, colocated in [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol)) · cookbook [blackboard.md](../cookbooks/blackboard.md)
+**Status:** wave-1 **done** (`capability-protocol` **0.2.1**, colocated in [`blackboard-protocol`](https://github.com/egao1980/blackboard-protocol)); current **0.2.3** (policy interceptors) · cookbook [blackboard.md](../cookbooks/blackboard.md)
 
-Extract of Demiurge `defcapability` / registry. Core `.asd` has **zero** AI-wire deps. MCP may later *project* a capability as `mcp-tool` in an adapter.
+Extract of Demiurge `defcapability` / registry. Core `.asd` has **zero** AI-wire deps. MCP *projects* a capability as `mcp-tool` in an adapter ([`blackboard-wire`](https://github.com/egao1980/blackboard-wire)).
 
 ---
 

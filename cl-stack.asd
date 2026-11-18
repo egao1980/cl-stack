@@ -104,7 +104,8 @@
                (:version "conversation-protocol" "0.3.0")
                "conversation-protocol/summary"
                (:version "steer-protocol" "0.3.0")
-               "event-protocol" "event-backend-libuv"
+               ;; CLOSE-EVENT-LOOP (with-agent-loop releases the libuv loop)
+               (:version "event-protocol" "0.2.2") (:version "event-backend-libuv" "0.2.2")
                ;; the subagent tool parses its JSON arguments
                "json-backend-jzon"
                "uiop")

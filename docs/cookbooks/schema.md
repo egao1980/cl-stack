@@ -4,20 +4,20 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.2.0** |
-| JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.2** |
-| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.3** |
+| Protocol (`stack-schema`) | [`schema-protocol`](https://github.com/egao1980/schema-protocol) | **0.2.2** |
+| JSON Schema (`stack-schema-json`) | [`schema-protocol-json`](https://github.com/egao1980/schema-protocol-json) | **0.1.3** |
+| XSD (`stack-schema-xsd`) | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.4** |
 | Arrow (`stack-schema-arrow`) | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) | **0.1.2** |
-| Avro (`stack-schema-avro`) | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) | **0.1.1** |
+| Avro (`stack-schema-avro`) | [`schema-protocol-avro`](https://github.com/egao1980/avro-protocol) | **0.1.2** |
 
 Brief: [schema.md](../capabilities/schema.md). Persistence → [sql.md](sql.md). Settings → [config.md](config.md). Field recoveries → [conditions.md](conditions.md).
 
 ```lisp
-(cl-repo:load-system "schema-protocol" :version "0.2.0")
-(cl-repo:load-system "schema-protocol-json" :version "0.1.2")  ; optional :json
-(cl-repo:load-system "schema-protocol-xsd" :version "0.1.3")   ; optional :xsd
+(cl-repo:load-system "schema-protocol" :version "0.2.2")
+(cl-repo:load-system "schema-protocol-json" :version "0.1.3")  ; optional :json
+(cl-repo:load-system "schema-protocol-xsd" :version "0.1.4")   ; optional :xsd
 (cl-repo:load-system "schema-protocol-arrow" :version "0.1.2") ; optional :arrow
-(cl-repo:load-system "schema-protocol-avro" :version "0.1.1")  ; optional :avro
+(cl-repo:load-system "schema-protocol-avro" :version "0.1.2")  ; optional :avro
 ```
 
 ---

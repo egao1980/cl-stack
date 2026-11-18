@@ -4,11 +4,11 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Emulator protocol (`stack-terminal`) | [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) | **0.1.0** |
-| Default backend: libghostty-vt 1.0 | [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) (+ [`ghostty-vt`](https://github.com/egao1980/ghostty-vt)) | **0.2.0** |
-| Pure-Lisp backend | [`terminal-backend-lisp`](https://github.com/egao1980/terminal-backend-lisp) | **0.1.0** |
+| Emulator protocol (`stack-terminal`) | [`terminal-protocol`](https://github.com/egao1980/terminal-protocol) | **0.2.0** |
+| Default backend: libghostty-vt 1.0 | [`terminal-backend-ghostty`](https://github.com/egao1980/terminal-backend-ghostty) (+ [`ghostty-vt`](https://github.com/egao1980/ghostty-vt) **0.3.1**) | **0.3.0** |
+| Pure-Lisp backend | [`terminal-backend-lisp`](https://github.com/egao1980/terminal-backend-lisp) | **0.2.0** |
 | PTY protocol (`stack-pty`) | [`pty-protocol`](https://github.com/egao1980/pty-protocol) | **0.1.0** |
-| PTY backend: forkpty / ConPTY | [`pty-backend-native`](https://github.com/egao1980/pty-backend-native) | **0.1.0** |
+| PTY backend: forkpty / ConPTY | [`pty-backend-native`](https://github.com/egao1980/pty-backend-native) | **0.2.1** |
 
 Briefs: [terminal.md](../capabilities/terminal.md) (#264), [pty.md](../capabilities/pty.md) (#270). Every example below runs as written on both terminal backends. They're checked against a real `sh` on a real pty.
 
@@ -51,6 +51,15 @@ The emulator is fed **octets**, the bytes a program writes, and splits across re
 
 For a renderer, use frames instead (`make-frame`, `frame-update` → `:none` / `:partial` / `:full`, `do-frame-rows … :dirty-only t`, `frame-mark-clean`).
 
+Search and copy work on the viewport in cell columns (0.2), the same on every backend:
+
+```lisp
+(stack-terminal:terminal-search term "ok")                ; ⇒ (#S(TERMINAL-MATCH :X 4 :Y 0 :END 6))
+(stack-terminal:terminal-search term "ERR" :case-sensitive nil)
+(stack-terminal:terminal-selection-text term 0 0 2 0)     ; ⇒ "ERR" — corners inclusive, as a mouse copy
+(stack-terminal:terminal-selection-text term 0 0 5 1 :rectangular t)
+```
+
 ## 3. Testing a TUI without a terminal
 
 Render your program's output into a terminal and assert on the screen, not on escape-sequence soup:
@@ -69,6 +78,8 @@ Render your program's output into a terminal and assert on the screen, not on es
       (rove:ok (stack-terminal:style-inverse          ; the title is reverse video
                 (stack-terminal:cell-style (aref (aref (getf snap :cells) 1) 1)))))))
 ```
+
+A program written on [`tui-protocol`](https://github.com/egao1980/tui-protocol) needs none of this glue: [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) runs it headless on any emulator here (`make-headless-tui`, `tui-type`, `tui-press`, `tui-wait-for`).
 
 To assert on input handling, `encode-key` / `encode-mouse` / `encode-paste` produce the bytes a real terminal would send *in the terminal's current modes*: cursor-key mode, bracketed paste, mouse tracking and format.
 

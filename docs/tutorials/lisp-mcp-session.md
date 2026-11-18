@@ -1,6 +1,6 @@
 # Tutorial: a token-thrifty lisp-mcp session
 
-**You will** fix a failing test in a Common Lisp project through [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) **0.4.0**, keeping the agent's context small:
+**You will** fix a failing test in a Common Lisp project through [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) **0.4.1**, keeping the agent's context small:
 - terse output by default;
 - long logs stored and read back in slices;
 - edits that compile as they land;
@@ -15,7 +15,7 @@ ros install egao1980/lisp-mcp
 claude mcp add lisp-mcp -- lisp-mcp --root "$PWD" --spawn swank
 ```
 
-Inside the workspace, `scripts/lisp-mcp.sh` (lisp-workspace) builds and caches `~/.cache/lisp-mcp/lisp-mcp-0.4.0`. After an upgrade, reconnect the server: `/mcp` in Claude Code.
+Inside the workspace, `scripts/lisp-mcp.sh` (lisp-workspace) builds and caches `~/.cache/lisp-mcp/lisp-mcp-0.4.1`. After an upgrade, reconnect the server: `/mcp` in Claude Code.
 
 Server flags that matter for token use:
 

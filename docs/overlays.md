@@ -91,7 +91,25 @@ Keep overlay file lists **relative** to the packager source dir (absolute paths 
 
 Overlay layers use roles such as `native-library`, `cffi-grovel-output`, `cffi-wrapper`, `headers` (see cl-repository spec).
 
-### Example publish commands
+### Declaring natives: `asdf-native` (default since 2026-11)
+
+The cl-stack natives (`cl-stack-brotli`, `-zstd`, `-snappy`, `-icu`, `event-backend-libuv` / `-libev`, `ghostty-vt`, `llama-cpp`, `vllm-cpp`, `pty-backend-native`, `image-backend-stb`, `doc-extract-backend-pdf`) declare their libraries as [`asdf-native`](https://github.com/egao1980/asdf-native) components. They have no hand-written `:overlays`, init script or `load-*` function. The exception is `cl-stack-ssl`: stock `cl+ssl` opens OpenSSL itself, so `cl-stack-ssl/paths` points it at the overlay before it loads, and its `:overlays` stay explicit.
+
+```lisp
+(defsystem "my-cffi-lib"
+  :defsystem-depends-on ("asdf-native")
+  :depends-on ("cffi")
+  :serial t
+  :components ((:file "package")
+               (:native-library "foo" :versions ("1") :env "MY_CFFI_LIB_NATIVE")
+               (:file "ffi")))
+```
+
+- **Load.** `(asdf:load-system "my-cffi-lib")` loads the library by truename. The search order is `$MY_CFFI_LIB_NATIVE`, then `native/` (the installed overlay), then `lib/<os>-<arch>/` (a checkout build). `:optional t` turns a miss into a warning, and `:system t` falls back to the OS library. A miss signals `asdf-native:native-library-not-found` with `use-value` / `continue` restarts.
+- **Publish.** `cl-repo publish` (and the canned `publish-native-package.yml`) makes each `lib/<os>-<arch>/` directory that platform's overlay. Packaging fails if a directory lacks a non-optional library. Explicit `:overlays` are only for extras (headers, data, a named `cuda` flavour). Normative: cl-repository [`native-deps.md`](https://github.com/egao1980/cl-repository/blob/main/docs/requirements/native-deps.md).
+- **Version.** The `.asd` `:version` is the only copy, with no version-sync script. A 4th part is the package revision on top of the upstream release: `3.5.9.3` is OpenSSL 3.5.9, revision 3.
+
+### Manual publish commands (systems without `:native-library`)
 
 Source-only first, then incremental overlays (distinct platforms; serialize index updates if parallel CI):
 
@@ -129,13 +147,7 @@ cl-repo add-overlay my-cffi-lib \
   --registry ghcr.io --namespace egao1980/cl-systems
 ```
 
-Consumer (conceptual):
-
-```lisp
-(cl-repository-client/quickload:add-registry "https://ghcr.io"
-                                             :namespace "egao1980/cl-systems")
-(cl-repository-client/quickload:load-system "my-cffi-lib" :version "1.0.0")
-```
+Consumer: `cl-repo sync` in a project that depends on `my-cffi-lib`, or `cl-repo install my-cffi-lib:1.0.0`; then plain `(asdf:load-system "my-cffi-lib")`.
 
 External pull:
 
@@ -151,11 +163,11 @@ oras pull --platform linux/amd64 \
 | This matrix + naming | #8 #9 | done |
 | Spike: one native → GHCR → clean container | #10 | done — prior art: grpc / cl-protobufs ([overlay-ci.md](overlay-ci.md)) |
 | Multi-arch CI pattern | #11 | done pattern in grpc; Windows via `windows-latest` or self-hosted ([overlay-ci.md](overlay-ci.md)) |
-| OpenSSL overlay | #12 | done — [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) `ghcr.io/egao1980/cl-systems/cl-stack-ssl:3.5.9` (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK |
-| libuv overlay (event A) | #16 | done — [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) `ghcr.io/egao1980/cl-systems/event-backend-libuv:0.1.4` (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK — [event-protocol.md](capabilities/event-protocol.md) |
-| libev overlay (event B) | #17 | done — [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) `ghcr.io/egao1980/cl-systems/event-backend-libev:0.1.0` (linux/amd64+arm64, darwin/arm64; Unix-only); clean-container smoke OK — [event-protocol.md](capabilities/event-protocol.md) |
-| Brotli (`br`) overlay | #45 | done — [`egao1980/cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) `ghcr.io/egao1980/cl-systems/cl-stack-brotli:1.2.1` (linux/amd64+arm64, darwin/arm64, windows/amd64) — [http-protocol.md](capabilities/http-protocol.md) |
-| Zstd overlay | #46 | done — [`egao1980/cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) `ghcr.io/egao1980/cl-systems/cl-stack-zstd:1.5.7` (same matrix) — [http-protocol.md](capabilities/http-protocol.md) |
+| OpenSSL overlay | #12 | done — [`egao1980/cl-stack-ssl`](https://github.com/egao1980/cl-stack-ssl) `ghcr.io/egao1980/cl-systems/cl-stack-ssl:3.5.9` → now **3.5.9.3** (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK |
+| libuv overlay (event A) | #16 | done — [`egao1980/event-backend-libuv`](https://github.com/egao1980/event-backend-libuv) `ghcr.io/egao1980/cl-systems/event-backend-libuv:0.1.4` → now **0.2.2** (linux/amd64+arm64, darwin/arm64, windows/amd64); clean-container smoke OK — [event-protocol.md](capabilities/event-protocol.md) |
+| libev overlay (event B) | #17 | done — [`egao1980/event-backend-libev`](https://github.com/egao1980/event-backend-libev) `ghcr.io/egao1980/cl-systems/event-backend-libev:0.1.0` → now **0.2.2** (linux/amd64+arm64, darwin/arm64; Unix-only); clean-container smoke OK — [event-protocol.md](capabilities/event-protocol.md) |
+| Brotli (`br`) overlay | #45 | done — [`egao1980/cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) `ghcr.io/egao1980/cl-systems/cl-stack-brotli:1.2.1` → now **1.2.1.2** (linux/amd64+arm64, darwin/arm64, windows/amd64) — [http-protocol.md](capabilities/http-protocol.md) |
+| Zstd overlay | #46 | done — [`egao1980/cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) `ghcr.io/egao1980/cl-systems/cl-stack-zstd:1.5.7` → now **1.5.7.2** (same matrix) — [http-protocol.md](capabilities/http-protocol.md) |
 
 ## Pitfalls (short)
 

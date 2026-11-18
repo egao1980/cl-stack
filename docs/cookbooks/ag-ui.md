@@ -4,19 +4,19 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-ag-ui`) | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) | **0.3.0** |
+| Protocol (`stack-ag-ui`) | [`ag-ui-protocol`](https://github.com/egao1980/ag-ui-protocol) | **0.4.1** |
 | Client reducer | `ag-ui-protocol/client` | (same) |
 | Default backend | [`ag-ui-backend-sse`](https://github.com/egao1980/ag-ui-backend-sse) | **0.2.1** |
-| Protobuf (WKT) | [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) | **0.3.0** |
+| Protobuf (WKT + official oneof) | [`ag-ui-backend-protobuf`](https://github.com/egao1980/ag-ui-backend-protobuf) | **0.4.0** |
 | TUI sink | [`ag-ui-backend-tui`](https://github.com/egao1980/ag-ui-backend-tui) | **0.1.0** |
 | JSON Patch | [`json-patch`](https://github.com/egao1980/json-patch) | **0.1.0** |
 
 Brief: [ag-ui.md](../capabilities/ag-ui.md) (#187). **Not JSON-RPC.** Official HTTP is `POST RunAgentInput` → `text/event-stream`. All **36** event types. Loop is `run-ai-agent` — [ai-agent.md](ai-agent.md).
 
 ```lisp
-(cl-repo:load-system "ag-ui-protocol" :version "0.3.0")
+(cl-repo:load-system "ag-ui-protocol" :version "0.4.1")
 (cl-repo:load-system "ag-ui-backend-sse" :version "0.2.1")
-(cl-repo:load-system "http-server-backend-hunchentoot" :version "0.1.0")
+(cl-repo:load-system "http-server-backend-hunchentoot" :version "0.2.0")
 ```
 
 ---
@@ -79,7 +79,7 @@ curl -sN -X POST http://127.0.0.1:8000/ \
   }'
 ```
 
-`Accept: application/vnd.ag-ui.event+proto` → length-prefixed WKT `google.protobuf.Value` (not official `Event` oneof). GET on the path → `AgentCapabilities`. Clack app only: `make-ag-ui-app`.
+With `ag-ui-backend-protobuf` loaded, `Accept: application/vnd.ag-ui.event+proto` → length-prefixed WKT `google.protobuf.Value`; `Accept: application/vnd.ag-ui.event+oneof` → the official `@ag-ui/proto` `Event` oneof (0.4); anything else → SSE JSON. GET on the path → `AgentCapabilities`. Clack app only: `make-ag-ui-app`.
 
 ---
 

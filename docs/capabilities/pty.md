@@ -1,7 +1,7 @@
 # pty-protocol (P2) — pseudo-terminals
 
 **Issues:** [#270](https://github.com/egao1980/cl-stack/issues/270) · terminal [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **locked** — no code yet
+**Status:** brief **locked**. Shipped: [`pty-protocol`](https://github.com/egao1980/pty-protocol) 0.1.0 + [`pty-backend-native`](https://github.com/egao1980/pty-backend-native) 0.2.1 (forkpty-style on Unix, ConPTY on Windows; `libpty-cl` through `asdf-native`). Cookbook [terminal.md](../cookbooks/terminal.md).
 
 Run a program attached to a pseudo-terminal. Read the bytes it writes, write the bytes a user types, resize the window, signal it and wait for it. This is what [`terminal-protocol`](terminal.md) leaves out: the emulator parses the bytes, and this protocol carries them.
 

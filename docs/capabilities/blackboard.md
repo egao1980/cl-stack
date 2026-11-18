@@ -1,7 +1,7 @@
 # blackboard-protocol (P2)
 
 **Issues:** [#192](https://github.com/egao1980/cl-stack/issues/192) epic · [#193](https://github.com/egao1980/cl-stack/issues/193) protocol · [#194](https://github.com/egao1980/cl-stack/issues/194) capabilities · adapters [#195](https://github.com/egao1980/cl-stack/issues/195) llm · [#196](https://github.com/egao1980/cl-stack/issues/196) wire · product [#197](https://github.com/egao1980/cl-stack/issues/197)  
-**Status:** wave-1 **done** (`blackboard-protocol` **0.1.1** + colocated `capability-protocol` **0.2.1**) · cookbook [blackboard.md](../cookbooks/blackboard.md)
+**Status:** wave-1 **done** (`blackboard-protocol` **0.1.1** + colocated `capability-protocol` **0.2.1**). Current `blackboard-protocol` **0.2.3** + `capability-protocol` **0.2.3**: policy interceptors, decision interceptor; journal in [`blackboard-journal`](https://github.com/egao1980/blackboard-journal) **0.1.0**; MCP / A2A / AG-UI adapters in [`blackboard-wire`](https://github.com/egao1980/blackboard-wire) **0.1.0** · cookbook [blackboard.md](../cookbooks/blackboard.md)
 
 Sibling: [capability.md](capability.md). **Not** agent-wire. MCP / A2A / AG-UI / `llm-protocol` are optional adapters that post to the board or implement capabilities. Core `.asd` must not depend on them.
 
@@ -82,7 +82,7 @@ Core stays AI-agnostic. A **mock** coding-agent KS (no LLM, no MCP) must run a m
 
 **Mock test:** stub `read-file`/`write-file`/`run-command` → fork → write → requeue → “test” → requeue → finish. Assert serial steps; a second workspace interleaves; cancel sticks; discard/merge; nested reviewer child.
 
-LLM / MCP adapters later sit on the same GFs (`:llm-generation` backend, MCP tool projection, A2A → `:pending-task`).
+LLM / MCP adapters sit on the same GFs ([`blackboard-wire`](https://github.com/egao1980/blackboard-wire)) (`:llm-generation` backend, MCP tool projection, A2A → `:pending-task`).
 
 ---
 

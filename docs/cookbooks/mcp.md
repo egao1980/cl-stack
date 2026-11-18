@@ -4,14 +4,14 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | **0.3.0** |
+| Protocol | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) | **0.3.1** |
 | stdio | [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) | **0.2.0** |
 | Streamable HTTP | [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.0** |
 
 Brief: [mcp.md](../capabilities/mcp.md) (#185). JSON-RPC via [`rpc-protocol`](rpc.md) — do not invent a second codec. Dual-era: modern **`2026-07-28`** (default) and legacy **`2025-11-25`**. Do **not** treat `2025-06-18` as supported.
 
 ```lisp
-(cl-repo:load-system "mcp-protocol" :version "0.3.0")
+(cl-repo:load-system "mcp-protocol" :version "0.3.1")
 (cl-repo:load-system "rpc-backend-inprocess" :version "0.1.0")
 ```
 
