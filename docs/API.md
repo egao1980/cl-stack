@@ -130,6 +130,8 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
   **Brief:** [capabilities/diff.md](capabilities/diff.md)
 - `revision-protocol` — revision DAG (`stack-rev`): immutable revisions with parents (merges), movable refs and immutable tags with compare-and-swap, designators (id prefix, ref, tag, as-of on `:recorded` / `:valid`, parent / ancestor), walks, merge-base, ranges, heads, ref listener. R0a: thread-safe in-memory store.
   **Brief:** [capabilities/revision.md](capabilities/revision.md)
+- `revision-backend-git` — revision-protocol backend over the git CLI (`stack-rev-git`): commits as revisions, branches / tags with `update-ref` CAS, walks via `rev-list`, `state-diff` via `diff-tree` / `git diff` + `parse-diff`, working-copy drift and capture, read-only pathlib filesystem per revision. V0 contract.
+  **Brief:** [capabilities/revision-backend-git.md](capabilities/revision-backend-git.md)
 
 ## Blackboard core (P2 — AI-agnostic)
 
