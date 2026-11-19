@@ -1,7 +1,7 @@
 # agent-tools (H2b) — the coding agent's file tools
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H2 (Decisions: agent-tools is its own repo, so the agent core gains no dependencies)
-**Status:** milestone **H2b locked**. Contract in [`egao1980/agent-tools`](https://github.com/egao1980/agent-tools) (`agent-tools/tests`, Rove); every function calls `%not-implemented`. Implementation through **team-solve**. Shell / pty tools, background jobs and the shell command scanner are **H2c** (out of scope).
+**Status:** milestone **H2b locked**. Contract in [`egao1980/agent-tools`](https://github.com/egao1980/agent-tools) (`agent-tools/tests`, Rove); every function calls `%not-implemented`. Implementation through **team-solve**. Shell / pty tools, background jobs and the shell command scanner are **H2c**: [agent-tools-shell.md](agent-tools-shell.md).
 
 `agent-tools` gives an `ai-agent-protocol` agent the small core toolset a coding agent needs on files: `read`, `write`, `edit`, `multi_edit`, `glob`, `grep`, `ls`. One `file-tools` object is one tool source over one directory tree of any `cl-stack-pathlib` filesystem. It builds on the H2a pathlib surface ([pathlib.md](pathlib.md): ranged reads, SHA-256 content hashes, atomic + CAS writes, ignore matcher, `fs-grep`) and on diff-protocol's `:text` engine ([diff.md](diff.md)) for edit previews.
 
