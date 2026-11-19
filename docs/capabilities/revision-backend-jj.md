@@ -1,7 +1,7 @@
 # revision-backend-jj (V2) — revision-protocol over the jj CLI
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track V · protocol brief [revision.md](revision.md) · diffs [diff.md](diff.md) · sibling [revision-backend-git.md](revision-backend-git.md)
-**Status:** milestone **V2 locked** (contract). Repo [`egao1980/revision-backend-jj`](https://github.com/egao1980/revision-backend-jj) (`stack-rev-jj`), version 0.1.0: exports, conditions, classes, templates, documented behaviour, stub methods and the Rove suite that specifies them. Implementation runs through **team-solve**.
+**Status:** milestone **V2 locked** (contract). Repo [`egao1980/revision-backend-jj`](https://github.com/egao1980/revision-backend-jj) (`stack-rev-jj`), version 0.1.0 (0.2.0: revision-protocol 0.3.0, diff-protocol 0.2.1): exports, conditions, classes, templates, documented behaviour, stub methods and the Rove suite that specifies them. Implementation runs through **team-solve**.
 
 A `revision-store` and a `revision-target` over one jj repository (seen from one workspace), driven through the `jj` program only (no jj-lib). V2 = the surface of git V0: graph, refs, drift, diffs (summary and content), a read-only revision filesystem, plus what jj adds — the working copy is a commit, conflicts can be committed, change ids survive rewrites, the operation log is the recorded-time axis.
 
@@ -12,7 +12,7 @@ A `revision-store` and a `revision-target` over one jj repository (seen from one
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | **Package** | `revision-backend-jj`, nickname `stack-rev-jj`; local nicknames `rev` `diff` `dt` `proc` `pathlib` `json` | Stack naming |
-| **Dependencies** | `revision-protocol` 0.2.0, `diff-protocol` 0.2.0 (tree engine, `parse-diff :unified` — it parses `jj diff --git`, hunk headers with section text included), `datetime-protocol` 0.1.3, `process-protocol` 0.2.0 + `process-backend-uiop` 0.1.0, `cl-stack-pathlib` 0.4.0, `encoding-protocol` 0.2.0, `json-protocol` 0.2.1 + `json-backend-jzon` 0.2.0, `bordeaux-threads` 0.9.4 | Own stack first; machine output is JSON lines |
+| **Dependencies** | `revision-protocol` 0.3.0, `diff-protocol` 0.2.1 (tree engine, `parse-diff :unified` — it parses `jj diff --git`, hunk headers with section text included), `datetime-protocol` 0.1.3, `process-protocol` 0.2.0 + `process-backend-uiop` 0.1.0, `cl-stack-pathlib` 0.4.0, `encoding-protocol` 0.2.0, `json-protocol` 0.2.1 + `json-backend-jzon` 0.2.0, `bordeaux-threads` 0.9.4 | Own stack first; machine output is JSON lines |
 | **Store** | `(make-jj-store path &key jj env permit-force)` → `jj-store`. PATH: the workspace root or any directory below it; outside a jj workspace (a plain git repo included) or missing → `jj-command-error`. Readers `jj-store-path` (workspace root), `jj-store-repo-path` (the `.jj/repo/` jj resolves; a secondary workspace shares its main one's), `jj-store-workspace` (`"default"` …), `jj-store-colocated-p`, `jj-store-env` (copy) | One store per workspace (`@` is per workspace) |
 | **Version** | `*minimum-jj-version*` = **"0.47.1"**. `make-jj-store` probes `jj --version` (cached per program) and compares on every call: older → `vc-tool-version-error` (tool "jj", found "0.46.0", required); a program that cannot start → found NIL. `parse-jj-version` reads `jj 0.47.1`, the release binaries' `jj 0.47.1-d16ee1fc…`, `0.48.0-dev` | Plan: minimum = latest stable when V2 starts, pinned in CI, no fallbacks |
 | **Locked minimum** | Latest stable on 2026-11-19 = **0.47.1** (2026-11-05; local Homebrew 0.47.1). CI installs the official release binaries of [jj-vcs/jj](https://github.com/jj-vcs/jj/releases/tag/v0.47.1) at exactly that version on every runner (musl Linux in the ci-base container, aarch64 macOS, x86_64 Windows), SHA-256-checked; the first CI run printed `jj 0.47.1-d16ee1fc88a72c54142241b079a34bbf3b033bc0` on all three | "What CI installs"; one pin, bumped by PR |
@@ -39,10 +39,10 @@ A `revision-store` and a `revision-target` over one jj repository (seen from one
 | **state-diff** | A / B: designators or a `jj-working-copy` (after a snapshot). `:summary` from `jj diff --from A --to B -T *diff-template*` (`renamed` → `:move`, `copied` → `:add`; lazy nodes; `"tree:/path"` footprints). `:changes` (default) = `jj diff --git` → `parse-diff :unified`. `:content` = file-level with hunk children. Binary (jj prints `Binary files … differ`, which parses to an opaque section), submodules and type changes become whole-file changes with both nodes — **never** `opaque-change` — so every diff applies and inverts (law 3) | Plan table |
 | **Working copy** | `(make-jj-working-copy store)`. **@ is the target**: `target-state` = @ after a snapshot (jj's rules: .gitignore, `snapshot.auto-track`, `max-new-file-size`); **stamp = @'s parents** (`target-revisions`; NIL when @ is on root); `target-stamp` replaces @ by a new change with those parents and @'s tree / description and abandons the old @ (`jj new --no-edit`, `jj restore --from --into`, `jj edit`, `jj abandon`); several stamps allowed (@ becomes a merge). No file in the workspace is ever written: contents and mtimes byte-identical (tested). `working-copy-revision` = snapshot + @ | Plan: "the working copy is a commit" |
 | **Drift** | After the snapshot: several stamps → `revision-error`; NIL iff @'s state equals the stamp's (empty when unstamped); else `state-diff` stamp → working copy at `:changes`. Drift = the working-copy commit's own changes | Plan: "drift = the working-copy commit's changes" |
-| **capture-revision** | Snapshot, then: default parents → `jj commit -m MESSAGE` — the captured revision **is the old @ change** (same change id), @ a new empty change on it; other parents → a new change with those parents and @'s tree, @ moved to an empty child of it, the old @ abandoned. MESSAGE default "capture"; afterwards drift NIL, `target-revisions` = (captured id) | Plan: "capture = a snapshot of @" + the protocol's "stamped, no drift" |
+| **capture-revision** | Snapshot, then: default parents → `jj commit -m MESSAGE` — the captured revision **is the old @ change** (same change id), @ a new empty change on it; other parents → a new change with those parents and @'s tree, @ moved to an empty child of it, the old @ abandoned. MESSAGE default "capture"; afterwards drift NIL, `target-revisions` = (captured id). 0.2.0: `:valid-at` / `:provenance` as in `commit-revision` (one `jj metaedit` of the captured change: author time and identity, committer via `--config user.*`); `:id` → `revision-error` before anything runs | Plan: "capture = a snapshot of @" + the protocol's "stamped, no drift" |
 | **Revision filesystem** | `make-revision-filesystem store designator` pinned to the **commit id** (rewrites and ref moves do not change what it reads); `revision-filesystem-revision` → the `revision`; `revision-path`. `jj file list -T *file-template*` + `jj file show` (exact bytes); symlinks are files with `fs-symlink-p` / `fs-read-symlink`; `fs-executable-p` = jj's bit; `fs-last-modified` = committer time; `iterdir` sorted by name; conflicted files read as materialized; writes / `fs-make-temp` / `fs-as-uri` → `unsupported-operation`; missing → `path-not-found` | Pathlib tools on any revision |
-| **Conditions** | Protocol types for protocol failures. jj-specific: `vc-tool-version-error` (tool found required; same name, slots and readers as git's — moves to revision-protocol with [revision-protocol#4](https://github.com/egao1980/revision-protocol/issues/4), this package then re-exports it) and `jj-command-error` (command exit-code stderr), both `revision-error` | No backend error dialect |
-| **Capabilities** | `(jj-capabilities store)` → `(:primary :state :merges t :children-index t :valid-time t :ref-cas nil :atomic-multi-ref nil :gc nil :signed nil :transactional-apply nil :projection nil :conflicted-revisions t)`; revision-protocol has query GFs for only some ([revision-protocol#5](https://github.com/egao1980/revision-protocol/issues/5)) | Plan capability names |
+| **Conditions** | Protocol types for protocol failures. jj-specific: `vc-tool-version-error` (tool found required) is revision-protocol's since 0.2.0 ([revision-protocol#4](https://github.com/egao1980/revision-protocol/issues/4)), imported and re-exported (`stack-rev-jj:vc-tool-version-error` is `stack-rev:vc-tool-version-error`) and `jj-command-error` (command exit-code stderr), both `revision-error` | No backend error dialect |
+| **Capabilities** | `(jj-capabilities store)` → `(:primary :state :merges t :children-index t :valid-time t :ref-cas nil :atomic-multi-ref nil :gc nil :signed nil :transactional-apply nil :projection nil :conflicted-revisions t)`; since 0.2.0 also `(rev:ref-cas-p store)` → NIL and `(rev:conflicted-revisions-p store)` → T ([revision-protocol#5](https://github.com/egao1980/revision-protocol/issues/5)) | Plan capability names |
 | **Threads** | A store may be shared; ref updates serialized by a per-store lock (CAS linearizable in the image, law 1 with 2×5 / 3×4 threads) | Emulated CAS needs it |
 
 ### Condition tree
@@ -50,7 +50,7 @@ A `revision-store` and a `revision-target` over one jj repository (seen from one
 ```
 revision-error                       (revision-protocol)
 ├── revision-not-found / ambiguous-revision / ref-conflict / tag-immutable …   (protocol, signalled by the backend)
-├── vc-tool-version-error (tool found required)     make-jj-store   (→ revision-protocol, #4)
+├── vc-tool-version-error (tool found required)     make-jj-store   (revision-protocol's, re-exported)
 └── jj-command-error (command exit-code stderr)     run-jj and any jj failure without a protocol meaning
 ```
 
@@ -123,9 +123,9 @@ The backend must run jj through `process-protocol`; `process-backend-uiop` 0.1.0
 - [process-backend-uiop#8](https://github.com/egao1980/process-backend-uiop/issues/8) — `backend-run` decodes output as text: binary or non-UTF-8 output errors.
 - [process-backend-uiop#9](https://github.com/egao1980/process-backend-uiop/issues/9) / [process-protocol#7](https://github.com/egao1980/process-protocol/issues/7) — `:env` replaces the whole environment on SBCL; semantics undefined.
 - [process-backend-uiop#10](https://github.com/egao1980/process-backend-uiop/issues/10) — no octet streams; `:timeout` ignored.
-- [revision-protocol#4](https://github.com/egao1980/revision-protocol/issues/4) — host `vc-tool-version-error` (then import + re-export it here and in revision-backend-git).
+- [revision-protocol#4](https://github.com/egao1980/revision-protocol/issues/4) — host `vc-tool-version-error` (done in revision-protocol 0.3.0; re-exported here and in revision-backend-git 0.2.0).
 
-Related: [revision-protocol#5](https://github.com/egao1980/revision-protocol/issues/5) (query GFs for `:ref-cas` / `:conflicted-revisions`).
+Related: [revision-protocol#5](https://github.com/egao1980/revision-protocol/issues/5) (query GFs for `:ref-cas` / `:conflicted-revisions`; done in 0.3.0, implemented here in 0.2.0).
 
 ---
 
@@ -140,6 +140,7 @@ Related: [revision-protocol#5](https://github.com/egao1980/revision-protocol/iss
 ## Implementation tasks
 
 - [x] V2 contract: this brief, `egao1980/revision-backend-jj` skeleton, Rove suite, CI with pinned jj on ubuntu / macos / windows
-- [ ] process-protocol / process-backend-uiop fixes above, published; revision-protocol#4
+- [ ] process-protocol / process-backend-uiop fixes above, published
+- [x] revision-protocol#4 / #5 / #6 adopted (0.2.0)
 - [ ] V2 implementation through team-solve
 - [ ] Projections / plans for jj (after git V1)
