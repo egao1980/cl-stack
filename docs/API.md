@@ -65,7 +65,7 @@
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
   - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core checklist); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends (OCI **0.2.0**)  
-  - `sql-orm` — first-party lispy CLOS ORM (`defmodel`; **not** Mito; OCI **0.1.0**) — cookbook [sql.md](cookbooks/sql.md)
+  - `sql-orm` — first-party lispy CLOS ORM (`defmodel`; **not** Mito; OCI **0.2.0**; schema algebra + reflection) — cookbook [sql.md](cookbooks/sql.md)
   - `sql-migrate` — Alembic-style revision runner (`stack-sql-migrate`; OCI **0.1.1**; linear; versions sql-orm ops)
 - `crypto-protocol` — recipes (`seal`/`unseal` AES-256-GCM) + hazmat digest/HMAC/AEAD; default **Ironclad**  
   **Brief:** [capabilities/crypto.md](capabilities/crypto.md) (#104) · cookbook [crypto.md](cookbooks/crypto.md)
@@ -124,7 +124,7 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
 
-## Revision and diff (Track R — R0)
+## Revision and diff (Track R — R0b / R1)
 
 - `diff-protocol` — diffs as values: change trees (`:add` `:remove` `:modify` `:move`), resource-string footprints, lazy content, engines per content type; apply / invert / compose / rebase / three-way (conflicts as data). R0: sexp engine, `:summary` / `:sexp` render. No dependencies.
   **Brief:** [capabilities/diff.md](capabilities/diff.md)

@@ -85,7 +85,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.3.10** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.3.2** | CLOS path + FS (`stack-pathlib`; `zip://`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
+| `cl-stack-pathlib` | **0.4.0** | CLOS path + FS (`stack-pathlib`; `zip://`; ranged reads, SHA-256, atomic + `:expected-hash` writes, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
@@ -95,10 +95,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
 | `sql-query-postgres` | **0.2.0** | postgres dialect |
-| `sql-orm` | **0.1.0** | CLOS ORM (`defmodel`) |
+| `sql-orm` | **0.2.0** | CLOS ORM (`defmodel`); schema algebra: `apply-ops-to-snapshot`, `alter-column-op`, `diff-schema :complete`, `reflect-schema` (SQLite, PostgreSQL) |
 | `sql-migrate` | **0.1.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
-| `diff-protocol` | **0.1.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp engine · [brief](capabilities/diff.md) |
-| `revision-protocol` | **0.1.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; in-memory store · [brief](capabilities/revision.md) |
+| `diff-protocol` | **0.2.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp, text (Myers / histogram, diff3) and tree engines; `:unified` render + git-diff parse · [brief](capabilities/diff.md) |
+| `revision-protocol` | **0.2.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
@@ -182,6 +182,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `pty-backend-native` | **0.2.1** | forkpty-style on Unix, ConPTY on Windows (`libpty-cl`) |
 | `tui-protocol` | **0.1.0** | Elm-architecture TUIs on a cell canvas (`stack-tui`) · [tui](capabilities/tui.md) |
 | `tui-backend-terminal` | **0.1.0** | headless TUI driver on any `terminal-protocol` emulator (tests, agents) |
+| `tui-backend-tty` | **0.1.0** | real terminal for `tui-protocol`: termios raw mode + `SIGWINCH` (Unix), console VT mode (Windows), CFFI into libc / kernel32; restores on any exit · [tui](capabilities/tui.md) |
 | `image-protocol` | **0.1.0** | decode / encode / probe / convert images over several backends (`stack-image`) · [image](capabilities/image.md) |
 | `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
