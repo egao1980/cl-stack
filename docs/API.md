@@ -134,6 +134,8 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
   **Brief:** [capabilities/revision-backend-git.md](capabilities/revision-backend-git.md)
 - `revision-backend-jj` — revision-protocol backend over the jj (Jujutsu) CLI (`stack-rev-jj`): change ids as revision ids (commit id in provenance), bookmarks / tags with CAS emulated over the operation log, `:recorded` as-of via `--at-op`, revset walks, `state-diff` via `jj diff --git` + `parse-diff`, committed conflicts as materialized files, @ as the working-copy target, read-only pathlib filesystem per revision. V2 contract.
   **Brief:** [capabilities/revision-backend-jj.md](capabilities/revision-backend-jj.md)
+- `diff-backend-lisp-source` — diff-protocol engine `:lisp` for Common Lisp source (`stack-diff-lisp`): top-level forms keyed like lisp-mcp locators (`defun foo`, `defmethod m :around (c t)`, `#+sbcl defun f`), form-level add / remove / modify / move (reorder, rename), nested structural leaves on the lisp-source-protocol CST, form-level three-way merge and rebase, `unified-patch`; comments and reader conditionals kept byte for byte, never evaluates. R3 contract.
+  **Brief:** [capabilities/diff-backend-lisp-source.md](capabilities/diff-backend-lisp-source.md)
 
 ## Blackboard core (P2 — AI-agnostic)
 
