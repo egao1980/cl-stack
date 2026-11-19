@@ -5,7 +5,7 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Protocol + in-memory + loader (`stack-steer`) | [`steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.3.0** |
-| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
+| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 
 Brief: [steer.md](../capabilities/steer.md). Conversation history → [conversation.md](conversation.md).
 

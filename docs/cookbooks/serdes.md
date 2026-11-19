@@ -7,35 +7,35 @@
 | Layer | Role | OCI |
 |-------|------|-----|
 | [`serdes-protocol`](https://github.com/egao1980/serdes-protocol) (`stack-serdes`) | GCF registry, Gray streams, JSONL, event GFs, media types | **0.2.2** |
-| `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.0** |
-| [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.0** |
-| `yaml-protocol` (same repo) | `:yaml` (JSON⊂YAML, same Lisp mapping) | **0.1.0** |
+| `sexp-protocol` (same repo) | `:sexp` implementor | **0.2.2** |
+| [`json-protocol`](https://github.com/egao1980/json-protocol) + `json-backend-jzon` | `:json` implementor (value + JSONL + events) | **0.2.1** |
+| `yaml-protocol` (same repo) | `:yaml` (JSON⊂YAML, same Lisp mapping) | **0.2.1** |
 | [`csv-protocol`](https://github.com/egao1980/csv-protocol) (`stack-csv`) | `:csv` / `:tsv` (dialects, row streams, events) | **0.1.0** |
 | [`xml-protocol`](https://github.com/egao1980/xml-protocol) + `xml-backend-native` | `:xml` implementor (Infoset + events + writer) | **0.1.0** |
 | [`protobuf-protocol`](https://github.com/egao1980/protobuf-protocol) | `:protobuf` (octets + proto3 JSON / WKT) | **0.2.0** |
-| [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) (`stack-arrow`) | `:arrow` / `:parquet` | **0.1.0** |
-| [`mime-protocol`](https://github.com/egao1980/mime-protocol) (`stack-mime`) | `:mime` / `:multipart` | **0.1.0** |
+| [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) (`stack-arrow`) | `:arrow` / `:parquet` | **0.1.1** |
+| [`mime-protocol`](https://github.com/egao1980/mime-protocol) (`stack-mime`) | `:mime` / `:multipart` | **0.1.5** |
 | [`cbor-protocol`](https://github.com/egao1980/cbor-protocol) (`stack-cbor`) | `:cbor` | **0.1.0** |
 | [`messagepack-protocol`](https://github.com/egao1980/messagepack-protocol) | `:messagepack` / `:msgpack` | **0.1.0** |
-| [`avro-protocol`](https://github.com/egao1980/avro-protocol) (`stack-avro`) | `:avro` (writer schema required) | **0.1.0** |
-| [`encoding-protocol`](https://github.com/egao1980/encoding-protocol) (`stack-encoding`) | RFC 4648 / QP / RLE; `/serdes` registers `:base64` … | **0.1.2** |
+| [`avro-protocol`](https://github.com/egao1980/avro-protocol) (`stack-avro`) | `:avro` (writer schema required) | **0.1.2** |
+| [`encoding-protocol`](https://github.com/egao1980/encoding-protocol) (`stack-encoding`) | RFC 4648 / QP / RLE; `/serdes` registers `:base64` … | **0.2.0** |
 
 Capability brief: [serdes.md](../capabilities/serdes.md). JSON-only API: [json cookbook](json.md). XML-only API: [xml cookbook](xml.md). Object streams (no formats): [io cookbook](io.md).
 
 ```lisp
-(cl-repo:load-system "json-backend-jzon" :version "0.2.0")  ; pulls json-protocol + serdes
+(cl-repo:load-system "json-backend-jzon" :version "0.2.1")  ; pulls json-protocol + serdes
 ;; optional:
-(cl-repo:load-system "yaml-protocol" :version "0.1.0")
-(cl-repo:load-system "sexp-protocol" :version "0.2.0")
+(cl-repo:load-system "yaml-protocol" :version "0.2.1")
+(cl-repo:load-system "sexp-protocol" :version "0.2.2")
 (cl-repo:load-system "csv-protocol" :version "0.1.0")
 (cl-repo:load-system "xml-backend-native" :version "0.1.0")
-(cl-repo:load-system "arrow-protocol" :version "0.1.0")
+(cl-repo:load-system "arrow-protocol" :version "0.1.1")
 (cl-repo:load-system "protobuf-backend-cl-protobufs" :version "0.2.0")
-(cl-repo:load-system "mime-protocol" :version "0.1.0")
+(cl-repo:load-system "mime-protocol" :version "0.1.5")
 (cl-repo:load-system "cbor-protocol" :version "0.1.0")
 (cl-repo:load-system "messagepack-protocol" :version "0.1.0")
-(cl-repo:load-system "avro-protocol" :version "0.1.0")
-(cl-repo:load-system "encoding-protocol" :version "0.1.2")
+(cl-repo:load-system "avro-protocol" :version "0.1.2")
+(cl-repo:load-system "encoding-protocol" :version "0.2.0")
 (asdf:load-system "encoding-protocol/serdes")
 ```
 
@@ -153,7 +153,7 @@ Binary Gray classes: json/sexp use character streams; [`arrow-protocol`](../capa
 ## 5. Arrow / Parquet
 
 ```lisp
-(cl-repo:load-system "arrow-protocol" :version "0.1.0")
+(cl-repo:load-system "arrow-protocol" :version "0.1.1")
 
 (let* ((schema (stack-arrow:make-arrow-schema
                 (list (stack-arrow:make-arrow-field :name "n" :type :int32)

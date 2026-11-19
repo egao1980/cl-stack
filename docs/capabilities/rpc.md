@@ -36,11 +36,11 @@ Default stream methods on `rpc-transport` signal unimplemented — unary transpo
 |-------|------|
 | Protocol (modes + codec GFs) | [`egao1980/rpc-protocol`](https://github.com/egao1980/rpc-protocol) **0.2.0** |
 | JSON-RPC 2.0 codec | [`egao1980/rpc-protocol-json`](https://github.com/egao1980/rpc-protocol-json) **0.1.0** |
-| gRPC binding | [`egao1980/rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) **0.1.0** |
+| gRPC binding | [`egao1980/rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) **0.2.0** |
 | In-process (A) | [`egao1980/rpc-backend-inprocess`](https://github.com/egao1980/rpc-backend-inprocess) **0.1.0** |
-| stdio (B) | [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) **0.1.1** |
-| HTTP POST (C) | [`egao1980/rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) **0.1.1** |
-| SSE (D) | [`egao1980/rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) **0.1.1** |
+| stdio (B) | [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) **0.1.2** |
+| HTTP POST (C) | [`egao1980/rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) **0.1.2** |
+| SSE (D) | [`egao1980/rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) **0.1.2** |
 
 ## Protocol surface
 

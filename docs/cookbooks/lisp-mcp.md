@@ -4,11 +4,11 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.4.0** |
-| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.2** |
-| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.6** |
+| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.5.0** |
+| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.4** |
+| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.7** |
 | SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.2** |
-| Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.1** |
+| Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.2** |
 | MCP | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) / [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) / [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.1** / **0.2.0** / **0.3.0** |
 
 | If you know | Here |
@@ -81,7 +81,7 @@ One missing `)` would usually swallow every form after it. Here the damage stays
 source-check {"path": "src/broken.lisp", "rules": "none"}
 → imbalance missing-close: 1 closing parenthesis missing — suggested fix at 3:13 (confidence high)
 
-edit-repair {"path": "src/broken.lisp"}            ; applies the fix; refused unless problems drop
+edit-structure {"path": "src/broken.lisp", "op": "repair"}   ; fixes imbalance 0 ("index" picks another); refused unless problems drop
 source-check {"path": "src/broken.lisp", "rules": "none"}
 → … clean
 ```
@@ -112,12 +112,14 @@ edit-replace {"path": "src/stats.lisp", "locator": "defun average",
 | Tool | Does |
 |------|------|
 | `edit-insert` (`where` before/after), `edit-delete` | siblings, with the separating whitespace |
-| `edit-wrap` (`head` e.g. `"when (ready-p)"`), `edit-splice`, `edit-raise` | paredit wrap / splice / raise |
-| `edit-slurp`, `edit-barf` (`direction`) | grow or shrink a list |
-| `edit-transpose`, `edit-move` (`target_locator`, optional `target_path`, `where`) | reorder; move across files (both files verified before either is written) |
+| `edit-structure` `op` `wrap` (`head` e.g. `"when (ready-p)"`), `splice`, `raise` | paredit wrap / splice / raise |
+| `edit-structure` `op` `slurp`, `barf` (`direction` `forward` / `backward`) | grow or shrink a list |
+| `edit-structure` `op` `transpose`, `move` (`target_locator`, optional `target_path`, `where`) | reorder; move across files (both files verified before either is written) |
 | `edit-rename-symbol` (`symbol` `pkg:name`, `new_name`, optional `path`) | every reference that resolves to the symbol, keeping prefixes and case; verifies all files first |
 | `edit-add-export` | appends to the `defpackage` `:export` in its designator style |
 | `edit-new-file` | a new file whose content reads clean; never overwrites |
+
+Before 0.5.0 each `edit-structure` op was its own tool (`edit-wrap`, `edit-splice`, `edit-raise`, `edit-slurp`, `edit-barf`, `edit-transpose`, `edit-move`, `edit-repair`). The arguments are unchanged; add `op`.
 
 Refused with a reason: sibling edits under `#+`/`#-`, quote or backquote prefixes, the consing dot, dotted lists, and forms rebuilt by recovery (repair the file first).
 

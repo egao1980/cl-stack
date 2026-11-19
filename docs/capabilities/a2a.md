@@ -1,7 +1,7 @@
 # a2a-protocol (P1)
 
 **Issues:** [#186](https://github.com/egao1980/cl-stack/issues/186)  
-**Status:** wave-1 **done** (`a2a-protocol` **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0**) — CLOS Agent Card / Task; **three binding backends**
+**Status:** wave-1 **done** (`a2a-protocol` **0.2.0** + jsonrpc **0.2.1** + httpjson **0.2.0** + grpc **0.2.0**; current jsonrpc **0.2.2**, httpjson **0.2.1**) — CLOS Agent Card / Task; **three binding backends**
 
 [A2A](https://a2a-protocol.org/latest/specification/) (Linux Foundation). Agent ↔ agent. Complementary to MCP (tools/data) and AG-UI (user).
 

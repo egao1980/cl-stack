@@ -4,7 +4,7 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.2** |
+| Protocol + mock (`stack-rag`) | [`rag-protocol`](https://github.com/egao1980/rag-protocol) | **0.1.3** |
 | In-process cosine store | [`rag-backend-memory`](https://github.com/egao1980/rag-backend-memory) | **0.1.0** |
 | SQL persist + Lisp cosine | [`rag-backend-sql`](https://github.com/egao1980/rag-backend-sql) | **0.1.0** |
 | Postgres ANN (pgvector) | [`rag-backend-pgvector`](https://github.com/egao1980/rag-backend-pgvector) | **0.1.0** |
@@ -12,15 +12,15 @@
 | Postgres FTS | [`rag-backend-tsvector`](https://github.com/egao1980/rag-backend-tsvector) | **0.1.0** |
 | Sparse store + encoder | [`rag-backend-splade`](https://github.com/egao1980/rag-backend-splade) | **0.1.0** |
 | Pairwise rerank | [`rag-backend-cross-encoder`](https://github.com/egao1980/rag-backend-cross-encoder) | **0.1.0** |
-| Recursive character splitter | [`rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.1.0** |
-| Embeddings | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.2.1** |
+| Recursive character splitter | [`rag-backend-text`](https://github.com/egao1980/rag-backend-text) | **0.2.0** |
+| Embeddings | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** |
 
 Brief: [rag.md](../capabilities/rag.md). Embeddings stay on an `llm-backend` — [llm cookbook](llm.md).
 
 ```lisp
-(cl-repo:load-system "rag-protocol" :version "0.1.2")
+(cl-repo:load-system "rag-protocol" :version "0.1.3")
 (cl-repo:load-system "rag-backend-memory" :version "0.1.0")
-(cl-repo:load-system "rag-backend-text" :version "0.1.0")
+(cl-repo:load-system "rag-backend-text" :version "0.2.0")
 
 (let* ((store (rag-backend-memory:make-memory-vector-store))
        (chunker (rag-backend-text:make-recursive-character-chunker

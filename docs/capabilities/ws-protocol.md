@@ -17,7 +17,7 @@ Conventions: [API.md](../API.md). Event DX: [event-protocol.md](event-protocol.m
 | **Wave-1 backend** | **[`websocket-driver`](https://github.com/fukamachi/websocket-driver)** (`websocket-driver-client`) | De-facto CL client; usocket + cl+ssl; BSD-2; Clack ecosystem |
 | **Async DX** | **Promises** (same as event/http facades) | `connect-async` → promise of connection; handlers stay callbacks; compose with HTTP |
 | **Event loop** | Prefer ops schedulable on `event-protocol` | Driver wave-1 may use BT threads internally; facade must not block the loop thread on `send`/`close` without documenting affinity |
-| **TLS / WSS** | **cl+ssl** + `cl-stack-ssl` overlay | Same as HTTPS (#12 / #35); no second TLS stack |
+| **TLS / WSS** | **cl+ssl** + `cl-stack-ssl` overlay | Same as HTTPS (#12 / #35); no second TLS stack. Load `cl-stack-ssl` before cl+ssl so it opens the overlay OpenSSL |
 | **Windows** | **Primary** | usocket path; no libev/Woo required for client |
 | **Server** | **H1 + H2 shipped** (`accept` / `make-ws-server` `:transport`) | Protocol **0.4.0**: `:auto` / `:http/1.1` / `:http/2`. Driver **0.4.0** H1 Upgrade + RFC 8441 CONNECT (TLS, `ENABLE_CONNECT_PROTOCOL`). `:auto` stays H1 so WSS tests are unsurprised |
 | **Extensions** | **permessage-deflate** = **P2** | RFC 7692; ship only if backend exposes it cheaply |
@@ -55,7 +55,7 @@ CLOS split (mirrors `http-protocol` HTTP version):
 
 | Backend | Transports | Notes |
 |---------|------------|-------|
-| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) **0.4.0** | `:http/1.1` (client+server) · `:http/2` (server) | H2 listen needs `:ssl-cert` / `:ssl-key`; client H2 stays `http-backend-async` |
+| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) **0.4.3** | `:http/1.1` (client+server) · `:http/2` (server) | H2 listen needs `:ssl-cert` / `:ssl-key`; client H2 stays `http-backend-async` |
 | `http-backend-winhttp` **0.1.3+** | `:http/1.1` | Native WinHTTP WebSocket upgrade; live `WINHTTP_WS_LIVE` |
 | `http-backend-async` **0.2.8+** | `:http/2` | RFC 8441 Extended CONNECT + `fast-websocket`; HPACK `":protocol"` string; live `HTTP_ASYNC_WS_H2_LIVE` |
 
@@ -166,6 +166,6 @@ P2: high-water marks, explicit `drain` / `pause` / `resume` mirroring Node `stre
 
 ## Extended CONNECT status
 
-- **Client** — `http-backend-async` **0.2.8** (event-loop I/O + HPACK `":protocol"` string).
-- **Server** — `ws-backend-websocket-driver` **0.4.0** (`:transport :http/2`, advertises `ENABLE_CONNECT_PROTOCOL`). Generic Clack H2 = `http-server-backend-http2` **0.2.0**. H1 echo/close canary: [`ws-parity`](https://github.com/egao1980/ws-parity) (Python `websockets` / Node `ws`).
+- **Client** — `http-backend-async` **0.2.8+** (event-loop I/O + HPACK `":protocol"` string).
+- **Server** — `ws-backend-websocket-driver` **0.4.0+** (`:transport :http/2`, advertises `ENABLE_CONNECT_PROTOCOL`). Generic Clack H2 = `http-server-backend-http2` **0.2.0**. H1 echo/close canary: [`ws-parity`](https://github.com/egao1980/ws-parity) (Python `websockets` / Node `ws`).
 - WinHTTP stays Upgrade-only (OS API).

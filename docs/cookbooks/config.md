@@ -6,7 +6,7 @@
 **Brief:** [config.md](../capabilities/config.md)
 
 ```lisp
-(cl-repo:load-system "cl-stack-config" :version "0.1.0")
+(cl-repo:load-system "cl-stack-config" :version "0.2.0")
 ```
 
 ---

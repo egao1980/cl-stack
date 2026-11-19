@@ -37,8 +37,9 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 | [docs/tutorials/](docs/tutorials/README.md) · [examples/](examples/agents/) | Tutorials: long-running agent (retries, compaction, permissions, subagents, `AGENTS.md`) · token-thrifty lisp-mcp session; runnable examples (`cl-repo test --system cl-stack/examples`) |
 | [docs/capabilities/ws-protocol.md](docs/capabilities/ws-protocol.md) | WebSocket client brief (`ws-backend-websocket-driver`) |
 | [docs/capabilities/json-protocol.md](docs/capabilities/json-protocol.md) | JSON encode/decode — jzon default, yason alternate |
+| [docs/cookbooks/terminal.md](docs/cookbooks/terminal.md) | Headless terminals + PTYs (`terminal-protocol`, `pty-protocol`); TUI / image briefs: [tui](docs/capabilities/tui.md) · [image](docs/capabilities/image.md) |
 | [docs/pins.md](docs/pins.md) | Pin file format + stable/edge channels |
-| [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix + GHCR overlay naming |
+| [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix, GHCR overlay naming, `asdf-native` `(:native-library …)` natives |
 | [docs/multi-impl.md](docs/multi-impl.md) | SBCL / ECL / ABCL CI matrix + local smoke notes (#42) |
 | [docs/overlay-ci.md](docs/overlay-ci.md) | Multi-arch publish CI prior art + Windows runners |
 | [docs/LICENSE-POLICY.md](docs/LICENSE-POLICY.md) | MIT + inbound allowlist |
@@ -48,11 +49,10 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 ## Corpus smoke
 
 ```bash
-qlot install
-qlot exec ros -e '(asdf:test-system "cl-stack/corpus-smoke")'
+cl-repo test --system cl-stack/corpus-smoke
 ```
 
-License allowlist: `python3 scripts/check-corpus-license.py`.
+License allowlist: `uv run scripts/check-corpus-license.py` (CI: `python3`, stdlib only).
 
 ## OCI corpus consumer
 

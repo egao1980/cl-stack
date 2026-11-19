@@ -4,7 +4,7 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Protocol (`stack-ai-agent`) | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
+| Protocol (`stack-ai-agent`) | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 | MCP sampling + peer | `ai-agent-protocol/mcp` | **0.1.0** |
 | AG-UI encode | `ai-agent-protocol/ag-ui` | **0.2.0** |
 | A2A expose | `ai-agent-protocol/a2a` | **0.1.0** |
@@ -12,7 +12,7 @@
 Brief: [ai-agent.md](../capabilities/ai-agent.md). Do **not** call this `run-agent` — that's `ag-ui-protocol:run-agent`.
 
 ```lisp
-(cl-repo:load-system "ai-agent-protocol" :version "0.6.0")
+(cl-repo:load-system "ai-agent-protocol" :version "0.7.0")
 ```
 
 ---

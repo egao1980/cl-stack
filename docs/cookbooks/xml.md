@@ -74,7 +74,7 @@ Klacks-shaped: `:start-document` `:end-document` `:dtd` `:start-element` `:end-e
 
 ## 4. Validating compose
 
-Layer 2 is [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.2**. `decode-validating` = well-formed decode then `validate-instance`. Streaming content-model validator is later.
+Layer 2 is [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.4**. `decode-validating` = well-formed decode then `validate-instance`. Streaming content-model validator is later.
 
 ```lisp
 (asdf:load-system "schema-protocol-xsd")

@@ -14,13 +14,13 @@
 Capability brief (RFCs, CLOS transport split): [ws-protocol.md](../capabilities/ws-protocol.md). Pins: [QUICKSTART](../QUICKSTART.md).
 
 ```lisp
-(cl-repo:load-system "ws-protocol" :version "0.4.0")
+(cl-repo:load-system "ws-protocol" :version "0.4.2")
 ;; H1 Upgrade + H2 CONNECT server:
-(cl-repo:load-system "ws-backend-websocket-driver" :version "0.4.0")
+(cl-repo:load-system "ws-backend-websocket-driver" :version "0.4.3")
 ;; or Windows native H1:
-;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
+;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.4")
 ;; H2 Extended CONNECT client (event-loop):
-;; (cl-repo:load-system "http-backend-async" :version "0.2.8")
+;; (cl-repo:load-system "http-backend-async" :version "0.2.19")
 ```
 
 ---
@@ -94,8 +94,8 @@ Wrong transport → `ws-transport-not-available` (e.g. WinHTTP + `:http/2`, asyn
 `http-backend-async` **0.2.3+** runs handshake + DATA on `register-io` (same TLS WANT_* / H2 pump as HTTP). No BT frame reader.
 
 ```lisp
-(cl-repo:load-system "http-backend-async" :version "0.2.8")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.4")
+(cl-repo:load-system "http-backend-async" :version "0.2.19")
+(cl-repo:load-system "event-backend-libuv" :version "0.2.2")
 
 (setf http-backend-async:*event-backend-maker*
       (lambda () (event-backend-libuv:make-libuv-backend)))
@@ -126,7 +126,7 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1` / `:http-async-ws-h2-live` via `feature-or
 ## 4. WinHTTP (Windows H1)
 
 ```lisp
-(cl-repo:load-system "http-backend-winhttp" :version "0.1.3")
+(cl-repo:load-system "http-backend-winhttp" :version "0.1.4")
 (let* ((b (http-backend-winhttp:make-winhttp-backend))
        (c (ws-protocol:make-ws-client b :transport :http/1.1)))
   (ws-protocol:connect b c "wss://echo.websocket.events/"))
@@ -171,7 +171,7 @@ Live: `WINHTTP_WS_LIVE=1`. Upgrade-only — not RFC 8441.
   (ws-protocol:start-ws-server server))
 ```
 
-Client (do **not** bind `*event-loop*` — deadlock): `http-backend-async` **0.2.8** + `:transport :http/2` `:verify nil` against a self-signed cert.
+Client (do **not** bind `*event-loop*` — deadlock): `http-backend-async` **0.2.19** + `:transport :http/2` `:verify nil` against a self-signed cert.
 
 `http2/server/threaded` may fail to load on Windows — tests skip.
 

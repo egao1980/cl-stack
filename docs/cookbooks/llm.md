@@ -5,17 +5,17 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Protocol + mock + catalog (`stack-llm`) | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** |
-| OpenAI-compat (`stack-llm-openai`) | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.1** |
+| OpenAI-compat (`stack-llm-openai`) | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.2** |
 | Anthropic Messages (`stack-llm-anthropic`) | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.2.0** |
-| llama.cpp native | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.4** |
-| CFFI + overlays | [`llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.1.5** |
+| llama.cpp native | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.5** |
+| CFFI + overlays | [`llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.2.0** |
 
 Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboard-protocol` dep. Demiurge **consumes** this. Sampling → [ai-agent.md](ai-agent.md). Conversation memory → [conversation.md](conversation.md). Rules / skills → [steer.md](steer.md). RAG / chunk / retrieve → [rag.md](rag.md).
 
 ```lisp
 (cl-repo:load-system "llm-protocol" :version "0.4.0")
-(cl-repo:load-system "llm-protocol-openai" :version "0.3.0")
-(cl-repo:load-system "llm-protocol-anthropic" :version "0.1.0")
+(cl-repo:load-system "llm-protocol-openai" :version "0.3.2")
+(cl-repo:load-system "llm-protocol-anthropic" :version "0.2.0")
 ```
 
 ---
@@ -120,7 +120,7 @@ Provider catalog (not LiteLLM, not a router):
   (stack-llm:register-provider cat "vllm"
                                (stack-llm-anthropic:make-vllm-anthropic-backend))
   (multiple-value-bind (b model)
-      (stack-llm:resolve-backend cat "anthropic:claude-sonnet-4-20250514")
+      (stack-llm:resolve-backend cat "anthropic:claude-sonnet-5-5")
     (stack-llm:generate b "ping" :model model)))
 ```
 
@@ -157,7 +157,7 @@ Refs: `"anthropic:claude"` / `:vllm` / `("openai" "gpt-4o")`. Missing name → `
 
 ## 4. Native llama.cpp
 
-CFFI to `libllamastack` — not `llama.h`. Overlays: linux/amd64 + windows/amd64 = CUDA+Vulkan; darwin Metal; linux/arm64 CPU. Host supplies `libcuda` / Vulkan ICD. Pin Lisp **0.1.5**; grammar / stream / `:parsed` need an ABI 2+ overlay (ABI 1 = fallback).
+CFFI to `libllamastack` — not `llama.h`. Overlays: linux/amd64 + windows/amd64 = CUDA+Vulkan; darwin Metal; linux/arm64 CPU. Host supplies `libcuda` / Vulkan ICD. Natives load at ASDF load through `asdf-native` (0.2.0; every library optional, so a checkout without natives still loads and `llama-available-p` is NIL; `$LLAMA_CPP_NATIVE` overrides, `LLAMA_CPP_FLAVOR=cpu|cuda|vulkan` picks a local `lib/<os>-<arch>-<flavor>/` build). Pin Lisp **0.2.0** (backend **0.1.5**); grammar / stream / `:parsed` need an ABI 2+ overlay (ABI 1 = fallback).
 
 ```lisp
 (asdf:load-system "llm-backend-llama-cpp")

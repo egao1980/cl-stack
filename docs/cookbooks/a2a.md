@@ -5,15 +5,15 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Protocol (`stack-a2a`) | [`a2a-protocol`](https://github.com/egao1980/a2a-protocol) | **0.2.0** |
-| JSON-RPC (default) | [`a2a-backend-jsonrpc`](https://github.com/egao1980/a2a-backend-jsonrpc) | **0.2.1** |
-| HTTP+JSON REST | [`a2a-backend-httpjson`](https://github.com/egao1980/a2a-backend-httpjson) | **0.2.0** |
+| JSON-RPC (default) | [`a2a-backend-jsonrpc`](https://github.com/egao1980/a2a-backend-jsonrpc) | **0.2.2** |
+| HTTP+JSON REST | [`a2a-backend-httpjson`](https://github.com/egao1980/a2a-backend-httpjson) | **0.2.1** |
 | gRPC | [`a2a-backend-grpc`](https://github.com/egao1980/a2a-backend-grpc) | **0.2.0** |
 
 Brief: [a2a.md](../capabilities/a2a.md) (#186). Same GFs on every binding. Card: `GET /.well-known/agent-card.json` (alias `agent.json`).
 
 ```lisp
 (cl-repo:load-system "a2a-protocol" :version "0.2.0")
-(cl-repo:load-system "a2a-backend-jsonrpc" :version "0.2.1")
+(cl-repo:load-system "a2a-backend-jsonrpc" :version "0.2.2")
 ```
 
 ---

@@ -23,7 +23,7 @@ Conventions: [API.md](../API.md). TLS overlays: [overlays.md](../overlays.md). E
 | **Parity refs** | **Java `java.net.http`** + **Boost.Beast verbs/messages** + RFCs below | Java = high-level client bar; Beast = wire vocabulary (not a full client) |
 | **Sync backend** | **dexador** | De-facto CL client; pooling, multipart, cookies, proxy |
 | **Async** | On **event-protocol** (≥2 backends) | Not hard-wired to libuv/libev; promises at facade |
-| **TLS** | **cl+ssl** + `cl-stack-ssl` overlay | #12 done; HTTPS/WSS consumers share OpenSSL |
+| **TLS** | **cl+ssl** + `cl-stack-ssl` overlay | #12 done; HTTPS/WSS consumers share OpenSSL. `cl-stack-ssl` points cl+ssl at the overlay OpenSSL before cl+ssl loads, so depend on `cl-stack-ssl`, not bare cl+ssl (`http-backend-async` ≥ 0.2.16) |
 | **WebSocket** | **Out of this protocol** → `ws-protocol` (#4) | Java puts WS on `HttpClient`; we keep separate per API.md |
 | **HTTP versions** | **HTTP/1.1** + prefer/negotiate **HTTP/2** (wave-2); **HTTP/3** = P2 | Protocol = preference + ALPN/header policy (RFC 7301 / 9113 §8); backends = wire (see [HTTP version split](#http-version-clos-split)) |
 | **Method surface** | All RFC 9110 methods + **PATCH** (RFC 5789); extension methods via string/keyword escape | Match Beast `http::verb` core + Java `method(...)` |
@@ -48,9 +48,9 @@ Wave-1: pin what dexador already uses, **except IDNA** — use stack `cl-idna`.
 | Content encode gzip/deflate | same | `compression-backend-chipz` (salza2); HTTP `:deflate` encode = zlib |
 | Content decode/encode **br** | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) → [`compression-protocol`](https://github.com/egao1980/compression-protocol) `:br` | [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) overlay |
 | Content decode/encode **zstd** | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) → `:zstd` | [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) overlay |
-| Content decode/encode **snappy** | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) → [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.3.1** | CFFI + `libsnappy`; **raw** block (not framed) |
+| Content decode/encode **snappy** | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) → [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.3.1.2** | CFFI + `libsnappy`; **raw** block (not framed) |
 | MIME type guess | **`mime-protocol`** `lookup-mime` (or trivial-mimes via dexador) | Filename → type |
-| MIME parse/print + CTE | **[`mime-protocol`](https://github.com/egao1980/mime-protocol)** **0.1.0** | First-party; `decode-content` / `encode-content` = **Content-Transfer-Encoding** — **not** HTTP Content-Encoding |
+| MIME parse/print + CTE | **[`mime-protocol`](https://github.com/egao1980/mime-protocol)** **0.1.5** | First-party; `decode-content` / `encode-content` = **Content-Transfer-Encoding** — **not** HTTP Content-Encoding |
 | Multipart / chunked | `http-protocol` streaming multipart + `mime-protocol` `:multipart` + **chunga** | Form uploads stay here; structured MIME entities → mime-protocol |
 | Charset | **babel** | Via dexador |
 | Cookies | **cl-cookie** | Via dexador |
@@ -184,7 +184,7 @@ Legend: **Y** = first-class · **P** = partial / via headers · **N** = absent �
 
 ## Content encoding (wave-1)
 
-Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked for wave-1 (was P2). **`snappy`** (raw block, not framed) is a later first-party coding via `http-encoding-snappy` + `cl-stack-snappy` **1.3.1**.
+Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked for wave-1 (was P2). **`snappy`** (raw block, not framed) is a later first-party coding via `http-encoding-snappy` + `cl-stack-snappy` **1.3.1.2**.
 
 ### Codings
 
@@ -195,7 +195,7 @@ Modern clients advertise and decode **br** and **zstd**, not only gzip. Locked f
 | `deflate` | RFC 1950/1951 | `http-encoding-chipz` → `:zlib` encode; decode zlib then raw `:deflate` | `compression-backend-chipz` |
 | `br` | RFC 7932 | [`http-encoding-brotli`](https://github.com/egao1980/http-encoding-brotli) → `:br` | [`cl-stack-brotli`](https://github.com/egao1980/cl-stack-brotli) |
 | `zstd` | RFC 8878 | [`http-encoding-zstd`](https://github.com/egao1980/http-encoding-zstd) → `:zstd` | [`cl-stack-zstd`](https://github.com/egao1980/cl-stack-zstd) |
-| `snappy` | raw Snappy (not framed; no HTTP RFC) | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) | [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.3.1** |
+| `snappy` | raw Snappy (not framed; no HTTP RFC) | [`http-encoding-snappy`](https://github.com/egao1980/http-encoding-snappy) | [`cl-stack-snappy`](https://github.com/egao1980/cl-stack-snappy) **1.3.1.2** |
 
 Skip obsolete `compress` (LZW). Dictionary transport (`dcb` / `dcz`, RFC 9842) = **P2**.
 
@@ -233,7 +233,7 @@ Facade:
 
 ### Overlay plan
 
-Same policy as OpenSSL ([overlays.md](../overlays.md)): grovel at build time if needed; ship `native-library` per os/arch; Windows primary.
+Ship `native-library` per os/arch ([overlays.md](../overlays.md)); Windows primary. Each library is an [`asdf-native`](https://github.com/egao1980/asdf-native) `(:native-library …)` component, loaded at ASDF load from `$CL_STACK_<LIB>_NATIVE`, the overlay's `native/`, `lib/<os>-<arch>/`, then the system library (`:system t`). Publish derives the overlays from `lib/<os>-<arch>/`. Brotli and zstd are `:optional t`: a missing library warns at load instead of failing it. Versions are upstream + packaging revision (`1.5.7.2` ships zstd 1.5.7).
 
 | Package | Native | Matrix |
 |---------|--------|--------|

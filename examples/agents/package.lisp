@@ -19,12 +19,15 @@
 (in-package #:cl-stack-examples/agents)
 
 (defmacro with-agent-loop (&body body)
-  "Run BODY with a libuv event loop bound, as sync RUN-AI-AGENT expects."
+  "Run BODY with a libuv event loop bound, as sync RUN-AI-AGENT expects.
+The loop is closed on exit: its maker owns it (EVENT-PROTOCOL:CLOSE-EVENT-LOOP)."
   `(let* ((eb (event-backend-libuv:make-libuv-backend))
           (el (event-protocol:make-event-loop eb)))
-     (event-protocol:with-event-backend (eb)
-       (event-protocol:with-event-loop-var (el)
-         ,@body))))
+     (unwind-protect
+          (event-protocol:with-event-backend (eb)
+            (event-protocol:with-event-loop-var (el)
+              ,@body))
+       (event-protocol:close-event-loop eb el))))
 
 (defun reply (text)
   "A final text response."

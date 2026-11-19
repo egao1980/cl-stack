@@ -5,7 +5,7 @@
 | Piece | Package | OCI |
 |-------|---------|-----|
 | Protocol + buffer / window (`stack-conversation`) | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** |
-| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
+| Agent hook | [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 | Turns | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** |
 
 Brief: [conversation.md](../capabilities/conversation.md).

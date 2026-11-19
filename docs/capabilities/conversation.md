@@ -1,6 +1,6 @@
 # conversation-protocol (P1)
 
-**Status:** `conversation-protocol` **0.1.0** + `ai-agent-protocol` **0.2.2** `:memory` · cookbook [conversation.md](../cookbooks/conversation.md)
+**Status:** wave-1 `conversation-protocol` **0.1.0** + `ai-agent-protocol` **0.2.2** `:memory`. Current **0.3.0**: `summary-memory` / `token-window-memory` (0.2), `compact-turns` (0.3; agent `:compaction`); SQL store in [`conversation-backend-sql`](https://github.com/egao1980/conversation-backend-sql) **0.1.0** · cookbook [conversation.md](../cookbooks/conversation.md)
 
 CLOS **conversation memory** over [`llm-turn`](llm.md). **Not** RAG. **Not** GFs on `llm-protocol`.
 
@@ -18,7 +18,7 @@ Comparators: LangChain buffer / window / summary; Spring `ChatMemory`; PydanticA
 | **Window** | Turn count, not tokens (`llm-usage` is after-the-fact). Keep all `:system`. |
 | **remember** | Append. `:replace t` snapshots (agent finish uses this). |
 | **In-tree** | `in-memory-conversation-store`, `buffer-memory`, `window-memory`. |
-| **Not 0.1.0** | LLM summary-memory; SQL persist; token window. Later backends. |
+| **Not 0.1.0** | LLM summary-memory; SQL persist; token window. Shipped since: summary / token-window in 0.2.0, SQL in `conversation-backend-sql` 0.1.0, `compact-turns` (templated summary + verbatim token tail; never splits a tool call from its result) in 0.3.0. |
 | **Agent** | Optional `:memory` / `:session`. `prepare-agent-turns` recalls; terminal finish remembers. Approval / deferred do not persist. |
 
 ---
@@ -38,7 +38,8 @@ Package nick: `stack-conversation`.
 
 | Layer | Repo | Ver |
 |-------|------|-----|
-| Protocol + in-process store / buffer / window | [`egao1980/conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.1.0** |
-| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** |
+| Protocol + in-process store / buffer / window / summary / token-window | [`egao1980/conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** |
+| SQL store | [`egao1980/conversation-backend-sql`](https://github.com/egao1980/conversation-backend-sql) | **0.1.0** |
+| Agent hook (`:memory`, `:compaction`) | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 
 Conditions: `conversation-missing-backend` (`use-value`); `conversation-session-not-found` (`continue`).

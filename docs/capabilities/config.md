@@ -1,7 +1,7 @@
 # Config facade (env + TOML)
 
 **Issues:** [#92](https://github.com/egao1980/cl-stack/issues/92) · [#98](https://github.com/egao1980/cl-stack/issues/98) · [#99](https://github.com/egao1980/cl-stack/issues/99)  
-**Status:** **done** — [`egao1980/cl-stack-config`](https://github.com/egao1980/cl-stack-config) `0.1.0` + tomlet on GHCR; cookbook [config.md](../cookbooks/config.md)
+**Status:** **done** — [`egao1980/cl-stack-config`](https://github.com/egao1980/cl-stack-config) `0.2.0` + tomlet on GHCR; cookbook [config.md](../cookbooks/config.md)
 
 One app DX for configuration: structured file + environment overlay + explicit overrides. Avoid N× envy / ad-hoc `uiop:getenv` stacks.
 

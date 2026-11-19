@@ -21,7 +21,7 @@
 
 ## Wave-1 protocol set
 
-- `event-protocol` — run / defer / cancel / sleep / register-io / wake-call / submit; multi-backend + default pin  
+- `event-protocol` — run / defer / cancel / sleep / register-io / wake-call / submit / close-event-loop; multi-backend + default pin  
   **Brief:** [capabilities/event-protocol.md](capabilities/event-protocol.md) — DX = **promises**; default **libuv**, second **libev**. `submit` `:executor` is a thunk runner, not a pool type — backends may plug in [`cl-stack-executors`](https://github.com/egao1980/cl-stack-executors).
 - `http-protocol` — sync + async send; request/response values  
   **Brief:** [capabilities/http-protocol.md](capabilities/http-protocol.md)
@@ -49,7 +49,7 @@
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
-- `serdes-protocol` — format encode/decode + Gray/JSONL/events + media-type registry (OCI **0.2.2**); **implemented by** `json-protocol` + `yaml-protocol` (`:yaml` **0.1.0**) + sexp (**0.2.0**) + `csv-protocol` **0.1.0** + `xml-protocol` **0.1.0** + `arrow-protocol` **0.1.0** + `protobuf-protocol` **0.2.0** + `mime-protocol` **0.1.0** + `cbor-protocol` **0.1.0** + `messagepack-protocol` **0.1.0** + `avro-protocol` **0.1.0** + `encoding-protocol` **0.1.2** (`/serdes`)  
+- `serdes-protocol` — format encode/decode + Gray/JSONL/events + media-type registry (OCI **0.2.2**); **implemented by** `json-protocol` + `yaml-protocol` (`:yaml` **0.2.1**) + sexp (**0.2.2**) + `csv-protocol` **0.1.0** + `xml-protocol` **0.1.0** + `arrow-protocol` **0.1.1** + `protobuf-protocol` **0.2.0** + `mime-protocol` **0.1.5** + `cbor-protocol` **0.1.0** + `messagepack-protocol` **0.1.0** + `avro-protocol` **0.1.2** + `encoding-protocol` **0.2.0** (`/serdes`)  
 
   **Brief:** [capabilities/serdes.md](capabilities/serdes.md) · **Cookbook:** [cookbooks/serdes.md](cookbooks/serdes.md)
 - `csv-protocol` — RFC 4180 dialects; whole-document + row streams + events; implements serdes `:csv` / `:tsv`  
@@ -84,7 +84,7 @@ HTTP client + server are done. Wire codecs + bindings are each `*-protocol` + `*
   **Brief:** [capabilities/sse.md](capabilities/sse.md) (#184) · cookbook [sse.md](cookbooks/sse.md)
 - `rpc-protocol-json` / `rpc-protocol-grpc` — JSON-RPC codec and gRPC binding (separate repos)
 - `rpc-backend-stdio` / `rpc-backend-http` / `rpc-backend-sse` — JSON-RPC transports (#170) · cookbook [rpc.md](cookbooks/rpc.md)
-- `protobuf-protocol` — serdes `:protobuf` + proto3 JSON / WKT; backend cl-protobufs **0.2.0**  
+- `protobuf-protocol` — serdes `:protobuf` + proto3 JSON / WKT; backend `protobuf-backend-cl-protobufs` **0.2.0** (cl-protobufs)  
   **Brief:** [capabilities/protobuf.md](capabilities/protobuf.md)
 - `grpc-protocol` — gRPC wire (channel / status); call via `rpc-protocol-grpc`  
   **Brief:** [capabilities/grpc.md](capabilities/grpc.md)

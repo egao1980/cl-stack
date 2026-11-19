@@ -2,7 +2,7 @@
 
 **Status:** **done** — [`egao1980/xml-protocol`](https://github.com/egao1980/xml-protocol) `0.1.0` + `xml-backend-native` `0.1.0` on GHCR; cookbook [xml.md](../cookbooks/xml.md)
 
-CLOS **XML Infoset** + pull events + streaming writer. Hard-implements [`serdes-protocol`](serdes.md) `:xml`. Well-formed syntax only — XSD is [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.2** (`decode-validating` = decode then `validate-instance`).
+CLOS **XML Infoset** + pull events + streaming writer. Hard-implements [`serdes-protocol`](serdes.md) `:xml`. Well-formed syntax only — XSD is [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) **0.1.4** (`decode-validating` = decode then `validate-instance`).
 
 Conventions: [API.md](../API.md). Pins: [pins.md](../pins.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md).
 
@@ -26,4 +26,4 @@ Conventions: [API.md](../API.md). Pins: [pins.md](../pins.md). Gap row: [STDLIB-
 |-------|------|-----|
 | Protocol (`stack-xml`) | [`xml-protocol`](https://github.com/egao1980/xml-protocol) | **0.1.0** |
 | Native backend | same repo (`xml-backend-native`) | **0.1.0** |
-| XSD compose | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.2** |
+| XSD compose | [`schema-protocol-xsd`](https://github.com/egao1980/schema-protocol-xsd) | **0.1.4** |

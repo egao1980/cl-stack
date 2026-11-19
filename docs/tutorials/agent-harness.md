@@ -13,7 +13,7 @@ Every step has a runnable example in [`examples/agents/`](../../examples/agents/
 
 | Package | Version | What it adds here |
 |---------|---------|-------------------|
-| [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** | the loop: retries, compaction trigger, wrap-up, typed tool failures, permissions, subagents, instruction discovery |
+| [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** | the loop: retries, compaction trigger, wrap-up, typed tool failures, permissions, subagents, instruction discovery |
 | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** | `retry-policy`, `llm-retry-class`, `llm-context-overflow`, cache-aware `llm-usage`, `anchored-token-count` |
 | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.2.0** | prompt cache breakpoints, API-side compaction, `Retry-After` |
 | [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** | `summary-memory` + `compact-turns` (templated summary, verbatim tail) |
@@ -24,14 +24,16 @@ Every step has a runnable example in [`examples/agents/`](../../examples/agents/
 (in-package #:cl-stack-examples/agents)
 ```
 
-All runs below need a bound event loop. `with-agent-loop` from [`package.lisp`](../../examples/agents/package.lisp) binds a libuv loop:
+All runs below need a bound event loop. `with-agent-loop` from [`package.lisp`](../../examples/agents/package.lisp) binds a libuv loop and closes it on exit (`close-event-loop`, event-protocol 0.2.2):
 
 ```lisp
 (defmacro with-agent-loop (&body body)
   `(let* ((eb (event-backend-libuv:make-libuv-backend))
           (el (event-protocol:make-event-loop eb)))
-     (event-protocol:with-event-backend (eb)
-       (event-protocol:with-event-loop-var (el) ,@body))))
+     (unwind-protect
+          (event-protocol:with-event-backend (eb)
+            (event-protocol:with-event-loop-var (el) ,@body))
+       (event-protocol:close-event-loop eb el))))   ; whoever makes a loop closes it
 ```
 
 ---
@@ -286,7 +288,7 @@ A short system prompt that names only the tools the agent has:
 Watch it with `:on-event`. The kinds: `:retry`, `:compacted`, `:permission`, `:subagent`, `:waiting`, `:inbox`, `:instructions`, plus the usual `:step`, `:invocation` and `:finished`.
 
 What is not covered yet:
-- Durability does not journal subagents, inbox contents or the set of injected instructions.
+- Durability journals subagents, the inbox and the injected instructions since 0.7.0. A child that was running at a crash comes back as failed, and the parent gets its report. Compaction is not journaled: a replay re-runs the summarizer.
 - opencode's "always allow" replies are not implemented.
 
 Reference: [ai-agent cookbook](../cookbooks/ai-agent.md) · [LLM cookbook](../cookbooks/llm.md) · [conversation](../cookbooks/conversation.md) · [steer](../cookbooks/steer.md).

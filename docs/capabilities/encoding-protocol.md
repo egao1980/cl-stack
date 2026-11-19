@@ -1,6 +1,6 @@
 # encoding-protocol (P2)
 
-**Status:** **shipped** — [`egao1980/encoding-protocol`](https://github.com/egao1980/encoding-protocol) OCI **0.1.2** (`stack-encoding`)
+**Status:** **shipped** — [`egao1980/encoding-protocol`](https://github.com/egao1980/encoding-protocol) OCI **0.2.0** (`stack-encoding`)
 
 RFC 4648 (Base16/32/64), RFC 2045 quoted-printable, classic byte RLE. Core depends only on Babel. Load `encoding-protocol/serdes` to register [`serdes-protocol`](serdes.md) `:base64` / `:base64url` / `:base32` / `:base32hex` / `:base16` (`:hex`) / `:quoted-printable` / `:rle`.
 

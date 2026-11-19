@@ -14,7 +14,7 @@
 Brief: [json-protocol.md](../capabilities/json-protocol.md).
 
 ```lisp
-(cl-repo:load-system "json-backend-jzon" :version "0.2.0")
+(cl-repo:load-system "json-backend-jzon" :version "0.2.1")
 ;; nick: stack-json — also registers serdes :json (see [serdes cookbook](serdes.md))
 ```
 
@@ -61,7 +61,7 @@ Octets (HTTP bodies):
 With [`cl-stack-http`](https://github.com/egao1980/cl-stack-http) **0.1.8+** (jzon via protocol):
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.8")
+(cl-repo:load-system "cl-stack-http" :version "0.1.11")
 (stack-http:with-backend (:async)       ; or :dexador / :auto
   (let ((res (stack-http:post "https://httpbingo.org/post"
                               :json '(("q" . "hi")))))

@@ -1,7 +1,7 @@
 # steer-protocol (P3)
 
 **Issues:** [#198](https://github.com/egao1980/cl-stack/issues/198)
-**Status:** `steer-protocol` **0.1.0** + `ai-agent-protocol` **0.2.2** `:steering` · cookbook [steer.md](../cookbooks/steer.md)
+**Status:** wave-1 `steer-protocol` **0.1.0** + `ai-agent-protocol` **0.2.2** `:steering`. Current **0.3.0**: tool-bearing skills + git-backed versioned store (0.2), path-scoped `AGENTS.md` `instruction-discovery` + `build-system-prompt` (0.3; agent `:instructions-discovery`) · cookbook [steer.md](../cookbooks/steer.md)
 
 CLOS **rules / skills** compiled into a system prompt. **Not** A2A `agent-skill`. **Not** GFs on `llm-protocol`. **Not** RAG.
 
@@ -21,7 +21,7 @@ Comparators: Cursor/Codex `SKILL.md`; Autolith `skill.load`.
 | **Files** | Cursor/Codex `SKILL.md` YAML frontmatter. `load-skills-from-directory`. |
 | **In-tree** | `in-memory-steering`. |
 | **Agent** | `:steering` after memory recall. `defagent` `(:steering form)`. |
-| **Not 0.1.0** | Tool-bearing skills; remote skill registries. |
+| **Not 0.1.0** | Tool-bearing skills (shipped 0.2.0); remote skill registries (still out). |
 
 ---
 
@@ -40,7 +40,7 @@ Package nick: `stack-steer`.
 
 | Layer | Repo | Ver |
 |-------|------|-----|
-| Protocol + in-memory + `SKILL.md` | [`egao1980/steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.1.0** |
-| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.2.2** |
+| Protocol + in-memory + `SKILL.md` + discovery | [`egao1980/steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.3.0** |
+| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 
 Conditions: `steer-missing-source` (`use-value`); `steer-unknown-directive` (`use-value` / `continue`); `steer-skill-not-found` (`use-value`).

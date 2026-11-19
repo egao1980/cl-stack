@@ -1,7 +1,7 @@
 # tui-protocol (P2) — terminal user interfaces
 
 **Issues:** [#274](https://github.com/egao1980/cl-stack/issues/274) · terminal [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **draft** — no code yet
+**Status:** brief **draft**. Wave 1 shipped: [`tui-protocol`](https://github.com/egao1980/tui-protocol) 0.1.0 (`stack-tui`: init / update / view over a cell canvas) + [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) 0.1.0 (headless, on any `terminal-protocol` emulator: `make-headless-tui`, `tui-type`, `tui-press`, `tui-wait-for`). No cookbook yet; see the repo READMEs.
 
 A CLOS protocol for full-screen terminal programs. The program is a model with `update` and `view` (the Elm architecture, as in bubbletea and [cl-tuition](https://github.com/atgreen/cl-tuition)). `view` returns a **canvas**: a grid of [`terminal-protocol`](terminal.md) cells and styles. A renderer diffs successive canvases into minimal VT output. An input decoder turns the terminal's bytes into key, mouse, paste, focus and resize messages.
 

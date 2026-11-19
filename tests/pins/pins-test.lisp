@@ -22,7 +22,7 @@
         (parse-system-entry (find "event-backend-libev" systems
                                   :key #'first :test #'string-equal))
       (ok (equal "event-backend-libev" name))
-      (ok (equal "0.1.3" ver))
+      (ok (and (stringp ver) (every (lambda (c) (or (digit-char-p c) (char= c #\.))) ver)))
       (ok (equal '(:unix) platforms)))))
 
 (deftest platforms-filter

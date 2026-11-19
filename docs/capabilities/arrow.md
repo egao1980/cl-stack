@@ -23,7 +23,7 @@ Cookbook: [serdes.md](../cookbooks/serdes.md). Schema emit: [schema.md](schema.m
 
 | Layer | Repo | OCI |
 |-------|------|-----|
-| Codec + serdes (`stack-arrow`) | [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) | **0.1.0** |
+| Codec + serdes (`stack-arrow`) | [`arrow-protocol`](https://github.com/egao1980/arrow-protocol) | **0.1.1** |
 | Schema emit/parse (`stack-schema-arrow`) | [`schema-protocol-arrow`](https://github.com/egao1980/schema-protocol-arrow) | **0.1.2** |
 
 ## Surface

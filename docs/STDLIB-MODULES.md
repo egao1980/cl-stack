@@ -32,7 +32,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | `datetime` / `zoneinfo` | `datetime-protocol` + tzdata + calendars |
 | `unicodedata` | `unicode-protocol` + ICU i18n/l10n (not gettext) |
 | `subprocess` | `process-protocol` |
-| model checking (Quint/TLA+) | `spec-protocol` **0.1.0** (`stack-spec`) + `spec-backend-quint` **0.1.0** |
+| model checking (Quint/TLA+) | `spec-protocol` **0.1.1** (`stack-spec`) + `spec-backend-quint` **0.1.1** |
 | `sqlite3` / SQLAlchemy | `sql-protocol` + `sql-query` + `sql-orm` + `sql-migrate` |
 | `gzip` / zipfile / `tarfile` / `bz2` | `compression-protocol` (xz overlay) |
 | pydantic-settings / pydantic models | `cl-stack-config` / `schema-protocol` |
@@ -82,7 +82,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 2 | FastAPI OpenAPI | **shipped** `openapi-protocol` **0.1.0** — emit + Clack `document-app`; dogfood lock below |
 | 3 | lxml / html5lib | html-protocol depth (selectors OK; still no CSS/JS engines) |
 | 4 | redis | `cache-protocol` + memory/redis |
-| 5 | dateutil `rrule` | **shipped** `datetime-protocol` **0.1.2** (`schedule` / `event-schedule`; RFC 5545 interchange) |
+| 5 | dateutil `rrule` | **shipped** `datetime-protocol` **0.1.3** (`schedule` / `event-schedule`; RFC 5545 interchange) |
 | 6 | watchdog | `watch-protocol` (Windows required) |
 | 7 | IMAP / async SMTP | mail-protocol backends |
 | 8 | pillow / openpyxl | leave unless a demo forces it |

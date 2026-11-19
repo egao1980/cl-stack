@@ -1,7 +1,7 @@
 # ai-agent-protocol (P2)
 
 **Issues:** leftover of [#195](https://github.com/egao1980/cl-stack/issues/195) · parent [#192](https://github.com/egao1980/cl-stack/issues/192)
-**Status:** wave-1 (`ai-agent-protocol` **0.2.2** + `/mcp` **0.1.0** · `/ag-ui` **0.2.0** · `/a2a` **0.1.0`) · cookbook [ai-agent.md](../cookbooks/ai-agent.md)
+**Status:** wave-1 (`ai-agent-protocol` **0.2.2** + `/mcp` **0.1.0** · `/ag-ui` **0.2.0** · `/a2a` **0.1.0**). Current **0.7.0**: `:durability` / `/telemetry` (0.3), retries, compaction, max-steps wrap-up, typed tool failures (0.4), permissions, background subagents (0.5), `AGENTS.md` discovery (0.6) · cookbook [ai-agent.md](../cookbooks/ai-agent.md) · tutorial [agent-harness.md](../tutorials/agent-harness.md)
 
 Async-first CLOS **agent loop** over [`llm-protocol`](llm.md). **Not** blackboard core. **Not** `ag-ui-protocol:run-agent` — use `run-ai-agent` / `run-ai-agent-async`.
 
@@ -15,9 +15,9 @@ MCP    ── call  ───┘
                     └── llm-protocol ──► models
 ```
 
-**Core has zero MCP/A2A/AG-UI deps.** Optional systems: `ai-agent-protocol/mcp`, `/ag-ui`, `/a2a`.
+**Core has zero MCP/A2A/AG-UI/task-protocol/telemetry-protocol deps.** Optional systems: `ai-agent-protocol/mcp`, `/ag-ui`, `/a2a`, `/durability`, `/telemetry`.
 
-`on-event` kinds: `:started` `:step` `:part` `:response` `:invocation` `:handoff` `:finished`. `%do-generate` uses `stream-generate` (`:on-part` hops onto the event loop). `ai-agent-protocol/ag-ui` encodes to AG-UI events via `*ag-ui-emit*`.
+`on-event` kinds: `:started` `:step` `:part` `:response` `:invocation` `:handoff` `:finished`, plus `:retry` `:compacted` `:wrap-up` `:permission` `:subagent` `:waiting` `:inbox` `:instructions` (0.4–0.6). `%do-generate` uses `stream-generate` (`:on-part` hops onto the event loop). `ai-agent-protocol/ag-ui` encodes to AG-UI events via `*ag-ui-emit*`.
 
 ---
 
@@ -34,7 +34,10 @@ MCP    ── call  ───┘
 | **MCP sampling** | `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`. |
 | **Approvals** | Pause `:approval`. `invoke-approve` / `invoke-deny` then `resume-ai-agent*`. |
 | **Memory** | Optional `conversation-protocol` `:memory` / `:session`. Recall on prepare; remember on terminal finish. Not RAG. |
-| **Steering** | `steer-protocol` `:steering`. Rules / `SKILL.md` after recall. Not A2A `agent-skill`. |
+| **Steering** | `steer-protocol` `:steering`. Rules / `SKILL.md` after recall. Not A2A `agent-skill`. `:instructions-discovery` injects path-scoped `AGENTS.md` as tool calls reach them (0.6). |
+| **Long runs** | `:extra` `:retry-policy` (by `llm-retry-class`), `:compaction` / `:compact-at` (`compact-turns`; once on `llm-context-overflow`), `:max-steps` wrap-up with `tool-choice :none`. Tool errors: `tool-failure` subtypes → model-readable results (0.4). |
+| **Permissions** | `{action, resource, effect}` rules, last match wins, deny on any resource wins; `:permission-policy` only tightens; `:ask` pauses `:approval`; deny returns feedback, does not abort (0.5). |
+| **Subagents** | `make-subagent-tool`: background children, reply injected before the parent's next generate; one level; `:subagents-on-finish` `:wait` / `:cancel` / `:detach` (0.5). |
 | **Promises** | Later facade. No Blackbird in the protocol. |
 
 ---
@@ -50,7 +53,7 @@ MCP    ── call  ───┘
 
 | Layer | Repo |
 |-------|------|
-| Protocol | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) **0.2.2** |
+| Protocol | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) **0.7.0** (wave-1: 0.2.2) |
 | MCP sampling + peer tools | `ai-agent-protocol/mcp` **0.1.0** |
 | AG-UI encoder | `ai-agent-protocol/ag-ui` **0.2.0** |
 | A2A expose | `ai-agent-protocol/a2a` **0.1.0** |
