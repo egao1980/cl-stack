@@ -96,7 +96,9 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
 | `sql-query-postgres` | **0.2.0** | postgres dialect |
 | `sql-orm` | **0.1.0** | CLOS ORM (`defmodel`) |
-| `sql-migrate` | **0.1.0** | Alembic-style revision runner (`stack-sql-migrate`) · [cookbook](cookbooks/sql.md) |
+| `sql-migrate` | **0.1.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
+| `diff-protocol` | **0.1.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp engine · [brief](capabilities/diff.md) |
+| `revision-protocol` | **0.1.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; in-memory store · [brief](capabilities/revision.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
@@ -150,11 +152,11 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
-| `llm-protocol-openai` | **0.3.2** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
+| `llm-protocol-openai` | **0.4.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream; `prompt_cache_key` + cached-token usage |
 | `llm-protocol-anthropic` | **0.3.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
 | `llama-cpp` | **0.2.0** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.9.0** | async-first loop + `:memory` + `:steering` + permissions, background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
+| `ai-agent-protocol` | **0.10.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
