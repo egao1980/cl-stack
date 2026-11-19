@@ -1,7 +1,7 @@
 # diff-protocol (R0 + R1) — diffs as values
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track R · MBT [#283](https://github.com/egao1980/cl-stack/issues/283)
-**Status:** brief **locked for R0** (shipped, diff-protocol 0.1.0) and **locked for R1** (text engine, tree engine, `:unified`, the diff-protocol#2 fix — see [R1 — locked](#r1--locked)). Contract: [`egao1980/diff-protocol`](https://github.com/egao1980/diff-protocol) `diff-protocol/tests` (Rove). Implementation via **team-solve**.
+**Status:** brief **locked for R0** (shipped, diff-protocol 0.1.0) and **locked for R1** (text engine, tree engine, `:unified`, the diff-protocol#2 fix — see [R1 — locked](#r1--locked)). **0.3.0** exports the [engine extension API](#engine-extension-api-030) ([diff-protocol#6](https://github.com/egao1980/diff-protocol/issues/6), [#7](https://github.com/egao1980/diff-protocol/issues/7)). Contract: [`egao1980/diff-protocol`](https://github.com/egao1980/diff-protocol) `diff-protocol/tests` (Rove). Implementation via **team-solve**.
 
 A diff is a **value**: a tree of `change`s computed by an **engine** for one content type. Diffs are applied, inverted, composed, rebased and three-way merged without touching any store. `revision-protocol` (the other R0 half) depends on this repo; this repo depends on nothing in the stack.
 
@@ -263,6 +263,7 @@ Labels follow the marker after one space. Marker lines always end in `#\Newline`
 | move | `diff --git a/OLD b/NEW`, `similarity index N%` (N = ⌊100 × similarity⌋, only when both sides are loaded), `rename from OLD`, `rename to NEW`, then `--- a/OLD`, `+++ b/NEW` and hunks when the content differs |
 | mode | `old mode 100644`, `new mode 100755` (before any `---` lines of the same file) |
 | non-text content (binary, sexp, any type change) | `Binary files a/P and b/P differ` (`/dev/null` for an add / remove side) |
+| non-text leaf type whose engine has a unified form (0.3.0, e.g. `:lisp`) | `--- a/P`, `+++ b/P` and the hunks `render-unified-content` writes ([below](#engine-extension-api-030)); `Binary files …` when it returns NIL |
 
 A file `:modify` without children is rendered from a context-0 diff of its contents. The same text at every level of the same diff.
 
@@ -286,6 +287,46 @@ R0 list edits are tail edits: `:remove`s of the tail (highest index first) and `
 ### Laws (R1)
 
 Laws 3–4 of the plan for the text engine (both algorithms, all levels) over every ordered pair of a fixed corpus (empty, no trailing newline, CRLF and mixed line ends, identical, all-different, blank and repeated lines) plus 40 deterministic random pairs and 45 triples; for the tree engine over a tree corpus (renames, similarity renames, mode, sexp / binary leaves, file ↔ directory) plus 25 random pairs and triples. Extra properties: hunk invariants (descending, separated, `before` = the base lines, footprint), Myers minimality (`removed + added = |a| + |b| − 2·LCS`), three-way with one side unchanged or both equal has no conflicts.
+
+---
+
+## Engine extension API (0.3.0)
+
+[diff-protocol#6](https://github.com/egao1980/diff-protocol/issues/6). An engine in another repo (first: [diff-backend-lisp-source](diff-backend-lisp-source.md), `:lisp`) subclasses `diff-engine`, registers one shared instance and specializes **exported** GFs only. `apply-diff` (its `skip-change` / `use-value` / `abort` restarts), `invert-diff`, `compose-diffs`, `three-way-diff`, `rebase-diff`, `parse-diff :sexp`, the tree engine's per-file nesting and the renders then work unchanged.
+
+```lisp
+(register-diff-engine name engine)                 ; → the registered instance; a name registers once (reload keeps it)
+;; an engine specializes:
+(engine-name engine)                               ; → keyword = footprint scheme ("lisp:/…")
+(compute-diff engine a b &key level context &allow-other-keys)
+(state-equal engine a b)
+(apply-change engine state change diff)            ; → new state; signals apply-conflict / unsupported-content
+(put-value engine state change value diff)         ; → new state (apply-diff's use-value)
+(invert-change change diff)                        ; default: swap kind / sides / move paths; specialize on a change subclass
+(merge-states engine base ours theirs resolve)     ; → (values merged-diff conflicts); resolve :base | :theirs
+(rebase-states engine diff onto base)              ; → (values diff conflicts)
+(rebase-by-merge engine diff onto base)            ; helper: rebase in state space (paths that shift: text, tree, lisp)
+(render-unified-content engine before after changes stream) ; → true after writing @@ hunks, NIL = no unified form
+```
+
+| Hook | Called by | Default (`diff-engine`) |
+|------|-----------|--------------------------|
+| `apply-change` | `apply-diff` per leaf, the tree engine per file | none |
+| `put-value` | `apply-diff`'s `use-value` restart | none |
+| `invert-change` | `invert-diff` | swaps; `"text:…/s-e"` ranges recomputed, other footprints kept |
+| `merge-states` | `three-way-diff`, `rebase-by-merge`, the tree's per-file merge on leaf engines | leaf pairing: identical changes once, overlapping footprints conflict |
+| `rebase-states` | `rebase-diff` | leaves with absolute paths (sexp) |
+| `render-unified-content` | `render-diff :unified` on the engine's diffs and on tree files of its type | NIL |
+
+**Footprints** are a convention, not a hook: `"<scheme>:/…"`, scheme = the engine name. The tree engine splices the file path in after the scheme (`"lisp:/src/r.lisp/defun a"`). At `:unified` render time it finds a leaf change's engine by that scheme.
+
+**`render-unified-content`** ([#7](https://github.com/egao1980/diff-protocol/issues/7)) writes `@@` hunks only; the tree writes the `diff --git` / `---` / `+++` lines.
+- `before` / `after` are the contents when the diff carries them, otherwise NIL. An add has no before and a remove no after. A `:changes`-level tree diff carries neither, only the leaf changes.
+- `changes` are the engine's own changes for that content, with paths relative to it. They are NIL for a whole-file section (add / remove / move / `:summary` modify).
+- The text engine's method renders line hunks: its own changes, or a context-0 line diff of the sides, with NIL read as `""`. A string-content engine can delegate to `(find-diff-engine :text)`.
+- An engine that cannot render, e.g. form-level changes without a base, returns NIL. The file stays `Binary files … differ`, and a diff of the engine itself signals `unsupported-content`.
+
+**0.2 names.** `%apply-change`, `%put-value`, `%invert-change`, `%three-way`, `%rebase`, `%rebase-by-merge` and `%register-engine` are the same function objects as the exported names. Methods defined on either name form one method set, so engines written against 0.2 internals keep compiling. New code uses the exported names.
 
 ---
 
