@@ -37,7 +37,7 @@ Canonical structural matrix for cl-stack prioritization. **Do not rediscover** t
 | Unicode | Fragmented | P1 | **shipped** — `unicode-protocol` **0.1.2** (UCD / normalize / IDNA / breaks / uset) + cl-unicode / sbcl / ICU4C **79.1.2** / ICU4J **79.1.0**; facade `cl-stack-idna` **0.1.0** — [unicode-protocol.md](capabilities/unicode-protocol.md) · [cookbook](cookbooks/unicode.md) |
 | i18n / l10n | Fragmented | P1 | **shipped** — ICU4C + ICU4J, [#151](https://github.com/egao1980/cl-stack/issues/151) **closed**. `i18n-protocol` **0.1.0** (locale / MF2 / plural / catalogs) · `l10n-protocol` **0.1.0** (collate / number / date / currency / list / relative-time / locale case). **Not** gettext. Locked ICU *app* surface, not every ICU header (no translit / bidi / `uregex` / spoof / MeasureFormat) — [i18n.md](capabilities/i18n.md) · [l10n.md](capabilities/l10n.md) |
 | Regex | De-facto converged | P2 | `cl-ppcre` **2.1.2** pinned |
-| Pathnames / FS | Wrong-shape | P1 | **shipped** — `cl-stack-pathlib` **0.3.1** (`stack-pathlib`; local/memory/`zip://`; restarts) |
+| Pathnames / FS | Wrong-shape | P1 | **shipped** — `cl-stack-pathlib` **0.3.2** (`stack-pathlib`; local/memory/`zip://`; restarts) |
 | Subprocess | De-facto converged | P2 | **shipped** — `process-protocol` **0.2.0** + `process-backend-uiop` **0.1.0** — [#106](https://github.com/egao1980/cl-stack/issues/106) · [process.md](cookbooks/process.md) |
 | RPC | Fragmented | P1 | **shipped** — `rpc-protocol` **0.2.0** + JSON-RPC / gRPC bindings + inprocess/stdio/http/sse — [#170](https://github.com/egao1980/cl-stack/issues/170) · [rpc.md](cookbooks/rpc.md) |
 | SSE | Fragmented | P1 | **shipped** — `sse-protocol` **0.1.1** + http / clack — [sse.md](cookbooks/sse.md) |
