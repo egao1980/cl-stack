@@ -1,7 +1,7 @@
 # revision-protocol (P1) — revision DAG, refs, tags, as-of
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track R · MBT [#283](https://github.com/egao1980/cl-stack/issues/283)
-**Status:** brief **draft**; milestone **R0a (graph layer) locked**. Repo [`egao1980/revision-protocol`](https://github.com/egao1980/revision-protocol) (`stack-rev`) holds the R0a contract: package, conditions, GFs, designator values, an `in-memory-store` class with stub methods, and the Rove suite that specifies it. Implementation runs through **team-solve**.
+**Status:** brief **draft**; milestone **R0a (graph layer)** locked and implemented (0.1.0); milestone **R0b (content, targets, plans, projections, composite revisions) locked** — see [R0b — locked](#r0b--locked). Repo [`egao1980/revision-protocol`](https://github.com/egao1980/revision-protocol) (`stack-rev`). Implementation runs through **team-solve**.
 
 A CLOS protocol for versioned things that are not only files. A store holds an immutable revision DAG with movable refs and immutable tags. Designators name revisions by id, ref, tag, time (on a recorded or a valid axis) and graph position. Backends: an in-memory store (in repo), git and jj over their CLIs (`revision-backend-git`, `revision-backend-jj`), `sql-migrate` script directories, agent sessions, Lisp images.
 
@@ -32,7 +32,7 @@ It replaces the ad-hoc version models already in the stack: `steer-protocol`'s `
 
 R0b adds the rest of the condition tree: `merge-conflict` (`take-ours`, `take-theirs`, `use-merged`, `abort`), `irreversible-step` (`skip-step`, `stamp-only`, `abort-transition`), `target-drift-detected` (`capture-and-continue`, `discard-drift`, `abort`), `step-failed` (`retry-step`, `skip-step`, `rollback-to-start`), `projection-unsupported` (`use-shadow`, `accept-model-fidelity`, `apply-for-real`), `projection-stale`; and the `force` restart on `ref-conflict`, permission-gated.
 
-**Capabilities** (R0b) are declared through [`capability-protocol`](capability.md), not a flag object: `:merges`, `:children-index`, `:valid-time`, `:atomic-multi-ref`, `:ref-cas`, `:gc`, `:signed`, `:transactional-apply`, `:projection` (fidelity list), `:primary`, `:conflicted-revisions` (jj). R0a does **not** depend on `capability-protocol`: it is colocated with `blackboard-protocol` (KSAR runtime) and is not a light dependency for a graph library. R0b either adds a `revision-protocol/capabilities` secondary system or waits for `capability-protocol` to split out of `blackboard-protocol`.
+**Capabilities** (R0b) are declared through [`capability-protocol`](capability.md), not a flag object: `:merges`, `:children-index`, `:valid-time`, `:atomic-multi-ref`, `:ref-cas`, `:gc`, `:signed`, `:transactional-apply`, `:projection` (fidelity list), `:primary`, `:conflicted-revisions` (jj). R0a does **not** depend on `capability-protocol`: it is colocated with `blackboard-protocol` (KSAR runtime) and is not a light dependency for a graph library. R0b keeps it that way: each capability is a query GF (`content-primary`, `target-fidelities`, `target-transactional-p`, `permit-force-p`); a `capability-protocol` adapter maps them once that protocol splits out of `blackboard-protocol`.
 
 **Laws** (property tests every backend runs; later the `defspec` invariants, Quint-checked, ITF replay on the in-memory store):
 
@@ -138,20 +138,131 @@ R0b extends `walk-revisions` with `:footprint` and accepts time phrases through 
 
 ---
 
+## R0b — locked
+
+Contract on branch `agent/revision-r0b-7b30` of [`egao1980/revision-protocol`](https://github.com/egao1980/revision-protocol): exports, conditions, classes, GFs with docstrings, stub methods on `in-memory-store` and a new `in-memory-target`, and the Rove suites that specify them. Version 0.2.0. Implementation runs through **team-solve**.
+
+### Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Dependencies** | Adds `diff-protocol` 0.1.0 (local nickname `diff`). Still no `capability-protocol`, pathlib, git or SQL | Diffs are the content values |
+| **R0a behaviour** | Unchanged, including the two choices in [revision-protocol#2](https://github.com/egao1980/revision-protocol/issues/2): `:expected` without `:ref` is ignored; re-tagging with another annotation signals `tag-immutable`. R0b adds keys and a restart, changes no R0a lambda list except the new `walk-revisions :footprint` key | The 78 R0a tests are the regression suite |
+| **Content classification** | `commit-revision`'s CONTENT: a `diff-protocol:diff` = delta against the first parent's state (a root: against NIL, the empty state); a `revision-payload` (`make-payload :state :delta`) = either or both; anything else = a state. `revision-content` still returns CONTENT as given | One commit GF for state, delta and opaque-migration stores |
+| **Primary** | `(content-primary store)` → `:state` \| `:delta`; in-memory `(make-in-memory-store :primary :delta)`. The other form is derived: `revision-state` folds deltas along first parents from NIL; `revision-delta` diffs the first parent's state (merges: first parent). A stored or payload delta is returned as stored (`eq`); a payload state wins over its delta | The plan's `:primary` capability |
+| **Engine** | `(content-engine store)`; in-memory `:engine`, default `sexp-diff-engine`. All state equality is the engine's `state-equal` | |
+| **delta-inverse / delta-footprint** | `delta-inverse` → diff or NIL (no inverse, e.g. an `opaque-change`); never signals `irreversible-change`. `delta-footprint` = `diff-footprint`; NIL for NIL | Plans ask "reversible?" as data |
+| **state-diff** | `(state-diff store a b &key footprint level)`; A / B are revision designators, targets (`target-state`), plans (state of the goal) or projections (`projection-state`). `level` default `:changes`. `:footprint` keeps the top-level changes overlapping one of the strings (`footprint-overlap-p`) | Same resource strings as diffs and permissions |
+| **walk :footprint** | `walk-revisions … :footprint list` keeps revisions whose `revision-delta` footprint overlaps; order unchanged | "Which revisions touched `table:widgets`?" |
+| **Capabilities** | No `capability-protocol` dependency yet. Each capability R0b needs is a query GF: `content-primary` (`:primary`), `target-fidelities` (`:projection`), `target-transactional-p` (`:transactional-apply`), `permit-force-p` (the `force` gate). A `capability-protocol` adapter maps them once that protocol splits out of `blackboard-protocol` | Keeps the graph library light; plan wording still holds through the adapter |
+| **force** | Restart `force` on `ref-conflict` in `move-ref`, `commit-revision`, `delete-ref`, established only when `(permit-force-p store name)` (default NIL; in-memory `:permit-force` NIL / T / predicate of the ref name). Redoes the operation with `:expected` omitted | "Permission-gated": absent restart, not a refusal at invoke time |
+| **Targets** | `revision-target`; stamps are revision **ids** (targets know no store). `target-stamp target revs` (revisions or ids, deduped, in order; NIL clears), `target-state` / `(setf target-state)` (an out-of-band write = drift), `target-drift target store` (diff stamped → actual, NIL when equal; unstamped compares with NIL; several stamps → `revision-error`), `capture-revision` (parents default to the stamp; stamps the new revision) | |
+| **Transactions** | `(with-target-transaction (target) …)` → `call-with-target-transaction`; a non-local exit restores state and stamp. A target that is not `target-transactional-p` → `revision-error`, body not run | No silent non-atomic fallback |
+| **Plans** | `plan-transition store target to` → `transition-plan` value (pure): `plan-store`, `plan-start`, `plan-goal` (one id), `plan-base` (merge-base id, NIL = the empty state for fresh targets and unrelated lines), `plan-steps`. `:down` steps to the base, then `:up` steps to TO, one parent edge each; at a merge the path takes the first parent that is or reaches the base. `plan-step`: `step-direction`, `step-from`, `step-to` (id or NIL), `step-diff` (= `state-diff` of from/to), `step-footprint`, `step-reversible-p` (NIL for a `:down` step undoing a revision whose delta has no inverse). Several stamped revisions → `revision-error` | Alembic "down to merge-base, up to target"; multi-head plans are R2 |
+| **describe-plan** | One line per step: `<up\|down> <from\|-> -> <to\|->[ footprint…][ (irreversible)]`, newline-terminated; NIL stream → string, T → `*standard-output*`, else NIL | Dry run / approval text |
+| **execute-plan** | `(execute-plan target plan)` → `(values target-revisions skipped-steps)`. Stamps `(step-to)` (or NIL) after each step. Resumes after the step whose TO matches the stamp; a stamp that is neither the start nor any TO → `revision-error`. Drift is checked before the first step | Law 5 |
+| **Projections** | `projection`; `project-state` (in-memory: always `:exact`; `:writable` allows `(setf projection-state)`), `project-plan target plan &key fidelity`, `project-merge store a b` → `(values projection conflicts)` (three-way on the merge-base, conflicts as data, base value kept), `projection-fidelity`, `projection-view` (the domain read API; sexp: a fresh copy), `projection-state`, `projection-parents` (commit defaults), `projection-conflicts`, `projection-writable-p`, `projection-discarded-p`, `commit-projection store p &key parents message ref`, `discard-projection` (idempotent; later reads and commits → `revision-error`) | |
+| **Fidelity** | Best first `:exact :shadow :model`; `project-plan` default = first of `target-fidelities`. In memory, `:exact` / `:shadow` apply the step diffs to a copy; `:model` is the goal revision's stored state. A target projection read or committed after the target's stamp or state changed → `projection-stale` | Law 6 |
+| **Composite revisions** | `make-manifest-part role store designator &key depends-on recipe` (resolved when made; store NIL keeps an id string — a store not available in this image), `make-manifest parts` (duplicate role, unknown dependency, cycle → `revision-error`), `commit-composite store parts &key parents ref expected message` (content and `revision-state` = the manifest), `composite-manifest` (NIL for other revisions), `plan-composite store d targets` → `((role . plan-or-nil) …)` dependencies first, `restore-composite store d targets` → plist role → stamp or `:skipped`. `targets` is a plist role → target. No atomicity across stores | One transition per part |
+| **In-memory target** | `make-in-memory-target &key state revisions engine transactional fidelities fail-step stamp-hook`. `fail-step (step attempt)` injects failures; `stamp-hook (target ids)` observes each stamp | Reference target for the law suite |
+| **Deferred** | `verify-revision`, multi-head plans, `parse-time-range` phrases, the `capability-protocol` adapter, `defspec` / Quint / ITF | Out of R0b scope |
+
+### Condition tree (R0b additions)
+
+```
+revision-error
+├── … R0a …                       ref-conflict gains restart: force (gated)
+├── merge-conflict (conflicts projection)        commit-projection:  take-ours, take-theirs, use-merged, abort
+├── irreversible-step (step)                     execute-plan:       skip-step, stamp-only, abort-transition
+├── target-drift-detected (target drift)         execute-plan:       capture-and-continue, discard-drift, abort
+├── step-failed (step cause attempt)             execute-plan:       retry-step, skip-step, rollback-to-start
+├── projection-unsupported (fidelity supported)  project-plan:       use-shadow, accept-model-fidelity, apply-for-real (applicable only)
+├── projection-stale (projection)
+└── composite-part-unavailable (part reason)     restore-composite:  skip-part, rebuild-from-recipe (with recipe + target)
+```
+
+`abort` is `cl:abort`. Restart semantics:
+
+- `capture-and-continue`: capture the drift as a child of the stamp, re-plan from it to the goal, run. `discard-drift`: reset to the stamped state, run. `abort`: return NIL, nothing changed.
+- `skip-step`: no change, no stamp, step returned in the second value, continue. `stamp-only`: stamp TO without changing the state (the target now drifts). `abort-transition`: return NIL, keep the last stamp.
+- `retry-step`: apply again with `attempt` + 1. `rollback-to-start`: restore state and stamp from before the call, return NIL. Unhandled `step-failed` propagates; the stamp names the last completed step, and re-running the plan resumes.
+- `use-shadow` / `accept-model-fidelity`: a projection at that fidelity. `apply-for-real`: execute the plan, return an `:exact` projection of the result.
+- `take-ours` / `take-theirs`: resolve every conflict to that side. `use-merged`: commit with base values at the conflicts. `abort`: commit nothing, return NIL.
+- `skip-part`: result `:skipped`. `rebuild-from-recipe`: call `(recipe part target)`, stamp the part's id. Reasons `:no-store`, `:no-target`, `:not-found`.
+
+### Protocol surface (R0b)
+
+```lisp
+;;; Content
+(make-payload &key state delta)        ; revision-payload: payload-state payload-state-p payload-delta
+(content-primary store) (content-engine store) (permit-force-p store name)
+(revision-state store d) (revision-delta store d)
+(delta-inverse delta) (delta-footprint delta)
+(state-diff store a b &key footprint level)
+(walk-revisions store from &key order until reverse footprint)
+
+;;; Targets
+(target-revisions target) (target-stamp target revisions)
+(target-state target) (setf (target-state target) state)
+(target-drift target store) (capture-revision target store &key parents message)
+(target-fidelities target) (target-transactional-p target)
+(with-target-transaction (target) …) (call-with-target-transaction target thunk)
+
+;;; Plans
+(plan-transition store target to)      ; transition-plan: plan-store plan-start plan-goal plan-base plan-steps
+                                       ; plan-step: step-direction step-from step-to step-diff step-footprint step-reversible-p
+(describe-plan plan stream) (execute-plan target plan)
+
+;;; Projections
+(project-state store d &key fidelity writable) (project-plan target plan &key fidelity)
+(project-merge store a b)
+(projection-fidelity p) (projection-view p) (projection-state p) (setf (projection-state p) s)
+(projection-parents p) (projection-conflicts p) (projection-writable-p p) (projection-discarded-p p)
+(commit-projection store p &key parents message ref) (discard-projection p)
+
+;;; Composite revisions
+(make-manifest-part role store d &key depends-on recipe)  ; part-role part-store part-revision-id part-depends-on part-recipe
+(make-manifest parts) (manifest-parts m)
+(commit-composite store parts &key parents ref expected message)
+(composite-manifest store d) (plan-composite store d targets) (restore-composite store d targets)
+
+;;; In memory
+(make-in-memory-store &key primary engine permit-force)
+(make-in-memory-target &key state revisions engine transactional fidelities fail-step stamp-hook)
+```
+
+### Contract tests (R0b)
+
+New files in `revision-protocol/tests`; 239 tests including parametrized rows, all failing against the stubs while the 78 R0a tests pass.
+
+| File | Covers |
+|------|--------|
+| `r0b-fixtures` | Sexp corpus committed as a DAG (main, feature, a merge with an explicit state, an unrelated line of lists / atoms / strings); transitions with expected step shapes; merge and opaque-payload fixtures; fault-injection hooks |
+| `content-test` | primary / engine, `revision-state` and `revision-delta` for both primaries, diffs and payloads as content, `delta-inverse` / `delta-footprint`, `state-diff` levels and `:footprint`, over targets / plans / projections, `walk-revisions :footprint` |
+| `target-test` | in-memory target values and copies, stamps, drift, `capture-revision`, `with-target-transaction` rollback and refusal |
+| `plan-test` | plan shapes (down to the merge-base, through the empty state, merges), purity, `describe-plan` format, `execute-plan` stamps, foreign stamps, drift / irreversible / step-failed restarts via `handler-bind`, resume after an unhandled failure |
+| `projection-test` | `project-state`, writable commits, `project-plan` defaults, fidelity restarts (only applicable ones offered), staleness, `project-merge` clean and conflicting with all `merge-conflict` restarts, discard |
+| `composite-test` | parts and manifest validation, `commit-composite`, dependency order, restore, `skip-part`, `rebuild-from-recipe` |
+| `force-test` | the gate (NIL / T / predicate), `force` on `move-ref`, `commit-revision`, `delete-ref` |
+| `law-r0b-test` | **law 3** (apply / inverse / self-diff / revision deltas / compose associativity, both primaries, three levels), **law 5** (goal reached, one stamp per step naming its TO, state at each stamp), **law 6** (`:exact` and `:shadow` equal execution; `:model` equal on `sexp:/cfg`) |
+
+---
+
 ## Repo layout
 
 | Repo / system | Role |
 |---------------|------|
 | [`revision-protocol`](https://github.com/egao1980/revision-protocol) (`stack-rev`) | Protocol, conditions, designators, in-memory store, law suite; later the `defspec` model |
-| `diff-protocol` (`stack-diff`) | Diffs as values; `revision-protocol` depends on it from R0b |
+| `diff-protocol` (`stack-diff`) | Diffs as values; `revision-protocol` depends on it from R0b (0.1.0) |
 | `revision-backend-git`, `revision-backend-jj` | CLI backends (Track V) |
 
 ---
 
-## Non-goals (R0a)
+## Non-goals (R0a, R0b)
 
-- Content, targets, plans, projections, composite revisions (R0b)
-- Capability declarations (R0b, see above)
+- git, jj, SQL and filesystem backends (Tracks V, R2, R4)
+- `capability-protocol` declarations (query GFs in R0b; adapter later)
+- `verify-revision`, multi-head plans, time phrases through `parse-time-range`
 - `defspec` model, Quint checks, ITF replay (R0 after R0b)
 - Persistence of the in-memory store, GC, signed revisions, multi-ref atomic updates
 
@@ -160,7 +271,9 @@ R0b extends `walk-revisions` with `:footprint` and accepts time phrases through 
 ## Implementation tasks
 
 - [x] R0a contract: brief, `egao1980/revision-protocol` skeleton, Rove suite
-- [ ] R0a implementation through team-solve (`.team-solve/task.md` in the repo)
-- [ ] R0b: content / target / plan / projection on `diff-protocol`, capabilities, rest of the condition tree
+- [x] R0a implementation through team-solve (revision-protocol#1, 0.1.0)
+- [x] R0b contract: brief section, skeleton and Rove suites on `agent/revision-r0b-7b30`
+- [ ] R0b implementation through team-solve (`.team-solve/task.md` in the worktree)
+- [ ] R0b follow-ups: `verify-revision`, multi-head plans (R2), `capability-protocol` adapter, `parse-time-range` phrases
 - [ ] `defspec` model → Quint, ITF replay against the in-memory store
 - [ ] Cookbook `cookbooks/revision.md`
