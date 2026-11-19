@@ -123,7 +123,7 @@
   ("http-encoding-snappy" "0.1.1")
   ("http-backend-dexador" "0.1.5")
   ("http-backend-async" "0.2.19")
-  ("http2" "2.1.7")
+  ("http2" "2.1.8")
   ("http-backend-winhttp" "0.1.4" :platforms (:windows))
   ("http-backend-java" "0.1.1")
   ("cl-stack-http" "0.1.11")
