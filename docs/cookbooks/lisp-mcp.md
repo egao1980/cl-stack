@@ -6,9 +6,9 @@
 |-------|---------|-----|
 | Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.5.0** |
 | Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.4** |
-| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.6** |
+| Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.7** |
 | SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.2** |
-| Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.1** |
+| Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.2** |
 | MCP | [`mcp-protocol`](https://github.com/egao1980/mcp-protocol) / [`mcp-backend-stdio`](https://github.com/egao1980/mcp-backend-stdio) / [`mcp-backend-streamable-http`](https://github.com/egao1980/mcp-backend-streamable-http) | **0.3.1** / **0.2.0** / **0.3.0** |
 
 | If you know | Here |

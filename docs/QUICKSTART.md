@@ -127,9 +127,9 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
 | `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
 | `lisp-source-protocol` | **0.2.4** | Eclector CST, recovery, lint, structural edits, table-driven indenter; skips a leading `#!` line (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
-| `repl-protocol` | **0.2.6** | live image: eval, debugger, stepping, inspector, channels; debugger levels claimed per request (`stack-repl`) |
+| `repl-protocol` | **0.2.7** | live image: eval, debugger, stepping, inspector, channels (input after an aborted channel debugger is never dropped); debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
-| `repl-backend-slynk` | **0.2.1** | Sly Slynk wire (+ mrepl channels) |
+| `repl-backend-slynk` | **0.2.2** | Sly Slynk wire (+ mrepl channels) |
 | `lisp-mcp` | **0.5.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.3** | `defcapability` + registry (`stack-capability`) |
