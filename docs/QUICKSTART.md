@@ -130,7 +130,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `repl-protocol` | **0.2.6** | live image: eval, debugger, stepping, inspector, channels; debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.1** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.4.1** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-mcp` | **0.5.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.2.3** | `defcapability` + registry (`stack-capability`) |
 | `schema-protocol-json` | **0.1.3** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |

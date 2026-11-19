@@ -1,6 +1,6 @@
 # Tutorial: a token-thrifty lisp-mcp session
 
-**You will** fix a failing test in a Common Lisp project through [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) **0.4.1**, keeping the agent's context small:
+**You will** fix a failing test in a Common Lisp project through [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) **0.5.0**, keeping the agent's context small:
 - terse output by default;
 - long logs stored and read back in slices;
 - edits that compile as they land;
@@ -15,18 +15,19 @@ ros install egao1980/lisp-mcp
 claude mcp add lisp-mcp -- lisp-mcp --root "$PWD" --spawn swank
 ```
 
-Inside the workspace, `scripts/lisp-mcp.sh` (lisp-workspace) builds and caches `~/.cache/lisp-mcp/lisp-mcp-0.4.1`. After an upgrade, reconnect the server: `/mcp` in Claude Code.
+Inside the workspace, `scripts/lisp-mcp.sh` (lisp-workspace) builds and caches `~/.cache/lisp-mcp/lisp-mcp-0.5.0`. After an upgrade, reconnect the server: `/mcp` in Claude Code.
 
 Server flags that matter for token use:
 
 | Flag / env | Default | Effect |
 |------------|---------|--------|
+| `--tools` / `LISP_MCP_TOOLS` | `all` | tool groups offered: `code` (source, edit, output) or `image` (repl, debug, inspect, jobs, output); run one server per preset and the agent pays only for what it loads |
 | `--verbose` / `LISP_MCP_VERBOSE=1` | off | every call verbose (diffs, hints, 12 frames) |
 | `--max-output-lines` / `LISP_MCP_MAX_OUTPUT_LINES` | 120 | cut point; ×4 with `verbose` |
 | `--max-output-chars` / `LISP_MCP_MAX_OUTPUT_CHARS` | 10000 | cut point; ×4 with `verbose` |
 | `LISP_MCP_OUTPUT_STORE_SIZE` | 64 | stored long outputs |
 
-The catalog itself is small: every one of the 63 tool descriptions is 120 characters or fewer, and the workflow lives once in the server instructions.
+The catalog itself is small: 56 tools in about 17 KB of `tools/list` (0.4.1: 35 KB for 63). Common arguments carry no per-tool description: the server instructions explain them, and the workflow, once.
 
 ---
 

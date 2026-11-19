@@ -24,7 +24,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [RPC](rpc.md) | `rpc-protocol` / JSON-RPC · in-process · stdio · HTTP · SSE |
 | [SSE](sse.md) | `sse-protocol` / http client · Clack server (`text/event-stream`) |
 | [MCP](mcp.md) | `mcp-protocol` **0.3.1** / stdio · Streamable HTTP (tools / resources / prompts / notifications) |
-| [lisp-mcp](lisp-mcp.md) | `lisp-mcp` **0.4.1** / `lisp-source-protocol` / `repl-protocol` (static analysis · structural edits · Swank/Slynk images) |
+| [lisp-mcp](lisp-mcp.md) | `lisp-mcp` **0.5.0** / `lisp-source-protocol` / `repl-protocol` (static analysis · structural edits · Swank/Slynk images) |
 | [AG-UI](ag-ui.md) | `ag-ui-protocol` **0.4.1** / SSE · WKT proto · TUI sink (`RunAgentInput` → 36 events) |
 | [A2A](a2a.md) | `a2a-protocol` / JSON-RPC · REST · gRPC (Agent Card + tasks) |
 | [AI agent](ai-agent.md) | `ai-agent-protocol` **0.6.0** (`run-ai-agent`; `:memory` + `:steering`; retries · compaction · permissions · subagents; `/mcp` sampling; not `run-agent`) |
