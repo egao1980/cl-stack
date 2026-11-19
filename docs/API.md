@@ -124,6 +124,11 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
 
+## Revision and diff (Track R — R0 contract)
+
+- `diff-protocol` — diffs as values: change trees (`:add` `:remove` `:modify` `:move`), resource-string footprints, lazy content, engines per content type; apply / invert / compose / rebase / three-way (conflicts as data). R0: sexp engine, `:summary` / `:sexp` render. No dependencies.
+  **Brief:** [capabilities/diff.md](capabilities/diff.md)
+
 ## Blackboard core (P2 — AI-agnostic)
 
 Sibling of agent-wire, **not** a layer on top of MCP. Demiurge **core** extract: KSAR event loop + COW workspaces + CLOS capabilities. Zero `mcp-protocol` / `a2a-protocol` / `ag-ui-protocol` / `llm-protocol` deps. Wave-1 **shipped** (OCI **0.1.1** / capability **0.2.1**).
