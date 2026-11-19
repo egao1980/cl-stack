@@ -1,7 +1,7 @@
 # cl-stack-pathlib — CLOS paths and pluggable filesystems
 
 **Repo:** [`egao1980/cl-stack-pathlib`](https://github.com/egao1980/cl-stack-pathlib) (nick `stack-pathlib`) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H (H2) and R4
-**Status:** 0.3.2 shipped (local / memory / `zip://`, restarts). **H2a brief locked**; contract on branch `agent/pathlib-h2a-7a35` (`cl-stack-pathlib/tests`, Rove). Implementation via **team-solve**.
+**Status:** 0.4.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations). **R4a brief locked** (snapshots + copy areas, 0.5.0); contract on branch `agent/pathlib-r4a-b056` (`cl-stack-pathlib/tests`, Rove). Implementation via **team-solve**.
 
 A `path` is a value bound to a `filesystem`; the `fs-*` generic functions are the SPI (shaped like Java NIO `FileSystemProvider`), and the facade (`read-text`, `walk`, `glob`, …) is the pathlib / NIO `Files` DX over them. Backends today: `local-filesystem`, `memory-filesystem`, `zip-filesystem` (read-only). Errors are CLHS 9 conditions with restarts at the signal site (`create-parents`, `create-file`, `overwrite`, `ignore-missing`, `use-value`) and `retry` at the operation site — the stack's reference for [conditions.md](conditions.md).
 
@@ -131,3 +131,124 @@ grep-match: grep-match-path grep-match-line grep-match-column grep-match-text
 ### Out of scope (later H2 slices / R4)
 
 `fs-watch` (R4b, OS backends) · `jailed-filesystem` (H2b) · `agent-tools` read / write / edit / glob / grep / shell (H2b+) · output streams · regex engine in pathlib · OS file locks · R4a areas, snapshots, manifests (they reuse `fs-stat`, `fs-content-hash` and the ignore matcher from this slice).
+
+---
+
+## R4a — locked
+
+First rung of the R4 ladder in the plan ("R4 detail — filesystem snapshots and sandboxed areas"): **content-addressed snapshots** and **sandboxed areas by folder copy with change tracking**. Portable code only, on the `filesystem` base protocol plus H2a (`fs-stat`, `fs-content-hash`, `fs-write-atomic`, ignore matcher). Local and memory backends; zip is not required. Version **0.5.0**. Journals (R4b), COW clones (R4c), confinement (R4d) and containers (R4e) live in `fs-backend-*` / `compute-backend-*` and specialize the same generics; consumers never change.
+
+### Decisions
+
+| Decision | Choice |
+|----------|--------|
+| **Dependencies** | None added. No `object-store-protocol`: pathlib has its own small `snapshot-store` protocol (memory and directory stores). An adapter onto `object-store-protocol` can live elsewhere. |
+| **Snapshot id** | `octets-hash` (SHA-256, `"sha256:…"`) of the canonical **flat manifest** below. The manifest is itself a blob, so the snapshot id is the manifest's blob id. Same tree → same id on every run, machine, backend and store. |
+| **Entries** | Regular files and symlinks under ROOT, minus ignored paths. **Directories are not entries** (git semantics: an empty directory does not change the id). Symlinks are not followed. |
+| **Modes** | Three: `:file` (100644), `:executable` (100755), `:symlink` (120000). `:executable` = the **owner execute bit** of `st_mode` on a backend that reports modes (local on SBCL / ECL unix). Every other bit is ignored, so umask and group/other bits never change an id. Backends without modes (memory, local on Windows, zip) always give `:file`. A tree with an executable script therefore has a different id on Windows than on unix, which is the price of portable ids (git's `core.fileMode=false` has the same effect). |
+| **Hashes** | File entry = `octets-hash` of the content. Symlink entry = `octets-hash` of the UTF-8 posix namestring that `fs-read-symlink` returns, stored as-is (memory stores absolute targets, local the raw `readlink(2)` string). |
+| **Paths** | Relative POSIX strings, `/` separators, no leading or trailing `/`, exactly as named on disk (no Unicode normalization, case-sensitive). Sorted by `string<`, which is UTF-8 octet order. |
+| **Change records** | `fs-change` values (kind, relative path, old/new mode, old/new hash), not `diff-protocol` diffs; an adapter elsewhere converts them. Same type for snapshot diffs, restores, area rescans and commits. |
+| **Ignore** | `:ignore` NIL (default, as `fs-walk`), an `ignore-matcher` relative to ROOT / BASE, or `:auto` (`load-ignore-files` + `.git/` pruned). Ignored paths never enter snapshots, stores, area copies, area changes or commits, and restore / commit never touch them. An area resolves `:auto` **once, at open**, against the base (`area-ignore` returns the matcher). |
+| **Area mtime check** | Manifest records path, mode, size, mtime and hash (the hash is taken while copying, since the content is read anyway; the plan's "hash on demand" would need the base content, which may have changed). Rescan: a file is hashed when its size or mtime differs from the record **or** its recorded mtime is not older than the open time minus 2 s (mtime is a universal time with 1 s granularity, FAT has 2 s: the racy-git rule). So same-size edits in the same second are found. The implementation may refresh records of unchanged files once they are no longer racy. |
+| **Conflict restarts** | `overwrite` (existing pathlib restart), `skip-path` (new), `abort-commit` (new). **Not `cl:abort`**: a missing or misplaced `abort` restart would unwind to the toplevel or the test runner. Helpers `invoke-skip-path`, `invoke-abort-commit` (`invoke-overwrite` exists). |
+| **Stubs** | The contract calls `%r4a-pending` (internal, `src/snapshot.lisp`); the implementation removes it and every call. |
+
+### Manifest encoding (locked)
+
+UTF-8 octets:
+
+```
+"cl-stack-pathlib tree v1" LF
+entry*                                ; sorted by path, string< (= UTF-8 octet order)
+entry := mode SP hash SP n SP path LF
+mode  := "100644" | "100755" | "120000"
+hash  := "sha256:" 64 lowercase hex   ; octets-hash of the content / symlink target
+n     := decimal UTF-8 octet length of path   ; paths may contain SP or LF
+```
+
+Duplicate paths → `error` when encoding. A malformed manifest (bad header, bad mode, length mismatch, unsorted or duplicate paths) → `snapshot-error` when parsing.
+
+Recorded ids (tests, `tests/r4a-support.lisp`, computed with `printf | shasum -a 256` and cross-checked with `octets-hash`):
+
+| Tree | Id |
+|------|----|
+| empty (directories only) | `sha256:1b284e6bd3fc9dfcfe2a2b144e85535a790497a1671d5a5f9c6577fb7feeaba5` |
+| fixed: `README.md` "hello\n", `src/a.lisp` "(defun a () 1)\n", `src/b/c.txt` "", `dir with space/é.txt` "ü\n", empty dir `empty/` | `sha256:2939372bedfa08ff2051af61095ae505cf23e2e5e8f73be092e55d11790c93c5` |
+| fixed + `bin/run.sh` "#!/bin/sh\necho hi\n" with the execute bit | `sha256:1ead55ccb6ef37ce2bb4d759da189ff2dd27720195d455c1437bce84e5d48cba` |
+
+### Surface
+
+```lisp
+;;; Values
+(make-snapshot-entry path mode hash)    ; snapshot-entry: snapshot-entry-path / -mode / -hash
+fs-change: fs-change-kind (:added :removed :modified :mode-changed) fs-change-path
+           fs-change-old-mode fs-change-new-mode fs-change-old-hash fs-change-new-hash
+(snapshot-manifest-octets entries) → octets      (parse-snapshot-manifest octets) → entries
+
+;;; Stores
+snapshot-store (protocol class), snapshot-store-p
+(make-memory-snapshot-store)                     ; memory-snapshot-store
+(make-directory-snapshot-store designator)       ; directory-snapshot-store; directory-snapshot-store-root → PATH
+*snapshot-store*                                 ; default :STORE, a process-wide memory store
+(snapshot-store-put store octets) → id           ; idempotent
+(snapshot-store-get store id) → octets           ; absent → SNAPSHOT-NOT-FOUND
+(snapshot-store-contains-p store id)
+
+;;; Snapshots (protocol + facade)
+(fs-snapshot fs root &key ignore store) → id
+(fs-restore fs root snapshot &key store ignore) → changes
+(fs-snapshot-changes store a b) → changes        ; NIL = the empty tree
+(snapshot designator &key ignore store)  (restore-snapshot designator snapshot &key store ignore)
+(snapshot-changes a b &key store)  (snapshot-entries snapshot &key store)
+
+;;; Areas (protocol + facade)
+(fs-open-area fs base &key (mechanism :copy) ignore directory) → area
+(fs-area-changes area) → changes
+(fs-close-area area &key (action :discard)) → (values changes status)
+(open-area base &key mechanism ignore directory)  (area-changes area)  (close-area area &key action)
+(with-area (var base &rest keys) &body body)     ; :discard on exit when still open
+area: area-p area-filesystem area-base area-root (PATHs) area-mechanism area-ignore
+      area-manifest (snapshot-entry list) area-open-p
+
+;;; Conditions
+snapshot-error (error): snapshot-error-store snapshot-error-id;  snapshot-not-found
+area-error (error): area-error-area
+area-conflict (area-error): area-conflict-path area-conflict-open-entry
+                            area-conflict-base-entry area-conflict-area-entry
+restarts: overwrite, skip-path, abort-commit;  invoke-skip-path, invoke-abort-commit
+```
+
+### Semantics
+
+**Stores.** Memory: a hash table digest → octets. Directory: blob `sha256:<h>` is the file `blobs/sha256/<h[0..2]>/<h[2..64]>` under the store root, raw octets, written with `fs-write-atomic`; a blob already present is not rewritten; reads do not re-verify. The directory is created on the first write and reused by later store objects (snapshots outlive the process). A directory store may live on any backend; it must not be under a snapshotted ROOT unless ignored there.
+
+**`fs-snapshot`.** Stores every entry blob, then the manifest, and returns the id. ROOT is not modified. A missing ROOT → `path-not-found`. Content of ignored paths is never read into the store.
+
+**`fs-restore`.** Makes the tree under ROOT equal the snapshot: writes files whose content or mode differ (execute bit set or cleared to match the entry, where the backend has modes), creates symlinks, deletes files and symlinks not in the snapshot, then removes directories left empty (never ROOT). Ignored paths are neither written nor deleted. ROOT is created when missing. The manifest and every blob are checked first: an unknown snapshot → `snapshot-not-found` and nothing is touched. Returns the change list from the tree before the call to the snapshot (NIL when it already matched).
+
+**`fs-snapshot-changes`.** Sorted by path. Same mode and hash → unchanged. Only the mode differs (`:file` ↔ `:executable`) → `:mode-changed`. Anything else that differs (content, or file ↔ symlink) → `:modified`. `:added` has NIL old fields, `:removed` NIL new fields. `(fs-snapshot-changes s a a)` is NIL; A or B NIL means the empty tree; unknown id → `snapshot-not-found`.
+
+**Areas.**
+- `fs-open-area`: MECHANISM `:copy` only; `:clone`, `:overlay`, `:virtual` and anything else → `unsupported-operation` before anything is created. BASE missing → `path-not-found`. DIRECTORY NIL → a fresh temp directory on FS (`fs-make-temp`, prefix `area-`; outside BASE); a given DIRECTORY must be absent or empty, else `path-exists-error` (left untouched). Copies files (content + execute bit), symlinks (as symlinks) and directories (empty ones too) of BASE minus IGNORE; records the manifest.
+- `area-base` / `area-root` return directory PATHs on the area's filesystem. `area-manifest`: the base entries as copied, sorted by path.
+- `fs-area-changes`: rescans the copy (see the mtime rule above), returns the change list from the manifest to the copy now, ignored paths left out. Edits from anything count: pathlib, `cl:open`, `/bin/sh`, another Lisp image. A file edited back to its original content is not a change. Equal to `fs-snapshot-changes` between a snapshot of the base at open and a snapshot of the area root with `area-ignore`.
+- `fs-close-area :discard` (default): deletes the copy → `(values nil :discarded)`. `:keep`: leaves it → `(values nil :kept)`. Both leave the base untouched.
+- `fs-close-area :commit`: computes the area changes, then checks **every** changed path against the base before writing. Path P conflicts when the base's entry now (absent, or mode + hash) differs from the manifest entry **and** from the area's entry (so identical edits and removals on both sides do not conflict). For each conflict, `area-conflict` is signalled with restarts `overwrite` (apply the area's version), `skip-path` (keep the base's version), `abort-commit` (write nothing: `(values nil :aborted)`, the area stays open). An unhandled conflict escapes the same way: nothing written, area open. Then changes are applied: files through `fs-write-atomic`, the execute bit following the entry, removals unlinked and directories left empty by them removed (never the base). Base paths the area did not change, and ignored paths, are never touched. The copy is deleted. Returns `(values changes :committed)`, CHANGES = what was written (skipped paths left out).
+- Any operation on a closed area (rescan, second close) → `area-error`. Closing is the only state change; `with-area` discards an area still open on exit.
+- No locking against other processes between the check and the writes (as `fs-write-atomic` in H2a); no confinement in R4a: the shell runs unconfined in the copy (R4d adds fences).
+
+**Laws on areas** (plan laws 3 and 6): `diff(a, a)` empty; restore then snapshot gives the same id; after a conflict-free commit with no base edits, `snapshot(base, :ignore :auto)` = the area's snapshot before the commit (projection = execution).
+
+### Contract (tests)
+
+`cl-stack-pathlib/tests`, Rove `deftest-parametrize` over `(:local :memory)` and, for snapshots, backend × store (`:memory` / `:directory`). Helpers in `tests/r4a-support.lisp` (on top of `h2a-support.lisp`): edits through `cl:open` (local) or the raw `fs-write-bytes` protocol call (memory), `/bin/sh` edits through `uiop:run-program`, `chmod` via the local backend. Mode and shell tests skip without unix modes; local symlink tests skip on Windows. 156 existing tests pass; 41 new tests fail on the stubs.
+
+| File | Covers |
+|------|--------|
+| `snapshot-test.lisp` | locked encoding (sort, modes, duplicates, malformed manifests), recorded ids; store put / get / contains / not-found slots / directory layout; fixed-tree id on local / memory × memory / directory stores, other location and creation order, manifest blob = id; empty tree, missing root; execute bit and umask independence; ignore (explicit, `:auto`, ignored content not stored); restore round trip (returned changes, emptied directories removed, missing root created, protocol call), ignore kept on restore, unknown snapshot touches nothing; restore of execute bits; directory store reused by a second store object; changes between snapshots (all kinds, inverse, NIL = empty, unknown id); mode changes; symlinks |
+| `area-test.lisp` | copy honours `:auto` / explicit matcher / no ignore, empty directories, manifest, base untouched; rescans see `cl:open` / protocol edits (same size, same second), ignored edits left out, base edits not area changes, agreement with snapshot changes, revert; `/bin/sh` edits incl. `chmod +x`; discard / keep / default action / `with-area` / temp directory; commit (writes, removals, ignored base files kept, untouched base edits kept, copy deleted), law 6, protocol calls, execute bit; conflict restarts (offered names, slots, `skip-path`, `overwrite`, `abort-commit`, helpers, unhandled); conflict cases (same edit, both removed, added both, removed vs edited, edited vs removed); open errors (mechanisms, missing base, non-empty / empty directory) |
+
+### Out of scope (later rungs)
+
+`fs-clone-tree` / `:clone` / `:overlay` (R4c, `fs-backend-*`) · `fs-watch` journals (R4b) · confinement of processes in an area (R4d / R4e, `compute-backend-*`) · `revision-protocol` / `diff-protocol` adapters over `fs-change` and snapshots (R1 tree engine, V1) · store GC · `object-store-protocol` stores · zip areas.
