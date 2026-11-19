@@ -1,7 +1,7 @@
 # SQL stack (P2) — three layers + runner
 
 **Issues:** [#101](https://github.com/egao1980/cl-stack/issues/101)  
-**Status:** three layers + runner **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.1.0** · `sql-migrate` **0.1.0** (linear Alembic-style; no second DDL). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
+**Status:** three layers + runner **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.2.0** · `sql-migrate` **0.1.1** (linear Alembic-style; no second DDL). **S2** (`sql-migrate` 0.2.0 on `revision-protocol` + `diff-protocol`) contract locked — see [sql-migrate 0.2.0 — S2 locked](#sql-migrate-020--s2-locked). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
 
 ```text
 sql-migrate          ← revision runner                ~ Alembic (linear 0.1.0)
@@ -421,6 +421,116 @@ Each pair records its locked complete and default op kinds. 17 pairs are marked 
 
 ---
 
+## sql-migrate 0.2.0 — S2 locked
+
+**Plan:** workspace `docs/HARNESS-PLAN.md` → R2 detail, milestone **S2** (linear graphs on `revision-protocol` + `diff-protocol`). S3 (branches, merge revisions, multi-head version table, footprint conflicts) and S4 (projections, capture, spec replay) come later.
+**Contract branch:** [`egao1980/sql-migrate` `agent/sql-migrate-s2-9d73`](https://github.com/egao1980/sql-migrate/tree/agent/sql-migrate-s2-9d73). Its stubs signal an internal `not-implemented` error ("… is not implemented yet (sql-migrate 0.2.0 S2)"). It is deliberately neither a `migrate-error` nor a `revision-error`, so no test can pass by expecting one. The new Rove files are the acceptance tests: `tests/s2-fixtures.lisp`, `engine-test.lisp`, `directory-test.lisp`, `target-test.lisp`, `compat-test.lisp`, `condition-test.lisp`. The 0.1 implementations stay in place on the branch so the 0.1 suite keeps running.
+**Dependencies:** `sql-orm` 0.2.0, `revision-protocol` 0.2.0 (local nickname `rev`), `diff-protocol` 0.2.0 (`diff`). The suite also loads `sql-query-postgres` (no driver, for the `:sql` render) and adds it to `:ci :with`. No PostgreSQL server; SQLite in memory.
+
+### Exports added
+
+```lisp
+;; conditions
+multiple-heads (multiple-heads-heads)          ; subtype of branch-not-supported
+;; schema diff engine (diff-protocol)
+schema-diff-engine  (make-schema-diff-engine &key dialect)  (schema-engine-dialect e)
+schema-diff         (make-schema-diff ops &key engine level) (schema-diff-ops d)
+schema-change       (change-schema-op c) (change-lossy-p c)
+(diff-lossy-p d) (step-lossy-p step)
+;; SQL target (revision-protocol)
+sql-target (make-sql-target connection &key directory version-table dialect (check-drift t))
+(target-connection tg) (target-directory tg) (target-version-table tg) (target-dialect tg)
+(target-check-drift-p tg)
+;; runner
+(current-revisions connection dir)
+```
+
+Every 0.1 export stays: `upgrade`, `downgrade`, `current-revision`, `stamp`, `ensure-version-table`, `history`, `head-revision`, `make-revision`, `register-revision`, `find-revision`, `require-revision`, `make-script-directory`, `directory-version-table`, `script-directory`, and the conditions with their readers.
+
+### Decisions
+
+| Decision | Choice |
+|----------|--------|
+| **Store** | `script-directory` is a subclass of `stack-rev:in-memory-store`. `make-script-directory &key version-table dialect` makes it with `:primary :delta` and a `schema-diff-engine` of that dialect (default `nil`, ANSI equality). Each registered migration is one revision: id = `:revision`, parents = `(:down-revision)` or none, message = the migration name. |
+| **Content** | A revision's content is `(make-schema-diff (migration-upgrade-ops m))`: a `schema-diff`, so the store classifies it as a delta. `revision-delta` returns it as stored (`eq`). `revision-state` folds the deltas from the root with `apply-ops-to-snapshot`. `walk-revisions :footprint` works on the op footprints. |
+| **register-revision** | Same checks as 0.1: a non-empty string id (else `migrate-error`), unique (else `migrate-error` with the id). **New:** the down-revision must be `nil` or already registered, else `unknown-revision`, and nothing is stored. Forks are accepted. Merge revisions (a list down-revision) are S3. |
+| **find-revision** | Exact id match, returning the `schema-migration` (`eq` to the registered object), or `nil`. No id-prefix matching. `stack-rev:resolve-revision` on the directory keeps R0a's unique-prefix rule. `require-revision` is unchanged: `unknown-revision` with a `use-value` restart. |
+| **history** | The migrations in `walk-revisions :topo` order from every head: parents first, root to head on a linear graph. **It never signals `branch-not-supported`.** Empty → `nil`. |
+| **head-revision** | The id of the single head, or `nil` when empty. Several heads → `multiple-heads` (heads sorted `string<`) with a `use-value` restart (the id is returned as is). `make-revision` defaults its parent to `head-revision`, so on a fork it signals unless `:down-id` is given. |
+| **Fork refusal (S2)** | `plan-transition` on a directory with more than one head signals **`branch-not-supported`** (that class exactly, not `multiple-heads`), whatever the goal, **before reading the target**. `upgrade` / `downgrade` resolve `:head` first (so `upgrade` with the default target signals `multiple-heads`). Every other target form reaches `plan-transition` and gets `branch-not-supported`. They always plan, even when there is nothing to do, so `downgrade :target :base` on a fork is refused too. Nothing is applied or stamped. `branch-not-supported` stays exported and is deprecated. It is the parent of `multiple-heads`, so 0.1 handlers still catch every fork refusal. |
+| **Plans** | A `plan-transition` method on `script-directory` (linear graphs). TO is a designator, or `nil` for the empty state (then `plan-goal` is `nil`). Steps go `:down` from the target's revision to the merge-base, then `:up` to TO, one parent edge each (the R0b shape). An `:up` step to R has `step-diff` = `(revision-delta dir R)` (`eq`, the migration's own ops). A `:down` step from R has `(invert-diff (revision-delta dir R))`. What runs is the script, not a re-diff of states, as in 0.1. Every step is `step-reversible-p`: drops are lossy, not irreversible. A target with several stamps → `revision-error`, and an unknown TO → `revision-not-found` (both R0b). Planning is pure. `describe-plan` is R0b's. |
+| **Lossy** | `change-lossy-p` is true for every `:remove` change (drop table, drop column). An inverse change is lossy when the change it inverts is lossy, or when the inverse itself is a `:remove`. So the inverse of a drop is lossy: it re-creates the schema, not the data. The double inverse of an add is lossy too, because the add's data went with the drop. `diff-lossy-p` = some change lossy; `step-lossy-p` = `diff-lossy-p` of `step-diff`. Lossy steps are data for approval (H5). `upgrade` / `downgrade` do not refuse them (0.1 behaviour). |
+| **Conditions** | `migrate-error` becomes a subtype of `stack-rev:revision-error`. `migrate-error-message` and `revision-error-message` return the same string. `unknown-revision` inherits `migrate-error` **and** `stack-rev:revision-not-found`, with designator = the id. `branch-not-supported` ⊂ `migrate-error`. `multiple-heads` ⊂ `branch-not-supported`. Handlers for `revision-error` / `revision-not-found` catch sql-migrate's conditions. |
+| **0.1 runner** | `upgrade` / `downgrade` keep their 0.1 lambda lists, defaults (`:head`, `:count 1`), `:target` / `:count` exclusivity, direction errors (`migrate-error` "use downgrade" / "use upgrade") and return values (the `schema-migration`s applied, in application order). They resolve the goal along `history`, check that the stamp is known (an unknown stamp → `unknown-revision`, as 0.1), call `plan-transition`, and run `execute-plan` on `(make-sql-target connection :directory dir :check-drift nil)`. **0.1 never checked drift, and neither do they.** |
+| **Step failure in the runner** | When a step fails, `upgrade` / `downgrade` first re-`signal` its cause (the driver's condition), so a 0.1 handler on, say, `sqlite:sqlite-error` still fires. If no handler takes it, `step-failed` keeps propagating with `execute-plan`'s restarts (`retry-step`, `skip-step`, `rollback-to-start`) available to the caller. Unhandled, the database keeps the last completed step (the 0.1.1 guarantee). |
+| **current-revision / stamp** | `current-revision` returns one id or `nil`. Several version-table rows → `multiple-heads` (the rows, sorted) with `use-value`. `current-revisions` = `target-revisions` (sorted). **`stamp` now checks first:** an unknown id signals `unknown-revision` and the version table is unchanged (0.1 deleted the row first). `stamp nil` clears. `ensure-version-table` is unchanged. |
+
+### Schema diff engine
+
+A `diff-protocol` engine whose states are sql-orm snapshots. `engine-name` → `:schema`.
+
+- **`compute-diff e a b &key level`** returns a `schema-diff` with one `schema-change` per op of `(diff-schema a b :complete t :dialect (schema-engine-dialect e))`, in that op order (sql-orm S1's locked order). This holds at every level: a schema op is already a leaf. `diff-level` records the level asked for, and `diff-engine` is `e`. Equal states (also when they differ only in order or name case) → an empty diff.
+- **Change shape** by op:
+
+  | Op | Kind | Path | Before | After |
+  |----|------|------|--------|-------|
+  | `create-table-op` | `:add` | `("<t>")` | `nil` | the table entry `(name . column-infos)` |
+  | `drop-table-op` | `:remove` | `("<t>")` | the table entry | `nil` |
+  | `add-column-op` | `:add` | `("<t>" "<c>")` | `nil` | the column-info |
+  | `drop-column-op` | `:remove` | `("<t>" "<c>")` | the column-info | `nil` |
+  | `alter-column-op` | `:modify` | `("<t>" "<c>")` | from | to |
+
+  Names in paths are downcased strings. `change-footprint` = `schema-op-footprint`. `diff-footprint` is the sorted union. `change-schema-op` is the op, and `schema-diff-ops` lists the ops in apply order.
+- **`make-schema-diff ops &key engine level`** wraps given ops (a list, one op, or a `schema-migration`) the same way. Engine default: a fresh ANSI engine. Level default: `:changes`.
+- **`state-equal`** = `schema-snapshot-equal :dialect`.
+- **`apply-diff state d`** is pure: `apply-ops-to-snapshot` per change, in order. An op that does not fit signals `diff:apply-conflict`, reason `:exists` (create / add of an existing name) or `:missing` (otherwise), with `diff-error-change` = the change. Restarts: `skip-change` (that change goes into the second value) and `abort` (`(values state :aborted)`, the original state).
+- **`invert-diff`** inverts each op (`invert-schema-op`), reverses the order and swaps the kinds. It returns a `schema-diff` and never signals `irreversible-change`. **`compose-diffs`** of two schema diffs is their concatenation (a `schema-diff`).
+- **`render-diff d :sql stream`** writes offline DDL in the engine's dialect: a keyword is the instance registered in `sql-query:*sql-dialect-registry*`, and `nil` is `(sql-query:make-ansi-dialect)`, never `*sql-dialect*`. Each change contributes the statements of `schema-op-upgrade` compiled with `sql-query:compile-sql`, each on its own line ending in `;`. `nil` dialect → ANSI. An empty diff → `""`. Stream `nil` → string; `t` → `*standard-output*`, returns `nil`. A stream → written, returns `nil`. An `alter-column-op` on `:sqlite3` signals `diff:unsupported-content`, because SQLite needs a live table rebuild and the offline form is S4. `:summary` is diff-protocol's (`A table:widgets`). `:sexp`, `parse-diff`, `three-way-diff` and `rebase-diff` are S3+.
+- Laws (corpus of 19 pairs, every level): apply round trip, inverse round trip, double inverse, self-diff empty, compose (there-and-back, associativity).
+
+### SQL target
+
+`(make-sql-target connection &key directory version-table dialect (check-drift t))`. `version-table` defaults to the directory's, else `"sql_migrate_version"`. `dialect` defaults to `(sql-query:dialect-for-connection connection)` and is resolved when the target is made, so `target-dialect` is never `nil`.
+
+| GF | `sql-target` |
+|----|--------------|
+| `target-revisions` | Version-table ids, sorted `string<`. Creates the table when it is missing (as 0.1's `current-revision`). |
+| `target-stamp` | `DELETE` every row, then `INSERT` each id, revisions or ids, deduped, in order. Returns the ids. No store check and no transaction of its own (atomic inside `with-target-transaction`). |
+| `target-state` | `(reflect-schema connection :exclude (list version-table) :dialect dialect)`. |
+| `(setf target-state)` | `revision-error` in S2. |
+| `target-drift tg store` | `nil` when the stamped revision's `revision-state` (`nil` unstamped) is `schema-snapshot-equal` to `target-state` **under the target's dialect** (reflected `"TEXT"` = `:text` on SQLite). Otherwise the `schema-diff` (a `schema-diff-engine` of that dialect) from the stamped state to the actual one. Several stamps → `revision-error`. |
+| `target-fidelities` | `nil`: projections are S4. |
+| `target-transactional-p` | True for dialect keys `:sqlite3` and `:postgres`. |
+| `call-with-target-transaction` | `sql-protocol:with-transaction`: a non-local exit rolls back DDL and stamp. Not transactional → `revision-error`, thunk not called. |
+| `execute-plan` | The R0b contract. For each step, one transaction runs the step's DDL (`upgrade-schema connection (schema-diff-ops (step-diff s)) :transaction nil`, so dialect rebuilds see earlier ops) **and** stamps `(step-to)`. A non-transactional target runs DDL then stamp. Any error inside the step rolls its transaction back; then `step-failed` (cause = that error, attempt from 1) is signalled **after** the rollback, with `retry-step`, `skip-step` (no change, no stamp, second value) and `rollback-to-start` (one transaction runs the inverses of the steps this call completed, restamps `plan-start`, returns `nil`). Unhandled, the stamp names the last completed step. Resume and the foreign-stamp `revision-error` are R0b's. With `target-check-drift-p`, drift before the first step signals `target-drift-detected` with `discard-drift` (one transaction runs the complete diff from the actual schema back to the stamped one, then the plan) and `abort` (return `nil`, nothing changed). `capture-and-continue` is not offered in S2 (`capture-revision` is S4). |
+
+### Behaviour changes from 0.1 (locked)
+
+1. `history` on a fork lists it instead of signalling `branch-not-supported`. The refusal moved to planning, and `head-revision` signals `multiple-heads`, a `branch-not-supported`. The 0.1 test `branch-not-supported` is the one 0.1 test changed.
+2. `register-revision` refuses an unregistered down-revision (`unknown-revision`).
+3. `stamp` checks before deleting.
+4. `current-revision` signals `multiple-heads` for several version rows (0.1 returned an arbitrary one).
+5. A failing step signals `step-failed` after re-signalling the driver's condition. 0.1 signalled only the driver's condition.
+
+### Tests (contract)
+
+| File | Covers |
+|------|--------|
+| `s2-fixtures` | Snapshot builders, a 19-pair corpus (sql-orm S1's rows with the change kinds and lossy flags the engine must give), linear and forked directories, an in-memory target, an `untouchable-target` (no methods), SQLite helpers |
+| `engine-test` | `deftest-parametrize` over the corpus: apply / inverse / double-inverse round trips at three levels, self-diff, compose, change shapes (kinds, ops, footprints, lossy, inverse lossy). Paths, before / after, dialect equality, `make-schema-diff`, `apply-conflict` restarts, `:summary`, `:sql` text on SQLite / PostgreSQL / ANSI, the SQLite alter refusal, stream designators |
+| `directory-test` | Store shape, content = the op list, folded states, `walk :footprint`, `make-revision` state, unknown parent, exact `find-revision`, forks (topological history, `multiple-heads` + `use-value`, `make-revision` on a fork, `plan-transition` refusal before reading the target), plan shapes up / down / partial / no-op, `describe-plan`, `step-lossy-p`, purity |
+| `target-test` | Defaults, stamps, reflected state, drift (column, unstamped table, several stamps), transaction rollback and refusal, `execute-plan` up and down (law 5), DDL + stamp atomic per step, `step-failed` after rollback with `retry-step` / `skip-step` / `rollback-to-start`, drift blocking with `abort` / `discard-drift` (no `capture-and-continue`), resume, foreign stamp |
+| `compat-test` | 0.1 entry points agree with the target; drift ignored by `upgrade`; `current-revisions`; `multiple-heads` from `current-revision`; `stamp` checks first; cause re-signalled then `step-failed`; `retry-step` from outside `upgrade`; fork refusals touch nothing; unknown stamp |
+| `condition-test` | Subtype tree; messages agree; `revision-error` / `revision-not-found` handlers catch duplicates, unknown ids (designator, `use-value`), unknown upgrade targets and fork refusals |
+
+**Counts.** 151 new tests (including parametrized rows: 5 corpus laws × 19 pairs) and 10 in `runner-test`. On the contract branch all 151 new tests fail cleanly (stubs), the 9 unchanged 0.1 tests pass, and the rewritten `branch-not-supported` fails until `history` stops signalling.
+
+### Release
+
+`sql-migrate` **0.2.0**: the contract branch already sets `:version "0.2.0"` and the dependency floors. Publish from the owning repo when S2 is green (skill **pr-merge-publish**).
+
+---
+
 ## Repo layout (locked)
 
 | Layer | Repo / systems | Version |
@@ -471,6 +581,9 @@ See [cookbooks/sql.md](../cookbooks/sql.md).
 - [x] `sql-query` ANSI Core DSL + dialect backends (wave-1 on `main`) — [#148](https://github.com/egao1980/cl-stack/issues/148)  
 - [x] OCI publish `sql-query{,-sqlite3,-postgres}` **0.2.0**  
 - [x] `sql-orm` merge + OCI **0.1.0** + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
-- [x] `sql-migrate` **0.1.0** linear runner + OCI — [sql-migrate#1](https://github.com/egao1980/sql-migrate/pull/1)
+- [x] `sql-migrate` **0.1.0** linear runner + OCI — [sql-migrate#1](https://github.com/egao1980/sql-migrate/pull/1)  
+- [x] S2 contract: `sql-migrate` 0.2.0 brief section, skeleton and Rove suites on `agent/sql-migrate-s2-9d73`  
+- [ ] S2 implementation through team-solve (`.team-solve/task.md` in the worktree), then OCI publish 0.2.0  
+- [ ] S3 branches / merges / multi-head version table; S4 projections, drift capture, spec replay
 
 **Impl order:** ~~imports → connectivity → query → ORM → migrate~~ — **wave-1 complete**. OpenAPI next.
