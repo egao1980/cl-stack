@@ -32,7 +32,7 @@ It replaces the ad-hoc version models already in the stack: `steer-protocol`'s `
 
 R0b adds the rest of the condition tree: `merge-conflict` (`take-ours`, `take-theirs`, `use-merged`, `abort`), `irreversible-step` (`skip-step`, `stamp-only`, `abort-transition`), `target-drift-detected` (`capture-and-continue`, `discard-drift`, `abort`), `step-failed` (`retry-step`, `skip-step`, `rollback-to-start`), `projection-unsupported` (`use-shadow`, `accept-model-fidelity`, `apply-for-real`), `projection-stale`; and the `force` restart on `ref-conflict`, permission-gated.
 
-**Capabilities** (R0b) are declared through [`capability-protocol`](capability.md), not a flag object: `:merges`, `:children-index`, `:valid-time`, `:atomic-multi-ref`, `:ref-cas`, `:gc`, `:signed`, `:transactional-apply`, `:projection` (fidelity list), `:primary`, `:conflicted-revisions` (jj). R0a does **not** depend on `capability-protocol`: it is colocated with `blackboard-protocol` (KSAR runtime) and is not a light dependency for a graph library. R0b keeps it that way: each capability is a query GF (`content-primary`, `target-fidelities`, `target-transactional-p`, `permit-force-p`); a `capability-protocol` adapter maps them once that protocol splits out of `blackboard-protocol`.
+**Capabilities** (R0b) are declared through [`capability-protocol`](capability.md), not a flag object: `:merges`, `:children-index`, `:valid-time`, `:atomic-multi-ref`, `:ref-cas`, `:gc`, `:signed`, `:transactional-apply`, `:projection` (fidelity list), `:primary`, `:conflicted-revisions` (jj). R0a does **not** depend on `capability-protocol`: it is colocated with `blackboard-protocol` (KSAR runtime) and is not a light dependency for a graph library. R0b keeps it that way: each capability is a query GF (`content-primary`, `target-fidelities`, `target-transactional-p`, `permit-force-p`; 0.3.0 adds `ref-cas-p` and `conflicted-revisions-p`); a `capability-protocol` adapter maps them once that protocol splits out of `blackboard-protocol`.
 
 **Laws** (property tests every backend runs; later the `defspec` invariants, Quint-checked, ITF replay on the in-memory store):
 
@@ -61,6 +61,8 @@ R0b adds the rest of the condition tree: `merge-conflict` (`take-ours`, `take-th
 | **commit-revision** | `(commit-revision store content &key parents ref expected message provenance valid-at id)`. `:parents` omitted + existing `:ref` → parent is the ref tip; otherwise a root; explicit `:parents nil` is a root. `:expected` omitted with `:ref` → the tip read at the start. Atomic: any condition → nothing stored, no ref moved | Commit-on-branch is one CAS |
 | **Restarts** | `use-current`: `move-ref` returns the current ref unchanged (NIL if absent); `commit-revision` returns the current tip, commits nothing; `delete-ref` returns NIL, ref kept. `retry`: redo with `:expected` = current (and re-read defaulted parents) | Established at the operation (CLHS 9 / ASDF `retry` convention) |
 | **Tags** | `tag-revision` creates; same target + annotation is a no-op returning the tag; anything else on an existing tag → `tag-immutable` with restart `create-new-tag` (new name). `move-ref` / `commit-revision :ref` on a tag → `tag-immutable` (`move-ref` offers `create-new-tag`). `delete-ref` on a tag → `tag-immutable`. `tag-revision` over a movable ref → `ref-conflict` | Tags never move or disappear (GC is a later capability) |
+| **Caller ids (0.3.0)** | Every committing operation (`commit-revision`, `commit-composite`, `commit-projection`, `capture-revision`) takes `:id`, `:valid-at`, `:provenance` with the same meaning. A backend that chooses ids itself (git, jj) refuses `:id` with `revision-error` before anything is written; the in-memory store accepts it | Stable, caller-chosen checkpoint ids where the store allows them |
+| **VC tools (0.3.0)** | `vc-tool-version-error` (`tool` `found` `required`, a `revision-error`): the CLI backends' store constructors signal it when their program is too old or cannot start (FOUND NIL); git and jj re-export the symbol | One condition, not one per backend |
 | **Cycles** | Fresh ids cannot cycle. A caller `:id` that is an ancestor-or-self of a parent → `cycle-refused`; any other existing `:id` → `revision-error` (revisions never change) | Law 1 for caller-chosen ids |
 | **Designators** | Values: `rev-ref`, `rev-tag`, `rev-as-of`, `rev-parent`, `rev-ancestor` (classes `ref-designator`, `tag-designator`, `as-of-designator`, `parent-designator`, `ancestor-designator`; readers `designator-name/-time/-on/-axis/-base/-n`), plus string ids and `revision` objects. Constructors check types (`type-error`) | Composable, printable, backend-dispatchable |
 | **rev-ref / rev-tag** | `rev-ref` matches any ref kind; `rev-tag` only tags | `main` vs `v1.0` |
@@ -154,16 +156,16 @@ Contract on branch `agent/revision-r0b-7b30` of [`egao1980/revision-protocol`](h
 | **delta-inverse / delta-footprint** | `delta-inverse` → diff or NIL (no inverse, e.g. an `opaque-change`); never signals `irreversible-change`. `delta-footprint` = `diff-footprint`; NIL for NIL | Plans ask "reversible?" as data |
 | **state-diff** | `(state-diff store a b &key footprint level)`; A / B are revision designators, targets (`target-state`), plans (state of the goal) or projections (`projection-state`). `level` default `:changes`. `:footprint` keeps the top-level changes overlapping one of the strings (`footprint-overlap-p`) | Same resource strings as diffs and permissions |
 | **walk :footprint** | `walk-revisions … :footprint list` keeps revisions whose `revision-delta` footprint overlaps; order unchanged | "Which revisions touched `table:widgets`?" |
-| **Capabilities** | No `capability-protocol` dependency yet. Each capability R0b needs is a query GF: `content-primary` (`:primary`), `target-fidelities` (`:projection`), `target-transactional-p` (`:transactional-apply`), `permit-force-p` (the `force` gate). A `capability-protocol` adapter maps them once that protocol splits out of `blackboard-protocol` | Keeps the graph library light; plan wording still holds through the adapter |
+| **Capabilities** | No `capability-protocol` dependency yet. Each capability R0b needs is a query GF: `content-primary` (`:primary`), `target-fidelities` (`:projection`), `target-transactional-p` (`:transactional-apply`), `permit-force-p` (the `force` gate). 0.3.0 ([#5](https://github.com/egao1980/revision-protocol/issues/5)): `ref-cas-p` (`:ref-cas`; default method and in-memory T, jj NIL) and `conflicted-revisions-p` (`:conflicted-revisions`; default and in-memory NIL, jj T). A `capability-protocol` adapter maps them once that protocol splits out of `blackboard-protocol` | Keeps the graph library light; plan wording still holds through the adapter |
 | **force** | Restart `force` on `ref-conflict` in `move-ref`, `commit-revision`, `delete-ref`, established only when `(permit-force-p store name)` (default NIL; in-memory `:permit-force` NIL / T / predicate of the ref name). Redoes the operation with `:expected` omitted | "Permission-gated": absent restart, not a refusal at invoke time |
-| **Targets** | `revision-target`; stamps are revision **ids** (targets know no store). `target-stamp target revs` (revisions or ids, deduped, in order; NIL clears), `target-state` / `(setf target-state)` (an out-of-band write = drift), `target-drift target store` (diff stamped → actual, NIL when equal; unstamped compares with NIL; several stamps → `revision-error`), `capture-revision` (parents default to the stamp; stamps the new revision) | |
+| **Targets** | `revision-target`; stamps are revision **ids** (targets know no store). `target-stamp target revs` (revisions or ids, deduped, in order; NIL clears), `target-state` / `(setf target-state)` (an out-of-band write = drift), `target-drift target store` (diff stamped → actual, NIL when equal; unstamped compares with NIL; several stamps → `revision-error`), `capture-revision` (parents default to the stamp; stamps the new revision; 0.3.0: `:id` `:valid-at` `:provenance` as in `commit-revision`) | |
 | **Transactions** | `(with-target-transaction (target) …)` → `call-with-target-transaction`; a non-local exit restores state and stamp. A target that is not `target-transactional-p` → `revision-error`, body not run | No silent non-atomic fallback |
 | **Plans** | `plan-transition store target to` → `transition-plan` value (pure): `plan-store`, `plan-start`, `plan-goal` (one id), `plan-base` (merge-base id, NIL = the empty state for fresh targets and unrelated lines), `plan-steps`. `:down` steps to the base, then `:up` steps to TO, one parent edge each; at a merge the path takes the first parent that is or reaches the base. `plan-step`: `step-direction`, `step-from`, `step-to` (id or NIL), `step-diff` (= `state-diff` of from/to), `step-footprint`, `step-reversible-p` (NIL for a `:down` step undoing a revision whose delta has no inverse). Several stamped revisions → `revision-error` | Alembic "down to merge-base, up to target"; multi-head plans are R2 |
 | **describe-plan** | One line per step: `<up\|down> <from\|-> -> <to\|->[ footprint…][ (irreversible)]`, newline-terminated; NIL stream → string, T → `*standard-output*`, else NIL | Dry run / approval text |
 | **execute-plan** | `(execute-plan target plan)` → `(values target-revisions skipped-steps)`. Stamps `(step-to)` (or NIL) after each step. Resumes after the step whose TO matches the stamp; a stamp that is neither the start nor any TO → `revision-error`. Drift is checked before the first step | Law 5 |
-| **Projections** | `projection`; `project-state` (in-memory: always `:exact`; `:writable` allows `(setf projection-state)`), `project-plan target plan &key fidelity`, `project-merge store a b` → `(values projection conflicts)` (three-way on the merge-base, conflicts as data, base value kept), `projection-fidelity`, `projection-view` (the domain read API; sexp: a fresh copy), `projection-state`, `projection-parents` (commit defaults), `projection-conflicts`, `projection-writable-p`, `projection-discarded-p`, `commit-projection store p &key parents message ref`, `discard-projection` (idempotent; later reads and commits → `revision-error`) | |
+| **Projections** | `projection`; `project-state` (in-memory: always `:exact`; `:writable` allows `(setf projection-state)`), `project-plan target plan &key fidelity`, `project-merge store a b` → `(values projection conflicts)` (three-way on the merge-base, conflicts as data, base value kept), `projection-fidelity`, `projection-view` (the domain read API; sexp: a fresh copy), `projection-state`, `projection-parents` (commit defaults), `projection-conflicts`, `projection-writable-p`, `projection-discarded-p`, `commit-projection store p &key parents message ref provenance valid-at id`, `discard-projection` (idempotent; later reads and commits → `revision-error`) | |
 | **Fidelity** | Best first `:exact :shadow :model`; `project-plan` default = first of `target-fidelities`. In memory, `:exact` / `:shadow` apply the step diffs to a copy; `:model` is the goal revision's stored state. A target projection read or committed after the target's stamp or state changed → `projection-stale` | Law 6 |
-| **Composite revisions** | `make-manifest-part role store designator &key depends-on recipe` (resolved when made; store NIL keeps an id string — a store not available in this image), `make-manifest parts` (duplicate role, unknown dependency, cycle → `revision-error`), `commit-composite store parts &key parents ref expected message` (content and `revision-state` = the manifest), `composite-manifest` (NIL for other revisions), `plan-composite store d targets` → `((role . plan-or-nil) …)` dependencies first, `restore-composite store d targets` → plist role → stamp or `:skipped`. `targets` is a plist role → target. No atomicity across stores | One transition per part |
+| **Composite revisions** | `make-manifest-part role store designator &key depends-on recipe` (resolved when made; store NIL keeps an id string — a store not available in this image), `make-manifest parts` (duplicate role, unknown dependency, cycle → `revision-error`), `commit-composite store parts &key parents ref expected message provenance valid-at id` (content and `revision-state` = the manifest), `composite-manifest` (NIL for other revisions), `plan-composite store d targets` → `((role . plan-or-nil) …)` dependencies first, `restore-composite store d targets` → plist role → stamp or `:skipped`. `targets` is a plist role → target. No atomicity across stores | One transition per part |
 | **In-memory target** | `make-in-memory-target &key state revisions engine transactional fidelities fail-step stamp-hook`. `fail-step (step attempt)` injects failures; `stamp-hook (target ids)` observes each stamp | Reference target for the law suite |
 | **Deferred** | `verify-revision`, multi-head plans, `parse-time-range` phrases, the `capability-protocol` adapter, `defspec` / Quint / ITF | Out of R0b scope |
 
@@ -183,7 +185,7 @@ revision-error
 
 `abort` is `cl:abort`. Restart semantics:
 
-- `capture-and-continue`: capture the drift as a child of the stamp, re-plan from it to the goal, run. `discard-drift`: reset to the stamped state, run. `abort`: return NIL, nothing changed.
+- `capture-and-continue` (`&key id message`, 0.3.0): capture the drift as a child of the stamp (message default "captured drift"), re-plan from it to the goal, run. `discard-drift`: reset to the stamped state, run. `abort`: return NIL, nothing changed.
 - `skip-step`: no change, no stamp, step returned in the second value, continue. `stamp-only`: stamp TO without changing the state (the target now drifts). `abort-transition`: return NIL, keep the last stamp.
 - `retry-step`: apply again with `attempt` + 1. `rollback-to-start`: restore state and stamp from before the call, return NIL. Unhandled `step-failed` propagates; the stamp names the last completed step, and re-running the plan resumes.
 - `use-shadow` / `accept-model-fidelity`: a projection at that fidelity. `apply-for-real`: execute the plan, return an `:exact` projection of the result.
@@ -196,6 +198,7 @@ revision-error
 ;;; Content
 (make-payload &key state delta)        ; revision-payload: payload-state payload-state-p payload-delta
 (content-primary store) (content-engine store) (permit-force-p store name)
+(ref-cas-p store) (conflicted-revisions-p store)                         ; 0.3.0
 (revision-state store d) (revision-delta store d)
 (delta-inverse delta) (delta-footprint delta)
 (state-diff store a b &key footprint level)
@@ -204,7 +207,7 @@ revision-error
 ;;; Targets
 (target-revisions target) (target-stamp target revisions)
 (target-state target) (setf (target-state target) state)
-(target-drift target store) (capture-revision target store &key parents message)
+(target-drift target store) (capture-revision target store &key parents message provenance valid-at id)
 (target-fidelities target) (target-transactional-p target)
 (with-target-transaction (target) …) (call-with-target-transaction target thunk)
 
@@ -218,12 +221,12 @@ revision-error
 (project-merge store a b)
 (projection-fidelity p) (projection-view p) (projection-state p) (setf (projection-state p) s)
 (projection-parents p) (projection-conflicts p) (projection-writable-p p) (projection-discarded-p p)
-(commit-projection store p &key parents message ref) (discard-projection p)
+(commit-projection store p &key parents message ref provenance valid-at id) (discard-projection p)
 
 ;;; Composite revisions
 (make-manifest-part role store d &key depends-on recipe)  ; part-role part-store part-revision-id part-depends-on part-recipe
 (make-manifest parts) (manifest-parts m)
-(commit-composite store parts &key parents ref expected message)
+(commit-composite store parts &key parents ref expected message provenance valid-at id)
 (composite-manifest store d) (plan-composite store d targets) (restore-composite store d targets)
 
 ;;; In memory
@@ -274,6 +277,7 @@ New files in `revision-protocol/tests`; 239 tests including parametrized rows, a
 - [x] R0a implementation through team-solve (revision-protocol#1, 0.1.0)
 - [x] R0b contract: brief section, skeleton and Rove suites on `agent/revision-r0b-7b30`
 - [ ] R0b implementation through team-solve (`.team-solve/task.md` in the worktree)
+- [x] 0.3.0: caller `:id` / `:valid-at` / `:provenance` on `commit-composite`, `commit-projection`, `capture-revision` ([#6](https://github.com/egao1980/revision-protocol/issues/6)); `vc-tool-version-error` hosted here for the git and jj backends ([#4](https://github.com/egao1980/revision-protocol/issues/4)); `ref-cas-p`, `conflicted-revisions-p` ([#5](https://github.com/egao1980/revision-protocol/issues/5))
 - [ ] R0b follow-ups: `verify-revision`, multi-head plans (R2), `capability-protocol` adapter, `parse-time-range` phrases
 - [ ] `defspec` model → Quint, ITF replay against the in-memory store
 - [ ] Cookbook `cookbooks/revision.md`
