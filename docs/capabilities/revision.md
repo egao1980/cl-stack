@@ -254,7 +254,7 @@ New files in `revision-protocol/tests`; 239 tests including parametrized rows, a
 |---------------|------|
 | [`revision-protocol`](https://github.com/egao1980/revision-protocol) (`stack-rev`) | Protocol, conditions, designators, in-memory store, law suite; later the `defspec` model |
 | `diff-protocol` (`stack-diff`) | Diffs as values; `revision-protocol` depends on it from R0b (0.1.0) |
-| `revision-backend-git`, `revision-backend-jj` | CLI backends (Track V); git V0 brief: [revision-backend-git.md](revision-backend-git.md) |
+| `revision-backend-git`, `revision-backend-jj` | CLI backends (Track V); git V0 brief: [revision-backend-git.md](revision-backend-git.md), jj V2 brief: [revision-backend-jj.md](revision-backend-jj.md) |
 
 ---
 

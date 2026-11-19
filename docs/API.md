@@ -132,6 +132,8 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
   **Brief:** [capabilities/revision.md](capabilities/revision.md)
 - `revision-backend-git` — revision-protocol backend over the git CLI (`stack-rev-git`): commits as revisions, branches / tags with `update-ref` CAS, walks via `rev-list`, `state-diff` via `diff-tree` / `git diff` + `parse-diff`, working-copy drift and capture, read-only pathlib filesystem per revision. V0 contract.
   **Brief:** [capabilities/revision-backend-git.md](capabilities/revision-backend-git.md)
+- `revision-backend-jj` — revision-protocol backend over the jj (Jujutsu) CLI (`stack-rev-jj`): change ids as revision ids (commit id in provenance), bookmarks / tags with CAS emulated over the operation log, `:recorded` as-of via `--at-op`, revset walks, `state-diff` via `jj diff --git` + `parse-diff`, committed conflicts as materialized files, @ as the working-copy target, read-only pathlib filesystem per revision. V2 contract.
+  **Brief:** [capabilities/revision-backend-jj.md](capabilities/revision-backend-jj.md)
 
 ## Blackboard core (P2 — AI-agnostic)
 
