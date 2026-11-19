@@ -27,7 +27,7 @@ Task-oriented recipes (Python/Java analogues → stack packages).
 | [lisp-mcp](lisp-mcp.md) | `lisp-mcp` **0.5.0** / `lisp-source-protocol` / `repl-protocol` (static analysis · structural edits · Swank/Slynk images) |
 | [AG-UI](ag-ui.md) | `ag-ui-protocol` **0.4.1** / SSE · WKT proto · TUI sink (`RunAgentInput` → 36 events) |
 | [A2A](a2a.md) | `a2a-protocol` / JSON-RPC · REST · gRPC (Agent Card + tasks) |
-| [AI agent](ai-agent.md) | `ai-agent-protocol` **0.6.0** (`run-ai-agent`; `:memory` + `:steering`; retries · compaction · permissions · subagents; `/mcp` sampling; not `run-agent`) |
+| [AI agent](ai-agent.md) | `ai-agent-protocol` **0.7.0** (`run-ai-agent`; `:memory` + `:steering`; retries · compaction · permissions · subagents; `/mcp` sampling; not `run-agent`) |
 | [Blackboard](blackboard.md) | `blackboard-protocol` / `capability-protocol` (KSAR + COW, no AI wire) |
 | [LLM](llm.md) | `llm-protocol` **0.4.0** / OpenAI **0.3.2** / Anthropic **0.2.0** / llama.cpp (generate · stream · embed) |
 | [Conversation memory](conversation.md) | `conversation-protocol` **0.3.0** (buffer · window · summary + `compact-turns`) + agent `:memory` |

@@ -40,6 +40,6 @@ Package nick: `stack-conversation`.
 |-------|------|-----|
 | Protocol + in-process store / buffer / window / summary / token-window | [`egao1980/conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** |
 | SQL store | [`egao1980/conversation-backend-sql`](https://github.com/egao1980/conversation-backend-sql) | **0.1.0** |
-| Agent hook (`:memory`, `:compaction`) | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
+| Agent hook (`:memory`, `:compaction`) | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 
 Conditions: `conversation-missing-backend` (`use-value`); `conversation-session-not-found` (`continue`).

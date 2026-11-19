@@ -1,7 +1,7 @@
 # ai-agent-protocol (P2)
 
 **Issues:** leftover of [#195](https://github.com/egao1980/cl-stack/issues/195) · parent [#192](https://github.com/egao1980/cl-stack/issues/192)
-**Status:** wave-1 (`ai-agent-protocol` **0.2.2** + `/mcp` **0.1.0** · `/ag-ui` **0.2.0** · `/a2a` **0.1.0**). Current **0.6.0**: `:durability` / `/telemetry` (0.3), retries, compaction, max-steps wrap-up, typed tool failures (0.4), permissions, background subagents (0.5), `AGENTS.md` discovery (0.6) · cookbook [ai-agent.md](../cookbooks/ai-agent.md) · tutorial [agent-harness.md](../tutorials/agent-harness.md)
+**Status:** wave-1 (`ai-agent-protocol` **0.2.2** + `/mcp` **0.1.0** · `/ag-ui` **0.2.0** · `/a2a` **0.1.0**). Current **0.7.0**: `:durability` / `/telemetry` (0.3), retries, compaction, max-steps wrap-up, typed tool failures (0.4), permissions, background subagents (0.5), `AGENTS.md` discovery (0.6) · cookbook [ai-agent.md](../cookbooks/ai-agent.md) · tutorial [agent-harness.md](../tutorials/agent-harness.md)
 
 Async-first CLOS **agent loop** over [`llm-protocol`](llm.md). **Not** blackboard core. **Not** `ag-ui-protocol:run-agent` — use `run-ai-agent` / `run-ai-agent-async`.
 
@@ -53,7 +53,7 @@ MCP    ── call  ───┘
 
 | Layer | Repo |
 |-------|------|
-| Protocol | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) **0.6.0** (wave-1: 0.2.2) |
+| Protocol | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) **0.7.0** (wave-1: 0.2.2) |
 | MCP sampling + peer tools | `ai-agent-protocol/mcp` **0.1.0** |
 | AG-UI encoder | `ai-agent-protocol/ag-ui` **0.2.0** |
 | A2A expose | `ai-agent-protocol/a2a` **0.1.0** |

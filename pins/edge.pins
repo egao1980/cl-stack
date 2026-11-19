@@ -213,7 +213,7 @@
   ("llm-protocol-anthropic" "0.2.0")
   ("llama-cpp" "0.2.0")
   ("llm-backend-llama-cpp" "0.1.5")
-  ("ai-agent-protocol" "0.6.0")
+  ("ai-agent-protocol" "0.7.0")
   ("blackboard-protocol" "0.2.3")
   ("capability-protocol" "0.2.3")
   ("cl-stack-llm-tui" "0.1.0")

@@ -41,6 +41,6 @@ Package nick: `stack-steer`.
 | Layer | Repo | Ver |
 |-------|------|-----|
 | Protocol + in-memory + `SKILL.md` + discovery | [`egao1980/steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.3.0** |
-| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.6.0** |
+| Agent hook | [`egao1980/ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** |
 
 Conditions: `steer-missing-source` (`use-value`); `steer-unknown-directive` (`use-value` / `continue`); `steer-skill-not-found` (`use-value`).
