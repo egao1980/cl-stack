@@ -1,7 +1,7 @@
 # tui-protocol (P2) — terminal user interfaces
 
 **Issues:** [#274](https://github.com/egao1980/cl-stack/issues/274) · terminal [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **draft**. Wave 1 shipped: [`tui-protocol`](https://github.com/egao1980/tui-protocol) 0.1.0 (`stack-tui`: init / update / view over a cell canvas) + [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) 0.1.0 (headless, on any `terminal-protocol` emulator: `make-headless-tui`, `tui-type`, `tui-press`, `tui-wait-for`). No cookbook yet; see the repo READMEs.
+**Status:** brief **draft**. Wave 1 shipped: [`tui-protocol`](https://github.com/egao1980/tui-protocol) 0.1.0 (`stack-tui`: init / update / view over a cell canvas) + [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) 0.1.0 (headless, on any `terminal-protocol` emulator: `make-headless-tui`, `tui-type`, `tui-press`, `tui-wait-for`). No cookbook yet; see the repo READMEs. H1b widgets: contract locked (section below), not implemented.
 
 A CLOS protocol for full-screen terminal programs. The program is a model with `update` and `view` (the Elm architecture, as in bubbletea and [cl-tuition](https://github.com/atgreen/cl-tuition)). `view` returns a **canvas**: a grid of [`terminal-protocol`](terminal.md) cells and styles. A renderer diffs successive canvases into minimal VT output. An input decoder turns the terminal's bytes into key, mouse, paste, focus and resize messages.
 
@@ -49,6 +49,7 @@ This supersedes `ag-ui-backend-tui`'s "no `tui-protocol`" note. That repo's tuit
 | Repo / system | Role |
 |---------------|------|
 | [`tui-protocol`](https://github.com/egao1980/tui-protocol) (`stack-tui`) | Program GFs, messages, commands, canvas, renderer (diff → VT), input decoder, `run-tui` |
+| `tui-protocol/widgets` (`stack-tui-widgets`, same repo) | Widget protocol, styled runs, text-input, viewport, select-list, confirm-dialog, spinner, status-line (H1b, locked below) |
 | [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) | Headless backend on any `terminal-protocol` backend: `make-headless-tui`, `tui-press`, `tui-screen`, `tui-snapshot` |
 | [`tui-backend-tty`](https://github.com/egao1980/tui-backend-tty) | Real terminal: termios raw mode + `SIGWINCH` (Unix), console VT mode (Windows), CFFI into libc / kernel32 (locked below) |
 
@@ -126,6 +127,61 @@ Each test starts a child SBCL (same runtime and core, the source registry of the
 
 ---
 
+## H1b — widgets, locked
+
+Contract: system `tui-protocol/widgets` (package `tui-protocol/widgets`, nickname `stack-tui-widgets`) in [`egao1980/tui-protocol`](https://github.com/egao1980/tui-protocol) 0.2.0, branch `agent/tui-widgets-h1b-2da5`: stubs plus the Rove tests that define it (`tui-protocol/widgets/tests`, run by `tui-protocol`'s test-op). Harness plan track H, row H1. The docstrings and file headers in `widgets/` carry the key tables and the exact layout rules; this section is the summary.
+
+### Shape
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Protocol** | A `widget` class with three GFs: `widget-init (w) → command`, `widget-update (w message) → (values w command event)`, `widget-view (w canvas)`. Not the program GFs. | A program has a separate model; a widget is its own model, so a parent keeps a widget in its model and forwards messages to it. |
+| **State** | `widget-update` changes the widget in place and returns it; callers use the returned value | Idiomatic CLOS; immutable copies of a text buffer per key buy nothing |
+| **Results** | The third value is a `widget-event` struct or NIL: `submit-event` (text), `cancel-event`, `edit-event` (text, for the external editor), `select-event` (index, item), `confirm-event` (choice, feedback). `widget-event-widget` names the source. | The parent reacts synchronously, with no user messages through the loop |
+| **Size** | `widget-view` records the canvas size as `widget-width` / `widget-height` (initargs before the first draw). Paging and follow-tail use the last size. | `run-tui` sends no resize at start; the canvas is the layout |
+| **Focus** | `widget-focused-p`; an unfocused widget ignores key and paste messages and draws no cursor. Key `:release` is ignored everywhere. | One focus rule for every widget |
+| **Cursor** | The cursor cell gets the inverse attribute added (both cells of a wide character). There is no hardware cursor in H1b. | No renderer change; snapshots can see it |
+| **One-widget program** | `make-widget-program widget &key quit-on` is a tui-protocol program whose model is the widget. `widget-program-events` returns the events (oldest first, thread-safe). The program quits on an event of a `quit-on` type. | Tests and one-widget tools run on `run-tui` / the headless driver as they are |
+| **Errors** | No new conditions. Bad arguments signal `type-error` (`check-type`). A completion function's errors propagate. | Nothing to recover from inside a widget |
+
+### Styled text runs
+
+`text-run text &key style bold dim italic underline inverse foreground background` → a run (`text-run-text`, `text-run-style`, a `tp:style`). A line is a list of runs; a string stands for one default run (`as-runs`). `runs-string`, `runs-width` (TP widths), `draw-runs canvas x y runs`, `truncate-runs runs width &key (ellipsis "…")`, and `wrap-runs runs width`:
+
+1. Newlines split hard lines.
+2. A line breaks at the last space whose non-empty prefix fits, and that one space is dropped.
+3. Without such a space, the break falls after the longest run of whole characters that fits. A combining mark stays with its base, a wide character moves down whole, and a line holds at least one character.
+4. Runs are split, never merged.
+
+This is the interface a later markdown / diff renderer emits. There is no markdown parser in H1b.
+
+### Widgets
+
+| Widget | Keys and behaviour (summary) | View |
+|--------|------------------------------|------|
+| `text-input` | Multi-line buffer; cursor (row, char col) on cluster boundaries (base + combining marks); `text-input-cursor-column` is the display column. Enter submits (empty: nothing; after `\` it becomes a newline); Alt/Shift/Ctrl+Enter and Ctrl+J insert a newline (legacy terminals send Shift+Enter as plain Enter). Left/Right, Ctrl/Alt+Left/Right and Alt+B/F by word, Home/End and Ctrl+A/E, Backspace/Delete joining lines, Ctrl+K/U/W. Up/Down move a line (same display column, snapped left) and on the first/last row browse history (draft saved and restored; any edit ends browsing; submit appends unless it equals the newest). Paste is one insert: CRLF/CR → LF, Tab → 4 spaces, other controls dropped. Ctrl+G → `edit-event`. Escape closes the menu, else `cancel-event`. | Prompt on the first row and the other rows indented by its width; each line wraps by cells. With a completion menu, `> ` / `  ` rows follow the text (at most `completion-max-items`, H − 1). When the text is taller than the canvas, the window is `clamp(cursor-row − R + 1, 0, rows − R)`. The placeholder is faint. |
+| completion hook | `:completion-function` (token → candidate strings). The token is the text after the last space/tab before the cursor. Typed text whose token starts with a trigger (`:completion-triggers`, default `("@")`) opens the menu. While it is open, each edit re-queries once, and NIL closes it. Up/Down wrap, Tab/Enter accept (replacing the token), and Escape or cursor motion closes it. Tab when closed completes one candidate at once or opens the menu for several. | — |
+| `viewport` | `:lines`, `:wrap` (default T), `:follow`. Up/Down 1 row, PgUp/PgDn one height, Home/End, mouse wheel 3 rows; after a scroll `follow-p` = at bottom. `viewport-append` (strings split at newlines), `viewport-append-text` (streams onto the last line), `viewport-offset` (setf clamps), `viewport-row-count`, `viewport-max-offset`, `viewport-at-bottom-p`. While following, appends, replacements and new sizes keep the tail. | Visual rows `[offset, offset + H)`, no scrollbar |
+| `select-list` | `:items`, `:label-function`, `:selected`. Up/Down clamp, Home/End, PgUp/PgDn; Enter → `select-event` (not when empty); Escape → `cancel-event`. | `> ` (bold) / `  ` + label cut to W − 2; window `clamp(sel − H + 1, 0, n − H)` |
+| `confirm-dialog` | Permission prompt. `:choices` (default allow once / always allow / deny), `:feedback-choice` (default `:deny`, NIL for none), `:title`, `:message`. Up/Down, digits 1–9, Enter; the feedback choice opens a `text-input` where Enter → `confirm-event :deny "text"` (empty allowed) and Escape goes back. Other choices → `confirm-event` with feedback NIL; Escape → `cancel-event`. | `draw-box` with title; message wrapped at W − 4 from row 1; blank row; `> N. label` rows; in feedback mode the prompt line, then the input |
+| `spinner` | `:frames` (default 10 braille), `:interval` 0.1, `:label`, `:active`. `widget-init` → `(tick interval)`; each tick advances and re-arms; inactive ignores ticks (chain ends). `spinner-start` → the tick command, `spinner-stop`. | `frame label`; inactive draws nothing |
+| `status-line` | `:left`, `:right` (strings or runs), `:style`. Ignores messages. | Row 0 filled with the style; right-aligned right; left cut with `…` to W − RW − 1, right dropped when RW + 2 > W |
+
+### Tests (the contract)
+
+- **Model level:** messages built by hand, `widget-update`, then `widget-view` on a fixed canvas. The checks are exact `canvas-lines`, cell styles (bold / faint / inverse cursor cells) and accessor state.
+- **End to end:** a `widget-program` on `tui-backend-terminal`'s headless driver with the pure-Lisp emulator. Keys, text and paste go through the emulator's encoders and the decoder. The checks are exact `tui-screen` snapshots (a wide character is one string character and a combining mark follows its base, as the emulator reports them) plus the final model and the recorded events.
+- 79 deftests (≈450 assertions). Before implementation, the old 19 tui-protocol tests pass, and 2 widget tests pass: the `boxed` helper checked against `draw-box`, and `status-line` ignoring messages, which the protocol default already gives. The other 77 fail.
+
+### Deferred
+
+- Running the external editor (suspending the tty is `tui-backend-tty`'s job). H1b only emits `edit-event`.
+- The markdown / diff renderers, which emit runs.
+- Sticky goal column, undo, kill ring, mouse in `text-input`, grapheme clusters beyond combining marks (ZWJ emoji).
+- Layout helpers.
+
+---
+
 ## Protocol surface (sketch)
 
 ```lisp
@@ -160,7 +216,7 @@ Each test starts a child SBCL (same runtime and core, the source registry of the
 
 ## Non-goals (wave 1)
 
-- A widget library beyond boxes, text, lists and progress bars. Widgets compose canvases and can grow later.
+- Widgets beyond the H1b set (text-input, viewport, select-list, confirm-dialog, spinner, status-line). Tables, trees, tabs and forms can grow later on the same protocol.
 - Layout engines (flexbox / constraints), which are P1
 - Images in TUIs (Kitty graphics through the canvas), which is P1 once `image-protocol` lands
 
@@ -173,4 +229,6 @@ Each test starts a child SBCL (same runtime and core, the source registry of the
 - [ ] `tui-backend-terminal`: headless driver on `terminal-protocol`; canvas ⇄ emulator snapshot and `encode-*` ⇄ decoder round-trips on both terminal backends
 - [x] `tui-backend-tty` contract locked (below): repo, stubs, pty tests
 - [ ] `tui-backend-tty` implementation (CFFI raw mode / console mode) passing its pty tests
+- [x] H1b widgets contract locked (above): `tui-protocol/widgets` stubs + Rove tests
+- [ ] H1b widgets implementation passing `tui-protocol/widgets/tests`
 - [ ] Cookbook `cookbooks/tui.md`
