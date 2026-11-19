@@ -20,7 +20,7 @@ Capability brief (RFCs, CLOS transport split): [ws-protocol.md](../capabilities/
 ;; or Windows native H1:
 ;; (cl-repo:load-system "http-backend-winhttp" :version "0.1.4")
 ;; H2 Extended CONNECT client (event-loop):
-;; (cl-repo:load-system "http-backend-async" :version "0.2.17")
+;; (cl-repo:load-system "http-backend-async" :version "0.2.19")
 ```
 
 ---
@@ -94,7 +94,7 @@ Wrong transport → `ws-transport-not-available` (e.g. WinHTTP + `:http/2`, asyn
 `http-backend-async` **0.2.3+** runs handshake + DATA on `register-io` (same TLS WANT_* / H2 pump as HTTP). No BT frame reader.
 
 ```lisp
-(cl-repo:load-system "http-backend-async" :version "0.2.17")
+(cl-repo:load-system "http-backend-async" :version "0.2.19")
 (cl-repo:load-system "event-backend-libuv" :version "0.2.2")
 
 (setf http-backend-async:*event-backend-maker*
@@ -171,7 +171,7 @@ Live: `WINHTTP_WS_LIVE=1`. Upgrade-only — not RFC 8441.
   (ws-protocol:start-ws-server server))
 ```
 
-Client (do **not** bind `*event-loop*` — deadlock): `http-backend-async` **0.2.17** + `:transport :http/2` `:verify nil` against a self-signed cert.
+Client (do **not** bind `*event-loop*` — deadlock): `http-backend-async` **0.2.19** + `:transport :http/2` `:verify nil` against a self-signed cert.
 
 `http2/server/threaded` may fail to load on Windows — tests skip.
 
