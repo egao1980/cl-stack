@@ -1,7 +1,7 @@
 # SQL stack (P2) — three layers + runner
 
 **Issues:** [#101](https://github.com/egao1980/cl-stack/issues/101)  
-**Status:** three layers + runner **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.2.0** · `sql-migrate` **0.1.1** (linear Alembic-style; no second DDL). **S2** (`sql-migrate` 0.2.0 on `revision-protocol` + `diff-protocol`) contract locked — see [sql-migrate 0.2.0 — S2 locked](#sql-migrate-020--s2-locked). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
+**Status:** three layers + runner **shipped** — `sql-protocol` **0.1.0** · `sql-query{,-postgres,-sqlite3}` **0.2.0** · `sql-orm` **0.3.0** · `sql-migrate` **0.2.1** (Alembic-style; no second DDL). **S2** (`sql-migrate` 0.2.x on `revision-protocol` + `diff-protocol`) shipped — see [sql-migrate 0.2.0 — S2 locked](#sql-migrate-020--s2-locked). Cookbook: [cookbooks/sql.md](../cookbooks/sql.md)
 
 ```text
 sql-migrate          ← revision runner                ~ Alembic (linear 0.1.0)
@@ -229,13 +229,14 @@ Track against SQLAlchemy 2.0 Core expression language + schema/DDL (not ORM). Fe
 
 ## Layer 3 — `sql-orm` (first-party CLOS ORM)
 
-**Repo:** [`egao1980/sql-orm`](https://github.com/egao1980/sql-orm) · nick **`stack-sql-orm`** · OCI **0.1.0**  
+**Repo:** [`egao1980/sql-orm`](https://github.com/egao1980/sql-orm) · nick **`stack-sql-orm`** · OCI **0.3.0**  
 **Depends on:** `sql-protocol`, `sql-query` (+ dialect backend for live DB)  
 **Issue:** [#149](https://github.com/egao1980/cl-stack/issues/149) · merged PR [#1](https://github.com/egao1980/sql-orm/pull/1)  
 **Cookbook:** [cookbooks/sql.md](../cookbooks/sql.md)
 
 Owns: `defmodel`, relations, `:compute`, persistence generics, schema snapshot/diff → reversible `schema-op` → sql-query DDL.  
 **0.2.0 (S1, contract locked):** pure snapshot fold, `alter-column-op`, faithful `diff-schema :complete t`, `reflect-schema` (SQLite, PostgreSQL), footprints — see [sql-orm 0.2.0 — S1 locked](#sql-orm-020--s1-locked).  
+**0.3.0:** the SQLite `alter-column-op` rebuild keeps foreign keys, keys, CHECKs, indexes and triggers, and refuses what it cannot keep — see [`alter-column-op`](#alter-column-op) ([sql-orm#14](https://github.com/egao1980/sql-orm/pull/14)).  
 Does **not** wrap Mito. Filters are **sql-query** expressions.
 
 ```lisp
@@ -336,13 +337,32 @@ With `:dialect nil`, equality is the ANSI rendering, so `:text`, `:string` and `
 - `from` and `to` are complete `column-info`s. They must share name (`string-equal`), primary-key, unique and autoincrement. Otherwise `initialize-instance` signals `invalid-schema-op`.
 - `invert-schema-op` swaps `from` and `to` and copies both columns.
 - `schema-op-upgrade` and `schema-op-downgrade` return the **portable** form: `alter-table-statement`s with one action per changed attribute. A type change gives `ALTER COLUMN c SET DATA TYPE t`. Nullability gives `SET NOT NULL` or `DROP NOT NULL`. A default gives `SET DEFAULT <lit>` or `DROP DEFAULT`. PostgreSQL accepts this as is. A string default is a literal (`(lit "b")`), not a column reference.
+- Since 0.3.0 the portable DDL compares types and defaults by the SQL the dialect renders (`:integer` = `"integer"`; PostgreSQL `int4` = `integer`), so an unchanged attribute gets no redundant `SET DATA TYPE` / `SET DEFAULT`.
 - **SQLite** has no `ALTER COLUMN`. `upgrade-schema` and `downgrade-schema` therefore get each op's statements from `dialect-schema-op-statements` **just before running that op**, after earlier ops have run. The default method returns `schema-op-upgrade` or `schema-op-downgrade`. The `(eql :sqlite3)` method for `alter-column-op` reflects the table on the same connection and rebuilds it:
   1. `CREATE TABLE <t>__sql_orm_rebuild` with the altered column list.
   2. `INSERT INTO … (cols) SELECT cols FROM <t>`.
   3. `DROP TABLE <t>`.
   4. `ALTER TABLE … RENAME TO <t>`.
 - The rebuild runs inside the caller's transaction, so a failure leaves the table and no rebuild table. Rows, primary-key values and AUTOINCREMENT continue. SQLite type affinity converts stored values.
-- Documented limit: the rebuild recreates only what `column-info` models. Other indexes, triggers and foreign keys on that table are not preserved (sql-orm DDL does not emit them).
+- **Kept (0.3.0).** The rebuild reflects what `column-info` does not model and re-creates it:
+
+  | Kept | Read from | Re-created as |
+  |------|-----------|---------------|
+  | foreign keys (column or table, composite, `ON DELETE` / `ON UPDATE`) | `pragma_foreign_key_list` | table `FOREIGN KEY` constraints, same order |
+  | composite `PRIMARY KEY` | `pragma_table_info` (`pk` order) | table `PRIMARY KEY (…)` |
+  | multi-column `UNIQUE` | `pragma_index_list` origin `u` + `pragma_index_info` | table `UNIQUE (…)` |
+  | `CHECK` (column or table, named or not) | the `CREATE TABLE` text in `sqlite_master` | table `CHECK (…)`, **name kept** |
+  | indexes (any, partial, expression) and triggers | their `sqlite_master.sql` | the same statement, after the rename |
+
+  Views are not dropped. Constraint names other than `CHECK` names are not kept.
+- **Refused (0.3.0).** What the rebuild cannot keep makes it signal **`sqlite-rebuild-unsupported`** (an `orm-error`; readers `sqlite-rebuild-unsupported-table`, `-objects`, `-op`) **before anything runs**, with a **`continue`** restart that rebuilds anyway and loses the listed objects:
+  - `COLLATE`, generated columns, `ON CONFLICT`, `DEFERRABLE` foreign keys, `WITHOUT ROWID`, `STRICT`;
+  - any foreign key **into** the table while `PRAGMA foreign_keys` is `ON`: `DROP TABLE` would run the children's `ON DELETE` actions (a cascade deletes their rows). Turn `foreign_keys` off outside the transaction first, as SQLite's own procedure does.
+
+  ```lisp
+  (handler-bind ((sql-orm:sqlite-rebuild-unsupported #'continue)) ; accept the loss
+    (sql-orm:upgrade-schema c ops))
+  ```
 - `schema-ops-upgrade` (offline AST) stays portable.
 
 ### `schema-op-footprint`
@@ -370,7 +390,7 @@ With `:dialect nil`, equality is the ANSI rendering, so `:text`, `:string` and `
   - default = `nil` when NULL, else `(sql-raw dflt_value)` (`0`, `'x'`)
 - autoincrement = primary key **and** the table's `sqlite_master.sql` contains `AUTOINCREMENT` (case-insensitive).
 - unique comes from `pragma_index_list(t)` rows with `unique = 1` and `origin = 'u'` whose `pragma_index_info` has exactly one column.
-- `reflection-query :sqlite3` kinds: `:tables`, `:columns`, `:indexes`, `:index-columns`.
+- `reflection-query :sqlite3` kinds: `:tables`, `:columns`, `:indexes`, `:index-columns`; since 0.3.0 also `:table-sql`, `:foreign-keys`, `:table-objects`, `:referencing` and `:foreign-keys-enabled` (used by the alter-column rebuild).
 
 **PostgreSQL** (tested through generated SQL and a canned connection; no server):
 
@@ -460,9 +480,9 @@ Every 0.1 export stays: `upgrade`, `downgrade`, `current-revision`, `stamp`, `en
 | **Fork refusal (S2)** | `plan-transition` on a directory with more than one head signals **`branch-not-supported`** (that class exactly, not `multiple-heads`), whatever the goal, **before reading the target**. `upgrade` / `downgrade` resolve `:head` first (so `upgrade` with the default target signals `multiple-heads`). Every other target form reaches `plan-transition` and gets `branch-not-supported`. They always plan, even when there is nothing to do, so `downgrade :target :base` on a fork is refused too. Nothing is applied or stamped. `branch-not-supported` stays exported and is deprecated. It is the parent of `multiple-heads`, so 0.1 handlers still catch every fork refusal. |
 | **Plans** | A `plan-transition` method on `script-directory` (linear graphs). TO is a designator, or `nil` for the empty state (then `plan-goal` is `nil`). Steps go `:down` from the target's revision to the merge-base, then `:up` to TO, one parent edge each (the R0b shape). An `:up` step to R has `step-diff` = `(revision-delta dir R)` (`eq`, the migration's own ops). A `:down` step from R has `(invert-diff (revision-delta dir R))`. What runs is the script, not a re-diff of states, as in 0.1. Every step is `step-reversible-p`: drops are lossy, not irreversible. A target with several stamps → `revision-error`, and an unknown TO → `revision-not-found` (both R0b). Planning is pure. `describe-plan` is R0b's. |
 | **Lossy** | `change-lossy-p` is true for every `:remove` change (drop table, drop column). An inverse change is lossy when the change it inverts is lossy, or when the inverse itself is a `:remove`. So the inverse of a drop is lossy: it re-creates the schema, not the data. The double inverse of an add is lossy too, because the add's data went with the drop. `diff-lossy-p` = some change lossy; `step-lossy-p` = `diff-lossy-p` of `step-diff`. Lossy steps are data for approval (H5). `upgrade` / `downgrade` do not refuse them (0.1 behaviour). |
-| **Conditions** | `migrate-error` becomes a subtype of `stack-rev:revision-error`. `migrate-error-message` and `revision-error-message` return the same string. `unknown-revision` inherits `migrate-error` **and** `stack-rev:revision-not-found`, with designator = the id. `branch-not-supported` ⊂ `migrate-error`. `multiple-heads` ⊂ `branch-not-supported`. Handlers for `revision-error` / `revision-not-found` catch sql-migrate's conditions. |
+| **Conditions** | `migrate-error` becomes a subtype of `stack-rev:revision-error`. `migrate-error-message` and `revision-error-message` return the same string. `unknown-revision` inherits `migrate-error` **and** `stack-rev:revision-not-found`, with designator = the id. `branch-not-supported` ⊂ `migrate-error`. `multiple-heads` ⊂ `branch-not-supported`. Handlers for `revision-error` / `revision-not-found` catch sql-migrate's conditions. Since 0.2.1 `unknown-revision` reports its message alone (`unknown revision "<id>"` when there is none), not the designator then the message. |
 | **0.1 runner** | `upgrade` / `downgrade` keep their 0.1 lambda lists, defaults (`:head`, `:count 1`), `:target` / `:count` exclusivity, direction errors (`migrate-error` "use downgrade" / "use upgrade") and return values (the `schema-migration`s applied, in application order). They resolve the goal along `history`, check that the stamp is known (an unknown stamp → `unknown-revision`, as 0.1), call `plan-transition`, and run `execute-plan` on `(make-sql-target connection :directory dir :check-drift nil)`. **0.1 never checked drift, and neither do they.** |
-| **Step failure** | A failing step signals **one** condition whose class inherits both `rev:step-failed` and the driver's own condition class (one combined class per driver class, made once). So a 0.1 handler on, say, `sqlite:sqlite-error` still fires, `step-failed` handlers get `execute-plan`'s restarts (`retry-step`, `skip-step`, `rollback-to-start`), `step-failed-cause` is the driver's original condition, and catch-all `error` handlers see a single condition. (Decided 2026-11-19: the earlier "re-signal the cause, then `step-failed`" rule was unsatisfiable under any catch-all handler.) Unhandled, the database keeps the last completed step (the 0.1.1 guarantee). |
+| **Step failure** | A failing step signals **one** condition whose class inherits both `rev:step-failed` and the driver's own condition class (one combined class per driver class, made once). So a 0.1 handler on, say, `sqlite:sqlite-error` still fires, `step-failed` handlers get `execute-plan`'s restarts (`retry-step`, `skip-step`, `rollback-to-start`), `step-failed-cause` is the driver's original condition, and catch-all `error` handlers see a single condition. (Decided 2026-11-19: the earlier "re-signal the cause, then `step-failed`" rule was unsatisfiable under any catch-all handler.) Unhandled, the database keeps the last completed step (the 0.1.1 guarantee). **0.2.1** ([sql-migrate#6](https://github.com/egao1980/sql-migrate/pull/6)): the combined condition's report (`princ`) prints the `step-failed` report, which prints the cause **once** (the driver's own `print-object`, e.g. cl-sqlite's `Code` / `SQL` block, runs for the cause only). The driver's bound slots with initargs are copied into the combined condition through closer-mop on **every** implementation (0.2.0 copied only on SBCL), and a driver slot whose initarg is `:step`, `:cause` or `:attempt` takes `step-failed`'s value. The combined class is built once under a lock. |
 | **current-revision / stamp** | `current-revision` returns one id or `nil`. Several version-table rows → `multiple-heads` (the rows, sorted) with `use-value`. `current-revisions` = `target-revisions` (sorted). **`stamp` now checks first:** an unknown id signals `unknown-revision` and the version table is unchanged (0.1 deleted the row first). `stamp nil` clears. `ensure-version-table` is unchanged. |
 
 ### Schema diff engine
@@ -527,7 +547,7 @@ A `diff-protocol` engine whose states are sql-orm snapshots. `engine-name` → `
 
 ### Release
 
-`sql-migrate` **0.2.0**: the contract branch already sets `:version "0.2.0"` and the dependency floors. Publish from the owning repo when S2 is green (skill **pr-merge-publish**).
+`sql-migrate` **0.2.0** shipped S2; **0.2.1** is the condition-report / slot-copy fix above. Both on GHCR.
 
 ---
 
@@ -537,8 +557,8 @@ A `diff-protocol` engine whose states are sql-orm snapshots. `engine-name` → `
 |-------|----------------|---------|
 | Connectivity | `egao1980/sql-protocol` + `sql-backend-*` | OCI **0.1.0** |
 | Core / query | `egao1980/sql-query` · `sql-query-sqlite3` · `sql-query-postgres` · `sql-query-csv` | OCI **0.2.0** (query + sqlite/pg; csv separate) |
-| ORM | `egao1980/sql-orm` | OCI **0.1.0** |
-| Migrate | `egao1980/sql-migrate` | OCI **0.1.0** |
+| ORM | `egao1980/sql-orm` | OCI **0.3.0** |
+| Migrate | `egao1980/sql-migrate` | OCI **0.2.1** |
 
 **Imports** (`cl-stack-systems`): `cl-dbi`, `dbd-*`, … as needed. SxQL/Mito are **not** required by the first-party SQL stack.
 
@@ -583,7 +603,8 @@ See [cookbooks/sql.md](../cookbooks/sql.md).
 - [x] `sql-orm` merge + OCI **0.1.0** + cookbook — [#149](https://github.com/egao1980/cl-stack/issues/149)  
 - [x] `sql-migrate` **0.1.0** linear runner + OCI — [sql-migrate#1](https://github.com/egao1980/sql-migrate/pull/1)  
 - [x] S2 contract: `sql-migrate` 0.2.0 brief section, skeleton and Rove suites on `agent/sql-migrate-s2-9d73`  
-- [ ] S2 implementation through team-solve (`.team-solve/task.md` in the worktree), then OCI publish 0.2.0  
+- [x] S2 implementation + OCI `sql-migrate` **0.2.0** / **0.2.1**  
+- [x] `sql-orm` **0.3.0**: SQLite alter-column rebuild keeps FKs / keys / CHECKs / indexes / triggers — [#308](https://github.com/egao1980/cl-stack/issues/308)  
 - [ ] S3 branches / merges / multi-head version table; S4 projections, drift capture, spec replay
 
 **Impl order:** ~~imports → connectivity → query → ORM → migrate~~ — **wave-1 complete**. OpenAPI next.
