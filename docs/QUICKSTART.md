@@ -132,14 +132,14 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `repl-backend-slynk` | **0.2.2** | Sly Slynk wire (+ mrepl channels) |
 | `lisp-mcp` | **0.5.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
-| `capability-protocol` | **0.2.3** | `defcapability` + registry (`stack-capability`) |
+| `capability-protocol` | **0.3.0** | `defcapability` + registry (`stack-capability`); `:llm-compaction` |
 | `schema-protocol-json` | **0.1.3** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.4** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
 | `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.4.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `conversation-protocol` | **0.3.0** | session store + buffer / window / summary; `compact-turns` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
+| `llm-protocol` | **0.5.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage, `server-compact` + `portable-turns`, lossless `part-state` (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `conversation-protocol` | **0.3.0** (`/summary` **0.4.0**) | session store + buffer / window / summary; `compact-turns`; `provider-compaction-memory` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
 | `steer-protocol` | **0.3.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) + path-scoped `AGENTS.md` discovery, base prompt builder · [cookbook](cookbooks/steer.md) |
 | `rag-protocol` | **0.1.3** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
@@ -151,10 +151,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.3.2** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream |
-| `llm-protocol-anthropic` | **0.2.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, API-side compaction |
+| `llm-protocol-anthropic` | **0.3.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
 | `llama-cpp` | **0.2.0** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.7.0** | async-first loop + `:memory` + `:steering` + permissions, background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
+| `ai-agent-protocol` | **0.9.0** | async-first loop + `:memory` + `:steering` + permissions, background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |

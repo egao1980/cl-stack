@@ -13,10 +13,10 @@ Every step has a runnable example in [`examples/agents/`](../../examples/agents/
 
 | Package | Version | What it adds here |
 |---------|---------|-------------------|
-| [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.7.0** | the loop: retries, compaction trigger, wrap-up, typed tool failures, permissions, subagents, instruction discovery |
+| [`ai-agent-protocol`](https://github.com/egao1980/ai-agent-protocol) | **0.9.0** | the loop: retries, compaction trigger, wrap-up, typed tool failures, permissions, subagents, instruction discovery |
 | [`llm-protocol`](https://github.com/egao1980/llm-protocol) | **0.4.0** | `retry-policy`, `llm-retry-class`, `llm-context-overflow`, cache-aware `llm-usage`, `anchored-token-count` |
-| [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.2.0** | prompt cache breakpoints, API-side compaction, `Retry-After` |
-| [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** | `summary-memory` + `compact-turns` (templated summary, verbatim tail) |
+| [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.3.0** | prompt cache breakpoints, API-side compaction (on demand + threshold), `Retry-After` |
+| [`conversation-protocol`](https://github.com/egao1980/conversation-protocol) | **0.3.0** (`/summary` **0.4.0**) | `summary-memory` + `compact-turns` (templated summary, verbatim tail), `provider-compaction-memory` |
 | [`steer-protocol`](https://github.com/egao1980/steer-protocol) | **0.3.0** | `instruction-discovery`, `build-system-prompt` |
 
 ```lisp
@@ -54,7 +54,19 @@ For a live run, use Anthropic:
 
 **Prompt cache.** Every request marks the last tool, the system prompt and the last two messages. A long run then re-reads tools, system and history from cache. `llm-usage-cache-read-tokens` and `llm-usage-cache-write-tokens` show what it saved.
 
-**API-side compaction** (beta `compact-2026-01-12`) lets Anthropic summarize in place. It combines with the agent-side compaction in step 3. The agent's threshold then only matters for backends without it.
+**API-side compaction.** Anthropic can write the summary itself, in two ways:
+
+- **On demand** (beta `compact-2026-09-04`, the API's recommended mode): the agent decides when, and the provider summarizes. Use a `provider-compaction-memory` as the agent's `:compaction` in step 3. The history then opens with the provider's signed summary. A later request to another backend gets it as text (`llm-protocol:portable-turns`), and a backend that cannot compact uses `:fallback`:
+
+  ```lisp
+  (stack-conversation:make-provider-compaction-memory
+   :instructions "Keep file paths, decisions and the open task. Do not call tools."
+   :fallback (stack-conversation:make-summary-memory :backend *claude*))
+  ```
+
+- **At a threshold** (beta `compact-2026-01-12`, `:server-compaction` above): the API compacts inside an ordinary request once input passes the trigger. It is left off requests that carry an on-demand summary (the API refuses both).
+
+`(llm-protocol:backend-supports-p b :compaction)` is the wire probe; the `:llm-compaction` capability (`make-llm-catalogue`) is the lookup. With `:durability`, both kinds of summary replay exactly from the journal.
 
 **Another provider.** The agent takes any `llm-protocol` backend in `:backend`, and the model is that backend's default model. Pick the provider by building the matching backend:
 
