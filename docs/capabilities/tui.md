@@ -1,7 +1,7 @@
 # tui-protocol (P2) — terminal user interfaces
 
 **Issues:** [#274](https://github.com/egao1980/cl-stack/issues/274) · terminal [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **draft**. Wave 1 shipped: [`tui-protocol`](https://github.com/egao1980/tui-protocol) 0.1.0 (`stack-tui`: init / update / view over a cell canvas) + [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) 0.1.0 (headless, on any `terminal-protocol` emulator: `make-headless-tui`, `tui-type`, `tui-press`, `tui-wait-for`). No cookbook yet; see the repo READMEs. H1b widgets: contract locked (section below), not implemented.
+**Status:** brief **draft**. Wave 1 shipped: [`tui-protocol`](https://github.com/egao1980/tui-protocol) 0.1.0 (`stack-tui`: init / update / view over a cell canvas) + [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) 0.1.0 (headless, on any `terminal-protocol` emulator: `make-headless-tui`, `tui-type`, `tui-press`, `tui-wait-for`). No cookbook yet; see the repo READMEs. H1b widgets: contract locked (section below). H1c markdown and diff rendering: [tui-markdown.md](tui-markdown.md), contract locked in [`tui-markdown`](https://github.com/egao1980/tui-markdown).
 
 A CLOS protocol for full-screen terminal programs. The program is a model with `update` and `view` (the Elm architecture, as in bubbletea and [cl-tuition](https://github.com/atgreen/cl-tuition)). `view` returns a **canvas**: a grid of [`terminal-protocol`](terminal.md) cells and styles. A renderer diffs successive canvases into minimal VT output. An input decoder turns the terminal's bytes into key, mouse, paste, focus and resize messages.
 
@@ -51,6 +51,7 @@ This supersedes `ag-ui-backend-tui`'s "no `tui-protocol`" note. That repo's tuit
 | [`tui-protocol`](https://github.com/egao1980/tui-protocol) (`stack-tui`) | Program GFs, messages, commands, canvas, renderer (diff → VT), input decoder, `run-tui` |
 | `tui-protocol/widgets` (`stack-tui-widgets`, same repo) | Widget protocol, styled runs, text-input, viewport, select-list, confirm-dialog, spinner, status-line (H1b, locked below) |
 | [`tui-backend-terminal`](https://github.com/egao1980/tui-backend-terminal) | Headless backend on any `terminal-protocol` backend: `make-headless-tui`, `tui-press`, `tui-screen`, `tui-snapshot` |
+| [`tui-markdown`](https://github.com/egao1980/tui-markdown) (`stack-tui-md`) | Markdown (streaming CommonMark subset) and diff renderers emitting styled runs (H1c, [tui-markdown.md](tui-markdown.md)) |
 | [`tui-backend-tty`](https://github.com/egao1980/tui-backend-tty) | Real terminal: termios raw mode + `SIGWINCH` (Unix), console VT mode (Windows), CFFI into libc / kernel32 (locked below) |
 
 ---
@@ -176,7 +177,7 @@ This is the interface a later markdown / diff renderer emits. There is no markdo
 ### Deferred
 
 - Running the external editor (suspending the tty is `tui-backend-tty`'s job). H1b only emits `edit-event`.
-- The markdown / diff renderers, which emit runs.
+- The markdown / diff renderers, which emit runs: H1c, [tui-markdown.md](tui-markdown.md).
 - Sticky goal column, undo, kill ring, mouse in `text-input`, grapheme clusters beyond combining marks (ZWJ emoji).
 - Layout helpers.
 
@@ -231,4 +232,6 @@ This is the interface a later markdown / diff renderer emits. There is no markdo
 - [ ] `tui-backend-tty` implementation (CFFI raw mode / console mode) passing its pty tests
 - [x] H1b widgets contract locked (above): `tui-protocol/widgets` stubs + Rove tests
 - [ ] H1b widgets implementation passing `tui-protocol/widgets/tests`
+- [x] H1c markdown / diff rendering contract locked: [tui-markdown.md](tui-markdown.md)
+- [ ] H1c implementation passing `tui-markdown/tests`
 - [ ] Cookbook `cookbooks/tui.md`
