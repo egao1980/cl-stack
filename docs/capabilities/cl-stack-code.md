@@ -1,7 +1,7 @@
-# cl-stack-code (H3a–H3c, H5a, H5b): the coding agent's headless and interactive shell, its sessions, plan mode, and checkpoints
+# cl-stack-code (H3a–H3c, H5a, H5b, H4b): the coding agent's headless and interactive shell, its sessions, plan mode, checkpoints, and its Lisp image
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H3 ("Product shell: interactive / `-p` / JSON stream / RPC / SDK; settings layering (user, project, local); … `AGENTS.md` discovery"). The repo was decided there (Decision 1).
-**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0** ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b locked** (checkpoints and rewind, with V3: git and jj as composite parts; version target **0.5.0**): [H5b — locked](#h5b--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
+**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0** ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b locked** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox; version target **0.6.0**, after lisp-mcp 0.7.0): [H4b — locked](#h4b--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
 
 `cl-stack-code` is the product: a coding agent CLI on cl-stack. H3a is the **headless** half only:
 
@@ -689,6 +689,81 @@ On the stubs, 109 of the 125 new cases fail, and every error is a `%not-implemen
 
 ---
 
+## H4b — locked
+
+**Plan row:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, H4 ("debugger → agent inbox bridge (restarts gated by permissions)"). The bridge itself is lisp-mcp/agent **0.7.0**: [lisp-agent-tools.md, H4b — locked](lisp-agent-tools.md#h4b--locked). This section is the product half.
+
+Contract: branch `agent/h4b-contract-e2a7` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.6.0**. The rules are in the headers of `src/lisp-image.lisp`, `src/interactive.lisp` ("H4b"), `src/program.lisp` ("H4b") and `src/settings.lisp` (the `lispImage` object). **Order:** this contract depends on `lisp-mcp/agent` 0.7.0. Implement, merge and publish lisp-mcp's H4b contract (same branch name in lisp-mcp) first. The implementation goes through **team-solve** (`.team-solve/task.md`: `system: cl-stack-code`, `test-system: cl-stack-code/tests`, this brief).
+
+```
+cl-stack-code --lisp-image spawn                       # a fresh SBCL with Swank
+cl-stack-code -p --lisp-image attach:4005 --lisp-observe "why is the worker stuck?"
+```
+
+The agent gets lisp-mcp's image tools (`repl-eval`, `debug-*`, `inspect*`, `source-*`, `edit-*`, …) next to the file and shell tools, rooted at the working directory, with one live image named `image` that the product starts. When the image enters the debugger in a thread no tool call waits on, the event reaches the agent. While a turn runs, it goes into the inbox before the next generate. When no turn runs, it starts a turn or stays a notice, as `lispImage.onDebugger` says. The interactive mode shows a banner and marks the status line. The agent answers with `debug-invoke-restart`, behind the same `restart:<name>` rules, an approval dialog interactively, and a deny in `-p` unless a rule allows it.
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **Where the code lives** | `src/lisp-image.lisp` plus hooks in settings, the command line, the tools, the prompt, the core, the program and the headless path. The bridge (events, queue, `post-image-events`) is lisp-mcp/agent's. **No ai-agent-protocol change.** | The inbox, `agent-run-post` and "a post during the final answer takes one more step" exist since 0.5 and 0.14. |
+| **Dependencies** | Adds `lisp-mcp` and `lisp-mcp/agent` ≥ **0.7.0**. `:properties (:cl-repo (:ci (:with ("swank" "slynk"))))`: spawned images load Swank or Slynk, as in lisp-mcp. The tests add `repl-protocol`. | Own stack only. |
+| **Settings** | `"lispImage": {"image": "off"\|"spawn"\|"attach:[HOST:]PORT", "backend": "swank"\|"slynk", "observe": false, "onDebugger": "turn"\|"notice"}`, merged per key across layers. Bad values signal `settings-error` with the key path (`lispImage`, `lispImage.image`, …). `lisp-image-settings` returns `(values image backend observe on-debugger)` with the defaults (off, swank, false, turn). `parse-lisp-image-designator` gives `(:off)`, `(:spawn)` or `(:attach host port)`. The host defaults to `127.0.0.1`, and the port must be 1..65535. **Given code.** | It is the project's choice, as checkpoints are. A project can turn the image on for everyone. |
+| **Flags** | `--lisp-image spawn\|attach:[HOST:]PORT\|off` and `--lisp-observe` go to the flag layer. A bad value is a usage error naming the three forms. **Given code.** | `off` lets a user override a project file. |
+| **Checks** | When any layer sets a lispImage key: observe without attach → `--lisp-observe needs --lisp-image attach:[HOST:]PORT (an observer attaches; it does not spawn)`. The image in plan mode → `--lisp-image is not available in plan mode yet (the image would not see the plan area)`. Both are `code-usage-error`s (exit 2), raised before anything starts. | Observe attaches (H4a). Plan areas need image projections (H5d). Until then a live image would see the real tree while the tools edit the area. |
+| **Tools** | `make-code-tools` returns `(file-tools shell-tools lisp-tools)` when the image is on: `make-lisp-tools` at the working directory, every group, `:observe` mode for observers, `:needs-approval t`, `:image-events t`, the hidden-tool rule applied (a `repl-eval` deny with resource `*` hides it). The offered names are the three sources' in that order. Rules use lisp-mcp's names and resources as written: `repl-eval(lisp:pure)`, `debug-invoke-restart(restart:retry-later)`, `repl-load-system(system:my-app)`. | H3a's tool composition. H4a's resources need no new rule syntax: a spec for "any other tool" is kept as written. |
+| **Starting the image** | `start-lisp-image`: the product calls `repl-spawn {"backend","name":"image"}` or `repl-connect {"host","port","backend","name":"image"}` itself, before the first turn and outside the permission rules. A failure is `lisp-image-error` (exit 1): `cannot start the Lisp image: …` or `cannot attach to the Lisp image at H:P: …`, before any model call. At the end (`-p`) or on `close-code-program`, `close-lisp-tools` kills a spawned image and leaves an attached one running. | The user asked for the image, so asking again would be noise. Starting it eagerly makes a bad port an immediate error, not a confused first turn. |
+| **System prompt** | After the environment section: `# Lisp image`, `- Image: <description>` (`image (spawned, swank)`, `image (attached H:P, B[, observe])`), then `lisp-tools-instructions` (lisp-mcp's instructions, the `IMAGE EVENTS:` line, the `OBSERVE MODE` line). `assemble-system-prompt :lisp-image tools`. | The H4a plan: the product appends the instructions. There is no ai-agent-protocol hook. |
+| **Headless** | `system` init gains `"lisp_image": {"name","kind","backend","host","port","observe"}`, only when the image is on. Each queued event, when it arrives, is a `{"type":"image_event","kind","connection","thread","level","job","text"}` line (written on the loop thread), and while the run is going it is posted into the run. `-p` never waits for events after the run, and the tools close. A restart asks (H4a) and `-p` denies the ask unless a rule allows it (`permission_denials` reason `"headless"`). The result object is unchanged. | Scripts see what happened. The run sees the event at its next step, and a post during the final answer takes one more step. |
+| **Interactive** | The state gets `state-image` (`:name :description :observe :on-debugger :debuggers`). Core events: `(:image-event …)` adds a notice (`λ image entered the debugger (thread T, level L): <condition>` / `λ image: job jN done`). A debugger goes to the front of `:debuggers`. Busy → `(:post-image-events)`. Idle with `turn` → busy and `(:image-turn)`. Idle with `notice` → nothing. The queued events then reach the model with the user's next message, right after it. `(:image-return …)` removes the thread's levels at or below L. `(:image-pending N)` after a turn end starts an image turn under `turn`. The program posts on the agent thread, and an image turn's message is the first event's turn. | "When no turn is running, it becomes a follow-up turn, or a notice, depending on a setting." A debugger left in another thread must not be forgotten while the user types. |
+| **Banner and status line** | Banner: `λ image is in the debugger: <condition's first line> (thread T)` (` (+K more)` when more wait), one row directly above the `─` rule, while any debugger waits. Status line left side: ` <model> · <mode> · λ image[ (observe[, debugger])] · <cwd>`. | The debugger is visible whatever the transcript shows, and the marker says which image the tools drive. |
+| **Observe mode** | A hard gate: observers are not offered restarts, and a mutating `repl-eval` is a tool result error even under `bypassPermissions`. The image never sees the form. | H4a's mode, not a rule. |
+| **Stubs** | `%not-implemented` is back in `src/package.lisp`. **Given:** the settings object and its merge, the flags, `parse-lisp-image-designator`, `lisp-image-settings`, `lisp-image-enabled-p`, `lisp-image-error`, `state-image` and `make-interactive-state :image`, the core's routing of the three events, the status-line hook, and `assemble-system-prompt :lisp-image`. **Stubbed:** every function in `src/lisp-image.lisp` (`check-lisp-image-settings`, `make-code-lisp-tools`, `start-lisp-image`, `lisp-image-description`, `%lisp-image-sections`, `lisp-image-state`, `image-event-notice`, `image-event-message`, `image-banner-text`, `%image-marker`, `%image-event`). **Left to the implementation:** the headless and program wiring (`make-code-tools`' third source, the start, the callbacks, the effects, the banner row, closing). Old paths never reach a stub, so the H3a–H5b tests keep passing. | — |
+
+### Surface (new in 0.6.0)
+
+```lisp
+;; settings and flags (given)
+settings-lisp-image  (lisp-image-settings s) → (values image backend observe on-debugger)
+(lisp-image-enabled-p s)  (parse-lisp-image-designator string) → (:off) | (:spawn) | (:attach host port)
++lisp-image-backend-names+ ("swank" "slynk")  +on-debugger-names+ ("turn" "notice")
+;; the image
++lisp-image-connection+ "image"
+(check-lisp-image-settings settings mode)  (make-code-lisp-tools cwd settings &key on-image-event)
+(start-lisp-image tools settings) → text   (lisp-image-description settings) → string
+(assemble-system-prompt … &key lisp-image)
+;; interactive
+state-image  (make-interactive-state … &key image)  (lisp-image-state settings)
+(image-event-notice event)  (image-event-message event)  (image-banner-text state)
+;; events (:image-event …) (:image-return …) (:image-pending N)
+;; effects (:post-image-events) (:image-turn)
+;; conditions
+lisp-image-error (code-error)  lisp-image-error-image  lisp-image-error-cause     ; exit 1
+```
+
+### Contract tests
+
+`cl-stack-code/tests` grows by 4 files (one of them helpers): **30 new deftests (61 cases with the parametrized rows)**. Every LLM interaction goes through the scripted mock backend. The image tests spawn real `ros +Q run` images with Swank. The observe tests attach to a second image that the test drives through lisp-mcp/agent (`swank:create-server`). The asynchronous debugger entry is a background `sb-thread` in the image.
+
+| File | Covers |
+|------|--------|
+| `lisp-image-support` | the background-error forms, `wait-until`, image turns found by their tag, a Swank server to attach to |
+| `lisp-image-test` | designators (13 rows), the settings object (defaults, parse, merge per key), its errors (5 rows), flags and the usage error, the checks (8 rows), descriptions (4 rows), the three sources (observe, hidden tools, none without an image), the system prompt section and its place, status markers (4 rows) and H3b's line unchanged, the core (idle `turn`, busy post, `notice`, debuggers and returns, jobs and pending, no image), the banner, `lisp-image-state`, event notices and messages |
+| `lisp-image-cli-test` | `-p --lisp-image spawn` (init, tools, prompt, a tool result), no image (init unchanged), **a background debugger in a run** (the event in the inbox before the next generate, an `image_event` line, `restart:abort` denied headless, `retry-later` allowed by a rule), a tool call's debugger (`DEBUGGER level 1`, no event, `=> 42`), **observe as a hard gate** under `bypassPermissions` against an attached image, attach failure (exit 1, no model call), usage errors (3 rows), the project settings file and `--lisp-image off` |
+| `lisp-image-program-test` | **the turn policy** (marker, banner above the rule, notice, an automatic turn with the event, the restart dialog, the banner gone after the restart), the notice policy (no turn, then the event after the user's next message), the observe marker against an attached image, configuration errors before the terminal |
+
+On the stubs, 39 of the 61 new cases fail (101 failing assertions). Every error is a `%not-implemented` one or an assertion downstream of one (lisp-mcp's H4b stubs count too: the run used the lisp-mcp contract worktree). The 22 that pass check given code or guard old shapes: the designators (13), the settings object and its errors (6), the flags, H3b's status line, and the init event without an image. All 595 H3a–H5b cases pass (measured with git 2.56 and jj 0.47.1). No throwaway prototype was run, so the implementation may find test bugs. Those go through a contract-fix commit, as before.
+
+### Non-goals (H4b)
+
+- More than one image per session, and choosing among connections in the UI (the tools can still `repl-spawn` more, and events name their connection).
+- The image in plan mode (H5d: image projections), image checkpoints (H5d / H4e).
+- `/image` commands (restart from a menu, reconnect). The agent answers the debugger, and the user answers the approval dialog.
+- Waiting for image events after a `-p` run, and events in RPC mode (H3d).
+- Remote and confined images, SSH and secrets (H4d).
+
+---
+
 ## Roadmap (H3b–H3e)
 
 | Slice | Scope | Builds on |
@@ -698,4 +773,4 @@ On the stubs, 109 of the 125 new cases fail, and every error is a `%not-implemen
 | **H3d** RPC | `--mode rpc`: JSON-RPC 2.0 over stdio (`rpc-protocol-json` + `rpc-backend-stdio`) — prompt, steer (H3c's `agent-run-post` path), follow-up, abort, approve, deny, and the session commands (tree, fork, rewind, clone, export); the stream-json events as notifications; `--input-format stream-json` for `-p` | H3a, H3c |
 | **H3e** SDK and configuration | A Lisp SDK (start a session, send prompts, receive events as CLOS objects, answer approvals); skills (`SKILL.md` via `steer-protocol`), prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, `@file` imports, project trust (project allow rules and `env` wait for the user's yes) | H3a–H3d |
 
-After H3: the image layer (H4), plan → project → approve (H5: [H5a — locked](#h5a--locked), later slices in its roadmap), extensions and a single binary (H6).
+After H3: the image layer (H4: [H4b — locked](#h4b--locked) is the product half of the debugger bridge), plan → project → approve (H5: [H5a — locked](#h5a--locked), later slices in its roadmap), extensions and a single binary (H6).
