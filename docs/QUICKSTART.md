@@ -85,7 +85,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.4.0** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.7.0** | CLOS path + FS (`stack-pathlib`; `zip://`; ranged reads, SHA-256, atomic + `:expected-hash` / `:mode` writes, `fs-chmod` / `(setf fs-mode)`, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
+| `cl-stack-pathlib` | **0.8.0** | CLOS path + FS (`stack-pathlib`; `zip://`; snapshot-store GC (`snapshot-store-ids` / `-delete`); ranged reads, SHA-256, atomic + `:expected-hash` / `:mode` writes, `fs-chmod` / `(setf fs-mode)`, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
