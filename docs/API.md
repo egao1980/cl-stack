@@ -65,8 +65,8 @@
 - SQL stack (three layers) — [capabilities/sql.md](capabilities/sql.md) (#101)  
   - `sql-protocol` — connectivity + **pooling** over **cl-dbi** (sqlite3 / postgres)  
   - `sql-query` — composable **CLOS DSL** (SQLAlchemy Core checklist); **ANSI** builtin; `sql-query-sqlite3` / `sql-query-postgres` dialect backends (OCI **0.2.0**)  
-  - `sql-orm` — first-party lispy CLOS ORM (`defmodel`; **not** Mito; OCI **0.2.0**; schema algebra + reflection) — cookbook [sql.md](cookbooks/sql.md)
-  - `sql-migrate` — Alembic-style revision runner (`stack-sql-migrate`; OCI **0.1.1**; linear; versions sql-orm ops)
+  - `sql-orm` — first-party lispy CLOS ORM (`defmodel`; **not** Mito; OCI **0.3.0**; schema algebra + reflection) — cookbook [sql.md](cookbooks/sql.md)
+  - `sql-migrate` — Alembic-style revision runner (`stack-sql-migrate`; OCI **0.2.1**; linear; versions sql-orm ops)
 - `crypto-protocol` — recipes (`seal`/`unseal` AES-256-GCM) + hazmat digest/HMAC/AEAD; default **Ironclad**  
   **Brief:** [capabilities/crypto.md](capabilities/crypto.md) (#104) · cookbook [crypto.md](cookbooks/crypto.md)
 - `secrets-protocol` — CSPRNG / tokens / compare / UUID / password KDF; default OS via Ironclad  
@@ -102,10 +102,10 @@ Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a �
 
 Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal `ag-ui-protocol:run-agent` — that is the wire GF.
 
-- `ai-agent-protocol` (OCI **0.13.0**) — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; `:memory` / `:steering`; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.
+- `ai-agent-protocol` (OCI **0.14.0**) — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; `:memory` / `:steering`; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.
 - `steer-protocol` — rules / `SKILL.md` (`stack-steer`). Not A2A `agent-skill`.  
   **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
-- `cl-stack-code` (OCI **0.3.1**) — the coding agent product (`stack-code`): headless `cl-stack-code -p` with text / JSON / stream-JSON output, user / project / local settings, `AGENTS.md` discovery, permission rules and modes over `ai-agent-protocol` and `agent-tools`; an interactive TUI (H3b), sessions (H3c), and plan mode with projected diffs, approve / reject and drift restarts (H5a contract, 0.4.0).
+- `cl-stack-code` (OCI **0.4.1**) — the coding agent product (`stack-code`): headless `cl-stack-code -p` with text / JSON / stream-JSON output, user / project / local settings, `AGENTS.md` discovery, permission rules and modes over `ai-agent-protocol` and `agent-tools`; an interactive TUI (H3b), sessions (H3c), and plan mode with projected diffs, approve / reject and drift restarts (H5a contract, 0.4.0).
   **Brief:** [capabilities/cl-stack-code.md](capabilities/cl-stack-code.md)
 - `llm-protocol` (OCI **0.5.0**) — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
   **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
@@ -136,11 +136,11 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 
 - `diff-protocol` (OCI **0.4.0**) — diffs as values: change trees (`:add` `:remove` `:modify` `:move`), resource-string footprints, lazy content, engines per content type; apply / invert / compose / rebase / three-way (conflicts as data). R0: sexp engine, `:summary` / `:sexp` render. No dependencies.
   **Brief:** [capabilities/diff.md](capabilities/diff.md)
-- `revision-protocol` (OCI **0.3.0**) — revision DAG (`stack-rev`): immutable revisions with parents (merges), movable refs and immutable tags with compare-and-swap, designators (id prefix, ref, tag, as-of on `:recorded` / `:valid`, parent / ancestor), walks, merge-base, ranges, heads, ref listener. R0a: thread-safe in-memory store.
+- `revision-protocol` (OCI **0.4.0**) — revision DAG (`stack-rev`): immutable revisions with parents (merges), movable refs and immutable tags with compare-and-swap, designators (id prefix, ref, tag, as-of on `:recorded` / `:valid`, parent / ancestor), walks, merge-base, ranges, heads, ref listener. R0a: thread-safe in-memory store.
   **Brief:** [capabilities/revision.md](capabilities/revision.md)
-- `revision-backend-git` (OCI **0.4.0**) — revision-protocol backend over the git CLI (`stack-rev-git`): commits as revisions, branches / tags with `update-ref` CAS, walks via `rev-list`, `state-diff` via `diff-tree` / `git diff` + `parse-diff`, working-copy drift and capture, read-only pathlib filesystem per revision (V0); V1 contract: projections (virtual trees + linked worktrees), `project-merge` via `merge-tree`, plans and `execute-plan`, worktrees, capability-gated `replay`.
+- `revision-backend-git` (OCI **0.5.0**) — revision-protocol backend over the git CLI (`stack-rev-git`): commits as revisions, branches / tags with `update-ref` CAS, walks via `rev-list`, `state-diff` via `diff-tree` / `git diff` + `parse-diff`, working-copy drift and capture, read-only pathlib filesystem per revision (V0); V1 contract: projections (virtual trees + linked worktrees), `project-merge` via `merge-tree`, plans and `execute-plan`, worktrees, capability-gated `replay`.
   **Brief:** [capabilities/revision-backend-git.md](capabilities/revision-backend-git.md)
-- `revision-backend-jj` (OCI **0.2.1**) — revision-protocol backend over the jj (Jujutsu) CLI (`stack-rev-jj`): change ids as revision ids (commit id in provenance), bookmarks / tags with CAS emulated over the operation log, `:recorded` as-of via `--at-op`, revset walks, `state-diff` via `jj diff --git` + `parse-diff`, committed conflicts as materialized files, @ as the working-copy target, read-only pathlib filesystem per revision. V2 contract.
+- `revision-backend-jj` (OCI **0.3.0**) — revision-protocol backend over the jj (Jujutsu) CLI (`stack-rev-jj`): change ids as revision ids (commit id in provenance), bookmarks / tags with CAS emulated over the operation log, `:recorded` as-of via `--at-op`, revset walks, `state-diff` via `jj diff --git` + `parse-diff`, committed conflicts as materialized files, @ as the working-copy target, read-only pathlib filesystem per revision. V2 contract.
   **Brief:** [capabilities/revision-backend-jj.md](capabilities/revision-backend-jj.md)
 - `diff-backend-lisp-source` (OCI **0.2.2**) — diff-protocol engine `:lisp` for Common Lisp source (`stack-diff-lisp`): top-level forms keyed like lisp-mcp locators (`defun foo`, `defmethod m :around (c t)`, `#+sbcl defun f`), form-level add / remove / modify / move (reorder, rename), nested structural leaves on the lisp-source-protocol CST, form-level three-way merge and rebase, `unified-patch`; comments and reader conditionals kept byte for byte, never evaluates. R3 contract.
   **Brief:** [capabilities/diff-backend-lisp-source.md](capabilities/diff-backend-lisp-source.md)

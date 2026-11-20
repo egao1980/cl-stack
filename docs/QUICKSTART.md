@@ -85,7 +85,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.4.0** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.6.3** | CLOS path + FS (`stack-pathlib`; `zip://`; ranged reads, SHA-256, atomic + `:expected-hash` writes, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
+| `cl-stack-pathlib` | **0.7.0** | CLOS path + FS (`stack-pathlib`; `zip://`; ranged reads, SHA-256, atomic + `:expected-hash` / `:mode` writes, `fs-chmod` / `(setf fs-mode)`, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
@@ -95,12 +95,12 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sql-query` | **0.2.0** | CLOS SQL DSL |
 | `sql-query-sqlite3` | **0.2.0** | sqlite3 dialect |
 | `sql-query-postgres` | **0.2.0** | postgres dialect |
-| `sql-orm` | **0.2.0** | CLOS ORM (`defmodel`); schema algebra: `apply-ops-to-snapshot`, `alter-column-op`, `diff-schema :complete`, `reflect-schema` (SQLite, PostgreSQL) |
-| `sql-migrate` | **0.1.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
+| `sql-orm` | **0.3.0** | CLOS ORM (`defmodel`); schema algebra: `apply-ops-to-snapshot`, `alter-column-op`, `diff-schema :complete`, `reflect-schema` (SQLite, PostgreSQL) |
+| `sql-migrate` | **0.2.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
 | `diff-protocol` | **0.4.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp, text (Myers / histogram, diff3) and tree engines; `:unified` render + git-diff parse; engine extension API (`register-diff-engine`, hooks, `make-conflict`) · [brief](capabilities/diff.md) |
-| `revision-protocol` | **0.3.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
-| `revision-backend-git` | **0.4.0** | revision-protocol over the git CLI (`stack-rev-git`); needs git ≥ 2.56 · [brief](capabilities/revision-backend-git.md) |
-| `revision-backend-jj` | **0.2.1** | revision-protocol over the jj CLI (`stack-rev-jj`) · [brief](capabilities/revision-backend-jj.md) |
+| `revision-protocol` | **0.4.0** | revision DAG (`stack-rev`): refs + tags with CAS (`replace-annotation` restart where `tag-rewrite-p`), as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
+| `revision-backend-git` | **0.5.0** | revision-protocol over the git CLI (`stack-rev-git`); full `refs/…` names used as given; needs git ≥ 2.56 · [brief](capabilities/revision-backend-git.md) |
+| `revision-backend-jj` | **0.3.0** | revision-protocol over the jj CLI (`stack-rev-jj`) · [brief](capabilities/revision-backend-jj.md) |
 | `diff-backend-lisp-source` | **0.2.2** | diff engine `:lisp`: form-level diffs keyed like lisp-mcp locators (`stack-diff-lisp`) · [brief](capabilities/diff-backend-lisp-source.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
@@ -135,8 +135,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `repl-protocol` | **0.2.7** | live image: eval, debugger, stepping, inspector, channels (input after an aborted channel debugger is never dropped); debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.2** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.6.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
-| `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
+| `lisp-mcp` | **0.6.1** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
+| `blackboard-protocol` | **0.3.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.3.0** | `defcapability` + registry (`stack-capability`); `:llm-compaction` |
 | `schema-protocol-json` | **0.1.3** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
 | `schema-protocol-xsd` | **0.1.4** | `:xsd` backend; `decode-validating` (`stack-schema-xsd`) |
@@ -159,15 +159,15 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `llm-protocol-anthropic` | **0.4.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
 | `llama-cpp` | **0.2.0** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.13.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
+| `ai-agent-protocol` | **0.14.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
-| `cl-stack-code` | **0.3.0** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c) · [brief](capabilities/cl-stack-code.md) |
+| `cl-stack-code` | **0.4.1** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a) · [brief](capabilities/cl-stack-code.md) |
 | `doc-extract-protocol` | **0.3.0** | document extraction (PDF / office / docling / unstructured backends) |
 | `doc-extract-render` | **0.1.1** | render extracted documents |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.21** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2); a burst waits FIFO for a free stream (`*h2-stream-wait-timeout*` 2 s, `*h2-max-stream-waiters*` 32) instead of dialing |
+| `http-backend-async` | **0.2.22** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2); a burst waits FIFO for a free stream (`*h2-stream-wait-timeout*` 2 s, `*h2-max-stream-waiters*` 32) instead of dialing |
 | `http2` | **2.1.8** | fork; 64 KiB HPACK string / header-block limits, reset per block; header stream errors keep HPACK in sync; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers; ignore unknown SETTINGS; Homebrew `libssl` by absolute path on macOS |
 | `http-backend-dexador` | **0.1.5** | sync HTTP/1.1 (soft-loads CE codecs) |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
@@ -239,7 +239,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
 | `cl-stack-executors` | **0.1.0** | BT pools backends *may* plug into `submit` |
 | `cffi` | **0.24.1** | via cl-stack-systems import |
-| `asdf-native` | **0.3.1** | `(:native-library "foo")` ASDF component: natives load at ASDF load by absolute path (env override → `native/` overlay → `lib/<os>-<arch>/`); cl-repo derives overlays from it · [overlays](overlays.md) |
+| `asdf-native` | **0.3.2** | `(:native-library "foo")` ASDF component: natives load at ASDF load by absolute path (env override → `native/` overlay → `lib/<os>-<arch>/`); cl-repo derives overlays from it · [overlays](overlays.md) |
 
 Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](overlays.md).
 
