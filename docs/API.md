@@ -105,6 +105,8 @@ Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal 
 - `ai-agent-protocol` — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; `:memory` / `:steering`; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.
 - `steer-protocol` — rules / `SKILL.md` (`stack-steer`). Not A2A `agent-skill`.  
   **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
+- `cl-stack-code` — the coding agent product (`stack-code`): headless `cl-stack-code -p` with text / JSON / stream-JSON output, user / project / local settings, `AGENTS.md` discovery, permission rules and modes over `ai-agent-protocol` and `agent-tools`. H3a contract.
+  **Brief:** [capabilities/cl-stack-code.md](capabilities/cl-stack-code.md)
 - `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
   **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
 
