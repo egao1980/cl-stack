@@ -99,8 +99,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sql-migrate` | **0.2.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
 | `diff-protocol` | **0.4.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp, text (Myers / histogram, diff3) and tree engines; `:unified` render + git-diff parse; engine extension API (`register-diff-engine`, hooks, `make-conflict`) · [brief](capabilities/diff.md) |
 | `revision-protocol` | **0.4.0** | revision DAG (`stack-rev`): refs + tags with CAS (`replace-annotation` restart where `tag-rewrite-p`), as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
-| `revision-backend-git` | **0.5.0** | revision-protocol over the git CLI (`stack-rev-git`); full `refs/…` names used as given; needs git ≥ 2.56 · [brief](capabilities/revision-backend-git.md) |
-| `revision-backend-jj` | **0.3.0** | revision-protocol over the jj CLI (`stack-rev-jj`) · [brief](capabilities/revision-backend-jj.md) |
+| `revision-backend-git` | **0.5.1** | revision-protocol over the git CLI (`stack-rev-git`); full `refs/…` names used as given; needs git ≥ 2.56 · [brief](capabilities/revision-backend-git.md) |
+| `revision-backend-jj` | **0.3.1** | revision-protocol over the jj CLI (`stack-rev-jj`) · [brief](capabilities/revision-backend-jj.md) |
 | `diff-backend-lisp-source` | **0.2.2** | diff engine `:lisp`: form-level diffs keyed like lisp-mcp locators (`stack-diff-lisp`) · [brief](capabilities/diff-backend-lisp-source.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
@@ -135,7 +135,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `repl-protocol` | **0.2.7** | live image: eval, debugger, stepping, inspector, channels (input after an aborted channel debugger is never dropped); debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.2** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.6.1** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-mcp` | **0.7.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.3.0** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.3.0** | `defcapability` + registry (`stack-capability`); `:llm-compaction` |
 | `schema-protocol-json` | **0.1.3** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
@@ -161,7 +161,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.14.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
-| `cl-stack-code` | **0.4.1** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a) · [brief](capabilities/cl-stack-code.md) |
+| `cl-stack-code` | **0.5.0** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a), checkpoints + rewind (H5b) · [brief](capabilities/cl-stack-code.md) |
 | `doc-extract-protocol` | **0.3.0** | document extraction (PDF / office / docling / unstructured backends) |
 | `doc-extract-render` | **0.1.1** | render extracted documents |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
