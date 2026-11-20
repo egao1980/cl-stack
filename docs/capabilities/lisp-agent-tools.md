@@ -1,7 +1,7 @@
-# lisp-mcp/agent (H4a): Lisp image tools for a native agent
+# lisp-mcp/agent (H4a, H4b): Lisp image tools for a native agent, and the debugger → inbox bridge
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H4 ("`lisp-mcp/agent` native tool source (no MCP hop); … form scanner (pure / defines / mutates / io / read-eval) as permission resources; … read-only observe mode")
-**Status:** milestone **H4a locked**. The contract is on branch `agent/h4a-contract-cfba` of [`egao1980/lisp-mcp`](https://github.com/egao1980/lisp-mcp): systems `lisp-mcp/agent` and `lisp-mcp/agent/tests` (Rove). Every new function calls `lisp-mcp::%not-implemented`. It will be implemented through **team-solve**. Version target **lisp-mcp 0.6.0**. H4b–H4e are listed under [Roadmap](#roadmap-h4bh4e).
+**Status:** milestone **H4a** shipped as lisp-mcp **0.6.0** (0.6.1 is current), with systems `lisp-mcp/agent` and `lisp-mcp/agent/tests` (Rove) in [`egao1980/lisp-mcp`](https://github.com/egao1980/lisp-mcp), implemented through **team-solve**. Milestone **H4b locked** (the debugger → agent inbox bridge, version target **lisp-mcp 0.7.0**, then cl-stack-code 0.6.0): [H4b — locked](#h4b--locked). H4c–H4e are listed under [Roadmap](#roadmap-h4bh4e).
 
 H4a has three parts:
 
@@ -28,13 +28,13 @@ H4a has three parts:
 
 | Decision | Choice | Reason |
 |----------|--------|--------|
-| **Repo / system** | `egao1980/lisp-mcp`, a new system `lisp-mcp/agent` (`src/agent/`, package `lisp-mcp/agent`) and tests `lisp-mcp/agent/tests` (`tests/agent/`). The scanner is in core `lisp-mcp` (`src/scan-forms.lisp`, exported `form-resources`). **Version 0.6.0** for both systems. CI gets a second job, `test-system.yml` with `system: lisp-mcp/agent`. | The tool source reuses about 2 300 lines of lisp-mcp internals: the tool registry, locators, renderers, output store, jobs and state. A separate repo would either copy them or turn them into a public API in lockstep with lisp-mcp. A subsystem is the mirror image of `ai-agent-protocol/mcp`: the MCP server core gains no `ai-agent-protocol` dependency, and `lisp-mcp/agent` pulls in `mcp-protocol` only through `lisp-mcp`. The scanner depends only on lisp-source-protocol, which the core already loads, so a later MCP `--observe` flag can use it (H4b). |
+| **Repo / system** | `egao1980/lisp-mcp`, a new system `lisp-mcp/agent` (`src/agent/`, package `lisp-mcp/agent`) and tests `lisp-mcp/agent/tests` (`tests/agent/`). The scanner is in core `lisp-mcp` (`src/scan-forms.lisp`, exported `form-resources`). **Version 0.6.0** for both systems. CI gets a second job, `test-system.yml` with `system: lisp-mcp/agent`. | The tool source reuses about 2 300 lines of lisp-mcp internals: the tool registry, locators, renderers, output store, jobs and state. A separate repo would either copy them or turn them into a public API in lockstep with lisp-mcp. A subsystem is the mirror image of `ai-agent-protocol/mcp`: the MCP server core gains no `ai-agent-protocol` dependency, and `lisp-mcp/agent` pulls in `mcp-protocol` only through `lisp-mcp`. The scanner depends only on lisp-source-protocol, which the core already loads, so a later MCP `--observe` flag can use it (H4d). |
 | **Dependencies (new, agent system only)** | `ai-agent-protocol` ≥ 0.12.0, `llm-protocol` ≥ 0.5.0, `json-protocol` ≥ 0.2.0, `json-backend-jzon` ≥ 0.2.0. `:ci :with ("swank" "slynk")`, as in core. | JSON arguments are decoded with the stack's JSON protocol, the same way agent-tools does it. Swank and Slynk are install roots for spawned images, never dependencies. |
 | **No MCP hop** | `call-lisp-tool` finds the handler in `lisp-mcp::*tools*`, wraps it exactly as `make-lisp-mcp-server` does (`bounded-handler`, plus `job-handler` for job tools), and calls it with `lisp-mcp:*state*` bound to the source's own state and `lisp-mcp::*server*` bound to NIL. | Same texts, same bounding, same jobs. NIL `*server*` makes progress and log notifications no-ops, which they already are without a client. |
 | **State** | One `lisp-mcp-state` per `lisp-tools`, made by `lisp-mcp::make-state` with the root and groups. Calls may run in parallel worker threads (the protocol's function-tool path); the state's lock already serializes what needs it. | Two sources (an observer and a full one) never share connections or jobs. |
 | **Tool names** | **lisp-mcp's names, unchanged** (`repl-eval`, `debug-invoke-restart`, `source-read`, …). Rules read `("repl-eval" "lisp:io" :ask)`. | One vocabulary across MCP, native, docs and the `lisp-mcp-tooling` skill. Server instructions name tools, and renaming would make them wrong. Hyphens are valid in Anthropic and OpenAI tool names. |
 | **Catalog** | `:groups` takes what lisp-mcp's `--tools` takes (NIL = all, keywords, or `"code"` / `"image"` / `"all"` / comma lists), via `lisp-mcp::parse-tool-groups`. `:tools` (a name list) narrows it further. Names always stay in lisp-mcp registration order (`(reverse lisp-mcp::*tools*)`). Descriptors use lisp-mcp's description and `tool-schema`. A tool outside the catalog is `agent-unknown-tool`. | The same selection logic as the MCP server, and the descriptor bytes stay inside lisp-mcp's catalog budget. |
-| **Instructions** | `lisp-tools-instructions` returns lisp-mcp's `server-instructions` for the source's groups without the `Resources:` line. In observe mode it adds one line that starts with `OBSERVE MODE`. The product appends it to the agent's instructions. | Common arguments (path, locator, connection, …) carry no schema description; the instructions explain them once. ai-agent-protocol has no hook for tool sources to add instructions (H4b may add one). |
+| **Instructions** | `lisp-tools-instructions` returns lisp-mcp's `server-instructions` for the source's groups without the `Resources:` line. In observe mode it adds one line that starts with `OBSERVE MODE`. The product appends it to the agent's instructions. | Common arguments (path, locator, connection, …) carry no schema description; the instructions explain them once. ai-agent-protocol has no hook for tool sources to add instructions, and H4b keeps it that way: the product appends the text. |
 | **Arguments** | A JSON object string or a string-keyed hash table. NIL or blank means `{}`. Bad JSON, or JSON that is not an object → `tool-input-error`. | The same rule as agent-tools. |
 | **Error mapping** | lisp-mcp's `bad-argument`, `path-outside-root`, `unknown-job` (all `lisp-mcp-error`), `no-connection`, `unknown-connection` and lisp-source-protocol's `lisp-source-error` (locator, edit, stale hash) → `agent:tool-input-error` with the same message. A call after `close-lisp-tools` → `agent:tool-unavailable`. Other conditions (wire errors) pass through. | "No live image: call repl-spawn …" is advice to fix the next call. `tool-unavailable` tells the model "do not call it again", which is wrong for it. |
 | **Permission resources** | See [Resources](#permission-resources). The method never signals: arguments that do not parse → `("*")`. | Rules must not crash a run. |
@@ -163,11 +163,79 @@ Checklist applied (team-solve STAGED): every assertion sits inside `ok`; `failur
 
 The debugger → inbox bridge, drift and promote-to-source, image checkpoints, remote images, trace / profile, an MCP `--observe` flag, a tool-source instructions hook in ai-agent-protocol, macroexpansion in the scanner (it would need the image), and recursive scanning of `eval` with a literal form.
 
+## H4b — locked
+
+**Plan row:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, H4 ("debugger → agent inbox bridge (restarts gated by permissions)"), acceptance "Agent fixes a seeded bug by choosing a restart in a spawned image". H4a shipped as lisp-mcp **0.6.0** (0.6.1: edits compile in the file's package, kills wait for the image).
+
+H4b is split over two repos, **in this order**:
+
+1. **`egao1980/lisp-mcp` (this section), version 0.7.0.** The bridge itself: which debugger entries are events, the event object and its text, the queue on the source, and posting into an agent run's inbox. Contract: branch `agent/h4b-contract-e2a7`, systems `lisp-mcp/agent` and `lisp-mcp/agent/tests`. The exact rules are in the header of `src/agent/events.lisp`.
+2. **`egao1980/cl-stack-code`, version 0.6.0.** The product wiring: `--lisp-image spawn|attach:[HOST:]PORT`, the lisp tools beside the file and shell tools, the system prompt section, the status line marker, the banner, and what an event does when no turn runs. See [cl-stack-code.md, H4b — locked](cl-stack-code.md#h4b--locked). Contract: branch `agent/h4b-contract-e2a7` of cl-stack-code. It depends on `lisp-mcp/agent` 0.7.0, so lisp-mcp is implemented, merged and published first.
+
+Both go through **team-solve**.
+
+### Prior art (intersection, not a clone)
+
+| Source | Took | Left |
+|--------|------|------|
+| SLIME / Sly | A debugger entry in any thread pops an sldb buffer naming the thread and level, with the restarts and the top frames. `:debug-return` closes it. | The buffer itself, and the "which sldb is current" UI. The debug tools act on the newest level of the connection (repl-protocol), as before. |
+| repl-protocol 0.2.7 | `(:debug thread level condition restarts frames conts)` events through `repl-event-listener`, the `continuations` list (pending request ids in that thread), `debugger-state-request-id`. | No protocol change: the events and the data were already there. |
+| lisp-mcp 0.5 MCP notifications | "X entered the debugger (level N): … Use debug-state, debug-backtrace, debug-invoke-restart" as a log message, and job-done log messages | MCP resource updates. Natively the message is an inbox turn, which the model actually reads |
+| ai-agent-protocol inbox (0.5–0.14) | `agent-run-post` (injected before the next generate), a post during the final answer takes one more step, subagent reports as tagged user turns (`<subagent id=… name=…>`) | No protocol change. The tool-source instructions hook moves out (the product appends `lisp-tools-instructions` itself, as H4a planned) |
+| Claude Code background tasks | A background job's end is reported to the agent without a poll | Its UI |
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **Repo split** | The bridge is in `lisp-mcp/agent`. The product decides what an event does when no turn runs, and how it looks, in cl-stack-code. Two contract branches, lisp-mcp first. | The bridge needs lisp-mcp's state, jobs and connection listeners, which are internals. Every host of `lisp-tools` (cl-stack-code, demos, a future SDK) gets events the same way. The idle policy, the banner and the status line are product UI. |
+| **Which entries are events** | A `:debug` whose `continuations` is NIL or `:unknown`: a thread no request is pending in (a background thread, a timer, an attached image's own threads). A `:debug` whose continuations name a pending request belongs to that request. A synchronous tool call returns it as its result (H4a's "DEBUGGER level N …", **not a hang**), and a detached job reports it as a `:job` event. So nothing is reported twice. | Swank and Slynk send the continuations with every `:debug`. They tell exactly whether a caller is waiting. Timing heuristics would race. |
+| **Jobs** | A job the caller was told is "Still running as job jN" (detached) produces a `:job` event when it finishes, fails or ends in the debugger. A job that finishes within its call's wait is that call's result. | Natively there was no job-done notification (H4a: "the model calls job-wait"). A long load that lands in the debugger is the most common asynchronous debugger entry. |
+| **Event object** | `image-event`: kind (`:debugger` `:job` `:debugger-return`), connection, thread, level, condition, restarts (`(index name description)` with NAME in the `restart:` resource form, e.g. `retry-later`), frames (top `+image-event-frames+` = 8), job, job-state, text. | A product can show the rule that would allow a restart without parsing text. |
+| **Text** | `<lisp-image-event kind="debugger" connection="C" thread="T" level="L">` LF, `C entered the debugger outside a tool call (thread T, level L).` LF, lisp-mcp's terse debugger rendering with 8 frames, then `The thread waits in the debugger until a restart is chosen: call debug-invoke-restart with connection "C" (debug-backtrace, debug-frame-locals and inspect-condition look first).` LF, `</lisp-image-event>` LF. Observe mode replaces the advice line with `This source is in observe mode: it cannot choose a restart. Tell the user which restart you would choose and why.` Job events: `<lisp-image-event kind="job" connection="C" job="jN" state="done\|failed">`, `Job jN (<summary>) finished\|failed after S s:`, the result, the closing tag. `debugger-event-text` is pure and exported. | The subagent-report idiom (`<subagent …>`). The body is the same text a tool call shows, so the model reads one format. |
+| **Queue and callback** | Events are queued on the source, oldest first. A new `:debugger` event for the same connection, thread and level replaces the old one. `lisp-tools-pending-events` copies the queue, `take-image-events` empties it, and `post-image-events tools run` takes the events and `agent-run-post`s each one's turn (`image-event-turn`). `:on-image-event` (a function of `tools event`) is called on the producing thread (the reader thread, or the job worker) after queuing. It must not block or call the source's image tools. Its errors become warnings. `:debugger-return` events are not queued: they go only to the callback, and they drop queued `:debugger` events of that thread at that level or deeper, which are stale. `close-lisp-tools` empties the queue. `:image-events nil` turns all of this off. | The queue keeps events that arrive while no turn runs, so a product can decide later. The callback lets a product wake its UI or its loop without polling. Posting from any thread is safe, because `agent-run-post` locks. |
+| **Restarts** | Unchanged H4a gate: `debug-invoke-restart` gives `("restart:<name>")` from the connection's newest debugger level (the background one when it is the newest), it is in `+approval-tools+`, rules decide, interactive approval dialogs, headless deny unless a rule allows it. On a level no request waits for, the tool returns `Invoked restart N [NAME] in thread T; no tool call was waiting on that thread, so its values are not shown.` instead of `; No values`. | The permission story stays one story. The new text tells the model the restart worked, and why no value comes back. |
+| **Observe mode** | A hard gate, unchanged. An observer still gets debugger events (watching a production image's errors is a use case), with the observe footer. It never runs a restart: `debug-invoke-restart` is not offered and is refused with `observe-mode-refused`. | A rule cannot lift it, and neither can `bypassPermissions` in the product. |
+| **Instructions** | With image events on and an image group offered, `lisp-tools-instructions` adds a line starting `IMAGE EVENTS:` that names `<lisp-image-event>`, after lisp-mcp's lines and before the `OBSERVE MODE` line. | The model should know what the tagged turns are before the first one arrives. |
+| **Wiring** | A per-state hook in lisp-mcp core, called by `connection-listener` for every connection event, and one called by `finish-job` for detached jobs. Both are set by `make-lisp-tools`. The MCP server's notifications are unchanged. | No repl-protocol change. |
+| **Moved out of H4b** | The MCP server's `--observe` goes to H4d (remote images, where observe is the default). The tool-source instructions hook in ai-agent-protocol is dropped: products append `lisp-tools-instructions`. `shell-timeout` restarts are an agent-tools slice, not the image layer. | The slice stays about the image debugger. None of the three is needed for the plan's H4 acceptance. |
+| **Stubs** | `lisp-mcp/agent::%not-implemented` in `src/agent/events.lisp`. Given: the `image-event` class and readers, the constants, the `make-lisp-tools` keys and slots. Stubbed: `debugger-event-text`, `lisp-tools-pending-events`, `take-image-events`, `image-event-turn`, `image-event-turn-p`, `post-image-events`. Left to the implementation: the core hooks, classification, the restart text, the instructions line. | — |
+
+### Surface (new in 0.7.0)
+
+```lisp
+;; package lisp-mcp/agent
+(make-lisp-tools … &key (image-events t) on-image-event)
+lisp-tools-image-events-p  lisp-tools-on-image-event (accessor)
+image-event  image-event-p  image-event-kind  image-event-connection  image-event-thread
+image-event-level  image-event-condition  image-event-restarts  image-event-frames
+image-event-job  image-event-job-state  image-event-text
++image-event-frames+ 8   +image-event-tag+ "lisp-image-event"
+(debugger-event-text connection debugger-state &key observe) → string   ; pure
+(lisp-tools-pending-events tools) → events   (take-image-events tools) → events
+(image-event-turn event) → llm user turn      (image-event-turn-p turn)
+(post-image-events tools run) → events posted (agent-run-post, oldest first)
+```
+
+### Contract (tests)
+
+15 new deftests (17 cases with the swank × slynk rows) in three new files of `lisp-mcp/agent/tests`. On the stubs all 17 fail (33 failing assertions, measured), and the 46 H4a cases pass, as do `lisp-mcp/tests`. The asynchronous debugger entry is a `sb-thread:make-thread` in a spawned `ros +Q run` image whose `restart-case` offers `retry-later`.
+
+| File | Covers |
+|------|--------|
+| `bridge-test` | defaults and constants, the callback accessor, the exact debugger text (8 of 12 frames) against lisp-mcp's renderer, the observe footer, event turns and `image-event-turn-p` (user turns only, the tag leads), the `IMAGE EVENTS:` line and its place, closed sources |
+| `bridge-live-test` | swank × slynk: a background debugger is one queued event with every slot, the callback sees it once, the restart gate sees it (`restart:retry-later`, asks), take, the new restart text, the `:debugger-return` event, not queued; a restart without a take drops the stale event; swank × slynk: a tool call's own debugger is its result and no event, `=> 42` after the restart; detached jobs as `:job` events (done, and ended in the debugger, reported once), a call that finishes in time is no event; `:image-events nil`; close drops events |
+| `bridge-agent-test` | **an agent answers a background debugger**: the event reaches the run's inbox before the next generate (after the eval's result, once), a `restart:abort` deny rule refuses the wrong restart with its feedback, `retry-later` runs; an unattended run denies the restart (no rule) and the thread stays in the debugger; an event while no turn runs waits in the queue and becomes the next turn with `continue-ai-agent` |
+
+No throwaway prototype was run, so the implementation may find test bugs. Those go through a contract-fix commit, re-sealed, as in H4a.
+
+---
+
 ## Roadmap (H4b–H4e)
 
 | Slice | Content | Depends on |
 |-------|---------|------------|
-| **H4b** | **Debugger → agent inbox bridge.** A debugger entry in a spawned or attached image, outside any tool call (another thread), becomes an inbox message for the agent: condition, restarts, top frames. Choosing a restart goes through `debug-invoke-restart` and its `restart:` rule. `shell-timeout`'s `continue` / `run-in-background` restarts are offered the same way. The same slice adds observe mode to the MCP server (`--observe`) and a tool-source instructions hook | H3 (inbox), repl-protocol events |
+| **H4b** | **Locked**: [H4b — locked](#h4b--locked). Debugger → agent inbox bridge in lisp-mcp/agent 0.7.0, product wiring in cl-stack-code 0.6.0. The MCP `--observe` flag moves to H4d, the tool-source instructions hook is dropped, and `shell-timeout` restarts go to agent-tools | H3 (inbox), repl-protocol events |
 | **H4c** | **Image ↔ source drift + promote to source.** Compare definitions in the image (xref / `find-definitions`, function source forms) with the files (`source-outline` + hashes). Drift blocks a commit (an H6 revision hook). "Promote" writes the image's version of a form to its file with `edit-replace` | revision-protocol, H4a |
-| **H4d** | **Remote and confined images.** SSH port forward, Swank secret, Podman via `agent-runtime-backend-podman`, observe mode as the default for production attaches, `image:` resources with host names | agent-runtime-protocol |
+| **H4d** | **Remote and confined images.** SSH port forward, Swank secret, Podman via `agent-runtime-backend-podman`, observe mode as the default for production attaches, the MCP server's `--observe` flag (from H4b), `image:` resources with host names | agent-runtime-protocol |
 | **H4e** | **Checkpoints, trace and profile.** Reload recipe (systems + evaluated forms journal), `fork` on Unix, saved cores. `repl-protocol` trace / profile GFs and their tools | repl-protocol 0.3 |
