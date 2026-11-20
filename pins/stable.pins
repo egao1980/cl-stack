@@ -261,7 +261,7 @@
   ("repl-backend-slynk" "0.2.2")
   ("lisp-mcp" "0.6.0")
   ("agent-tools" "0.2.0")
-  ("cl-stack-code" "0.1.1")
+  ("cl-stack-code" "0.3.0")
   ;; Messaging / cache / directory / object store / config
   ("mq-protocol" "0.1.0")
   ("mq-backend-amqp" "0.1.0")
