@@ -124,6 +124,9 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `tui-markdown` — markdown and diff rendering for `tui-protocol` (`stack-tui-md`): a CommonMark-subset parser (plain-list AST) and renderer to styled runs, a `markdown-stream` whose completed blocks never re-render, and a unified / side-by-side diff renderer for `diff-protocol` values and unified text with word-level highlighting. H1c contract.
   **Brief:** [capabilities/tui-markdown.md](capabilities/tui-markdown.md)
 
+- `markdown-protocol` — CommonMark-subset markdown parser (`stack-markdown`) with GFM tables and `~~strike~~`: `parse-markdown` → a plain-list block / inline AST compared with `EQUAL`. No dependencies. Used by `tui-markdown` and `doc-extract-protocol`'s `parse-markup`.
+  **Brief:** [capabilities/markdown.md](capabilities/markdown.md)
+
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
 
