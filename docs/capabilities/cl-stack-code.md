@@ -1,7 +1,7 @@
-# cl-stack-code (H3a, H3b): the coding agent's headless and interactive shell
+# cl-stack-code (H3a–H3c): the coding agent's headless and interactive shell, and its sessions
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H3 ("Product shell: interactive / `-p` / JSON stream / RPC / SDK; settings layering (user, project, local); … `AGENTS.md` discovery"). The repo was decided there (Decision 1).
-**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0** ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b locked** (the interactive mode, version target **0.2.0**): [H3b — locked](#h3b--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
+**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0** ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c locked** (sessions and steering, version target **0.3.0**): [H3c — locked](#h3c--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
 
 `cl-stack-code` is the product: a coding agent CLI on cl-stack. H3a is the **headless** half only:
 
@@ -334,7 +334,7 @@ On the stubs every H3b case fails, and every H3a case passes. No throwaway proto
 
 ### Non-goals (H3b)
 
-- Sessions: `/tree`, `/fork`, `/clone`, `--continue` / `--resume`, persistent input history, and steering mid-turn with `agent-run-post` (H3c).
+- Sessions: `/tree`, `/fork`, `/clone`, `--continue` / `--resume`, persistent input history, and steering mid-turn with `agent-run-post` (H3c, [locked](#h3c--locked)).
 - RPC mode and `--input-format stream-json` (H3d). The SDK, prompt templates as `/name`, skills, and project trust (H3e).
 - Running the external editor. Ctrl-G emits `edit-event`, and H3b ignores it.
 - Showing rules saved by "always" in `/permissions` during the same session (they show from the next start), rule editing in the UI, and a cost table.
@@ -343,13 +343,134 @@ On the stubs every H3b case fails, and every H3a case passes. No throwaway proto
 
 ---
 
+## H3c — locked
+
+Contract: branch `agent/h3c-contract-5904` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.3.0**. It holds the stubs, which call `%not-implemented`, and the Rove tests in `cl-stack-code/tests` that define them. The file headers in `src/sessions.lisp`, `src/session-views.lisp`, `src/interactive.lisp` ("H3c"), `src/headless.lisp` and `src/program.lisp` ("H3c") give the exact rules. This section summarizes them. The implementation goes through **team-solve** (`.team-solve/task.md`: `system: cl-stack-code`, `test-system: cl-stack-code/tests`, this brief).
+
+Every conversation, headless or interactive, is a session: a `revision-protocol` store with one revision per turn and a `head` ref. `--continue`, `--resume ID` and `--session-id ID` pick it; `--fork-session` resumes into a copy. The interactive mode adds `/tree`, `/fork`, `/rewind`, `/clone`, `/export` and `/session`, plus steering: a message sent into the running turn instead of queued after it.
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **Store** | `session-store`: a subclass of `revision-protocol`'s `in-memory-store`, written through to one directory per session. Every write (`commit-revision`, `move-ref`, `tag-revision`, `delete-ref` as `:around` methods) takes the session's lock file, reads what other processes wrote since, runs the in-memory method and writes the new files. Rejected: **conversation-backend-sql on SQLite**, because it stores flat turn lists keyed by session (no DAG, no refs, no CAS) and would bring `sql-query-sqlite3` and a native library into a CLI that has none; **a new general file backend** (`revision-backend-file`), because policy would make it a first-party repo with its own contract, and one product needs it. The store is product-internal, and the graph, CAS, walks and restarts are the in-memory store's own, so the R0a law suite already covers them. | A session is small, append-mostly data that one or two processes touch. Files plus the in-memory store's semantics keep every revision-protocol query working with no new dependency. |
+| **Layout** | `<data-dir>/sessions/<project-key>/<id>/`, holding `session.sexp` (id, project directory, `cloned-from`, version), `revisions/<rev>.sexp` (one immutable file per revision: id, parents, recorded time as unix seconds + nanoseconds, message, provenance, content), `refs/<name>` (`<rev id>` LF, tags `tag <rev id>` LF + annotation), and `lock` (`<pid> <universal-time>` LF while a write runs). `<project-key>/last` names the session that committed last. Every file is written to a temporary name and renamed. It is read with `*read-eval*` NIL and keywords only, and an unreadable file signals `session-error` naming it. | Readers never see half a file. Revision files never change, so concurrent readers need no lock. sexp keeps the store dependency-free and diffable. |
+| **Data directory** | `user-data-directory`: `$CL_STACK_CODE_DATA_DIR`, else `$XDG_DATA_HOME/cl-stack-code/`, else (Windows) `%LOCALAPPDATA%\cl-stack-code\`, else `~/.local/share/cl-stack-code/`. Empty or relative values are ignored. `run-cli` and `make-code-program` take `:data-dir`, and the tests always pass a temporary one. | XDG on Unix and the Windows convention. Config stays under `~/.config` as in H3a. Sessions are data, not configuration. |
+| **Project key** | The project directory (project root, else working directory), as a native namestring without the trailing separator, with every character other than an ASCII letter or digit replaced by `-` (`/Users/me/proj` → `-Users-me-proj`). | Claude Code's scheme, readable on disk. `session.sexp` records the real path. |
+| **Ids** | Session ids are 32 lowercase hex characters (H3a's format). `--session-id` and `--resume` also accept a UUID, which is normalized. `--resume` and `open-session` take a unique prefix of at least 4 characters. Revision ids are the in-memory store's 40 hex characters, and clones keep them. | H3a's `session_id` becomes the store's id unchanged. |
+| **Turn record** | A revision's content is a `turn-record` plist: `prompt` (as typed), `turns` (the `llm:turn-state`s the turn added, never `:system`), `replace` (TURNS is the whole conversation, for a run that rewrote its history), `finish` (`:stop :max-steps :canceled :failed`), `model`, `permission-mode`, `usage`, `steering` (texts as typed), `version`. The message is the prompt's first line, cut to 72 characters. The provenance is `(:kind :turn)`. The conversation at a revision is the fold of the records on its first-parent line. | Deltas keep a long session linear on disk. Storing turn states keeps provider parts (tool calls, thinking signatures) exact. The system prompt is rebuilt by every process, so edited `AGENTS.md` files apply on resume. |
+| **What a resume restores** | The conversation and the model (`--model` > the head record's model > settings > default). Rules, mode, env and max turns come from the current settings and flags. | A stored `bypassPermissions` must not come back silently, and a project file's new deny rule must apply. |
+| **Laziness** | `create-session` writes nothing. A session's directory appears with its first write, so starting and quitting leaves no session. | No empty sessions in `--list-sessions`. |
+| **Concurrency** | Each store remembers its **base**: the head it read or last wrote. `commit-turn`, `move-session-head`, `rewind-session` and `fork-turn` move `head` by compare-and-swap from it, under the lock, against the state on disk. A lost race signals **`session-conflict`** (expected, actual) and writes nothing. `commit-turn` offers the restart **`fork-session`**, which saves the turn as a new session cloned at the expected head. The lock waits `*session-lock-timeout*` (5 s) and then signals `session-locked`. A lock file older than 30 s is stale and is broken. | revision-protocol's `move-ref` CAS made cross-process: the lock makes the CAS atomic across processes, and the base gives it the right expected value. No turn is lost and no history is interleaved. |
+| **Conflict policy** | Headless and interactive both take `fork-session`. `-p` writes `cl-stack-code: session OLD changed in another process; this turn was saved as session NEW` to stderr, the `result` carries NEW and the exit code is the run's. The TUI switches to NEW with a notice. | A clear error that keeps the work. Two terminals on one session diverge instead of corrupting each other. |
+| **Headless** | Before the run: `check-session-flags`, then the session (`--continue` → `last`; `--resume`; else new, with `--session-id` or random; `--fork-session` → `clone-session` at the head). The run gets `session-turns` + the prompt. Once it has started, the turn is committed **before** the result is written, whatever its outcome (failed, max turns and interrupted runs too). Every event's `session_id` is the store's id. **The JSON shapes are unchanged.** `--list-sessions` prints `session-summary-lines` and exits 0. | Claude Code's `-c` / `-r` / `--session-id` / `--fork-session`. `$(cl-stack-code -p …)` scripts keep working. |
+| **Flags** | `-c/--continue`, `-r/--resume ID`, `--session-id ID`, `--fork-session`, `--list-sessions`. Usage errors (exit 2): `--continue` with `--resume`; `--fork-session` alone; `--session-id` with resume and no fork; a bad id; `--list-sessions` with any session flag; an existing `--session-id`. A missing session is `session-not-found` (exit 2). | Each combination either means one thing or is refused. |
+| **Interactive start** | `make-code-program` resolves the session as `-p` does, and signals before the terminal is touched. A resumed session starts with `session-entries` as the transcript, its prompts as the input history (the persistent history H3b deferred), and its id. | One resolution path for both modes. |
+| **Interactive turns** | Each terminal turn end (not `:approval`) commits the turn on the agent thread before the `:turn-end` reaches the UI. A commit error shows as an error entry, and those turns go into the next commit. | Disk state is current whenever the UI goes idle, which the tests rely on. |
+| **Commands** | `/session` (id), `/tree` (`session-tree-lines` as a notice), `/fork [AT]` (head → AT's parent, AT's prompt back into the input; AT is a turn number on the current line or an id prefix from `/tree`; default the last turn), `/rewind [N]` (head N turns back, default 1; the turns stay in `/tree`), `/clone` (continue in a copy of the current line), `/export FILE` (markdown, or JSON for `.json`), `/steer MESSAGE`. `/clear` now also starts a new session. While busy, `/session`, `/tree` and `/steer` work. The others give H3b's "not available while a turn runs" error. | pi's tree commands. `/fork` re-asks (pi), `/rewind` just goes back (Claude Code's conversation rewind; files are H5). |
+| **Tree** | Depth first in insertion order. `●` marks the head's line, `○` other branches, and `  (head)` the head. A straight line does not indent. Branch points draw `├─ ` / `└─ ` with `│  ` continuations. Long messages are cut to the width with `…`. | A 50-turn linear session stays 50 flat rows, and only real branches indent. |
+| **Export** | Markdown: `# Session <id>`, `## Turn N`, `**User**` / `**Assistant**` blocks, `**Tool** \`name\` args` (+ ` (error)`) with the result in a fence longer than any backtick run in it, `_notice_`. JSON: `session_id`, `project`, `head`, `turns[]` with revision, parent, prompt, model, permission_mode, finish, usage, steering and messages (typed parts). | Readable and lossless enough to re-import later. |
+| **Steering vs follow-up** | **Enter** while a turn runs queues a **follow-up** (H3b, unchanged). **Ctrl-T** (or `/steer`) sends **steering**: `agent-run-post` on the agent thread, which ai-agent-protocol injects before the run's next generate. A post that arrives while the model's final answer streams makes the loop take one more step. The run's `:inbox` event becomes `(:steered TEXTS)` and adds the user entry where the model took it. A post that comes too late (the run had finished) stays pending and becomes the **first** queued follow-up. Esc or a failure returns pending steering, then the queue, to the input, and empties the run's inbox. Rows while busy: `steering: …` above `queued: …` above the spinner. Idle, Ctrl-T is Enter. | **No ai-agent-protocol change is needed.** `agent-run-post` and the `:inbox` event exist since 0.5, and 0.13.0 (#29) makes continue-after-cancel clean. Enter stays the follow-up key because H3b locked it, and Alt/Shift+Enter is already newline. Ctrl+Enter is not distinguishable on legacy terminals. Ctrl-T is a distinct control byte that is unbound in `w:text-input` and reaches the program in raw mode (ISIG off, so no SIGINFO on macOS). Headless steering is H3d's RPC `steer`. |
+| **Dependencies** | Adds `revision-protocol` ≥ 0.3.0 and `datetime-protocol` ≥ 0.1.3. `ai-agent-protocol` ≥ **0.13.0** (fresh turn after cancel, #29), so the H3b `%reopen-run` workaround can go. | All published. |
+| **Stubs** | `%not-implemented` is back in `src/package.lisp`. Given (not stubs): the conditions, `turn-record` and its constructor, the `session-store` class and its readers, the constants and `*session-lock-timeout*`, the new `invocation` slots and their parsing, the core's new state slots, the `:data-dir` keywords and `+help-text+`. Stubbed: every new function, the four write-through `:around` methods, the core's `%session-command` / `%session-event`, and the program's new effects. `run-cli`'s headless path is as in 0.2, so the H3a and H3b tests keep passing on the stubs. | — |
+
+### Surface (new in 0.3.0)
+
+```lisp
+;; where
+(user-data-directory &key getenv (platform :posix|:windows))   → directory
+(sessions-directory cwd &key data-dir)    → <data-dir>/sessions/<key>/
+(project-session-key directory)           → "-Users-me-proj"
+(normalize-session-id string)             → 32 hex | NIL
+
+;; records
+turn-record  (make-turn-record &key prompt turns replace-p finish model permission-mode usage steering version)
+record-prompt record-turns record-replace-p record-finish record-model record-permission-mode
+record-usage record-steering record-version
+(record-content record) (content-record plist) (revision-record revision)
+
+;; store
+session-store (rev:in-memory-store)  session-id session-directory session-project-dir
+                                     session-cloned-from session-base
++head-ref+ "head"  +session-format+ 1  *session-lock-timeout* 5  +stale-lock-seconds+ 30
+(create-session dir &key id project-dir)  (open-session dir designator)  (sync-session store)
+(list-sessions dir)  (last-session dir)
+(session-head store)  (session-line store &optional d)  (session-records store &optional d)
+(session-turns store &optional d)
+(commit-turn store record &key expected id)        → (values revision store)
+(resolve-turn store at)  (move-session-head store d &key expected)
+(rewind-session store n)  (fork-turn store at) → (values head prompt)
+(clone-session store &key id at sessions-dir)
+
+;; views
+(session-entries store &optional d)  (session-tree-lines store &key width)
+(session-summary-lines dir)  (export-session store stream &key format designator)
+
+;; command line
+invocation-continue-p invocation-resume invocation-session-id invocation-fork-session-p
+invocation-list-sessions-p  (check-session-flags invocation)
+(run-cli … &key data-dir)  (make-code-program … &key data-dir)
+
+;; core
+state-steering  state-session-id  (make-interactive-state … &key session-id)
+;; events (:steer T) (:steered TS) (:session ID) (:session-reset :entries E :input T :notice M)
+;; effects (:steer T) (:tree) (:fork AT) (:rewind N) (:clone) (:export FILE)
+```
+
+### Conditions
+
+```
+code-error
+└── session-error (session)                          exit 1
+    ├── session-not-found (designator)               exit 2 (it comes from the flags)
+    ├── session-conflict (expected actual)           commit-turn: restart fork-session (&optional id); abort
+    ├── session-locked (file)
+    └── session-turn-not-found (designator)          /fork AT, /rewind N
+```
+
+`ref-conflict` from raw `revision-protocol` calls on a `session-store` keeps its own restarts (`use-current`, `retry`). They run with the lock held, against the synced state.
+
+### Key bindings (added)
+
+| Where | Key | Action |
+|-------|-----|--------|
+| input, busy | Ctrl-T | steer: send the input into the running turn |
+| input, idle | Ctrl-T | send (as Enter) |
+| input, busy | Enter | queue a follow-up (H3b) |
+
+### Contract tests
+
+`cl-stack-code/tests` grows by 6 files (one of them helpers): **76 new deftests (103 cases with the parametrized rows), about 470 `ok` forms.** The 181 H3a + H3b deftests (238 cases) stay. Their version checks now expect 0.3.0, and their helpers pass a private `:data-dir`. Every LLM interaction goes through the scripted mock backend. Every file test uses a temporary data or sessions directory. Two store objects on one directory stand in for two processes, and the headless and TUI conflict tests use a second thread and a gated mock step.
+
+| File | Covers |
+|------|--------|
+| `session-support` | temp sessions directories, records with tool calls, commits, turn summaries, fixed clocks |
+| `session-store-test` | data-directory precedence (9 parametrized rows), project keys, id forms (9 rows), the record plist, lazy creation, commit and reopen (recorded times kept), files on disk (immutable revisions, `refs/head`, `last`, lock released), replace records, messages and caller ids, prefixes and ambiguity, listing order under fixed clocks, summary lines, existing ids, unreadable files, cross-store `session-conflict` (slots, nothing written), `fork-session` and abort, explicit `:expected`, lock timeout, stale lock, CAS linearizable for 2 stores × 15 threaded commits with `retry`, raw ref and tag writes persisting, `sync-session`, clones (line only, same ids, at a turn, empty), rewinds, `resolve-turn`, `fork-turn`, `move-session-head` CAS |
+| `session-view-test` | entries (tool results, errors, steering, injected instructions skipped, interrupted), exact tree lines (branches, marks following the head, width cut, two roots, empty), exact markdown (fence lengthening, errors, notices), JSON fields |
+| `session-cli-test` | flag parsing, flag combinations (6 rows), a run is a session in the data directory, resume carries the conversation, prefix and UUID, `--continue`, not-found exit 2, `--session-id`, `--fork-session` (with `--session-id`, with `-c`), the session's model vs `--model`, failed and max-turn runs saved, stream-json ids, `--list-sessions`, a concurrent commit forking the turn |
+| `session-core-test` | `/session`, every command's effect, usage errors (5 rows), busy rules, `:steer` busy and idle, `:steered` placement, untaken steering becoming the next turn, cancel and failure restoring steering then the queue, `:session-reset`, help text |
+| `session-program-test` | each turn saved, resume (transcript, history, history sent), `--continue` and resume errors before the terminal, the **`/tree` screen snapshot**, `/rewind`, `/fork` with the prompt back, `/clone`, `/export` (md and json), `/clear` as a new session, Ctrl-T steering reaching the same turn (no extra request, transcript order, record), Ctrl-T idle, steering and follow-up rows and order, Esc restoring steering, a concurrent commit forking the session |
+
+On the stubs, 101 of the 103 H3c cases fail, and every error is a `%not-implemented` one. The two that pass, `session-cli-parses-session-flags` and `core-help-mentions-sessions-and-steering`, check given code. All 238 H3a and H3b cases pass. No throwaway prototype was run, so the implementation may find test bugs. Those go through a contract-fix commit, as in H3a and H3b.
+
+### Non-goals (H3c)
+
+- Restoring files with a rewind, checkpoints as composite revisions (H5).
+- Steering from `-p`, `--input-format stream-json`, RPC `steer` / `follow_up` (H3d).
+- An interactive session picker (`/resume`, `--resume` without an id), session names and titles, deleting or pruning sessions, GC.
+- Compaction (cl-stack-code does not enable it; `replace` records are read but not written).
+- A project-wide input history across sessions, and hosted sharing.
+- Cross-machine sessions. The lock assumes one filesystem with atomic rename and exclusive create, so not NFS.
+
+---
+
 ## Roadmap (H3b–H3e)
 
 | Slice | Scope | Builds on |
 |-------|-------|-----------|
-| **H3b** interactive | Locked: [H3b — locked](#h3b--locked) | H1, H3a |
-| **H3c** sessions | Sessions as a `revision-protocol` store: one revision per turn, `--continue`, `--resume <id>`, `/tree`, `/fork`, `/clone`, export; `session_id` becomes the store's id; steering vs follow-up queue on `agent-run-post` | R0, H3a |
-| **H3d** RPC | `--mode rpc`: JSON-RPC 2.0 over stdio (`rpc-protocol-json` + `rpc-backend-stdio`) — prompt, steer, follow-up, abort, approve, deny; the stream-json events as notifications; `--input-format stream-json` for `-p` | H3a, H3c |
+| **H3b** interactive | Shipped (0.2.0): [H3b — locked](#h3b--locked) | H1, H3a |
+| **H3c** sessions | Locked (0.3.0): [H3c — locked](#h3c--locked). Sessions as a file-backed `revision-protocol` store; `--continue` / `--resume` / `--session-id` / `--fork-session` / `--list-sessions`; `/tree` `/fork` `/rewind` `/clone` `/export`; steering (Ctrl-T) vs follow-up (Enter) on `agent-run-post` | R0, H3a, H3b |
+| **H3d** RPC | `--mode rpc`: JSON-RPC 2.0 over stdio (`rpc-protocol-json` + `rpc-backend-stdio`) — prompt, steer (H3c's `agent-run-post` path), follow-up, abort, approve, deny, and the session commands (tree, fork, rewind, clone, export); the stream-json events as notifications; `--input-format stream-json` for `-p` | H3a, H3c |
 | **H3e** SDK and configuration | A Lisp SDK (start a session, send prompts, receive events as CLOS objects, answer approvals); skills (`SKILL.md` via `steer-protocol`), prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, `@file` imports, project trust (project allow rules and `env` wait for the user's yes) | H3a–H3d |
 
 After H3: the image layer (H4), plan → project → approve (H5), extensions and a single binary (H6).
