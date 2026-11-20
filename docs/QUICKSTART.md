@@ -43,7 +43,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 
 | System | OCI tag | Notes |
 |--------|---------|--------|
-| `cl-repository-client` | **0.27.19** | bootstrap from `ghcr.io/egao1980/cl-repository/…`; installs `:defsystem-depends-on` (e.g. `asdf-native`) before reading the `.asd` |
+| `cl-repository-client` | **0.27.26** | bootstrap from `ghcr.io/egao1980/cl-repository/…`; installs `:defsystem-depends-on` (e.g. `asdf-native`) before reading the `.asd`; a package drops sibling `.asd` files it does not provide (cl-repository#117) |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.1** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
 | `yaml-protocol` | **0.2.1** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
@@ -83,9 +83,9 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
 | `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
-| `http-protocol` | **0.3.10** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
+| `http-protocol` | **0.4.0** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
-| `cl-stack-pathlib` | **0.4.0** | CLOS path + FS (`stack-pathlib`; `zip://`; ranged reads, SHA-256, atomic + `:expected-hash` writes, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md) |
+| `cl-stack-pathlib` | **0.6.3** | CLOS path + FS (`stack-pathlib`; `zip://`; ranged reads, SHA-256, atomic + `:expected-hash` writes, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
 | `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
@@ -98,7 +98,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sql-orm` | **0.2.0** | CLOS ORM (`defmodel`); schema algebra: `apply-ops-to-snapshot`, `alter-column-op`, `diff-schema :complete`, `reflect-schema` (SQLite, PostgreSQL) |
 | `sql-migrate` | **0.1.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
 | `diff-protocol` | **0.4.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp, text (Myers / histogram, diff3) and tree engines; `:unified` render + git-diff parse; engine extension API (`register-diff-engine`, hooks, `make-conflict`) · [brief](capabilities/diff.md) |
-| `revision-protocol` | **0.2.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
+| `revision-protocol` | **0.3.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
+| `revision-backend-git` | **0.4.0** | revision-protocol over the git CLI (`stack-rev-git`); needs git ≥ 2.56 · [brief](capabilities/revision-backend-git.md) |
+| `revision-backend-jj` | **0.2.1** | revision-protocol over the jj CLI (`stack-rev-jj`) · [brief](capabilities/revision-backend-jj.md) |
+| `diff-backend-lisp-source` | **0.2.2** | diff engine `:lisp`: form-level diffs keyed like lisp-mcp locators (`stack-diff-lisp`) · [brief](capabilities/diff-backend-lisp-source.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
 | `sql-backend-postgres` | **0.1.0** | postgres connectivity |
@@ -106,8 +109,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `crypto-protocol` | **0.2.0** | seal/unseal + hazmat + **sign/verify** (`stack-crypto`) |
 | `crypto-backend-ironclad` | **0.2.1** | digest/HMAC/AEAD/sign + secrets (Ironclad; UUID v7) |
 | `secrets-protocol` | **0.1.3** | CSPRNG/tokens/UUID v4+v7/password KDF API |
-| `process-protocol` | **0.2.0** | subprocess `run`/`launch` + `set-signal`/`raise-signal` (`stack-process`) · [cookbook](cookbooks/process.md) |
-| `process-backend-uiop` | **0.1.0** | UIOP backend (default) |
+| `process-protocol` | **0.4.1** | subprocess `run`/`launch` + `set-signal`/`raise-signal`; env merge, octet I/O, `:process-group` + `kill :tree`, `process-pid` (`stack-process`) · [cookbook](cookbooks/process.md) |
+| `process-backend-uiop` | **0.3.1** | UIOP backend (default); Windows tree kill via job object |
 | `named-readtables` | **0.9** | fset dep (SBCL 2.6 pin, not QL 20250622) |
 | `fset` | **2.4.4** | functional sets/maps (`fset2`); spec-protocol runtime |
 | `misc-extensions` | **4.3.2** | fset |
@@ -132,7 +135,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `repl-protocol` | **0.2.7** | live image: eval, debugger, stepping, inspector, channels (input after an aborted channel debugger is never dropped); debugger levels claimed per request (`stack-repl`) |
 | `repl-backend-swank` | **0.2.2** | SLIME Swank wire |
 | `repl-backend-slynk` | **0.2.2** | Sly Slynk wire (+ mrepl channels) |
-| `lisp-mcp` | **0.5.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
+| `lisp-mcp` | **0.6.0** | Common Lisp MCP server (source / edit / live image); terse output, stored long output, background jobs; `--tools` groups (`code` / `image`), `edit-structure` · [tutorial](tutorials/lisp-mcp-session.md) · [cookbook](cookbooks/lisp-mcp.md) |
 | `blackboard-protocol` | **0.2.3** | KSAR board + COW workspaces (`stack-blackboard`) · [cookbook](cookbooks/blackboard.md) |
 | `capability-protocol` | **0.3.0** | `defcapability` + registry (`stack-capability`); `:llm-compaction` |
 | `schema-protocol-json` | **0.1.3** | `:json` schema-document backend (LLM `:output`, AG-UI, MCP tools) |
@@ -141,7 +144,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
 | `llm-protocol` | **0.5.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage, `server-compact` + `portable-turns`, lossless `part-state` (`stack-llm`) · [cookbook](cookbooks/llm.md) |
-| `conversation-protocol` | **0.3.0** (`/summary` **0.4.0**) | session store + buffer / window / summary; `compact-turns`; `provider-compaction-memory` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
+| `conversation-protocol` | **0.4.0** | session store + buffer / window / summary; `compact-turns`; `provider-compaction-memory` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
 | `steer-protocol` | **0.3.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) + path-scoped `AGENTS.md` discovery, base prompt builder · [cookbook](cookbooks/steer.md) |
 | `rag-protocol` | **0.1.3** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
 | `rag-backend-memory` | **0.1.0** | in-process cosine vector store |
@@ -152,15 +155,19 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
-| `llm-protocol-openai` | **0.4.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream; `prompt_cache_key` + cached-token usage |
-| `llm-protocol-anthropic` | **0.3.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
+| `llm-protocol-openai` | **0.5.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream; `prompt_cache_key` + cached-token usage |
+| `llm-protocol-anthropic` | **0.4.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
 | `llama-cpp` | **0.2.0** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.10.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md) |
+| `ai-agent-protocol` | **0.13.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
+| `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
+| `cl-stack-code` | **0.1.1** | coding agent CLI, headless `-p` (H3a) · [brief](capabilities/cl-stack-code.md) |
+| `doc-extract-protocol` | **0.3.0** | document extraction (PDF / office / docling / unstructured backends) |
+| `doc-extract-render` | **0.1.1** | render extracted documents |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
-| `http-backend-async` | **0.2.19** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2); a burst waits FIFO for a free stream (`*h2-stream-wait-timeout*` 2 s, `*h2-max-stream-waiters*` 32) instead of dialing |
+| `http-backend-async` | **0.2.21** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2); a burst waits FIFO for a free stream (`*h2-stream-wait-timeout*` 2 s, `*h2-max-stream-waiters*` 32) instead of dialing |
 | `http2` | **2.1.8** | fork; 64 KiB HPACK string / header-block limits, reset per block; header stream errors keep HPACK in sync; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers; ignore unknown SETTINGS; Homebrew `libssl` by absolute path on macOS |
 | `http-backend-dexador` | **0.1.5** | sync HTTP/1.1 (soft-loads CE codecs) |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
@@ -174,22 +181,24 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `a2a-backend-grpc` | **0.2.0** | `/lf.a2a.v1.A2AService/*` via `rpc-protocol-grpc` |
 | `ag-ui-backend-sse` | **0.2.1** | POST `RunAgentInput` → SSE |
 | `ag-ui-backend-protobuf` | **0.4.0** | JSON-as-WKT (`google.protobuf.Value`, `+proto`) and official `Event` oneof (`application/vnd.ag-ui.event+oneof`) |
-| `ag-ui-backend-tui` | **0.1.0** | event sink + transcript (not a wire client) |
+| `ag-ui-backend-tui` | **0.1.1** | event sink + transcript (not a wire client) |
 | `terminal-protocol` | **0.2.0** | headless terminal emulator: feed octets, frames, input encoding, viewport search, selection (`stack-terminal`) · [cookbook](cookbooks/terminal.md) |
 | `terminal-backend-ghostty` | **0.3.0** | default emulator backend on libghostty-vt 1.0 (`ghostty-vt` **0.3.1** overlays) |
 | `terminal-backend-lisp` | **0.2.0** | pure-Lisp VT core backend; same parity corpus |
 | `pty-protocol` | **0.1.0** | run programs on pseudo-terminals: spawn, read/write, resize, signal (`stack-pty`) · [cookbook](cookbooks/terminal.md) |
 | `pty-backend-native` | **0.2.1** | forkpty-style on Unix, ConPTY on Windows (`libpty-cl`) |
-| `tui-protocol` | **0.1.0** | Elm-architecture TUIs on a cell canvas (`stack-tui`) · [tui](capabilities/tui.md) |
+| `tui-protocol` | **0.2.0** | Elm-architecture TUIs on a cell canvas (`stack-tui`) · [tui](capabilities/tui.md) |
 | `tui-backend-terminal` | **0.1.0** | headless TUI driver on any `terminal-protocol` emulator (tests, agents) |
-| `tui-backend-tty` | **0.1.0** | real terminal for `tui-protocol`: termios raw mode + `SIGWINCH` (Unix), console VT mode (Windows), CFFI into libc / kernel32; restores on any exit · [tui](capabilities/tui.md) |
+| `tui-backend-tty` | **0.1.1** | real terminal for `tui-protocol`: termios raw mode + `SIGWINCH` (Unix), console VT mode (Windows), CFFI into libc / kernel32; restores on any exit · [tui](capabilities/tui.md) |
+| `markdown-protocol` | **0.1.0** | CommonMark-subset parser + GFM tables (`stack-markdown`) · [brief](capabilities/markdown.md) |
+| `tui-markdown` | **0.2.0** | markdown + diff rendering for `tui-protocol` (`stack-tui-md`) · [brief](capabilities/tui-markdown.md) |
 | `image-protocol` | **0.1.0** | decode / encode / probe / convert images over several backends (`stack-image`) · [image](capabilities/image.md) |
 | `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
 | `http-server-backend-hunchentoot` | **0.2.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.2.0** | Unix / libev second backend |
-| `cli-protocol` | **0.1.0** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
-| `cli-backend-clingon` | **0.1.0** | default CLI backend |
+| `cli-protocol` | **0.2.1** | CLI parse/run + Windows dialects ([cookbook](cookbooks/cli.md)) |
+| `cli-backend-clingon` | **0.2.1** | default CLI backend |
 | `cli-backend-adopt` | **0.1.0** | alternate CLI backend |
 | `serdes-protocol` | **0.2.2** | format encode/decode + Gray/JSONL/events + media types · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.2** | serdes `:sexp` implementor |

@@ -23,7 +23,7 @@
 
 - `event-protocol` — run / defer / cancel / sleep / register-io / wake-call / submit / close-event-loop; multi-backend + default pin  
   **Brief:** [capabilities/event-protocol.md](capabilities/event-protocol.md) — DX = **promises**; default **libuv**, second **libev**. `submit` `:executor` is a thunk runner, not a pool type — backends may plug in [`cl-stack-executors`](https://github.com/egao1980/cl-stack-executors).
-- `http-protocol` — sync + async send; request/response values  
+- `http-protocol` (OCI **0.4.0**) — sync + async send; request/response values  
   **Brief:** [capabilities/http-protocol.md](capabilities/http-protocol.md)
 - `ws-protocol` — connect, send, on-message, ping, close  
   **Brief:** [capabilities/ws-protocol.md](capabilities/ws-protocol.md)
@@ -45,7 +45,7 @@
 
 ## Wave-2 app tooling (briefs locked)
 
-- `cli-protocol` — command tree / parse / run; default **clingon**, alternate **adopt**  
+- `cli-protocol` (OCI **0.2.1**) — command tree / parse / run; default **clingon**, alternate **adopt**  
   **Brief:** [capabilities/cli.md](capabilities/cli.md) (#103)
 - `io-protocol` — ObjectInput/Output–like **CLOS shell** (`read-object` / `write-object`); **no serdes**; OCI **0.1.0**  
   **Brief:** [capabilities/io.md](capabilities/io.md) · **Cookbook:** [cookbooks/io.md](cookbooks/io.md)
@@ -71,7 +71,7 @@
   **Brief:** [capabilities/crypto.md](capabilities/crypto.md) (#104) · cookbook [crypto.md](cookbooks/crypto.md)
 - `secrets-protocol` — CSPRNG / tokens / compare / UUID / password KDF; default OS via Ironclad  
   **Brief:** [capabilities/secrets.md](capabilities/secrets.md) (#104)
-- `process-protocol` — subprocess spawn/pipes (UIOP); **not** RPC  
+- `process-protocol` (OCI **0.4.1**) — subprocess spawn/pipes (UIOP); **not** RPC  
   **Brief:** [capabilities/process.md](capabilities/process.md) (#106)
 - `rpc-protocol` — interaction modes (`:call-response` / `:notify` / `:call-stream` / `:client-stream` / `:bidi-stream`); JSON-RPC is `rpc-protocol-json`; gRPC binding is `rpc-protocol-grpc`  
   **Brief:** [capabilities/rpc.md](capabilities/rpc.md) (#170) · cookbook [rpc.md](cookbooks/rpc.md)
@@ -102,12 +102,12 @@ Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a �
 
 Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal `ag-ui-protocol:run-agent` — that is the wire GF.
 
-- `ai-agent-protocol` — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; `:memory` / `:steering`; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.
+- `ai-agent-protocol` (OCI **0.13.0**) — `run-ai-agent` / `run-ai-agent-async`; function-tool / nested agent / handoff; `:memory` / `:steering`; optional `/mcp` `/ag-ui` `/a2a`. Core has **zero** wire deps.
 - `steer-protocol` — rules / `SKILL.md` (`stack-steer`). Not A2A `agent-skill`.  
   **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
-- `cl-stack-code` — the coding agent product (`stack-code`): headless `cl-stack-code -p` with text / JSON / stream-JSON output, user / project / local settings, `AGENTS.md` discovery, permission rules and modes over `ai-agent-protocol` and `agent-tools`; an interactive TUI (H3b), sessions (H3c), and plan mode with projected diffs, approve / reject and drift restarts (H5a contract, 0.4.0).
+- `cl-stack-code` (OCI **0.3.1**) — the coding agent product (`stack-code`): headless `cl-stack-code -p` with text / JSON / stream-JSON output, user / project / local settings, `AGENTS.md` discovery, permission rules and modes over `ai-agent-protocol` and `agent-tools`; an interactive TUI (H3b), sessions (H3c), and plan mode with projected diffs, approve / reject and drift restarts (H5a contract, 0.4.0).
   **Brief:** [capabilities/cl-stack-code.md](capabilities/cl-stack-code.md)
-- `llm-protocol` — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
+- `llm-protocol` (OCI **0.5.0**) — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
   **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
 
 MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `llm-protocol`.
@@ -120,13 +120,13 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `pty-protocol` — spawn a program on a pseudo-terminal: read / write octets, resize, signal, wait. One native backend over a small C ABI (forkpty-style on Unix, ConPTY on Windows).
   **Brief:** [capabilities/pty.md](capabilities/pty.md) ([#270](https://github.com/egao1980/cl-stack/issues/270))
 
-- `tui-protocol` — full-screen terminal programs: `init` / `update` / `view` over a canvas of `terminal-protocol` cells; diff renderer and input decoder; headless (`terminal-protocol`) and real-tty backends. **Draft.**
+- `tui-protocol` (OCI **0.2.0**) — full-screen terminal programs: `init` / `update` / `view` over a canvas of `terminal-protocol` cells; diff renderer and input decoder; headless (`terminal-protocol`) and real-tty backends. **Draft.**
   **Brief:** [capabilities/tui.md](capabilities/tui.md) ([#274](https://github.com/egao1980/cl-stack/issues/274))
 
-- `tui-markdown` — markdown and diff rendering for `tui-protocol` (`stack-tui-md`): a CommonMark-subset parser (plain-list AST) and renderer to styled runs, a `markdown-stream` whose completed blocks never re-render, and a unified / side-by-side diff renderer for `diff-protocol` values and unified text with word-level highlighting. H1c contract.
+- `tui-markdown` (OCI **0.2.0**) — markdown and diff rendering for `tui-protocol` (`stack-tui-md`): a CommonMark-subset parser (plain-list AST) and renderer to styled runs, a `markdown-stream` whose completed blocks never re-render, and a unified / side-by-side diff renderer for `diff-protocol` values and unified text with word-level highlighting. H1c contract.
   **Brief:** [capabilities/tui-markdown.md](capabilities/tui-markdown.md)
 
-- `markdown-protocol` — CommonMark-subset markdown parser (`stack-markdown`) with GFM tables and `~~strike~~`: `parse-markdown` → a plain-list block / inline AST compared with `EQUAL`. No dependencies. Used by `tui-markdown` and `doc-extract-protocol`'s `parse-markup`.
+- `markdown-protocol` (OCI **0.1.0**) — CommonMark-subset markdown parser (`stack-markdown`) with GFM tables and `~~strike~~`: `parse-markdown` → a plain-list block / inline AST compared with `EQUAL`. No dependencies. Used by `tui-markdown` and `doc-extract-protocol`'s `parse-markup`.
   **Brief:** [capabilities/markdown.md](capabilities/markdown.md)
 
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
@@ -134,15 +134,15 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 
 ## Revision and diff (Track R — R0b / R1)
 
-- `diff-protocol` — diffs as values: change trees (`:add` `:remove` `:modify` `:move`), resource-string footprints, lazy content, engines per content type; apply / invert / compose / rebase / three-way (conflicts as data). R0: sexp engine, `:summary` / `:sexp` render. No dependencies.
+- `diff-protocol` (OCI **0.4.0**) — diffs as values: change trees (`:add` `:remove` `:modify` `:move`), resource-string footprints, lazy content, engines per content type; apply / invert / compose / rebase / three-way (conflicts as data). R0: sexp engine, `:summary` / `:sexp` render. No dependencies.
   **Brief:** [capabilities/diff.md](capabilities/diff.md)
-- `revision-protocol` — revision DAG (`stack-rev`): immutable revisions with parents (merges), movable refs and immutable tags with compare-and-swap, designators (id prefix, ref, tag, as-of on `:recorded` / `:valid`, parent / ancestor), walks, merge-base, ranges, heads, ref listener. R0a: thread-safe in-memory store.
+- `revision-protocol` (OCI **0.3.0**) — revision DAG (`stack-rev`): immutable revisions with parents (merges), movable refs and immutable tags with compare-and-swap, designators (id prefix, ref, tag, as-of on `:recorded` / `:valid`, parent / ancestor), walks, merge-base, ranges, heads, ref listener. R0a: thread-safe in-memory store.
   **Brief:** [capabilities/revision.md](capabilities/revision.md)
-- `revision-backend-git` — revision-protocol backend over the git CLI (`stack-rev-git`): commits as revisions, branches / tags with `update-ref` CAS, walks via `rev-list`, `state-diff` via `diff-tree` / `git diff` + `parse-diff`, working-copy drift and capture, read-only pathlib filesystem per revision (V0); V1 contract: projections (virtual trees + linked worktrees), `project-merge` via `merge-tree`, plans and `execute-plan`, worktrees, capability-gated `replay`.
+- `revision-backend-git` (OCI **0.4.0**) — revision-protocol backend over the git CLI (`stack-rev-git`): commits as revisions, branches / tags with `update-ref` CAS, walks via `rev-list`, `state-diff` via `diff-tree` / `git diff` + `parse-diff`, working-copy drift and capture, read-only pathlib filesystem per revision (V0); V1 contract: projections (virtual trees + linked worktrees), `project-merge` via `merge-tree`, plans and `execute-plan`, worktrees, capability-gated `replay`.
   **Brief:** [capabilities/revision-backend-git.md](capabilities/revision-backend-git.md)
-- `revision-backend-jj` — revision-protocol backend over the jj (Jujutsu) CLI (`stack-rev-jj`): change ids as revision ids (commit id in provenance), bookmarks / tags with CAS emulated over the operation log, `:recorded` as-of via `--at-op`, revset walks, `state-diff` via `jj diff --git` + `parse-diff`, committed conflicts as materialized files, @ as the working-copy target, read-only pathlib filesystem per revision. V2 contract.
+- `revision-backend-jj` (OCI **0.2.1**) — revision-protocol backend over the jj (Jujutsu) CLI (`stack-rev-jj`): change ids as revision ids (commit id in provenance), bookmarks / tags with CAS emulated over the operation log, `:recorded` as-of via `--at-op`, revset walks, `state-diff` via `jj diff --git` + `parse-diff`, committed conflicts as materialized files, @ as the working-copy target, read-only pathlib filesystem per revision. V2 contract.
   **Brief:** [capabilities/revision-backend-jj.md](capabilities/revision-backend-jj.md)
-- `diff-backend-lisp-source` — diff-protocol engine `:lisp` for Common Lisp source (`stack-diff-lisp`): top-level forms keyed like lisp-mcp locators (`defun foo`, `defmethod m :around (c t)`, `#+sbcl defun f`), form-level add / remove / modify / move (reorder, rename), nested structural leaves on the lisp-source-protocol CST, form-level three-way merge and rebase, `unified-patch`; comments and reader conditionals kept byte for byte, never evaluates. R3 contract.
+- `diff-backend-lisp-source` (OCI **0.2.2**) — diff-protocol engine `:lisp` for Common Lisp source (`stack-diff-lisp`): top-level forms keyed like lisp-mcp locators (`defun foo`, `defmethod m :around (c t)`, `#+sbcl defun f`), form-level add / remove / modify / move (reorder, rename), nested structural leaves on the lisp-source-protocol CST, form-level three-way merge and rebase, `unified-patch`; comments and reader conditionals kept byte for byte, never evaluates. R3 contract.
   **Brief:** [capabilities/diff-backend-lisp-source.md](capabilities/diff-backend-lisp-source.md)
 
 ## Blackboard core (P2 — AI-agnostic)
