@@ -97,7 +97,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sql-query-postgres` | **0.2.0** | postgres dialect |
 | `sql-orm` | **0.2.0** | CLOS ORM (`defmodel`); schema algebra: `apply-ops-to-snapshot`, `alter-column-op`, `diff-schema :complete`, `reflect-schema` (SQLite, PostgreSQL) |
 | `sql-migrate` | **0.1.1** | Alembic-style revision runner (`stack-sql-migrate`; each step's DDL + stamp in one transaction) · [cookbook](cookbooks/sql.md) |
-| `diff-protocol` | **0.2.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp, text (Myers / histogram, diff3) and tree engines; `:unified` render + git-diff parse · [brief](capabilities/diff.md) |
+| `diff-protocol` | **0.4.0** | diffs as values (`stack-diff`): footprints, lazy content, apply / invert / compose / rebase / three-way; sexp, text (Myers / histogram, diff3) and tree engines; `:unified` render + git-diff parse; engine extension API (`register-diff-engine`, hooks, `make-conflict`) · [brief](capabilities/diff.md) |
 | `revision-protocol` | **0.2.0** | revision DAG (`stack-rev`): refs + tags with CAS, as-of on recorded / valid time, walks, merge-base; content, targets, resumable plans, projections, composite revisions; in-memory store + target · [brief](capabilities/revision.md) |
 | `sql-query-csv` | **0.1.0** | CSV catalog dialect |
 | `sql-backend-sqlite3` | **0.1.0** | sqlite3 connectivity |
