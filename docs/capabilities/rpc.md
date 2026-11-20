@@ -38,7 +38,7 @@ Default stream methods on `rpc-transport` signal unimplemented — unary transpo
 | JSON-RPC 2.0 codec | [`egao1980/rpc-protocol-json`](https://github.com/egao1980/rpc-protocol-json) **0.1.0** |
 | gRPC binding | [`egao1980/rpc-protocol-grpc`](https://github.com/egao1980/rpc-protocol-grpc) **0.2.0** |
 | In-process (A) | [`egao1980/rpc-backend-inprocess`](https://github.com/egao1980/rpc-backend-inprocess) **0.1.0** |
-| stdio (B) | [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) **0.1.2** |
+| stdio (B) | [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio) **0.1.2**; **0.2.0 locked** ([H3d](cl-stack-code.md#h3d--locked)): server answers parse errors, bad envelopes and batches and keeps serving; the client reads on a thread (responses by id, notifications, server requests, timeouts); `make-stdio-pipe` / `make-stdio-rpc-pair` for in-process round trips |
 | HTTP POST (C) | [`egao1980/rpc-backend-http`](https://github.com/egao1980/rpc-backend-http) **0.1.2** |
 | SSE (D) | [`egao1980/rpc-backend-sse`](https://github.com/egao1980/rpc-backend-sse) **0.1.2** |
 

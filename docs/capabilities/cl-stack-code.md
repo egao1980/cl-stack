@@ -1,7 +1,7 @@
-# cl-stack-code (H3a–H3c, H5a, H5b, H4b): the coding agent's headless and interactive shell, its sessions, plan mode, checkpoints, and its Lisp image
+# cl-stack-code (H3a–H3d, H5a, H5b, H4b): the coding agent's headless and interactive shell, its sessions, plan mode, checkpoints, its Lisp image, and its SDK and JSON-RPC server
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H3 ("Product shell: interactive / `-p` / JSON stream / RPC / SDK; settings layering (user, project, local); … `AGENTS.md` discovery"). The repo was decided there (Decision 1).
-**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0**; **0.1.1** runs H3a with no stack workarounds: `--help` / `--version` come from `stack-cli:parse` (cli-protocol 0.2.1, clingon 0.2.1; no argv pre-scan), options and commands are built with `make-option` / `make-command :backend`, the designator's model reaches the backend as the agent's `:model` (ai-agent-protocol 0.12.0), and each run makes its own HTTP backend (http-backend-async 0.2.20) ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b locked** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox; version target **0.6.0**, after lisp-mcp 0.7.0): [H4b — locked](#h4b--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
+**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0**; **0.1.1** runs H3a with no stack workarounds: `--help` / `--version` come from `stack-cli:parse` (cli-protocol 0.2.1, clingon 0.2.1; no argv pre-scan), options and commands are built with `make-option` / `make-command :backend`, the designator's model reaches the backend as the agent's `:model` (ai-agent-protocol 0.12.0), and each run makes its own HTTP backend (http-backend-async 0.2.20) ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox) shipped as **0.6.0**: [H4b — locked](#h4b--locked). Milestone **H3d locked** (the SDK and `--rpc`, JSON-RPC 2.0 over stdio; version target **0.7.0**, after rpc-backend-stdio 0.2.0): [H3d — locked](#h3d--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
 
 `cl-stack-code` is the product: a coding agent CLI on cl-stack. H3a is the **headless** half only:
 
@@ -764,13 +764,166 @@ On the stubs, 39 of the 61 new cases fail (101 failing assertions). Every error 
 
 ---
 
+## H3d — locked
+
+**Plan row:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, H3 ("RPC (`rpc-protocol-json` over stdio) / SDK"). H3d takes the RPC half of the roadmap row and the SDK that the roadmap had put in H3e: the server is a thin adapter over the SDK, so they ship together.
+
+Contract: branch `agent/h3d-contract-68ea` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.7.0**, and branch `agent/h3d-contract-68ea` of [`egao1980/rpc-backend-stdio`](https://github.com/egao1980/rpc-backend-stdio), version **0.2.0**. The rules are in the headers of `src/client.lisp` (the SDK), `src/rpc.lisp` (the server, the error table, the subprocess client) and `src/arguments.lisp` (`check-rpc-flags`) in cl-stack-code, and of `src/backend.lisp` and `src/pipe.lisp` in rpc-backend-stdio. **Order:** rpc-backend-stdio 0.2.0 first (implement, merge, publish), then cl-stack-code 0.7.0, which requires it. Both go through **team-solve** (`.team-solve/task.md`: `system: rpc-backend-stdio` / `cl-stack-code`, `test-system: …/tests`, this brief).
+
+```
+cl-stack-code --rpc --cwd ~/proj --model anthropic          # JSON-RPC 2.0 on stdin / stdout
+→ {"jsonrpc":"2.0","id":1,"method":"session/new","params":{"permission_mode":"acceptEdits"}}
+← {"jsonrpc":"2.0","method":"event","params":{"type":"system","subtype":"init","session_id":"3f9a…",…}}
+← {"jsonrpc":"2.0","id":1,"result":{"type":"system","subtype":"init","session_id":"3f9a…",…}}
+→ {"jsonrpc":"2.0","id":2,"method":"turn/start","params":{"session_id":"3f9a…","prompt":"fix the test"}}
+← {"jsonrpc":"2.0","id":2,"result":{"session_id":"3f9a…"}}
+← {"jsonrpc":"2.0","method":"event","params":{"type":"text_delta",…}}   … tool_use, approval_request …
+→ {"jsonrpc":"2.0","id":3,"method":"approval/respond","params":{"session_id":"3f9a…","id":"toolu_1","decision":"once"}}
+← {"jsonrpc":"2.0","method":"event","params":{"type":"result","subtype":"success",…}}
+```
+
+```lisp
+(cl-stack-code:with-client (c :cwd "~/proj" :on-approval (lambda (s req) (declare (ignore s req)) :once))
+  (let ((s (cl-stack-code:client-new-session c :permission-mode :accept-edits)))
+    (cl-stack-code:event-value (cl-stack-code:client-query s "fix the test") "result")))
+```
+
+### Prior art (intersection, not a clone)
+
+| Source | Took | Left |
+|--------|------|------|
+| Claude Code SDK control protocol (`--input-format stream-json`, `control_request`) | The stream-json events as the one event vocabulary; approvals answered by the caller with a feedback text; interrupt; one turn at a time per session | Requests multiplexed inside the event stream (here plain JSON-RPC); `can_use_tool` with input rewriting; hooks and MCP over the control channel |
+| Codex app-server (JSON-RPC over stdio, `thread/*`, `turn/*`) | Several conversations per server, `thread/fork`-style forks, `turn/start` that returns at once and streams notifications, `turn/interrupt`, `turn/steer` | Approvals as server→client requests (here `approval_request` events and an `approval/respond` call, so a client needs no request handler); its item/delta model; auth and login methods |
+| MCP | JSON-RPC 2.0 framing, newline-delimited over stdio, the reserved error range, `initialize` returning capabilities | `initialize` being mandatory; capability negotiation; tools as the server's surface |
+| pi `--mode rpc` | `prompt` / `steer` / `follow_up` / `abort` as separate commands, the session commands next to the turn commands, events as JSON lines | One session per process; its own non-JSON-RPC framing; `follow_up` queues (here a second `turn/start` is refused) |
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **One core** | `src/client.lisp` is the SDK: `make-client`, sessions, `client-turn` / `client-query`, steering, interrupts, approvals, plans, checkpoints, rewinds, settings, tools. `src/rpc.lisp` maps each JSON-RPC method onto one SDK function and sends the SDK's events as notifications. The headless run's `%report` becomes the single emitter with one sink per destination (stream-json lines for `-p`, the session's callbacks for the SDK), so `-p` keeps its output byte for byte. | The RPC layer cannot drift from the SDK, and the SDK cannot drift from `-p`. |
+| **One schema** | SDK values, `-p --output-format stream-json` lines and `--rpc` notifications are the same json-protocol objects (EQUAL hash tables, snake_case keys). A turn's events after `system` are exactly the `-p` stream of the same script (tests compare them with `session_id` and `duration_ms` aside). New types, absent from `-p`: `approval_request`, `approval_resolved`, `steering` (`taken` / `dropped`), `session` (`forked`), and the plan subtype `discarded`. `+event-types+` lists every type. | The roadmap promised "the stream-json events as notifications". CLOS event classes (roadmap H3e) would have been a second schema; `event-type` / `event-value` read the objects. |
+| **SDK** | `(make-client &key cwd settings providers user-config-dir data-dir getenv on-event on-approval plan-area)`, `close-client`, `with-client`. Sessions: `client-new-session`, `client-resume-session` (an id, a prefix, a UUID or `:last`; `:fork`), `client-fork-session` (`:at`), `client-close-session`, `client-find-session`, `client-sessions`, `client-list-sessions`. Turns: `client-turn` → a `code-turn` (returns once the turn runs), `client-wait`, `client-query` → `(values result events)`, `client-steer`, `client-interrupt`. Approvals: `client-pending-approvals`, `client-respond-approval`. `client-approve-plan`, `client-reject-plan`, `client-checkpoints`, `client-rewind`, `client-settings`, `client-tools`, `client-busy-p`. | The functions name what the TUI does through keys and `-p` through flags. |
+| **Threads** | One loop thread per client runs one libuv loop for all its sessions, with `%run-headless`'s bindings, writing to no stream. Callbacks run on it, in event order; an error in a callback is dropped. Every client function works from any thread: elsewhere it runs on the loop thread and waits; inside a callback it runs at once (so a callback can answer an approval). `client-wait` / `client-query` refuse the loop thread (`code-usage-error`). | The TUI's rule ("agent work never runs on the UI thread") turned around: the caller's thread never runs agent work. |
+| **Sessions** | Set up as `make-code-program` does (same functions, same configuration errors, nothing left open when one signals): settings of the session's own working directory under the client's flag layer, then the session's `model` / `permission-mode` overrides; the agent's rule store is the local settings file, so "always" is saved as in the TUI. Created lazily (H3c). Its init event is `-p`'s `system` init object (plus `turns` on resume, `forked_from` on a fork) and is also `session/new`'s result. Resuming a session already open returns it. A fork is `clone-session` (`--fork-session`, Codex's `thread/fork`), not H3c's `/fork` head move, which `rewind` covers. | One session per conversation, many per client; `:last` is `--continue`. |
+| **Concurrency** | **Several sessions per server, one turn per session.** A second `turn/start` while a turn runs or waits for approvals is an **error** (`turn-busy`, -32003), not a queue. Mid-turn input is `turn/steer` (H3c's `agent-run-post`): taken before the next generate, `steering` `taken`; posts not taken by the end are drained and reported `dropped`, never sent later. | A server-side queue would need its own list, cancel and ordering rules, and the client already sees `result`. Steering covers "add this to what you are doing"; "do this next" is the client's next `turn/start`. |
+| **Turns** | First turn (and the first after a rewind moved the head): `run-ai-agent-async` on `session-turns`; later: `continue-ai-agent-async`. `@path` in the prompt expands as in the TUI; `mentions` attaches more files (a path that is not a file under the root is refused before anything runs). A terminal end commits the turn (H3c record, steering included) and records its checkpoints (H5b) **before** `result` is delivered. A commit conflict forks the session as `-p` does (`session` `forked` event; the handle takes the new id). Plan sessions open or reopen their plan at the first turn, and every plan turn ends with `plan` `projected` before `result`. | Disk state is current when a caller sees `result`, which is what scripts and tests read. |
+| **Approvals** | No handler answers `agent-approval-required` (bypassPermissions approves, as in `-p`), so an ask pauses the run. Each pending call is an `approval_request` event (`id`, `name`, `input`, `summary` = `tool-call-summary`, `preview` = `tool-call-preview` or null), then `on-approval` may answer it: `:once`, `:always`, `:reject`, `(:reject "feedback")`, `:reject-all`, or NIL (wait). `approval/respond` / `client-respond-approval` answer later and return the ids resolved; each gets `approval_resolved`. The run resumes when nothing waits. `turn/interrupt` while calls wait denies them (`interrupt`) and ends the turn without resuming. Result `permission_denials` reasons: `denied` (rule) and `rejected` (an answer). | H3b's four answers mapped onto ai-agent-protocol 0.12+ exactly as the dialog does. An event plus a call keeps the client simple: no server→client requests to answer. |
+| **Plans, checkpoints, rewinds** | `plan/approve` (`on_drift` abort / rebase / overwrite) returns `-p`'s `plan` object (`applied`, `rebased`, `drift`), approving with the checkpointer and recording plan checkpoints with the head; `plan/reject` returns `discarded`. `checkpoint/list` returns objects, newest first. `rewind` returns `-p`'s `rewind` object; a drift abort is a value (`files` `aborted`). All refuse a busy session. | H5a's and H5b's "plans in RPC mode" and "rewinding in RPC mode" non-goals, with `-p`'s shapes. |
+| **Methods** | `initialize` (optional), `session/new`, `session/resume`, `session/list`, `session/fork`, `session/close`, `turn/start`, `turn/steer`, `turn/interrupt`, `approval/respond`, `plan/approve`, `plan/reject`, `checkpoint/list`, `rewind`, `settings/get`, `tools/list` (`+rpc-methods+`). Params are objects with snake_case keys, `session_id` the exact id of a session open in the server. Every server→client message is the notification `event` with the event object as params. Notifications may arrive before the response that caused them. | The task's list, plus `initialize` (MCP / Codex) and `session/close` (a long-lived server holding several sessions needs to free one). |
+| **`settings/get`** | The merged settings in the settings-file shape, rules as `format-permission-rule` strings, `env` as the sorted **names** only, plus the files read. | Env values hold API keys; a client never needs them. |
+| **Errors** | `rpc-error-for` maps a condition to `(values code message data)`: the first matching type of `+rpc-error-codes+` (below), message = the condition's text, data = `{"condition": type name, …fields}`. An `rpc-protocol:rpc-error` keeps its code and data. Bad params → -32602 `"METHOD: KEY must be …"`. | A documented table, conditions first (CLHS 9), codes as data for clients. |
+| **`--rpc`** | `run-cli` → `check-rpc-flags` (exit 2), then `serve-rpc` on a stdio transport over `input` / `output` until EOF, exit 0. Only JSON-RPC on stdout. EOF closes the client: running turns are interrupted and committed. Refused with `--rpc`: `-p`, a prompt, `--output-format`, the session flags, the plan / rewind action flags. Allowed: `--cwd` (default directory of new sessions), `--model`, `--max-turns`, `--permission-mode`, the rule flags, `--append-system-prompt`, `--lisp-image`, `--lisp-observe` (every session's flag layer), `--plan-area`. | The flag layer is the server's; per-session choices go in `session/new`. |
+| **Subprocess client** | `connect-rpc-client :command argv` (or `:transport`), `rpc-client-call`, `rpc-client-events`, `rpc-client-wait-event`, `rpc-client-process`, `close-rpc-client` (stdin closed first → the child exits 0). | The optional half of the SDK, and what the subprocess test drives. |
+| **The image** | With `lispImage` on, each session has its own image (started with the session). `image_event` as in `-p`; posted into a running turn; while idle delivered at once and posted after the next turn's prompt. `onDebugger` `turn` does not start turns in the SDK. | H4b's "events in RPC mode" non-goal. The caller owns the turn schedule. |
+| **rpc-backend-stdio 0.2.0** (dependency, contracted in its repo) | **Server**: parse errors answer -32700 with `id: null`, non-objects and bad envelopes -32600, batches as one array line, blank lines and stray responses ignored, and the loop always goes on (0.1.2 signalled out of `rpc-serve` on a bad line). **Client**: a reader thread routes responses by id (0.1.2 read the next line as the response, so a server notification before it became the result), notifications to `:on-notification`, server requests to `:on-request` (-32601 without it); `:timeout` → `stdio-rpc-timeout`; EOF fails every waiting call. **Pipes**: `make-stdio-pipe` and `make-stdio-rpc-pair`, portable in-memory pipes (trivial-gray-streams) for in-process round trips. `:command` children get `:error-output` (default inherited, 0.1.2 left an unread pipe), and `close-stdio-rpc-transport` closes stdin first and waits `:timeout`. | Each is a bug or gap that `--rpc` hits; fixed in the stack, not around it. rpc-protocol and rpc-protocol-json need no change. |
+| **Dependencies** | Adds `rpc-protocol` ≥ 0.2.0, `rpc-protocol-json` ≥ 0.1.0, `rpc-backend-stdio` ≥ **0.2.0**, `process-backend-uiop`. Tests add `rpc-protocol`, `rpc-backend-stdio`. | Own stack only. |
+| **Stubs** | `%not-implemented` is back in `src/package.lisp`. **Given:** the conditions, the `--rpc` flag and `invocation-rpc-p`, the `run-cli` dispatch, the `code-client` / `code-session` / `code-turn` / `rpc-client` classes and readers, `with-client`, `event-type`, `event-value`, the constants (`+event-types+`, `+approval-decision-names+`, `+rpc-methods+`, `+rpc-error-codes+`, `+rpc-event-method+`, `+rpc-protocol-version+`). **Stubbed:** every function in `src/client.lisp` and `src/rpc.lisp`, `check-rpc-flags`, `%run-rpc`; in rpc-backend-stdio `make-stdio-pipe` and `make-stdio-rpc-pair` (the reader thread and the server answers change existing functions, so their tests fail on 0.1.2's code). Old paths never reach a stub. | — |
+
+### Error codes
+
+| Code | Condition (first match wins) | `data` beyond `condition` |
+|------|------------------------------|---------------------------|
+| -32700 / -32600 | parse error / invalid request (rpc-backend-stdio) | — |
+| -32601 | unknown method | — |
+| -32602 | bad params; `code-usage-error` (bad `cwd`, bad session id, blank prompt, bad mention, `permission-rule-error`) | — |
+| -32603 | any other `error` | — |
+| -32000 | any other `code-error` (`run-failed`, …) | — |
+| -32001 | `session-not-found` | `designator` |
+| -32002 | `session-not-open` | `session_id` |
+| -32003 | `turn-busy` | `session_id` |
+| -32004 | `turn-not-running` | `session_id` |
+| -32005 | `approval-not-found` | `id` |
+| -32006 | `session-conflict` | `expected`, `actual` |
+| -32007 | `session-turn-not-found` | `designator` |
+| -32008 | `plan-error` (`plan-not-found`, `plan-drift`) | `plan_id` |
+| -32009 | `checkpoint-error` (`checkpoint-not-found`, `checkpoint-expired`) | `designator` (not found) |
+| -32010 | `settings-error` | `file`, `key` |
+| -32011 | `model-not-found` | `designator` |
+| -32012 | `lisp-image-error` | — |
+| -32013 | `session-locked` | — |
+| -32014 | `client-closed` | — |
+| own | `rpc-protocol:rpc-error` | its own |
+
+### Surface (new in 0.7.0)
+
+```lisp
+;; values
+event-type event-value +event-types+ +approval-decision-names+
+;; the client
+code-client (make-client &key cwd settings providers user-config-dir data-dir getenv
+                         on-event on-approval plan-area)
+(close-client c) (with-client (var &rest args) &body) client-cwd client-closed-p client-sessions
+;; sessions
+code-session code-session-id code-session-client code-session-cwd code-session-model
+code-session-permission-mode code-session-init code-session-store
+(client-new-session c &key cwd model permission-mode session-id)
+(client-resume-session c designator &key cwd model permission-mode fork session-id)
+(client-fork-session s &key at session-id) (client-close-session s) (client-find-session c id)
+(client-list-sessions c &key cwd) (client-busy-p s)
+;; turns
+code-turn code-turn-session code-turn-prompt code-turn-events code-turn-result code-turn-done-p
+(client-turn s prompt &key mentions on-event) (client-wait turn &key timeout)
+(client-query s prompt &key mentions on-event timeout) → (values result events)
+(client-steer s text) (client-interrupt s)
+(client-pending-approvals s) (client-respond-approval s id decision &key feedback)
+;; plans, checkpoints, introspection
+(client-approve-plan s &key on-drift) (client-reject-plan s) (client-checkpoints s)
+(client-rewind s turn &key mode on-drift) (client-settings s-or-c) (client-tools s)
+;; conditions (code-error)
+client-closed session-not-open turn-busy turn-not-running approval-not-found
+;; --rpc
+invocation-rpc-p (check-rpc-flags inv) +rpc-protocol-version+ +rpc-methods+ +rpc-event-method+
++rpc-error-codes+ (rpc-error-for condition) → (values code message data)
+(make-rpc-handler c) (serve-rpc transport &rest client-args) → 0
+rpc-client (connect-rpc-client &key command transport on-event error-output)
+(rpc-client-call rc method params &key timeout) (rpc-client-events rc &key type session-id)
+(rpc-client-wait-event rc predicate &key timeout) (rpc-client-process rc) (close-rpc-client rc &key timeout)
+
+;; rpc-backend-stdio 0.2.0
+(make-stdio-rpc-transport &key input output command error-output on-notification on-request)
+stdio-rpc-transport-on-notification stdio-rpc-transport-on-request stdio-rpc-transport-process
+stdio-rpc-timeout (stdio-rpc-timeout-method stdio-rpc-timeout-seconds)
+(make-stdio-pipe &key capacity) → (values input output)
+(make-stdio-rpc-pair &key on-notification on-request) → (values server client)
+(close-stdio-rpc-transport tx &key force timeout)
+```
+
+### Contract tests
+
+`cl-stack-code/tests` grows by 6 files (one of them helpers): **72 new deftests (104 cases with the parametrized rows), about 450 `ok` forms.** The 656 H3a–H4b cases stay; their version checks expect 0.7.0. Every LLM interaction goes through the scripted mock backend; gated steps make busy, steering, interrupt and EOF cases deterministic. RPC round trips run `serve-rpc` on `make-stdio-rpc-pair` in-process; one test drives a child SBCL running `run-cli --rpc` through `connect-rpc-client :command`.
+
+| File | Covers |
+|------|--------|
+| `rpc-support` | event collectors and waits, `normalized` / `same-events-p`, `with-test-client`, `with-rpc` (server thread + client on a pair), `call`, `fault`, `rpc-result` |
+| `client-test` | make / close / closed; init object (keys, first event, lazy disk); overrides; configuration errors leave nothing open; existing session ids; the result object (-p's keys, order, deltas); **SDK events = `-p` stream-json** for one script; commit before `result`; conversation continues; two sessions; resume (prefix, already open, missing), `:last`, `:fork`; `client-fork-session :at`; list objects; close; **turn-busy**; interrupt (idle NIL, record `:canceled`); steering taken / not running / dropped; mentions (order, dedupe, refusals); blank prompt; wait and query timeouts; max turns and failures; **conflict fork**; callbacks on one loop thread, inline calls, dropped errors; settings (env names only); tools; the image during a turn and while idle |
+| `client-approval-test` | the request object and preview; once; always (saved as `edit(a.txt)`); reject with feedback (`rejected`); reject-all; resume after the last answer; callback answers; not found, bad decisions, busy; interrupt while waiting; bypass and deny rules |
+| `client-plan-test` | plan turn and approve × {copy, git} (opened first, projected before result, checkpoints); reject; drift then overwrite; a new plan after apply; busy refusals; checkpoint objects; rewind both (next turn on the new head); files-only drift, overwrite, conversation-only, errors |
+| `rpc-test` | `--rpc` parsing and 8 refused combinations (exit 2, nothing on stdout); bad `--cwd`; constants; `rpc-error-for` (20 rows) and data fields; **`run-cli --rpc` on string streams**; turn round trip; **notifications = `-p` stream-json**; -32003 / -32002 / -32601; invalid params (6 rows), non-object params; approvals; steer and interrupt; session methods; plans; checkpoints and rewind; settings and tools; configuration error codes; **EOF interrupts and commits** |
+| `rpc-process-test` | a child `cl-stack-code --rpc`: initialize, session/new, a turn, result, exit 0 on stdin EOF, the record on disk |
+
+rpc-backend-stdio 0.2.0 adds `tests/peer-test.lisp`: **27 deftests (32 cases)**: pipes (round trip, blocking, close, capacity, broken pipe, thread-safe writes), pairs, interleaved notifications, ids, timeouts, a closed peer, server requests, the server's answers (parse error, 6 invalid-request rows, batches, null ids, blank lines) and a child process with `:error-output`.
+
+On the stubs, 103 of the 104 new cl-stack-code cases fail (`rpc-constants` checks given code), every one a `%not-implemented` error or an assertion downstream of one, and all 656 old cases pass (measured: 657 passing, 103 failing, with the rpc-backend-stdio contract worktree in the registry). In rpc-backend-stdio, 31 of the 32 new cases fail (stubs, or 0.1.2's reader and server; the `no-method` row already passes) and the 6 old ones pass. No throwaway prototype was run, so the implementation may find test bugs; those go through a contract-fix commit, as before.
+
+### Non-goals (H3d)
+
+- `--input-format stream-json` for `-p` (the roadmap's H3d item): `--rpc` covers driving a session from a program; a stream-json input mode would be a second control protocol.
+- A follow-up queue on the server, changing an open session's model or mode (`/model`, `/permissions`), and server→client requests.
+- Other transports for the same methods (HTTP / SSE / WebSocket through `rpc-backend-http` and `-sse`): the adapter is transport-agnostic, but only stdio is contracted.
+- Several clients on one server, authentication, and sharing a session between servers beyond H3c's lock and fork-on-conflict.
+- An interactive session picker, session names, deleting sessions (as H3c).
+- Typed CLOS event classes in the SDK (one schema instead).
+
+---
+
 ## Roadmap (H3b–H3e)
 
 | Slice | Scope | Builds on |
 |-------|-------|-----------|
 | **H3b** interactive | Shipped (0.2.0): [H3b — locked](#h3b--locked) | H1, H3a |
 | **H3c** sessions | Locked (0.3.0): [H3c — locked](#h3c--locked). Sessions as a file-backed `revision-protocol` store; `--continue` / `--resume` / `--session-id` / `--fork-session` / `--list-sessions`; `/tree` `/fork` `/rewind` `/clone` `/export`; steering (Ctrl-T) vs follow-up (Enter) on `agent-run-post` | R0, H3a, H3b |
-| **H3d** RPC | `--mode rpc`: JSON-RPC 2.0 over stdio (`rpc-protocol-json` + `rpc-backend-stdio`) — prompt, steer (H3c's `agent-run-post` path), follow-up, abort, approve, deny, and the session commands (tree, fork, rewind, clone, export); the stream-json events as notifications; `--input-format stream-json` for `-p` | H3a, H3c |
-| **H3e** SDK and configuration | A Lisp SDK (start a session, send prompts, receive events as CLOS objects, answer approvals); skills (`SKILL.md` via `steer-protocol`), prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, `@file` imports, project trust (project allow rules and `env` wait for the user's yes) | H3a–H3d |
+| **H3d** RPC and SDK | Locked (0.7.0): [H3d — locked](#h3d--locked). The in-process SDK (`make-client`, sessions, `client-turn` / `client-query`, approvals, steering, interrupts, plans, checkpoints, rewinds) and `--rpc`, a JSON-RPC 2.0 server over stdio that is a thin adapter over it; the stream-json events as notifications. `--input-format stream-json` dropped (non-goal) | H3a, H3c, H5a, H5b, rpc-backend-stdio 0.2.0 |
+| **H3e** configuration | Skills (`SKILL.md` via `steer-protocol`), prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, `@file` imports, project trust (project allow rules and `env` wait for the user's yes) | H3a–H3d |
 
 After H3: the image layer (H4: [H4b — locked](#h4b--locked) is the product half of the debugger bridge), plan → project → approve (H5: [H5a — locked](#h5a--locked), later slices in its roadmap), extensions and a single binary (H6).
