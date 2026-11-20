@@ -1,9 +1,9 @@
-# revision-backend-git (V0) — revision-protocol over the git CLI
+# revision-backend-git (V0, V1) — revision-protocol over the git CLI
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track V · protocol brief [revision.md](revision.md) · diffs [diff.md](diff.md)
-**Status:** milestone **V0 locked** (contract). Repo [`egao1980/revision-backend-git`](https://github.com/egao1980/revision-backend-git) (`stack-rev-git`), version 0.1.0 (0.2.0: revision-protocol 0.3.0, diff-protocol 0.2.1): exports, conditions, classes, documented behaviour, stub methods and the Rove suite that specifies them. Implementation runs through **team-solve**.
+**Status:** milestone **V0 locked** and implemented; milestone **V1 locked** (contract) — see [V1 — locked](#v1--locked). Repo [`egao1980/revision-backend-git`](https://github.com/egao1980/revision-backend-git) (`stack-rev-git`), version 0.1.0 (0.2.0: revision-protocol 0.3.0, diff-protocol 0.2.1): exports, conditions, classes, documented behaviour, stub methods and the Rove suite that specifies them. Implementation runs through **team-solve**.
 
-A `revision-store` and a `revision-target` over one git repository, driven through the `git` program only (no libgit2, no gitoxide). V0 = graph, refs, drift, diffs (summary and content), a read-only revision filesystem. Projections, `commit-projection`, `execute-plan`, merges as projections and linked worktrees are **V1**.
+A `revision-store` and a `revision-target` over one git repository, driven through the `git` program only (no libgit2, no gitoxide). V0 = graph, refs, drift, diffs (summary and content), a read-only revision filesystem. Projections, `commit-projection`, `execute-plan`, merges as projections and linked worktrees are **V1** ([below](#v1--locked)).
 
 ---
 
@@ -121,10 +121,118 @@ The backend must run git through `process-protocol`, and `process-backend-uiop` 
 
 ---
 
+## V1 — locked
+
+**Plan row:** V1 = projections, `commit-projection`, `capture-revision`, `execute-plan`, worktrees (depends on V0 and R4's pathlib view). **Acceptance (binding, from the plan):** `project-state`, `project-merge`, `commit-projection` and `capture-revision` leave the store's working tree and its real index byte-identical, checked by `git status` and an index hash. The V1 suite checks that around every one of them, and also around `apply-patch`, `project-plan`, `discard-projection` and `remove-worktree`.
+
+Contract on branch `agent/git-v1-contract-2532` of [`egao1980/revision-backend-git`](https://github.com/egao1980/revision-backend-git). Version **0.3.0** (new API, minor). The branch has the exports, two git-specific conditions, the `git-projection` class, docstrings that state the behaviour, stubs that call `%not-implemented` (internal, `src/projection.lisp`), and the Rove files that specify them. The implementation removes `%not-implemented` and every call to it. It runs through **team-solve**.
+
+### Decisions (V1)
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Files** | `src/projection.lisp` (projections, `apply-patch`, tree filesystem), `src/plan.lisp` (plans, `execute-plan`, `project-plan`, `(setf target-state)`), `src/worktree.lisp` (linked worktrees, replay). No new dependencies: pathlib stays at 0.4.0, because V1 uses only `make-path`, the local filesystem and the V0 revision filesystem | Small diff against V0 |
+| **Projection kinds** | `git-projection` (a `rev:projection`) is one of two kinds. **Virtual**: a tree object in the repository; nothing is checked out. `project-state` without `:writable`, `project-merge`, `apply-patch` and `project-plan :exact` return one. **Materialized**: a detached linked worktree. `project-state :writable t` and `project-plan :shadow` return one. `git-projection-tree` is the tree id; `git-projection-worktree` is the worktree directory, or NIL for a virtual projection | The plan's rule: anything an image loads is materialized, and everything else stays virtual and cheap |
+| **Fidelity** | Every projection is `:exact`, whatever `:fidelity` asks for (the protocol allows a better fidelity than requested). The one exception is `project-plan :shadow` | Git trees are exact |
+| **`project-state` designators** | A revision designator (parents = its id); a `git-working-copy` (a snapshot of `target-state` with uncommitted and untracked files, not ignored ones; parents = `target-revisions`); or a `git-projection` (its state and parents; **conflicts are not carried over**, so a writable copy of a merge projection is how you resolve the merge by hand) | Covers the plan's area over a git working copy: clone it with its uncommitted changes, then commit back through `commit-projection` |
+| **Views** | A virtual projection's view is a `pathlib:path` on a read-only `revision-filesystem` over the projection's tree. New: `make-tree-filesystem store tree`, with `revision-filesystem-revision` NIL, `revision-filesystem-tree` set, and every mtime the Unix epoch. A materialized projection's view is a `pathlib:path` on `pathlib:local-filesystem` at the worktree's top level | `projection-view` = the domain's normal read API (pathlib), so the agent tools run unchanged |
+| **Materialized state** | `projection-state` / `git-projection-tree` of a materialized projection = what `git add -A` would record in the worktree (a temporary index seeded from **that worktree's** index, so `core.fileMode` / `core.symlinks` = false keep the recorded modes, as in V0). Whatever writes the files (pathlib, `cl:open`, a shell, an image) shows up. `(setf projection-state)` writes the worktree so that the state equals STATE afterwards: tracked and untracked files outside STATE are deleted, and ignored files (by the rules in effect after the write) are left alone | The same state rule as the V0 working copy |
+| **Where worktrees go** | `*projection-directory*` (NIL = the OS temp directory) gets one fresh subdirectory per materialized projection, outside the store's worktree. `git worktree add --detach` (`--no-checkout`, then `read-tree -u --reset TREE` with the linked worktree's own index). A bare store can materialize too. `discard-projection` runs `worktree remove --force`, deletes the directory and prunes | A linked worktree has its own HEAD and index, so the main checkout is never touched |
+| **`project-merge`** | `merge-tree --write-tree -z --allow-unrelated-histories A B`; git picks the base (criss-cross: ort's virtual base; unrelated: empty). Parents `(A-id B-id)`, a virtual projection. **Conflicts as data**: one `diff:diff-conflict` per conflicted path (from the conflicted-file-info section). `conflict-ours` / `conflict-theirs` are V0 file-level changes from git's stage 1 (absent → `:add`) to stage 2 / stage 3 (absent → `:remove`), and the footprint is `"tree:/path"`. **`projection-state` keeps the base value at each conflicted path** (stage 1, or absent), as the protocol says. `merge-projection-marker-tree` = git's own result tree, with conflict markers. The second value = `projection-conflicts` | Protocol R0b `project-merge` semantics over git's merge engine |
+| **`commit-projection`** | The tree (`git-projection-tree`) is committed through V0 `commit-revision` (`commit-tree`, then `update-ref` CAS when `:ref` is given), so V0's `ref-conflict` restarts, `tag-immutable` and the `:id` refusal all apply. Parents default to `projection-parents`. A conflicted projection signals `merge-conflict`: `take-ours` / `take-theirs` resolve each conflicted path to that side's file (removal included), `use-merged` commits the base values, `abort` returns NIL and commits nothing | One commit path for V0 and V1 |
+| **`apply-patch`** (the plan's `apply-diff` on a projection) | `(apply-patch projection patch)` returns a **new** virtual projection (parents copied, no conflicts); the source does not change. A `git diff` patch (string, or octets for non-UTF-8 and `--binary` patches) is applied with `git apply --cached` into a temporary `GIT_INDEX_FILE` seeded with the source tree, then `write-tree`. A refusal signals `patch-rejected` (slots projection, stderr) and writes nothing. A `diff:diff` value is applied with `diff:apply-diff` to `projection-state`, and its `apply-conflict` restarts propagate | Cheap "does this patch apply to X / to the merge" for H5. Never touches the real index |
+| **Plans** | `plan-transition` (git-store, git-working-copy) uses the protocol's path rule: down to the merge-base, up to TO, one parent edge per step, and at a merge the first parent that is or reaches the base. **Step diffs are `:summary`** (file-level, lazy nodes, one `diff-tree` per step; they apply and invert, per V0 law 3). Every step is reversible, so this backend never signals `irreversible-step`. `describe-plan` and `step-footprint` are the protocol's own methods. Pure: no ref, file or index changes | `:changes` would read every blob of every step at plan time. This is a recorded deviation from the R0b "level :changes" wording |
+| **`execute-plan`** | The protocol's flow: a drift check first (`capture-and-continue` / `discard-drift` / `abort`), a stamp after every step, resume from a step's TO, a foreign stamp → `revision-error`, and `step-failed` with `retry-step` / `skip-step` / `rollback-to-start`. **HEAD stamp**: each step is `read-tree -m -u FROM-TREE TO-TREE` on the real index, then `update-ref HEAD TO`, so the current branch moves and a whole plan works like `git reset --keep GOAL` (each step leaves a reflog entry). **Stamp ref**: only the worktree files change, through a temporary index; HEAD, branches and the real index are never touched. Ignored files are never touched in either mode | V0's two stamp modes, carried over to transitions |
+| **`(setf target-state)`** | Writes the worktree files (the materialized-projection rule above). HEAD, the stamp ref and the real index stay as they are, so the target drifts | The protocol's out-of-band write |
+| **`target-fidelities`** | `(:exact :shadow)`. `project-plan :exact` = a virtual projection of the goal tree, which is what `execute-plan` leaves on a target with no drift. `:shadow` = a materialized projection: a worktree checked out at `plan-start` (the target's drift is left behind, as after `discard-drift`) where the steps really run. `:model` → `projection-unsupported` with only `use-shadow` and `apply-for-real` offered. A target projection read or committed after the working copy's stamp or state changed → `projection-stale`. `target-transactional-p` stays NIL | Law 6 holds by construction for `:exact` |
+| **`capture-revision`** | **Unchanged from V0**: temporary index → `write-tree` → `commit-tree`, then the stamp. The plan's `stash create` row stays rejected, because it skips untracked files and would leave drift. V1 adds the byte-identical acceptance checks around it (including on a linked worktree) | V0 decision stands |
+| **Linked worktrees** | `add-worktree store path designator &key branch` → a `git-store` on the new worktree (same `:env` and `:permit-force`). Detached by default; `:branch` creates the branch (an existing one → `ref-conflict`, expected NIL, and nothing is created); a non-empty PATH → `revision-error`. `list-worktrees` → plists `:path :head :branch :detached :bare :locked :prunable`, main worktree first, from `worktree list --porcelain -z` through the pure, fuzzed `parse-worktree-list`. `remove-worktree store path &key force`: local changes without `:force` → `git-command-error`; the main worktree or a non-worktree → `revision-error`. New reader `git-store-common-dir` (= `git-store-git-dir` except on a linked worktree). `(make-git-working-copy linked-store)` is that worktree's own target | Subagents can get a real checkout. Refs are shared, HEAD and the index are per worktree |
+| **Rebase → `replay`** | `replay-revisions store revisions onto &key ref expected`: REVISIONS is a chain, parents first (as `revision-range` returns). `git replay --onto` (with the flag that makes it print instead of update refs, `--ref-action=print` where the probed version has it), then the backend moves REF itself with CAS (`ref-conflict` as in V0). Message, author and author date are kept. A merge commit or a non-chain → `revision-error`; a conflict → `replay-conflict` (slots revision, onto), and no ref moves. `diff:rebase-diff` on diff values stays the diff-protocol tree engine's | Git-native rebase of revisions, separate from the pure diff operation |
+| **Git minimum (decided)** | `*minimum-git-version*` **stays 2.43.0**: the ci-base container still ships 2.43.0 and [cl-repository#101](https://github.com/egao1980/cl-repository/issues/101) is open with no PR (checked 2026-11-20). Everything in V1 except replay works on 2.43 (`merge-tree --write-tree` ≥ 2.38, `--merge-base` ≥ 2.40, `worktree add --orphan` ≥ 2.42). **`replay-revisions` is the one capability-gated operation**: `*replay-git-version*` = **"2.44.0"**, and `git-replay-p store` says whether the store's git has it. With an older git it signals `vc-tool-version-error` (tool "git", found, required "2.44.0") before any git command runs. The replay tests check the gate on an older git and skip the replay itself. When #101 lands, `*minimum-git-version*` rises to ci-base's git (≥ 2.44) and the gate goes away (follow-up). `git replay` is still marked experimental, so its flags are checked against CI's version whenever the minimum moves | The plan says no fallbacks. A gate is not a fallback, because the operation is simply unavailable, and it keeps V1 off #101's critical path |
+| **Threads** | As in V0. A projection is not shared across threads while it is being written. Materialized projections in different directories are independent (git's worktree locks) | — |
+
+### Condition tree (V1 additions)
+
+```
+revision-error                                  (revision-protocol)
+├── … V0 …
+├── merge-conflict (conflicts projection)       commit-projection: take-ours, take-theirs, use-merged, abort
+├── target-drift-detected (target drift)        execute-plan: capture-and-continue, discard-drift, abort
+├── step-failed (step cause attempt)            execute-plan: retry-step, skip-step, rollback-to-start
+├── projection-unsupported (fidelity supported) project-plan :model: use-shadow, apply-for-real
+├── projection-stale (projection)               target projections after the working copy changed
+├── vc-tool-version-error (tool found required) replay-revisions on git < *replay-git-version*
+├── patch-rejected (projection stderr)          apply-patch: git apply refused the patch   [git-specific]
+└── replay-conflict (revision onto)             replay-revisions: a commit conflicts       [git-specific]
+```
+
+`irreversible-step` is never signalled (git steps always invert). Discarded projections, writes to a read-only projection, non-chains, and merge commits in a replay signal plain `revision-error`. Dirty `remove-worktree` without `:force` → `git-command-error`.
+
+### Protocol surface (V1) mapped to git
+
+| Protocol / backend call | git |
+|-------------------------|-----|
+| `project-state` (virtual) | the commit's tree, or the working copy's `add -A` tree via a temporary index |
+| `project-state :writable t`, `project-plan :shadow` | `worktree add --detach --no-checkout DIR`, then `read-tree -u --reset TREE` (the linked worktree's index); state = `add -A` + `write-tree` through a temporary index |
+| `(setf projection-state)`, `(setf target-state)` | `read-tree` into a temporary index, `checkout-index -f -a`, delete paths outside STATE (ignored files kept) |
+| `project-merge` | `merge-tree --write-tree -z --allow-unrelated-histories A B` (conflicted file info → `diff-conflict`s; stage-1 entries → base values, written with `mktree`) |
+| `apply-patch` | `GIT_INDEX_FILE=tmp git read-tree TREE`, `git apply --cached`, `write-tree` |
+| `commit-projection` | `commit-tree` + `update-ref REF NEW OLD` (V0 `commit-revision`) |
+| `capture-revision` | V0: temporary index, `add -A`, `write-tree`, `commit-tree`; **not** `stash create` |
+| `plan-transition` | `merge-base`, `rev-list --first-parent` paths, `diff-tree -r -z -M --name-status` per step |
+| `execute-plan` (HEAD stamp) | per step `read-tree -m -u FROM TO`, then `update-ref HEAD TO` |
+| `execute-plan` (stamp ref) | per step: temporary index, `checkout-index` / removals, then `update-ref STAMP-REF TO` |
+| `project-plan :exact` | the goal's tree |
+| `state-diff` with projections and plans | the projection's tree / the plan goal's tree (V0 `diff-tree` / `git diff`) |
+| `add-worktree` / `list-worktrees` / `remove-worktree` | `worktree add [--detach \| -b BRANCH]`, `worktree list --porcelain -z`, `worktree remove [--force]` + `worktree prune` |
+| `replay-revisions` | `replay --onto ONTO BASE..TIP` (print mode), then `update-ref` CAS |
+
+```lisp
+;;; V1 additions to the package
+git-projection git-projection-p (git-projection-tree p) (git-projection-worktree p)
+(merge-projection-marker-tree p) *projection-directory*
+(make-tree-filesystem store tree) (revision-filesystem-tree fs)
+(apply-patch projection patch)  patch-rejected (-projection -stderr)
+(git-store-common-dir s) (add-worktree s path designator &key branch)
+(list-worktrees s) (remove-worktree s path &key force) (parse-worktree-list string)
+*replay-git-version* (git-replay-p s) (replay-revisions s revisions onto &key ref expected)
+replay-conflict (-revision -onto)
+;; revision-protocol GFs, new on git-store / git-working-copy / git-projection:
+;; project-state project-merge project-plan projection-fidelity projection-view
+;; projection-state (setf projection-state) projection-parents projection-conflicts
+;; projection-writable-p projection-discarded-p commit-projection discard-projection
+;; plan-transition execute-plan (setf target-state); target-fidelities → (:exact :shadow)
+```
+
+### Contract tests (V1)
+
+Five new files in `revision-backend-git/tests`, plus `v1-support`. That makes **58 new test rows** (parametrized rows counted), and every one fails against the stubs. The **137 V0 rows still pass**. One V0 assertion moved: `working-copy-values` no longer checks `target-fidelities` = NIL, and `transition-test` now expects `(:exact :shadow)`. Expected values come from real git, run in the test (`merge-tree`, `diff --binary`, `worktree list`, `reflog`, `write-tree` through a temporary index, `hash-object` of `.git/index`).
+
+| File | Covers |
+|------|--------|
+| `v1-support` | `with-checkout-unchanged` (status with `GIT_OPTIONAL_LOCKS=0`, index hash, worktree bytes, HEAD) around every operation the acceptance line names; real `merge-tree`; `build-diverged` (clean and conflicting, with modify/delete) and `build-chain` fixtures |
+| `projection-test` | Values and fidelity rows; the read-only view and tree filesystem; projections of a working copy and of a projection; writable worktrees (location, registration, file edits from outside, `setf`, ignored files); `commit-projection` (parents, ref, dates, provenance, refusals, tags); discard (worktree removed, every later call refused); `apply-patch` as text, octets and a diff value, rejections; `state-diff` over projections (law 3); bare stores |
+| `merge-test` | Clean merges against git's tree; designators; conflicts as data (paths, base values, marker tree, change kinds, footprints); unrelated and criss-cross; **law 4** (symmetry, clean and conflicting); merge commits; every `merge-conflict` restart; resolving by hand through a writable copy |
+| `transition-test` | Fidelities; plan shapes (down, down + up, no steps, unknown TO); `:summary` reversible steps and `describe-plan`; unborn branch; `execute-plan` with the HEAD stamp (**law 5**, a reflog entry per step, index = goal, ignored files kept) and with a stamp ref (HEAD / branch / index untouched); drift restarts; `capture-and-continue`; resume and foreign stamps; `(setf target-state)`; `project-plan` `:exact` (**law 6**), `:shadow`, `:model` restarts, staleness |
+| `worktree-test` | Detached and branch worktrees, `git-store-common-dir`, shared refs, existing branch / non-empty directory; a linked worktree as its own target (capture leaves the main index alone); list / lock / remove / force / refusals; bare repositories; `parse-worktree-list` corpus, malformed rows, live output, 3 seeded fuzz rounds |
+| `replay-test` | `*replay-git-version*` locked; `git-replay-p`; the gate (bound to "99.0.0": `vc-tool-version-error`, nothing moved); on git ≥ 2.44: replay onto a new base (messages, author dates, chain, ref CAS), conflicts, non-chains, merge commits |
+
+### Non-goals (V1)
+
+- Per-path refinement of conflicted `.lisp` merges through `diff-backend-lisp-source` (git provides the tree level; a follow-up)
+- Committing conflicts (that is jj's `:conflicted-revisions`); octopus merges; `merge-tree` strategy options
+- `with-target-transaction` on the working copy (`target-transactional-p` stays NIL); multi-head plans (R2)
+- Lazy virtual mounts of projections (R4f); copy/clone areas over projections are `cl-stack-pathlib` R4a/R4c on the materialized view, not backend code
+- Replaying merge commits; interactive rebase; `rebase-diff` through `replay` (diff values stay with diff-protocol)
+- Network, signing, GC, `update-ref --stdin` transactions (as in V0); jj (V2); composite-revision parts (V3)
+
+---
+
 ## Implementation tasks
 
 - [x] V0 contract: this brief, `egao1980/revision-backend-git` skeleton, Rove suite, CI git-version probe
-- [ ] process-protocol / process-backend-uiop fixes above, published
-- [ ] V0 implementation through team-solve
-- [ ] ci-base git upgrade → raise `*minimum-git-version*`
-- [ ] V1: projections, `commit-projection`, `execute-plan`, worktrees
+- [x] process-protocol / process-backend-uiop fixes above, published
+- [x] V0 implementation through team-solve (0.1.0; 0.2.0 on revision-protocol 0.3.0)
+- [x] V1 contract: the section above, branch `agent/git-v1-contract-2532` (tests + `%not-implemented` stubs, 0.3.0)
+- [ ] V1 implementation through team-solve
+- [ ] ci-base git upgrade ([cl-repository#101](https://github.com/egao1980/cl-repository/issues/101)) → raise `*minimum-git-version*` to ≥ 2.44, drop the replay gate
