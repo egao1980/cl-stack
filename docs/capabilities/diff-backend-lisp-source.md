@@ -69,21 +69,23 @@ Each unit has a key string, unique in its file.
 - **OP** is the head symbol's name, package prefix dropped, downcased (`cl:defmacro` → `defmacro`).
 - **NAME**: a symbol → its name without package marker, downcased (`#:my-pkg`, `:my-pkg`, `My-Pkg` → `my-pkg`); a string → its characters as written (`"my-sys/tests"` → `my-sys/tests`); anything else → normalised text (`(setf foo)`).
 - **Normalised text** = lisp-source-protocol's locator normalisation: trimmed, runs of whitespace → one space, downcased.
-- **Duplicates:** the second unit with the same key gets `" #2"`, the third `" #3"`, in file order (`setf`, `setf #2`).
+- **Duplicates:** the second unit with the same key gets `" #2"`, the third `" #3"`, in file order (`setf`, `setf #2`). `"eof"` is reserved for the trailer: a top-level `(eof …)` form counts from `#2` (`eof #2`, `eof #3`), with or without a trailer (0.2.0, diff-backend-lisp-source#2).
 
 ## Changes
 
 `compute-diff engine a b` reads both sides (clean, or `lisp-source-unreadable`) and compares their units by key.
 
+**Anonymous units** (0.2.0) — a head with no name node (not `in-package`, not the trailer: `setf`, `eval-when`, `progn`, …) has no identity beyond operator + ordinal, so before comparing, b's anonymous units are keyed in a's namespace by content: per base key, a b unit takes the key of the first unused a unit with the same text; the rest pair up in order between the same matched neighbours (an edit stays a `:modify`); the others get fresh ordinals after a's. Inserting a `setf` before others is one `:add`. The changes are then renamed to **operational keys**: applying them in order is simulated, and each key, `from` and anchor is the ordinal key that unit has in the state the change reads (before key, `from`, before anchor) or makes (key, after anchor). Only keys of duplicated bases differ. A merge keys ours and theirs in base's namespace the same way; new anonymous units of both sides share one numbering by text (sorted), so the same new form is a twin and different new forms never collide.
+
 - **`:add`** — key only in b. `after` = b's unit plist, anchor = its predecessor in b.
 - **`:remove`** — key only in a. `before` = a's unit plist, anchor = its predecessor in a.
-- **`:modify`** — key in both, not moved, unit texts differ. Sides = the unit plists with anchor NIL.
+- **`:modify`** — key in both, not moved, unit texts differ. Sides = the unit plists; both anchors = the unit's predecessor (0.2.0: only `use-value` on a vanished unit uses them).
 - **`:move` (reorder)** — key in both, but out of order: the **moved** keys are the common keys that the diff-protocol `:text` engine (Myers) marks removed when it diffs the common keys of a (in a's order) against those of b (in b's order), one key per line. A moved unit whose text also changed is still one `:move` (`before` text ≠ `after` text). `path` = `from` = `(:form K)`.
 - **`:move` (rename)** — with `detect-renames`: a removed and an added unit, both with a **name node** (a `DEF…` / `DEFINE-…` / `defmethod` head, also under a `#-` guard; not `in-package`, anonymous forms or `#+` units), whose texts are `string=` once the **name node's text** is cut out of each (so: the same definition operator, the same body and comments, a different name). Removed units in a's order each take the first unused match in b's order. `from` = `(:form OLD)`, `path` = `(:form NEW)`, footprint `("lisp:/OLD" "lisp:/NEW")`. A rename that also changes the body is a remove and an add.
 - **Anchors** (what makes apply and invert exact):
   - `after.anchor` of an `:add` / `:move` = the unit's predecessor in b.
   - `before.anchor` of a `:remove` = its predecessor in a.
-  - `before.anchor` of a `:move` = its nearest predecessor in a that is **stable** (common, not moved) **or** moved and later in b's order than this unit; NIL if none. (When the inverse moves units back in reverse order, those are exactly the units already back in place.)
+  - `before.anchor` of a `:move` = the unit right before it in the state it moves from (the apply order simulated); NIL if none. The inverse puts it back exactly there, so every later inverse change sees the state the forward one left. (0.1.0 used the nearest predecessor in a that is stable or moved later in b's order, which skips an added unit in between and shifts ordinals for later inverse changes.)
 - **Order** (`apply-diff` applies in list order): removes in **descending** a order; then adds and moves in **b's order**; then modifies in b's order. Inverse = reversed (diff-protocol rule), which keeps every anchor valid.
 
 ### Nested changes
@@ -113,6 +115,8 @@ States are strings; each change re-reads the current state (unclean → `lisp-so
 | `:move` | `from` present with before's text; new key absent unless it equals `from` (`:exists`); anchor present | take the unit out, insert after's text after the anchor |
 | leaf | unit present and `node-forms` path reachable (`:missing`); node text `string=` before (`:before-mismatch`, actual = node text) | replace that node's text |
 
+- 0.2.0: a state the engine itself just returned (found by identity, `EQ`) keeps the units that change placed instead of being re-cut. Re-cutting an intermediate state can move a comment onto a unit with no final newline and break a later change's before check.
+- 0.2.0, anonymous units: a unit found by key whose text differs (or a key not found) is looked up by text among the anonymous units of the same base; an `:add` / `:move` onto a key held by an anonymous unit of the same base is not `:exists` (the new one shifts the ordinals of those after it).
 - Restarts are diff-protocol's: `skip-change`, `use-value`, `abort` around every change (including `lisp-source-unreadable` from an unclean state). `use-value V`: for a leaf, V is node text put at its path; for a form-level change, V is a unit text put at its key — replacing the unit when present, else inserted after the change's anchor (after's, then before's) when that is present, else at the end of the file before the `"eof"` unit.
 - `invert-diff` (diff-protocol default): kinds swap, plists swap, order reversed, `:summary` laziness kept. `compose-diffs` = concatenation.
 
@@ -165,7 +169,7 @@ Properties (suite): symmetric in ours / theirs (same merged text, same conflict 
 
 - Merging two edits **inside** one form (nested three-way); a textual fallback inside a conflicting form (callers can run the `:text` engine on the two unit texts).
 - Conflict markers in a merged file (`merge-sources` / a git merge driver) — V-track, on top of `conflict-ours` / `conflict-theirs`.
-- Descending into top-level `progn` / `eval-when` / `locally` for identity (they are one unit keyed by the operator); identity of anonymous forms beyond operator + ordinal.
+- Descending into top-level `progn` / `eval-when` / `locally` for identity (they are one unit keyed by the operator). (Anonymous forms are matched by content since 0.2.0.)
 - Move detection for nested forms; similarity-based renames; renames of a body that also references the old name.
 - Recovery-based diffs of files that do not read clean (use `use-text-diff`).
 - `render-diff :unified` on a `:lisp` diff without a base; `:lisp` leaves in the tree engine's `:unified` render.
