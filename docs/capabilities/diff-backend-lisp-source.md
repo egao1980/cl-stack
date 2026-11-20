@@ -147,7 +147,7 @@ Properties (suite): symmetric in ours / theirs (same merged text, same conflict 
 
 ## Under the tree engine
 
-`(make-instance 'tree-diff-engine :leaf-engines '((:text . :text) (:lisp . :lisp)))` with `(make-tree-file content :type :lisp)`: leaf paths nest as `("src" "r.lisp" :form "defun a" 3 2)`, footprints splice to `"lisp:/src/r.lisp/defun a/3/2"`, apply / invert / three-way per file go through this engine (tree conflicts on one file carry the form-level footprint plus `"tree:/src/r.lisp"`). The tree's `:unified` render shows `:lisp` files as binary at R3 (diff-protocol only renders `:text` leaves) — [diff-protocol#7](https://github.com/egao1980/diff-protocol/issues/7).
+`(make-instance 'tree-diff-engine :leaf-engines '((:text . :text) (:lisp . :lisp)))` with `(make-tree-file content :type :lisp)`: leaf paths nest as `("src" "r.lisp" :form "defun a" 3 2)`, footprints splice to `"lisp:/src/r.lisp/defun a/3/2"`, apply / invert / three-way per file go through this engine (tree conflicts on one file carry the form-level footprint plus `"tree:/src/r.lisp"`). The tree's `:unified` render shows `:lisp` files as hunks since 0.2.1 (diff-protocol 0.3.0 `render-unified-content`, [diff-protocol#7](https://github.com/egao1980/diff-protocol/issues/7) closed, diff-backend-lisp-source#3). When the tree diff carries the file contents (`:summary`, `:content`), it renders the `:text` engine's line hunks, the same ones `unified-patch` gives. At `:changes` level it carries neither side, so it renders one section per change, `@@ lisp:/… @@` with the unit or node texts. That form is for reading; for `patch` / `git apply`, use `unified-patch` with the base text. The engine registers with `register-diff-engine` and specializes the exported hooks (`apply-change`, `put-value`, `merge-states`, `rebase-states`).
 
 ## Conditions and restarts
 
@@ -178,7 +178,7 @@ Properties (suite): symmetric in ours / theirs (same merged text, same conflict 
 ## Follow-ups
 
 - [diff-protocol#6](https://github.com/egao1980/diff-protocol/issues/6): export the engine SPI (`%apply-change`, `%put-value`, `%three-way`, `%rebase`, `%register-engine`) for engines that live in other repos.
-- [diff-protocol#7](https://github.com/egao1980/diff-protocol/issues/7): render non-`:text` leaves with a text form (`:lisp`) in the tree engine's `:unified` output.
+- [diff-protocol#7](https://github.com/egao1980/diff-protocol/issues/7) (done in diff-protocol 0.3.0; used from 0.2.1): render non-`:text` leaves with a text form (`:lisp`) in the tree engine's `:unified` output.
 
 ## Implementation tasks
 
