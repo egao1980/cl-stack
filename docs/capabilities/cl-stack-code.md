@@ -1,7 +1,7 @@
-# cl-stack-code (H3a): the coding agent's headless shell
+# cl-stack-code (H3a, H3b): the coding agent's headless and interactive shell
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H3 ("Product shell: interactive / `-p` / JSON stream / RPC / SDK; settings layering (user, project, local); … `AGENTS.md` discovery"). The repo was decided there (Decision 1).
-**Status:** milestone **H3a locked**. The contract is in [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code) (`cl-stack-code/tests`, Rove), and every function that does work calls `%not-implemented`. It will be implemented through **team-solve**. Version target **cl-stack-code 0.1.0**. Later slices: [Roadmap](#roadmap-h3bh3e).
+**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0** ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b locked** (the interactive mode, version target **0.2.0**): [H3b — locked](#h3b--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
 
 `cl-stack-code` is the product: a coding agent CLI on cl-stack. H3a is the **headless** half only:
 
@@ -230,11 +230,124 @@ The same flags, files and outputs. `~/.config/cl-stack-code/` resolves under `us
 
 ---
 
+## H3b — locked
+
+Contract: branch `agent/h3b-contract-b7d4` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.2.0**. It holds the stubs, which call `%not-implemented`, and the Rove tests in `cl-stack-code/tests` that define them. The file headers in `src/interactive.lisp`, `src/transcript.lisp`, `src/mentions.lisp`, `src/rule-store.lisp` and `src/program.lisp` give the exact rules. This section summarizes them. The implementation goes through **team-solve** (`.team-solve/task.md`: `system: cl-stack-code`, `test-system: cl-stack-code/tests`, this brief).
+
+Running `cl-stack-code` without `-p` starts an interactive session on the terminal. The screen has a scrolling transcript with streamed markdown, compact tool calls and diffs for edits, a multi-line input with history and `@path` completion, slash commands, approval dialogs, Esc to interrupt, a queue for follow-ups, and a status line. The session uses the same settings, rules, tools, `AGENTS.md` and system prompt as `-p`.
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **Shape** | Three layers. (1) A **pure core**: `(interactive-update state event) → (values state effects)`. Events and effects are plain lists. The core does no I/O and never calls the agent. (2) **Pure views**: `transcript-lines`, `status-line-text`, `tool-call-summary`, `approval-message`, `tool-call-preview`. (3) The **program** (`code-program`, a tui-protocol program). It turns keys and agent callbacks into events and carries out the effects in order. | Most of the behaviour is tested without a terminal or an agent. The program layer only glues. |
+| **Dependencies** | Adds `tui-protocol` ≥ 0.2.0 with `tui-protocol/widgets`, `tui-markdown` ≥ 0.2.0, `tui-backend-tty` ≥ 0.1.1, `diff-protocol` ≥ 0.3.0 and `bordeaux-threads`. The tests add `tui-backend-terminal` 0.1.0, `terminal-protocol` and `terminal-backend-lisp` 0.2.0, `pty-protocol` 0.1.0 and `pty-backend-native` 0.2.1. | All are H1 parts that are already published. No third-party TUI library. |
+| **State** | `interactive-state` is given (not a stub). `interactive-update` changes it in place and returns it, as tui widgets do. Readers: `state-transcript` (entries), `state-busy-p`, `state-queue`, `state-approvals`, `state-model`, `state-permission-mode`, `state-cwd`, `state-rules`, `state-usage`, `state-quit-p`. | Same idiom as `tui-protocol/widgets`. A copy per key press buys nothing. |
+| **Entries** | An `entry` struct (given) of kind `:user`, `:assistant`, `:tool`, `:notice` or `:error`. A tool entry has the invocation's id, name, input, status, result and error-p. Streamed text is added to the last entry when that entry is `:assistant`; otherwise it starts a new one. | One list renders the whole transcript. |
+| **Events → effects** | Events: `:submit`, `:interrupt`, `:quit`, `:part`, `:usage`, `:invocation`, `:turn-end` (`:reason` `:stop` / `:max-steps` / `:canceled` / `:failed` / `:approval`, with `:pending` and `:message`), `:reply`, `:model-set`, `:notice`, `:error`. Effects: `:run`, `:cancel`, `:approve`, `:deny`, `:resume`, `:restore-input`, `:new-conversation`, `:set-model`, `:set-permission-mode`, `:quit`. | Each effect maps to one ai-agent-protocol call or one widget change. |
+| **Approvals** | The dialog answers map onto ai-agent-protocol 0.12.0: **once** → `approve-invocation`, **always** → `approve-invocation :always t`, **reject** → `deny-invocation :feedback text`, **reject all** → `deny-invocation :all t`. `(:resume)` follows every answer, and the program resumes only when the run has no `:proposed` invocation left. No handler answers `agent-approval-required`, so an ask pauses the run (`:approval`) and the dialog takes over. The exception is `bypassPermissions`, which approves every ask, as in `-p`. | This uses the protocol's pause/resume. Nothing blocks the event loop while the user decides. An "always" can approve the other pending calls too, so the core reads `state-approvals` back through the invocations' statuses. |
+| **Saved "always"** | The agent's `permission-rule-store` is a `settings-rule-store` on `<project-dir>/.cl-stack-code/settings.local.json`. Saving appends `format-permission-rule` (the inverse of `parse-permission-rule`, which falls back to the `{"tool","resource"}` object form) to `permissions.allow` and keeps every other key. A bad file signals `settings-error` and writes nothing. | This was the H3a roadmap's promise. The next start, or a `-p` run, reads the rule as an ordinary settings rule. |
+| **Dialog** | `w:confirm-dialog` with `+approval-choices+` (Allow once / Always allow / Reject / Reject all). Reject asks for feedback (an empty answer is allowed). The title is "Permission", or "Permission (I of N)". The message is `approval-message`: the summary, plus up to 12 lines of the edit's diff preview. Esc in the dialog is `:interrupt`, which rejects every pending call, and the run goes on. | Codex and Claude Code offer the same four answers. The preview shows the edit before the user decides. |
+| **Diff preview** | `tool-call-preview root name input` computes the diff that `edit` / `multi_edit` / `write` would make. It produces the same text that agent-tools puts in its edit result (`--- a/REL`, `+++ b/REL`, then `diff:render-diff` of the text engine with context 3). It never signals. `tool-result-diff` pulls the diff back out of an edit result. | A test checks that the preview equals the diff the tool reports after the edit. |
+| **Transcript** | `transcript-lines entries width &key streaming`. Blocks are separated by one empty line. User text is `> ` + wrapped text. Assistant text is `md:render-markdown`, or a live `markdown-stream` for the last entry while streaming. A tool entry is `● summary`, then the edit diff (`md:render-diff-lines` at W−2, indented by 2) or `  ⎿ first line` plus `    … +N lines`. A notice is shown as is. An error is `error: …`. | Codex's and Claude Code's compact tool rows, and tui-markdown as H1c planned. |
+| **Turn control** | Esc, or Ctrl-C while busy, sends `:interrupt`, which runs `cancel-agent-run`. A message submitted while a turn runs goes to the queue. When the turn ends normally, the first queued message becomes the next turn (`continue-ai-agent-async`, history kept). When a turn is canceled or fails, the queue goes back into the input (`:restore-input`, joined by LF). | This is the "follow-up" queue. Steering (`agent-run-post` mid-turn) is H3c's. Returning the queue to the input on Esc matches Claude Code. Nothing is sent that the user stopped. |
+| **Commands** | `/help`, `/clear` (new conversation, usage zeroed), `/model [MODEL]` (the program resolves the model with the same providers; success sends `:model-set`, failure sends `:error`; the history is kept), `/permissions [MODE]` (shows the mode and the settings rules, or switches the mode from the next turn on), `/exit`. While a turn runs, only `/help` and `/exit` work. The others add an error entry. | The pi / Claude Code minimum. Prompt templates as `/name` are H3e. |
+| **@ mentions** | `project-files` lists every entry under the working directory: root-relative, sorted, directories ending in `/`, `.gitignore` / `.ignore` applied, `.git` skipped. The program reads it at start and after every turn. `mention-candidates` ranks entries in three groups: path prefix, then segment prefix, then substring (case-insensitive), with at most 20 candidates. `expand-mentions` appends `<file path="REL">…</file>` blocks for the regular files mentioned under the root. Each file is capped at 32 000 characters. | The model sees the file without needing a tool call. The transcript shows what the user typed. |
+| **Input** | `w:text-input` with prompt `> `, placeholder `Message, @file, /help`, history kept in memory, completion `mention-candidates` with 5 menu rows. The external editor (Ctrl-G) is ignored in H3b. | Persistent history goes with sessions (H3c). |
+| **Status line** | Left: ` <model> · <mode> · <cwd>`, with the home directory shown as `~`. Right: `<in> in · <out> out ` (summed tokens). Drawn inverse on the last row. | Model, directory, mode and usage at a glance. The widget's layout rules cut a long path from the left side. |
+| **Layout** | From the bottom: the status line; then the dialog or the input (at most 8 rows); then a `─` rule; then, while busy, the queued messages and a spinner (`Working… (Esc to interrupt)`); the transcript viewport fills the rest and follows the tail. PgUp, PgDn and the mouse wheel scroll it. | The bottom rows are fixed, so the snapshot tests can check them exactly. |
+| **Threads** | Agent work never runs on the UI thread. Agent events come back as messages sent with `tui-send`, so only `tui-update` touches the state and the widgets. | The tui-markdown stream and the widgets are not thread-safe. |
+| **Entry and terminal** | `make-code-program invocation &key providers user-config-dir getenv` signals the same configuration errors as `-p`, before the terminal is touched. `close-code-program` is idempotent. `run-cli` without `-p` runs the program on a `tty-backend` when `input` / `output` are the process's own standard streams and `tty-available-p` is true. Otherwise it signals a `code-usage-error` that names the terminal and `-p` (exit 2). Quitting returns 0. A prompt given as arguments is the first message. `--output-format` without `-p` is a usage error. tui-backend-tty restores the terminal on `:quit`, on a condition, and on exit. | Tests drive `run-cli` with string streams, so the "not a terminal" path is deterministic and a test run can never grab the developer's terminal. |
+| **Keys** | Enter sends the message. Alt/Shift+Enter or Ctrl+J inserts a newline. Up/Down browse the history. Tab completes. Esc interrupts. Ctrl-C interrupts while busy, clears the input when there is text, and quits on an empty input. Ctrl-D on an empty input quits. In the dialog: Up/Down, 1–4, Enter, and Esc to reject all. | See below. |
+| **Stubs** | `%not-implemented` is back in `src/package.lisp`. The entry struct, the state class and its readers, `make-interactive-state`, `make-settings-rule-store`, `+help-text+`, `+approval-choices+` and `+max-mention-chars+` are given. `run-cli`'s dispatch is left as in 0.1, so the H3a tests keep passing on the stubs. | — |
+
+### Surface (new in 0.2.0)
+
+```lisp
+;; core
+(make-interactive-state &key model permission-mode cwd rules)  → interactive-state
+(interactive-update state event)            → (values state effects)
+(state-approvals state)                     ; pending, unanswered, still :proposed
+(status-line-text state)                    → (values left right)
++help-text+  +approval-choices+
+
+;; transcript
+entry  make-entry (&key kind text id name input status result error-p)
+entry-kind entry-text entry-id entry-name entry-input entry-status entry-result entry-error-p
+(transcript-lines entries width &key streaming)   → lines of runs
+(tool-call-summary name input)              → string
+(tool-result-diff result)                   → unified diff text or NIL
+(tool-call-preview root name input)         → unified diff text or NIL
+(approval-message root invocation)          → string
+
+;; mentions
+(project-files root &key (limit 10000))     → ("README.md" "src/" "src/a.lisp" …)
+(mention-candidates files token &key (limit 20))  → ("@src/a.lisp" …)
+(expand-mentions text root)                 → (values prompt attached-rels)
++max-mention-chars+                         ; 32000
+
+;; saved rules
+(format-permission-rule rule)               → "edit(src/a.lisp)" | {"tool","resource"}
+settings-rule-store  (make-settings-rule-store file)  settings-rule-store-file
+;; + methods on ai-agent-protocol:save-permission-rule / list-permission-rules
+
+;; program
+code-program  (make-code-program invocation &key providers user-config-dir getenv)
+(close-code-program program)
+code-program-state  code-program-input  code-program-dialog
+```
+
+### Key bindings
+
+| Where | Key | Action |
+|-------|-----|--------|
+| input | Enter | send the message; queued while a turn runs |
+| input | Alt+Enter, Shift+Enter, Ctrl+J, or `\` before Enter | newline |
+| input | Up / Down (first / last row) | history |
+| input | `@…`, Tab, Up/Down, Enter | file completion |
+| anywhere | Esc | interrupt the turn (closes the completion menu first) |
+| anywhere | Ctrl-C | busy: interrupt; text in the input: clear it; empty: quit |
+| anywhere | Ctrl-D | empty input: quit |
+| transcript | PgUp / PgDn, mouse wheel | scroll; at the bottom it follows again |
+| dialog | 1–4, Up/Down + Enter | once / always / reject (asks for feedback) / reject all |
+| dialog | Esc | reject all pending; the run goes on |
+
+### Conditions
+
+No new conditions. `make-code-program` signals H3a's `code-usage-error`, `settings-error` and `model-not-found`, and `run-cli` maps them to exit 2. Running without a terminal is a `code-usage-error`. A bad local settings file during an "always" reply signals `settings-error` from `save-permission-rule`; the program shows it as an error entry. A failed turn becomes `(:turn-end :reason :failed :message …)` and an error entry, and the session goes on. tui-backend-tty's `tty-not-a-terminal` / `tty-system-error` are caught by `run-cli` (exit 2 / 1) after the terminal is restored.
+
+### Contract tests
+
+`cl-stack-code/tests` grows by 7 files (one of them helpers): **82 new deftests (106 cases with the parametrized rows)**. The 99 H3a tests (132 cases) stay; their version checks now expect 0.2.0. Every LLM interaction goes through the scripted mock backend. It gains one step kind, `(:gate GATE STEP)`, which holds a generate until the test opens the gate, so interrupts and queued follow-ups are deterministic.
+
+| File | Covers |
+|------|--------|
+| `interactive-support` | events → effects helpers, `proposed` invocations, `with-code-tui` (a `code-program` on `tui-backend-terminal`'s headless driver with the pure-Lisp emulator), screen and row waits |
+| `core-test` | submit / blank / queue, streamed parts, usage sums, invocation entries, interrupt, cancel and failure returning the queue, max turns, approvals and every reply, reject-all, Esc in approvals, quit and `/exit`, `/help`, `/clear`, `/model`, `/permissions`, unknown commands, status line text (home as `~`) |
+| `transcript-test` | tool summaries (16 parametrized rows), result diffs, previews equal to agent-tools' own edit diff, write / multi_edit / replace_all previews, NIL cases, approval messages with the 12-line cut, exact transcript lines for every entry kind, markdown and live streams, tool bodies, header truncation, edit diffs, entry separation |
+| `mentions-test` | project file listing with ignore files and limits, candidate ranking and limits, file blocks, duplicates, text left alone (emails, directories, outside the root, binary, missing), truncation |
+| `rule-store-test` | `format-permission-rule` round trips (10 parametrized rows) and the object form, file creation, keeping the other keys, no duplicates, ask rules, bad files signalling `settings-error` and writing nothing, the next start reading the rules |
+| `program-test` | first-screen layout (exact bottom rows), resize, a full turn with markdown and usage, tool rows, initial prompt, `AGENTS.md`, scrolling, approve once / always (rule saved and honoured) / reject with feedback / reject all / the second of two / Esc, deny rules and bypass with no dialog, Esc interrupt, queued follow-ups (layout and order), queue restored on interrupt, `@` completion and attachment, the file list refreshed, history, multi-line input, `/help`, `/clear`, `/model` (failure, then success with the history kept), `/permissions`, `/exit`, Ctrl-D / Ctrl-C quitting and clearing, Ctrl-C interrupt, configuration errors |
+| `interactive-cli-test` | no terminal → exit 2 naming the terminal and `-p`, `--output-format` without `-p`, configuration errors first, and the **pty smoke test**: a child SBCL running `run-cli` on a `pty-protocol` pty, with its screen read back through the emulator. It checks the first frame, the status line, one mock turn, quitting with Ctrl-C (exit 0) and `stty -g` restored. Unix only; on Windows it calls `skip`, as tui-backend-tty's crash test does. |
+
+On the stubs every H3b case fails, and every H3a case passes. No throwaway prototype was run, so the implementation may find test bugs. Those go through a contract-fix commit, as in H3a and H2c.
+
+### Non-goals (H3b)
+
+- Sessions: `/tree`, `/fork`, `/clone`, `--continue` / `--resume`, persistent input history, and steering mid-turn with `agent-run-post` (H3c).
+- RPC mode and `--input-format stream-json` (H3d). The SDK, prompt templates as `/name`, skills, and project trust (H3e).
+- Running the external editor. Ctrl-G emits `edit-event`, and H3b ignores it.
+- Showing rules saved by "always" in `/permissions` during the same session (they show from the next start), rule editing in the UI, and a cost table.
+- Syntax highlighting of code blocks (tui-markdown's hook stays empty), images, mouse selection and copy, themes.
+- `SIGTSTP` / Ctrl-Z suspend (tui-backend-tty leaves it out).
+
+---
+
 ## Roadmap (H3b–H3e)
 
 | Slice | Scope | Builds on |
 |-------|-------|-----------|
-| **H3b** interactive | Running without `-p`: full-screen TUI on `tui-backend-tty` with `tui-protocol/widgets` and `tui-markdown` — scrolling transcript with streamed markdown, multi-line input with history and `@` file mentions, status line, approval dialog (once / always / deny / deny all → `invoke-approve-always`, `invoke-deny-all`), "always" replies saved to `settings.local.json` through a `permission-rule-store`, `/model`, `/clear`, `/help`, Ctrl-C cancels the turn | H1, H3a |
+| **H3b** interactive | Locked: [H3b — locked](#h3b--locked) | H1, H3a |
 | **H3c** sessions | Sessions as a `revision-protocol` store: one revision per turn, `--continue`, `--resume <id>`, `/tree`, `/fork`, `/clone`, export; `session_id` becomes the store's id; steering vs follow-up queue on `agent-run-post` | R0, H3a |
 | **H3d** RPC | `--mode rpc`: JSON-RPC 2.0 over stdio (`rpc-protocol-json` + `rpc-backend-stdio`) — prompt, steer, follow-up, abort, approve, deny; the stream-json events as notifications; `--input-format stream-json` for `-p` | H3a, H3c |
 | **H3e** SDK and configuration | A Lisp SDK (start a session, send prompts, receive events as CLOS objects, answer approvals); skills (`SKILL.md` via `steer-protocol`), prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, `@file` imports, project trust (project allow rules and `env` wait for the user's yes) | H3a–H3d |
