@@ -1,7 +1,7 @@
-# cl-stack-code (H3a–H3d, H5a, H5b, H4b): the coding agent's headless and interactive shell, its sessions, plan mode, checkpoints, its Lisp image, and its SDK and JSON-RPC server
+# cl-stack-code (H3a–H3d, H5a, H5b, H4b, H8d): the coding agent's headless and interactive shell, its sessions, plan mode, checkpoints, its Lisp image, its SDK and JSON-RPC server, and its views of running units
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H3 ("Product shell: interactive / `-p` / JSON stream / RPC / SDK; settings layering (user, project, local); … `AGENTS.md` discovery"). The repo was decided there (Decision 1).
-**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0**; **0.1.1** runs H3a with no stack workarounds: `--help` / `--version` come from `stack-cli:parse` (cli-protocol 0.2.1, clingon 0.2.1; no argv pre-scan), options and commands are built with `make-option` / `make-command :backend`, the designator's model reaches the backend as the agent's `:model` (ai-agent-protocol 0.12.0), and each run makes its own HTTP backend (http-backend-async 0.2.20) ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox) shipped as **0.6.0**: [H4b — locked](#h4b--locked). Milestone **H3d locked** (the SDK and `--rpc`, JSON-RPC 2.0 over stdio; version target **0.7.0**, after rpc-backend-stdio 0.2.0): [H3d — locked](#h3d--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
+**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0**; **0.1.1** runs H3a with no stack workarounds: `--help` / `--version` come from `stack-cli:parse` (cli-protocol 0.2.1, clingon 0.2.1; no argv pre-scan), options and commands are built with `make-option` / `make-command :backend`, the designator's model reaches the backend as the agent's `:model` (ai-agent-protocol 0.12.0), and each run makes its own HTTP backend (http-backend-async 0.2.20) ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox) shipped as **0.6.0**: [H4b — locked](#h4b--locked). Milestone **H3d** (the SDK and `--rpc`, JSON-RPC 2.0 over stdio) shipped as **0.7.0**: [H3d — locked](#h3d--locked). Milestone **H8d locked** (a supervisor per session, the TUI process panel `/ps` / Ctrl-P, the `units/*` RPC methods; version target **0.8.0**): [H8d — locked](#h8d--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
 
 `cl-stack-code` is the product: a coding agent CLI on cl-stack. H3a is the **headless** half only:
 
@@ -914,6 +914,119 @@ On the stubs, 103 of the 104 new cl-stack-code cases fail (`rpc-constants` check
 - Several clients on one server, authentication, and sharing a session between servers beyond H3c's lock and fork-on-conflict.
 - An interactive session picker, session names, deleting sessions (as H3c).
 - Typed CLOS event classes in the SDK (one schema instead).
+
+---
+
+## H8d — locked
+
+**Plan row:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H8d ("Visual tools to observe and control running units"), "Decisions (2026-11-21)" item 3. The units, their logs and the search engine are [supervisor-protocol](supervisor.md) 0.3.0 (H8a–H8c); the agent's unit tools are [agent-tools 0.3.0](agent-tools-units.md). This section is the product half: the session's supervisor, the TUI process panel and the same model over `--rpc`.
+
+Contract: branch `agent/h8d-contract-38cf` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.8.0**. The rules are in the headers of `src/units.lisp` (the supervisor, the unit tree, the JSON objects, the resource sampler, the permission decision), `src/unit-panel.lisp` (layout, keys, views), `src/interactive.lisp` ("H8d"), `src/program.lisp` ("H8d"), `src/client.lisp` ("H8d", the SDK functions), `src/rpc.lisp` (the `units/*` methods) and `src/headless.lisp`. **Order:** supervisor-protocol 0.3.0 and agent-tools 0.3.0 are published; nothing else comes first. The implementation goes through **team-solve** (`.team-solve/task.md`: `system: cl-stack-code`, `test-system: cl-stack-code/tests`, this brief).
+
+```
+cl-stack-code                     # /ps or Ctrl-P: the session's units
+→ {"jsonrpc":"2.0","id":7,"method":"units/subscribe","params":{"session_id":"3f9a…","since":0}}
+← {"jsonrpc":"2.0","method":"event","params":{"type":"unit","seq":1,"unit_id":"shell-job-1","event":"state","from":null,"to":"starting",…}}
+← {"jsonrpc":"2.0","id":7,"result":{"subscription":"sub-1","seq":9,"complete":true}}
+→ {"jsonrpc":"2.0","id":8,"method":"units/control","params":{"session_id":"3f9a…","unit":"shell-job-2","action":"stop"}}
+← {"jsonrpc":"2.0","id":8,"error":{"code":-32017,"message":"stop shell-job-2 needs confirmation: …","data":{"condition":"unit-control-needs-confirmation","resource":"stop:shell-job-2",…}}}
+```
+
+### Prior art (intersection, not a clone)
+
+| Source | Took | Left |
+|--------|------|------|
+| `htop` / `top`, `docker ps`, `systemctl status` | One row per process with state, pid, uptime, CPU% (Δcpu / Δwall, one core = 100), RSS; tree by owner | Sort / filter keys, signals menu, per-thread rows |
+| Claude Code background tasks (`/bashes`), Codex `unified_exec` | Shell jobs and agents in one list; read a job's output while it runs | A job list separate from servers and subagents |
+| `journalctl -u … -f`, `less +F`, `kubectl logs -f` | Follow a unit's log, scroll back, `/` search with highlighted hits, `n` / `N` | A query language |
+| k9s / lazydocker | A pane over a live event stream; stop / restart from the list with a confirm | Port-forward, shell exec, attach (later: H8a-1 executors) |
+| H3b, H3d (this product) | The confirm dialog, the status line, `--rpc` events as notifications and condition-named errors | — |
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **Supervisor ownership** | One supervisor per interactive program, per SDK / `--rpc` session and per `-p` run, made by `make-code-supervisor` (given) before the tools. State directory `units-directory` = `<data-dir>/units/<project key>/` (the sessions' key). It outlives conversation changes (`/clear`, `/clone`, a conflict fork): it belongs to the running session, not to one conversation id. Root scope = the session; agent-tools adds `:tool-source "shell"`; a plan's area tools get `"shell"` under `:agent "plan-<id8>"`. Close: unit tools, shell tools, then `shutdown-supervisor` (one stop wave; logs kept) | A per-project state directory lets every start sweep what a crashed cl-stack-code left in that project (live owners are kept) and gives unit-tools the earlier runs' logs as previous logs. A supervisor per session keeps one session's controls away from another's units |
+| **Tools** | `make-code-tools :supervisor` (given): bash commands are `:shell-job` units, and the five unit tools come **last**: `(file shell [lisp] units)`, so `(third sources)` stays the lisp tools. -p, the TUI and the SDK all offer them; deny rules hide them as any tool. The init event's `tools` grow by the five names | One tool list everywhere; the H8c tools reach the agent only through the product |
+| **Unit model** (`src/units.lisp`) | `unit-tree` = depth-first rows: a scope's own units (start order), then its child scopes (creation order), root units at depth 0, empty scopes omitted. `unit-status-word` = agent-tools' (`running`, `exited 0`, `failed 3`, `exited` / `failed` for threads, `killed`). `unit-last-line` = the last output record cleaned (ANSI and controls removed). `unit-object` / `unit-objects` (tree order, filters kind / state / owner glob) are the **one** source for the panel rows and `units/list` | The panel and RPC cannot disagree |
+| **Panel** | `/ps` (idle or busy) or **Ctrl-P** opens it; Ctrl-P / Esc / `q` close it. It replaces the transcript, the queue / spinner / banner rows and the input (the input keeps its text); the status line stays. Row 0 title `Units · N running · M total`, row 1 the column header, then the tree. Fixed columns `"~a~20a ~9a ~9a ~6@a ~6@a ~5@a ~6@a  ~a"`: mark (`> ` selected, inverse), name (indented id), status, kind, pid (`-` threads), uptime (`1m04s`, `-` finished), CPU%, RSS (`12.3M`), last line. Scope rows `  shell/`. The row above the rule is the help (`+unit-list-help+`), the last action's result, or the panel's prompt | Fixed widths make exact snapshot tests possible (the clock-driven columns are masked); one help row says every key |
+| **Keys** | List: Up / Down (scope rows skipped), Home / End, Enter follow, `s` stop, `r` restart, `i` input (prompt `input> `, the line + LF), `e` close input, Esc / `q` / Ctrl-P close. Log view: Up / Down / PgUp / PgDn / Home scroll, End follow, `/` search (`search> `), `n` / `N` hits (wrapping), `s r i e`, Esc clears the search, then back. An approval dialog always takes the keys first | `less` / `htop` muscle memory; the agent is never left waiting behind the panel |
+| **Follow and search** | The log view loads the last 2000 output lines (`log-read`), follows with `log-follow` (:wait 0.25) on a thread, drops the oldest past 2000. Lines `"~a~5d  ~a"` (mark `>` on hits), TAB to the next 8 columns, stderr red, gaps as unit_read shows them. Search = `ss:search-logs` on the unit tools' own index, `:units (id) :k 50`; every occurrence of the query's terms (`ss:query-terms`, longest first) is inverse; a hit outside the loaded lines reloads the window around it. Title `Log <id> (<status>) · following` / `· lines A-B`, then `· search "Q": I of N` | The H8b reader and the H8c engine, as the agent uses them; no second index |
+| **CPU / RSS** | `sample-unit-resources` (one OS call for all units): macOS / Linux `ps -A -o pid= -o pgid= -o rss= -o time=` (LC_ALL=C), summed over the unit's process group; Windows `Get-CimInstance Win32_Process` (WorkingSetSize, KernelModeTime + UserModeTime), the unit's pid and descendants. CPU% = Δcpu / Δwall × 100 between two samples. Sampled every 2 s (Unix) / 5 s (Windows) while the panel is open, and on `units/list` with `resources`. Threads: `-` | `ps -o pgid,rss,time` exists on macOS and Linux (`/proc` is Linux-only, `libproc` macOS-only, both native); CIM is already the H8a inspector's Windows source and costs ~0.5–1 s per call, hence the slower rate. The group / descendant tree is the one stop and sweep act on. No portable per-thread CPU. The sampler moves into supervisor-protocol's `os-inspector` later ([supervisor-protocol#4](https://github.com/egao1980/supervisor-protocol/issues/4)) |
+| **Permission parity** | A panel or RPC action **is** the agent's unit_control call: `unit-control-arguments` (close_input = `input` with `""` and `eof: true`, resource `input:<id>`), decided by `unit-action-permission` = `ai-agent-protocol:agent-permission` of the session's agent on its unit tools (its rules, saved rules, unit_control's default ask); `bypassPermissions` turns an ask into allow, a deny stays. Allowed actions run `tools:call-unit-tool "unit_control"`, so texts and effects are the tool's. TUI: deny → help row + transcript error `stop rpc-1 denied by unit_control(*:rpc-*)`; ask → confirm dialog "Unit control" (Yes / No, no "always"); allow → done, result as help row and `unit_control: …` notice | One layer, tested both ways: rules like `unit_control(stop:shell-job-*)` decide for the agent and the user alike. No "always": unit ids are per supervisor, so a saved id rule would match another unit next session |
+| **Live updates** | The program subscribes at `tui-init` (from the current seq); each event updates the status line count (`(:units :running N)`) and, for a `:state` → `:failed`, adds the notice `unit <id> (<kind>) failed with exit code N; /ps to inspect` (`(:unit-failed :notice …)`); the open panel redraws, ticks every 1 s and samples on its own thread | The H8a stream is ordered and replayable, so nobody polls states |
+| **Status line** | Right side `N running · <in> in · <out> out ` while N > 0, unchanged at 0 (given `%units-marker`) | Every H3b–H4b status-line test stays exact |
+| **`--rpc`** | Six methods (`+rpc-methods+`): `units/list`, `units/subscribe` (`since` replays every retained event after it, then live, in seq order, each once; `complete` false when older events were dropped), `units/unsubscribe`, `units/read` (unit or ref, `start_line` / `limit` / `tail` / `streams`), `units/search`, `units/control` (`confirmed` answers an ask). Notifications are `event` with `{"type":"unit",…}` (`+event-types+` gains `"unit"`). Thin adapters over `client-units`, `client-subscribe-units`, `client-unsubscribe-units`, `client-read-unit`, `client-search-units`, `client-control-unit` | H3d's one-core rule: RPC = SDK = the panel's model. An ask is a −32017 the client answers with its own dialog (no server→client requests, as H3d) |
+| **Web page** | **Out of 0.8.0** (a later row, H8d-1) | A listening socket is new attack surface even read-only (unit logs carry tokens and env; it needs a per-run token, origin checks and a bind policy); `--rpc` already serves external UIs, and a page is best a thin client over the same methods once `rpc-backend-http` / `-sse` exist (H3d's transport non-goal), not a second server; the stack has no live-page layer yet (SSE + JS); and every OS would need browser-free tests. Plan: `--units-web 127.0.0.1:PORT`, read-only, over the `units/*` methods |
+| **Stubs** | `%h8d-pending` (`src/package.lisp`). **Given:** the conditions and their RPC codes / data fields, constants, `units-directory`, `make-code-supervisor`, `make-code-tools :supervisor`, `code-unit-tools`, the `unit-panel` class and readers, the program slots (`code-program-supervisor`, `-unit-tools`, `-panel`), `state-units-running` and `%units-marker`, `/ps` and the event routing in the core, `+rpc-methods+`, `+event-types+`. **Stubbed:** every function in `src/units.lisp` and `src/unit-panel.lisp` past the given ones, the SDK functions. **Left to the implementation:** the wiring in the program, the client sessions, -p and the `units/*` handlers. Old paths never reach a stub | — |
+
+### Surface (new in 0.8.0)
+
+```lisp
+;; supervisor and tools (given)
+(units-directory cwd &key data-dir)  (make-code-supervisor cwd &key data-dir getenv (exit-hook t))
+(make-code-tools cwd &key settings on-image-event supervisor scope)  (code-unit-tools sources)
+;; model
+(unit-status-word u) (unit-tree sup &key scope) (unit-last-line u)
+(format-unit-uptime s) (format-unit-rss b) (format-unit-cpu p) (parse-ps-cpu-time string)
+(sample-unit-resources units) → id → (:cpu-time s :rss b)   (unit-cpu-percent prev cur seconds)
+(unit-object u &key stats cpu-percent depth now) (unit-objects sup &key kind state owner stats cpu now)
+(unit-event-object event &key subscription session-id) (unit-record-object r) (unit-gap-object g)
+(unit-control-arguments action unit-id &key input)
+(unit-action-permission agent unit-tools action unit-id &key input mode) → (values effect rule resources)
+(unit-action-message action unit &key input) (unit-failure-notice event)
+;; views and the panel
+(unit-row-text row width &key header selected stats cpu now) (unit-panel-lines rows width height &key …)
+(unit-log-lines records gaps width &key hits query) (unit-log-title unit &key following first-line …)
+unit-panel unit-panel-open-p unit-panel-mode unit-panel-selected unit-panel-unit unit-panel-query
+unit-panel-hits unit-panel-hit-index  code-program-supervisor code-program-unit-tools code-program-panel
+state-units-running  ;; core: (:units :running N) (:unit-failed :notice T) → effect (:units-panel)
+;; SDK
+code-session-supervisor code-session-unit-tools
+(client-units s &key kind state owner resources) (client-subscribe-units s &key since) → (values id seq complete)
+(client-unsubscribe-units s id) (client-read-unit s &key unit ref start-line limit tail streams)
+(client-search-units s query &key units kinds streams since until k context)
+(client-control-unit s unit action &key input confirmed)
+;; constants
++unit-panel-key+ +unit-log-scrollback+ +unit-tick-interval+ +unit-stats-interval+ +unit-rpc-actions+
++unit-action-choices+ +unit-panel-columns+ +unit-list-help+ +unit-log-help+
+;; conditions (code-error)
+unit-not-found unit-control-denied unit-control-needs-confirmation unit-control-failed subscription-not-found
+```
+
+### Error codes (added)
+
+| Code | Condition | `data` beyond `condition` |
+|------|-----------|---------------------------|
+| -32015 | `unit-not-found` | `unit` |
+| -32016 | `unit-control-denied` | `unit`, `action`, `rule` |
+| -32017 | `unit-control-needs-confirmation` | `unit`, `action`, `resource` |
+| -32018 | `subscription-not-found` | `subscription` |
+| -32019 | `unit-control-failed` | `unit`, `action` |
+
+### Contract tests
+
+`cl-stack-code/tests` grows by 6 files (one of them helpers): **58 new deftests (99 cases with the parametrized rows), about 490 `ok` forms**, on macOS, Linux and Windows. Child processes are this SBCL (an echo server, exit codes, a CPU burner) or portable shell commands (`sleep` / `ping -n`, `sort`, `echo`, `exit 3`). The fixture session (H8a's, product-side): **two background shell jobs the agent started with bash** (the mock LLM), a fake stdio server (`:rpc`) and a subagent thread in scope `sub`. Panel tests run on tui-backend-terminal's headless driver at 120 × 30; rows are compared exactly with the UP / CPU% / RSS columns masked, styles through `tui-snapshot` cells.
+
+| File | Covers |
+|------|--------|
+| `units-support` | child argv, portable commands, `with-test-supervisor`, `with-units-tui` (the fixture), `with-gap-supervisor`, independent row / status / time formatters, cell styles |
+| `units-test` | constants; `units-directory`; `make-code-supervisor`; `make-code-tools :supervisor` (order, scope, hiding); RPC error rows (5); uptime / RSS / CPU / `ps` time tables (30 rows); `unit-cpu-percent`; status words; tree order; last line; exact row texts; panel lines (title, scroll, inverse); log lines (marks, TAB, stderr red, highlight runs, gaps); titles; unit / event / record / gap objects; filters; control arguments; **permission table (9 rows) = the agent's own decision**; dialog messages; failure notices; **live resource samples** (RSS of a child, CPU of a busy child, none for threads and finished units) |
+| `units-core-test` | `/ps` idle and busy, its usage error, the running count and the status line, the failure notice |
+| `units-program-test` | **panel snapshot over the fixture**; open / close keys and the kept input; **live update on a state change** and a new unit; failure notice in the transcript; **follow + search highlight** (hit mark, inverse cells, `n`, new lines while following, Esc twice); **stop through the confirm dialog** (Yes, No, Esc); **stop through an allow rule** (no dialog; restart still asks); a deny rule; input and close input to the echo server; **panel rows = `unit-objects`**; wiring (unit tools offered, close shuts the supervisor down) |
+| `units-client-test` | a supervisor per session (state dir, init tools, close); `client-units` (order, statuses, filters, resources); read by unit / ref / tail / streams and errors; search hits = read lines, kinds-only, filters; **subscribe with replay since 0 then live, no gap or duplicate**; control (confirmation, stop, input + EOF to sort, failures); deny beats confirmed; **permission parity (4 rows): the agent's unit_control and the caller's control agree** |
+| `units-rpc-test` | `initialize`; `units/list` shape and filters; **RPC = SDK for one script**; **`units/subscribe` replay, live, unsubscribe**; live-only subscribe; `units/read`; `units/search`; `units/control` (-32017, confirmed, input / close_input, -32019, -32602, -32015); deny (-32016 with the rule) |
+
+The old suites change only where 0.8.0 changes them: version checks expect 0.8.0, the init / `tools/list` names end with the unit tools (`client-test`, `json-test`), and `rpc-constants` lists the six methods. Locally (macOS, stubs): of the 99 new cases 11 pass (given code: constants, directories, `make-code-supervisor`, `make-code-tools :supervisor`, the five RPC error rows, `initialize`) and 88 fail, each on `%h8d-pending`, a `-32601` for an unimplemented `units/*` method, or downstream of the missing wiring (a NIL supervisor). Of the 760 old cases, `client-new-session-init` and `stream-json-init-and-result` fail as intended (their tool lists now end with the unit tools); every other old case matches a run of `main` on the same machine (38 git-backed plan / checkpoint cases fail locally on both: the sandboxed temp directory is "not a git worktree"; CI runs them). The systems load with no new warnings. No throwaway prototype was run, so the implementation may find test bugs; those go through a contract-fix commit, as before.
+
+### Non-goals (H8d)
+
+- The local web page (H8d-1, above).
+- Attaching to a pty or tmux unit: no executor gives a unit a terminal until H8a-1; the panel gets an `a` key then.
+- Previous sessions' logs in the panel (the agent's `unit_list include_previous` has them), deleting logs, a retention policy (H6's daemon).
+- Streaming a unit's output as `--rpc` notifications (clients page with `units/read` after `next_line`), and a server-side follow.
+- Sorting / filtering keys in the panel, per-thread CPU, GPU / network stats, CPU% normalised by cores.
+- "Always allow" in the unit dialog; editing rules from the panel.
 
 ---
 
