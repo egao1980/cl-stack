@@ -128,7 +128,7 @@ unit shell-job-3 (exited 2): lines 41-80 of 102
 [more: unit_read unit "shell-job-3" start_line 81]
 ```
 
-- Exactly one of `ref` / `unit`. With a ref: start = line − 10, limit 40; with a unit: start 1, limit 200; `start_line` / `limit` (1 … `max-read-lines`) override. Lines counted are output records; gaps are shown where they fall.
+- Exactly one of `ref` / `unit`. With a ref: limit 40, start = line − min(10, ⌊(limit − 1) / 2⌋), so a small limit centres the ref and the ref line is always shown (0.3.1, [agent-tools#6](https://github.com/egao1980/agent-tools/issues/6)); with a unit: start 1, limit 200; `start_line` / `limit` (1 … `max-read-lines`) override. Lines counted are output records; gaps are shown where they fall.
 - Header `unit <key> (<status>): lines A-B of <last line>`; `[more: …]` when output exists after B (also when the cap cut the lines).
 - Nothing from START: `unit <key> (<status>): no output from line S; the log ends at line L`.
 - A unit without a log file (supervisor without a state directory): `unit <key> (<status>): no log file; in-memory head and tail:` then `unit-output`, cleaned, trailing newlines dropped, truncated as H2c (`truncate-shell-output`).
@@ -157,7 +157,7 @@ Errors: unknown or out-of-scope unit → `unit-not-found`; a previous session's 
 ### Shell tools under a supervisor
 
 - `bash` foreground: start the unit, close its stdin, wait up to `timeout_ms`; result = its stdout and stderr records in line order, cleaned (`clean-shell-output`), trailing newlines dropped, `truncate-shell-output` — except that the omitted-characters line reads `[truncated: <n> characters omitted; the full output is in unit <id>: use unit_read or unit_search]` — then `[exit code N]`. Timeout: `shell-timeout` with `continue` / `run-in-background` as H2c; unhandled → `stop-unit` and the H2c timeout text.
-- `run_in_background` → `Started job <id>: <command>` … (H2c text, unit id). `job_output` / `job_input` / `job_kill` / `job_list`: H2c texts; output since the last read comes from the log (a per-job line cursor; the oldest unread characters beyond `max-job-buffer`, and gap bytes, count as dropped); `job_list` status `running` / `exited N` (`:exited` or `:failed` with a code) / `killed`. `max-jobs` counts running job units. H2c `job-<n>` ids do not exist under a supervisor (`job-not-found`).
+- `run_in_background` → `Started job <id>: <command>` … (H2c text, unit id). `job_output` / `job_input` / `job_kill` / `job_list`: H2c texts, except that a truncated output's omitted-characters line names the unit as foreground `bash` does (0.3.1, [agent-tools#7](https://github.com/egao1980/agent-tools/issues/7)); output since the last read comes from the log (a per-job line cursor; the oldest unread characters beyond `max-job-buffer`, and gap bytes, count as dropped); `job_list` status `running` / `exited N` (`:exited` or `:failed` with a code) / `killed`. `max-jobs` counts running job units. H2c `job-<n>` ids do not exist under a supervisor (`job-not-found`).
 - `shell-tools-jobs` / `find-shell-job` return `shell-job`s whose `shell-job-unit` is the unit. `close-shell-tools` closes the source's scope: its units stop, their logs stay; later calls → `tool-unavailable`.
 
 ---
