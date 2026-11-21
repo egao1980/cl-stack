@@ -1,7 +1,7 @@
 # cl-stack-pathlib — CLOS paths and pluggable filesystems
 
 **Repo:** [`egao1980/cl-stack-pathlib`](https://github.com/egao1980/cl-stack-pathlib) (nick `stack-pathlib`) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H (H2) and R4
-**Status:** 0.4.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations). **R4a brief locked** (snapshots + copy areas, 0.5.0); contract on branch `agent/pathlib-r4a-b056` (`cl-stack-pathlib/tests`, Rove). Implementation via **team-solve**.
+**Status:** 0.8.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations, R4a snapshots + copy areas, store GC). **R4b-0 brief locked** (change journals: protocol + `:poll` fallback, 0.9.0); contract on branch `agent/r4b0-contract-c0af` (`cl-stack-pathlib/tests`, Rove, with the reusable `cl-stack-pathlib/journal-suite`). Implementation via **team-solve**.
 
 A `path` is a value bound to a `filesystem`; the `fs-*` generic functions are the SPI (shaped like Java NIO `FileSystemProvider`), and the facade (`read-text`, `walk`, `glob`, …) is the pathlib / NIO `Files` DX over them. Backends today: `local-filesystem`, `memory-filesystem`, `zip-filesystem` (read-only). Errors are CLHS 9 conditions with restarts at the signal site (`create-parents`, `create-file`, `overwrite`, `ignore-missing`, `use-value`) and `retry` at the operation site — the stack's reference for [conditions.md](conditions.md).
 
@@ -252,3 +252,138 @@ restarts: overwrite, skip-path, abort-commit;  invoke-skip-path, invoke-abort-co
 ### Out of scope (later rungs)
 
 `fs-clone-tree` / `:clone` / `:overlay` (R4c, `fs-backend-*`) · `fs-watch` journals (R4b) · confinement of processes in an area (R4d / R4e, `compute-backend-*`) · `revision-protocol` / `diff-protocol` adapters over `fs-change` and snapshots (R1 tree engine, V1) · store GC · `object-store-protocol` stores · zip areas.
+
+---
+
+## R4b-0 — locked
+
+First milestone of R4b in the plan ("R4 detail", rung R4b: change journals): the **journal protocol and its portable fallback** in `cl-stack-pathlib` **0.9.0**. Portable code only, no new dependencies. The OS mechanisms come after it, one repo per OS, each running the same journal suite: R4b-1 `fs-backend-linux` 0.1.0 (inotify), R4b-2 `fs-backend-darwin` 0.1.0 (FSEvents), R4b-3 `fs-backend-windows` 0.1.0 (`ReadDirectoryChangesW`). A journal only makes `fs-area-changes` cheaper: the result never changes, so consumers (H5 through `fs-area-changes`) get the speed-up through `:journal :auto` with no code change.
+
+### Decisions
+
+| Decision | Choice |
+|----------|--------|
+| **Shape** | `fs-watch` returns a `journal` object, and the caller **pulls** with `journal-drain`. There is no callback (the plan's `(fs-watch fs root fn)` sketch): areas need "what changed since I last looked", and a pull with a settle bound gives the ordering rule below. |
+| **Drain result** | `(values relative-paths complete-p)`. A path P means "the entry at P, or anything below P if P is or was a directory, may have changed". `complete-p` T promises that every changed entry is at or below some returned path. `complete-p` NIL (an overflow, a dropped root, a mechanism that can't tell) means "rescan everything", and the paths are then NIL. |
+| **Portable fallback** | The `:poll` journal, made by the method on the base `filesystem`. Every drain returns `(values nil nil)`, so it is correct with no OS support. |
+| **Dispatch** | Through a registry, `*watch-mechanisms*`, not through methods. A backend calls `register-watch-mechanism` at load time with a constructor, a rank and an `available-p` probe of `(fs directory)` (the volume, the OS, the filesystem class). `:auto` picks the best-ranked available mechanism, else `:poll`. `register` / `unregister` never modify the old list, so a `let` binding of `*watch-mechanisms*` scopes registrations, which is how the tests register fakes. The names `:poll` and `:auto` are reserved. |
+| **Normalization in one place** | The `:around` method of `journal-drain` on `journal` does the shared work, so backends return raw paths. It signals `journal-error` on a closed journal, checks `:settle`, strips trailing `/`, drops paths below an ignored directory or ignored as a file, removes duplicates and sorts with `string<`. A `""` path (the root itself) or `complete-p` NIL becomes `(values nil nil)`. The `:around` of `journal-close` makes close idempotent: the backend's close method runs once. |
+| **Settle rule** | Every write that **returned before `journal-drain` was called** is reported, or `complete-p` is NIL. `:settle` (seconds, default `*journal-settle*` = 0.05) is how long a mechanism may wait for OS events in flight (flush, read the queue) before it gives up and answers NIL. A mechanism that is unsure answers NIL and never guesses. |
+| **Areas** | `fs-open-area … :journal` attaches a journal to the area's root, with the area's ignore matcher. The default `:auto` attaches one only when a non-`:poll` mechanism is available, so with no backend loaded, areas behave exactly as in R4a (`area-journal` is NIL). `fs-area-changes` drains and re-examines only the drained paths. `:rescan t` is the full R4a rescan, which leaves the journal and the area state alone. That keyword makes the law testable. |
+| **Existence by listing** | A drained path is looked up **by exact name in its parent directory's listing**, never by probing the path. On a case-insensitive volume (macOS, Windows), `README.md` still opens after a rename to `readme.md`. Only the listing shows the new name, which is what the R4a rescan uses. |
+| **Trust** | With `complete-p` T the area does not look outside the drained paths. A journal that hides an edit hides it from `fs-area-changes` (but not from `:rescan t`). This is the speed-up, and the journal suite is what proves a mechanism never lies. |
+| **Commit** | `fs-close-area :commit` uses the full rescan, never the journal. Commits are rare, and the copy is deleted afterwards, so an edit a journal missed would be lost for good. |
+| **Stubs** | The contract calls `%r4b0-pending` (internal, `src/journal.lisp`). The implementation removes it and every call. |
+
+### Surface
+
+```lisp
+;;; Journals (protocol)
+(fs-watch fs directory &key ignore (mechanism :auto)) → journal
+    ; ignore: NIL | ignore-matcher (relative to DIRECTORY) | :auto (resolved once, here)
+    ; mechanism: :auto | :poll | a registered keyword (unknown / unavailable → UNSUPPORTED-OPERATION)
+    ; missing DIRECTORY → PATH-NOT-FOUND
+(journal-drain journal &key (settle *journal-settle*)) → (values relative-paths complete-p)
+(journal-close journal) → NIL                 ; idempotent
+journal: journal-p journal-filesystem journal-root (PATH) journal-ignore
+         journal-mechanism (:poll :fsevents :inotify :rdcw …) journal-open-p
+*journal-settle*                              ; 0.05
+journal-error (error): journal-error-journal  ; drain after close
+
+;;; Mechanism registry
+*watch-mechanisms*                            ; opaque; LET-bind to scope registrations
+(register-watch-mechanism name constructor &key (rank 0) available-p) → name
+    ; (funcall constructor fs directory matcher) → an open journal with JOURNAL-MECHANISM = NAME
+    ; (funcall available-p fs directory) → generalized boolean; NIL = always available
+    ; same NAME again: replaced in place; :poll / :auto → ERROR
+(unregister-watch-mechanism name) → T | NIL
+(watch-mechanisms &optional fs directory) → names, best first (rank desc, then registration
+    order), then :poll; with FS and DIRECTORY only the available ones
+
+;;; Areas (changed)
+(fs-open-area fs base &key (mechanism :copy) ignore directory (journal :auto)) → area
+    ; journal: :auto (attach when (first (watch-mechanisms fs root)) is not :poll)
+    ;          | T (fs-watch :auto, may be :poll) | a mechanism keyword | NIL (none)
+    ; unknown / unavailable mechanism → UNSUPPORTED-OPERATION, nothing left on disk
+(fs-area-changes area &key rescan) → changes  ; rescan T: full R4a rescan, state untouched
+(open-area base &key mechanism ignore directory journal)  (area-changes area &key rescan)
+(area-journal area) → journal | NIL
+
+;;; Backends subclass JOURNAL and specialize the primary methods:
+(defmethod journal-drain ((j my-journal) &key settle) …)  ; raw paths; the :around normalizes
+(defmethod journal-close ((j my-journal)) …)              ; runs once
+```
+
+### Semantics
+
+**Journal lifetime.** A journal reports paths touched after `fs-watch` returns. Each drain reports the paths touched since the previous drain. A closed journal signals `journal-error` on drain, and its backend's close method has already run exactly once. The journal never changes the tree.
+
+**`fs-area-changes` with a journal** (`rescan` NIL). The area keeps the entry state from its previous call, which starts as the manifest at open. It drains the journal:
+
+- `complete-p` NIL: it does the full R4a rescan and takes its entries as the new state.
+- `complete-p` T: for each drained path P, it drops the state at and below P, then re-examines P from the root. Every ancestor must be listed by exact name and be a real (non-symlink), non-ignored directory. If P is listed: a file or symlink gives one entry (hashed; the racy-git shortcut does not apply), and a directory gives a scan of its subtree. Nothing else is touched.
+
+The result is the R4a diff from the manifest to that state. The journal is attached before the copy is written (or the copy is otherwise accounted for), so the first call is correct whatever the backend reported about the copy itself.
+
+**`fs-close-area`.** It closes the journal before the copy is deleted, on `:discard`, `:keep` and a completed `:commit`. An aborted commit leaves the area and its journal open. A commit computes what it writes with the **full rescan** (`:rescan t`): a journal speeds up the frequent `fs-area-changes` calls, but it is never trusted with what reaches the base, because the copy is deleted afterwards and a missed edit would be lost.
+
+**The law (the contract).** For every area, every mechanism and every edit, `(fs-area-changes area)` is EQUAL, field by field (kind, path, modes, hashes), to `(fs-area-changes area :rescan t)`.
+
+### The journal suite (`cl-stack-pathlib/journal-suite`)
+
+A secondary system in `cl-stack-pathlib` (`tests/journal-suite.lisp`, package `cl-stack-pathlib/journal-suite`, public API only, no test framework). Every backend runs it with its own mechanism:
+
+```lisp
+(run-journal-suite mechanism &key (backend :local) (settle *journal-settle*) directory)
+  → (values failures steps)   ; FAILURES NIL = the law holds; STEPS = step names run
+(journal-suite-steps &key (backend :local)) → step names for this OS and backend
+;; in a backend's Rove tests:
+(ok (null (run-journal-suite :inotify)))
+```
+
+It opens one area (base tree with `.gitignore` ignoring `*.log` and `build/`, `:ignore :auto`, `:journal mechanism`). It fails at once if the area's journal is not MECHANISM, so a backend that silently falls back to `:poll` cannot pass. Then it applies the steps in order, and after each step it compares `(fs-area-changes area)` with `:rescan t`. Each step also checks the rescan against expected changes, so an edit that silently did nothing shows up as a `:corpus` failure rather than a pass. Failure plists have the kinds `:law`, `:corpus`, `:error`, `:mechanism` and `:journal-open` (the journal is still open after `close-area`).
+
+| Step | Edit | Runs on |
+|------|------|---------|
+| `:no-edits` | nothing (the rescan must be empty) | all |
+| `:create` | `new.txt`, `src/new.lisp` | all |
+| `:modify-same-size` | `a.txt` "aaa" → "zzz", same second as the copy; the only path touched (it catches a dropping mechanism) | all |
+| `:modify-size` | `b.txt` grows | all |
+| `:revert` | `a.txt` back to its content at open (no longer a change) | all |
+| `:delete` | `b.txt` | all |
+| `:rename-in-directory` | `src/c.lisp` → `src/d.lisp` | all |
+| `:rename-across-directories` | `new.txt` → `docs/new.txt` | all |
+| `:directory-create` | `tree/x/1.txt`, `tree/x/y/2.txt`, empty `tree/empty/` | all |
+| `:directory-delete` | `tree/` with its contents | all |
+| `:directory-rename` | `docs/` → `manual/` with its contents | all |
+| `:ignored` | `x.log`, `y.log`, `build/new.o`, `build/sub/z.o` (none may show up) | all |
+| `:symlink-create` | `link` → `a.txt`, `lnk-dir` → `src` (not followed) | memory; local except Windows |
+| `:symlink-retarget` | `link` → `src/d.lisp` (not dangling: cl-stack-pathlib#41) | memory; local except Windows |
+| `:mode-change` | `chmod 755 run.sh` | local with unix modes |
+| `:case-only-rename` | `README.md` → `readme.md` | all |
+| `:burst` | 2000 files under `burst/` (an overflow candidate) | all |
+| `:burst-delete` | `burst/` | all |
+| `:child-process` | `uiop:run-program` command line: `/bin/sh` on unix, `cmd.exe` on Windows: create, modify, delete, mkdir, rename | local |
+
+Local edits use `cl:rename-file` and the pathlib facade, and the child-process step uses a shell. The work directory is a fresh subdirectory of `uiop:temporary-directory` (or of `:directory`, so a backend can test a given volume), referred to by its truename. Nothing is hard-coded to `/tmp`.
+
+### Contract (tests)
+
+`cl-stack-pathlib/tests` (Rove), which now depends on `cl-stack-pathlib/journal-suite`. The fake mechanisms live in `tests/journal-fakes.lisp` and are registered only inside a `let` of `*watch-mechanisms*`. The scan-based fakes find changes by snapshotting the journal root on each drain:
+
+- `:fake-exact` returns every changed entry.
+- `:fake-coarse` returns the parent directory of each change, as a coalescing mechanism would.
+- `:fake-overflow` acts as exact up to 100 paths, then returns `complete-p` NIL.
+- `:fake-liar` acts as exact minus the greatest path, while still claiming `complete-p` T.
+- `:fake-scripted` answers each drain from a queue the test fills, and records drains, settles and closes.
+
+| File | Covers |
+|------|--------|
+| `journal-test.lisp` | the law: the suite on `:poll`, `:fake-exact`, `:fake-coarse`, `:fake-overflow` × local / memory, and `:auto` / T; the suite **catches `:fake-liar`** (a `:law` failure at `:modify-same-size`); open errors reported by the suite; `fs-watch` (`:poll` with nothing registered, readers, `:ignore :auto`, explicit `:poll` beside a registered fake, `:auto` picks the fake, missing directory, unknown or unavailable mechanism); the registry (rank order, ties, replace in place, availability per filesystem, `:poll` last, unregister, reserved names, `let` scoping); drain normalization (dedup, sort, trailing `/`, ignored paths, `""` and `complete-p` NIL → `(nil nil)`); settle (0.05 default, explicit, `*journal-settle*`, bad values → `type-error` before the mechanism is called); close (idempotent, close method runs once, drain after close → `journal-error` with the journal); areas: attach (`:auto` none / fake, T → `:poll`, NIL, `:poll`, unknown → `unsupported-operation` with nothing created, root and matcher shared), closed with the area before the copy is deleted (discard / keep / commit; an aborted commit leaves it open; a commit writes an edit the journal hid), narrowing (a complete empty drain hides an edit, `:rescan t` does not drain, a drained file or directory is re-examined, removal by listing, ignored paths, `complete-p` NIL → full rescan, the area's drain uses `*journal-settle*`) |
+| `journal-suite.lisp` | the corpus and the runner (sealed with `tests/`) |
+
+All R4a and earlier tests pass unchanged, because `:journal :auto` attaches nothing when nothing is registered. Tests must pass on macOS, Linux and Windows (CI matrix). Symlink steps skip local Windows, the mode step needs unix modes, and the child-process step runs on local only.
+
+### Out of scope (R4b-1 … R4b-3 and later)
+
+The OS mechanisms (`fs-backend-linux` inotify, `fs-backend-darwin` FSEvents, `fs-backend-windows` `ReadDirectoryChangesW`) · fanotify and the USN journal · using journals for drift detection outside areas · a callback / push API · `fs-watch` on zip filesystems · using journals directly in cl-stack-code (H5 benefits through `:auto`).
