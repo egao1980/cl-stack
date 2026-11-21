@@ -1,7 +1,7 @@
 # fs-backend-linux — the inotify change journal (R4b-1)
 
 **Repo:** [`egao1980/fs-backend-linux`](https://github.com/egao1980/fs-backend-linux) (nick `stack-fs-linux`) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) R4 detail, rung R4b · protocol brief [pathlib.md, R4b-0](pathlib.md#r4b-0--locked)
-**Status:** **R4b-1 brief locked**, version 0.1.0. Contract on branch `agent/r4b1-contract-9592` (`fs-backend-linux/tests`, Rove): the exports, the `inotify-journal` class, the libc bindings and the registration are given; the behaviour is stubbed (`%r4b1-pending`). Implementation via **team-solve**.
+**Status:** **R4b-1 brief locked**, version 0.1.0. Contract on branch `agent/r4b1-contract-9592` (`fs-backend-linux/tests`, Rove): the exports, the `inotify-journal` class, the libc bindings and the registration are given; the behaviour is stubbed (`%r4b1-pending`). Implementation via **team-solve**. **R4c-2 locked** (below): `:ficlone` reflink clones, version **0.2.0**, on `cl-stack-pathlib` 0.10.0's clone protocol, with a CI job on real btrfs / XFS loop volumes; overlayfs moves to R4d. Contract not yet authored (`%r4c2-pending`).
 
 The first OS mechanism for cl-stack-pathlib's change journals. Loading `fs-backend-linux` registers `:inotify` with `register-watch-mechanism`. On Linux, for a directory on a `local-filesystem`, `fs-watch … :mechanism :auto` (and so `fs-open-area … :journal :auto`) then gets an inotify journal instead of `:poll`, and `fs-area-changes` re-examines only the paths it drains. The result never changes (the R4b law), only the cost.
 
@@ -94,3 +94,89 @@ Given in the contract (shape locked): the package and exports, `src/ffi.lisp` (c
 ### Out of scope (later)
 
 fanotify (`FAN_REPORT_DFID_NAME`, whole-filesystem marks, needs `CAP_SYS_ADMIN`) · detecting network and FUSE filesystems (`statfs` magic: NFS, SMB/CIFS, FUSE do not report remote changes) for the availability probe · changes inotify never sees (writes through `mmap`, edits on another host of a network filesystem), which a journal cannot report and the law cannot test · `FICLONE` / reflink copy areas on Linux (an R4a `:mechanism` for fs-backend-linux) · a reader thread to keep the kernel queue short · ECL / CCL CI jobs (the CFFI bindings are portable, but 0.1.0 is tested on SBCL).
+
+---
+
+## R4c-2 — locked
+
+Reflink clones for the R4c-0 clone protocol ([pathlib.md § R4c-0](pathlib.md#r4c-0--locked), `cl-stack-pathlib` 0.10.0), in **fs-backend-linux 0.2.0**. Loading the system also registers `:ficlone`. On btrfs, XFS with reflink and bcachefs, `clone-tree … :mechanism :auto` and `open-area` (default `:auto`) then clone with no consumer change. On ext4, tmpfs and the like, the probe says `:unsupported-volume` and `:auto` copies. The verdict: `cl-stack-pathlib/clone-suite` passes with `:ficlone` on a real btrfs **and** a real XFS volume in CI.
+
+**Overlayfs is not in R4c-2.** The plan puts "overlayfs in a user namespace" in R4c, but it moves to R4d, next to `compute-backend-landlock`, for these reasons:
+
+- **Visibility.** The overlay mount exists only inside the new mount namespace. The harness image cannot join it, because `unshare(CLONE_NEWUSER)` fails with `EINVAL` in a multithreaded process and an SBCL image always has threads. So a pathlib area can never read the merged tree.
+- **Who uses it.** Only a process spawned inside the namespace sees the overlay, and spawning confined processes is R4d's job: user + mount namespaces, Landlock, bubblewrap.
+- **CI.** The ubuntu-24.04 runners block unprivileged user namespaces through AppArmor. R4d has to handle that anyway.
+- **The verdict.** R4c's verdict (equivalence with `:copy`) needs only clones.
+
+R4d then specifies `:overlay` areas: lower = base read-only, upper = the area, and the area's changes read from the upper directory, including whiteouts (0/0 character devices) and opaque directories (`user.overlay.opaque` with `userxattr`). Until then `:overlay` stays `unsupported-operation`.
+
+### Decisions
+
+| Decision | Choice |
+|----------|--------|
+| **Dependencies** | `cl-stack-pathlib` ≥ 0.10.0, `cffi`, `uiop`, as in 0.1.0. New libc calls only (`open`, `ioctl`, `close`, `unlink`, `__errno_location`); no library to load. Off Linux the bindings are stand-ins that signal `ficlone-error`. |
+| **Registration** | `(register-clone-mechanism :ficlone 'ficlone-file :rank +ficlone-rank+ :available-p 'ficlone-available-p)`, `+ficlone-rank+` = 100. No tree hook: there is no tree-level reflink call. |
+| **ioctl** | `FICLONE` = `_IOW(0x94, 9, int)` = #x40049409, the generic Linux ABI: the same on x86-64, arm64 and riscv64, so no grovel step. powerpc, mips, sparc and alpha encode `_IOW` differently and are not supported (as in R4b-1). `ioctl` is variadic and is called through `cffi:foreign-funcall-varargs` with the fixed arguments `(:int fd :unsigned-long request)` and the variadic `(:int src-fd)`. |
+| **Per file** | `ficlone-file fs source destination`: open SOURCE `O_RDONLY\|O_CLOEXEC\|O_NOFOLLOW`; create DESTINATION `O_WRONLY\|O_CREAT\|O_EXCL\|O_CLOEXEC`, mode #o600 (pathlib sets the bits afterwards); `ioctl(dst, FICLONE, src)`; both fds are always closed. 0 → T. Otherwise DESTINATION is unlinked first, then: `EOPNOTSUPP` / `ENOTTY` / `ENOSYS` → `(nil :unsupported-volume)`; `EXDEV` → `(nil :cross-volume)`; `EINVAL` / `EPERM` / `ETXTBSY` / `EBUSY` → `(nil :clone-failed)` (btrfs NOCOW against COW files, immutable or append-only files, swap files); anything else (`EACCES`, `ENOSPC`, `EDQUOT`, `EIO`, `EROFS`, failing `open`) → **`ficlone-error`**, a `cl-stack-pathlib:clone-error` (operation "ioctl FICLONE" / "open", code = errno), so `use-copy` applies. |
+| **Detection by a probe clone** | `ficlone-available-p fs source-dir destination-dir`. Off Linux: `(nil :unavailable)`. Not a `local-filesystem`: `(nil :unsupported-filesystem)`. Otherwise the probe really clones, on the target volume, and maps the errno as per file. It picks an existing regular file in SOURCE-DIR: the first one found listing at most 1000 entries, at most two levels down, preferring a non-empty one, opened read-only, so **the source tree is never written**. It clones that file into a fresh temp file `.cl-stack-ficlone-probe-<hex>` in DESTINATION-DIR, then unlinks the temp file. Success → T; `EXDEV` → `:cross-volume`; unsupported errnos → `:unsupported-volume`; a temp file that cannot be created (`EACCES`, `EROFS`) → `:unavailable`. When SOURCE-DIR has no regular file to borrow, the probe writes 4096 octets into a temp file in DESTINATION-DIR and clones it to a second temp file there. That tests only the destination volume. A cross-volume tree then falls back per file (`:cross-volume` in the fallbacks), which is honest and rare (an empty tree). No cache: the probe is one open, one create, one ioctl and one unlink, and `st_dev` is not a reliable key (btrfs subvolumes have their own devices but share extents). A journal watching DESTINATION-DIR sees the probe file come and go, which is no change. |
+| **Sharing check (tests)** | `file-extents-shared-p pathname` → T when every extent of a non-empty file has `FIEMAP_EXTENT_SHARED` (#x2000), via `FS_IOC_FIEMAP` (#xC020660B, the generic `struct fiemap` layout). It is exported for tests and documented as such. This proves the ioctl really reflinked, not just that the content matches. |
+| **Stubs** | The contract calls `%r4c2-pending` (internal, `src/clone.lisp`). The implementation removes it and every call. |
+
+### Surface
+
+```lisp
++ficlone-rank+                                   ; 100
++ficlone+ +fs-ioc-fiemap+ +fiemap-extent-shared+
+(ficlone-available-p fs source-dir destination-dir) → (values available-p reason)
+(ficlone-file fs source destination) → T | (values nil reason)    ; signals FICLONE-ERROR
+(file-extents-shared-p pathname) → boolean       ; for tests
+ficlone-error (cl-stack-pathlib:clone-error)
+```
+
+### CI: a job that really calls the ioctl
+
+The canned ubuntu job runs in the ci-base container, on ext4, and cannot mount anything. It grades detection (`/tmp` → `:unsupported-volume`, memory → `:unsupported-filesystem`), the errno mapping, and loading. Real reflinks get a **second job**, `reflink`, in `.github/workflows/test.yml`, on the `ubuntu-latest` **host** (passwordless sudo):
+
+```yaml
+  reflink:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: read }
+    steps:
+      - uses: actions/checkout@v5
+      - shell: bash
+        run: |
+          sudo apt-get install -y btrfs-progs xfsprogs
+          for fs in btrfs xfs; do
+            truncate -s 1G "$RUNNER_TEMP/$fs.img"
+          done
+          mkfs.btrfs -q "$RUNNER_TEMP/btrfs.img"
+          mkfs.xfs -q -m reflink=1 "$RUNNER_TEMP/xfs.img"
+          for fs in btrfs xfs; do
+            sudo mkdir -p /mnt/$fs
+            sudo mount -o loop "$RUNNER_TEMP/$fs.img" /mnt/$fs
+            sudo chown "$(id -u):$(id -g)" /mnt/$fs
+          done
+      - uses: egao1980/cl-repository/.github/actions/setup-lisp@main
+      - uses: egao1980/cl-repository/.github/actions/ci@main
+        with: { phase: install }
+      - uses: egao1980/cl-repository/.github/actions/ci@main
+        with: { phase: test }
+        env:
+          FS_BACKEND_LINUX_REFLINK_DIRS: /mnt/btrfs:/mnt/xfs
+          FS_BACKEND_LINUX_REQUIRE_REFLINK: "1"
+```
+
+The tests read `FS_BACKEND_LINUX_REFLINK_DIRS`. Without it, each reflink test is one skip with the note "FICLONE needs a reflink volume: set FS_BACKEND_LINUX_REFLINK_DIRS (CI job `reflink`)". With `FS_BACKEND_LINUX_REQUIRE_REFLINK=1`, a missing variable, a missing directory or a directory without reflink support **fails** instead, so the job can never go green by skipping. Locally, the same works in Docker: `docker run --privileged` with the ci-base image, the same `mkfs` and `mount -o loop`, and `cl-repo test`. **Verdict:** the `reflink` job of the contract PR's CI, read with `gh run view --log`. A macOS `check-feature.sh` passes vacuously, as in R4b-1.
+
+### Contract (tests)
+
+| File | Covers |
+|------|--------|
+| `clone-registry-test.lisp` | all OS: `:ficlone` registered, rank 100, ahead of `:copy`, beside `:inotify`; constants; memory → `:unsupported-filesystem`; off Linux `(nil :unavailable)`, `unsupported-operation` by name |
+| `clone-detect-test.lisp` | Linux (canned job): the temp directory (ext4 / overlay in the container) → `(nil :unsupported-volume)` and `:auto` copies with that reason; the probe leaves no file behind and never writes SOURCE (its snapshot and its mtime unchanged); an empty source directory takes the destination-only probe; `ficlone-file` on ext4 → `(nil :unsupported-volume)`, with DESTINATION gone; `EACCES` on the destination directory → `ficlone-error` (errno 13), with `use-copy` offered |
+| `clone-reflink-test.lisp` | each reflink dir (btrfs, XFS): detection T; within the volume: content, mode, mtime, and **`file-extents-shared-p` true for the clone, false for a `:copy`**; after an in-place write to the clone, the source's hash is unchanged; btrfs → XFS `(nil :cross-volume)` by the probe and `EXDEV` per file; reflink dir → `/tmp` (ext4) `:cross-volume`; btrfs `chattr +C` (NOCOW) source → `(nil :clone-failed)` per file and the tree is still whole; areas: `open-area` on btrfs is `:clone` with `:ficlone` |
+| `clone-suite-test.lisp` | each reflink dir: `(run-clone-suite :ficlone :directory dir :other-volume other)`, with the other reflink dir as OTHER-VOLUME (every step, `:cross-volume` included); `(run-clone-suite :ficlone :directory dir)` |
+
+### Out of scope
+
+Overlay areas (R4d, above) · `FICLONERANGE` / `FIDEDUPERANGE` (partial clones, dedup) · `copy_file_range` (it may reflink, but it can silently copy, so it cannot be told apart from a copy) · btrfs subvolume snapshots · ZFS block cloning (OpenZFS 2.2 `FICLONE` works through the same ioctl and should just pass the probe, but it is not tested in CI) · bcachefs in CI (no packaged mkfs on the runners) · architectures with another `_IOW` encoding.

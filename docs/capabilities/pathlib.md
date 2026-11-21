@@ -1,7 +1,7 @@
 # cl-stack-pathlib — CLOS paths and pluggable filesystems
 
 **Repo:** [`egao1980/cl-stack-pathlib`](https://github.com/egao1980/cl-stack-pathlib) (nick `stack-pathlib`) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H (H2) and R4
-**Status:** 0.8.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations, R4a snapshots + copy areas, store GC). **R4b-0 brief locked** (change journals: protocol + `:poll` fallback, 0.9.0); contract on branch `agent/r4b0-contract-c0af` (`cl-stack-pathlib/tests`, Rove, with the reusable `cl-stack-pathlib/journal-suite`). Implementation via **team-solve**. **R4b-2 brief locked:** [fs-backend-darwin.md](fs-backend-darwin.md) (`:fsevents`, `egao1980/fs-backend-darwin` 0.1.0). **R4b-3 brief locked:** [fs-backend-windows.md](fs-backend-windows.md) (`:rdcw`, `egao1980/fs-backend-windows` 0.1.0).
+**Status:** 0.8.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations, R4a snapshots + copy areas, store GC). **R4b-0 brief locked** (change journals: protocol + `:poll` fallback, 0.9.0); contract on branch `agent/r4b0-contract-c0af` (`cl-stack-pathlib/tests`, Rove, with the reusable `cl-stack-pathlib/journal-suite`). Implementation via **team-solve**. **R4b-2 brief locked:** [fs-backend-darwin.md](fs-backend-darwin.md) (`:fsevents`, `egao1980/fs-backend-darwin` 0.1.0). **R4b-3 brief locked:** [fs-backend-windows.md](fs-backend-windows.md) (`:rdcw`, `egao1980/fs-backend-windows` 0.1.0). **R4c-0 brief locked** (copy-on-write clones: protocol + the portable `:copy` rung, 0.10.0); contract on branch `agent/r4c0-contract-d65b` ([PR #46](https://github.com/egao1980/cl-stack-pathlib/pull/46); `cl-stack-pathlib/tests`, Rove, with the reusable `cl-stack-pathlib/clone-suite`). **R4c-1 / R4c-2 / R4c-3 briefs locked:** `:clonefile` ([fs-backend-darwin.md](fs-backend-darwin.md#r4c-1--locked)), `:ficlone` ([fs-backend-linux.md](fs-backend-linux.md#r4c-2--locked)), `:block-clone` ([fs-backend-windows.md](fs-backend-windows.md#r4c-3--locked)), 0.2.0 each.
 
 A `path` is a value bound to a `filesystem`; the `fs-*` generic functions are the SPI (shaped like Java NIO `FileSystemProvider`), and the facade (`read-text`, `walk`, `glob`, …) is the pathlib / NIO `Files` DX over them. Backends today: `local-filesystem`, `memory-filesystem`, `zip-filesystem` (read-only). Errors are CLHS 9 conditions with restarts at the signal site (`create-parents`, `create-file`, `overwrite`, `ignore-missing`, `use-value`) and `retry` at the operation site — the stack's reference for [conditions.md](conditions.md).
 
@@ -387,3 +387,134 @@ All R4a and earlier tests pass unchanged, because `:journal :auto` attaches noth
 ### Out of scope (R4b-1 … R4b-3 and later)
 
 The OS mechanisms (`fs-backend-linux` inotify, `fs-backend-darwin` FSEvents, `fs-backend-windows` `ReadDirectoryChangesW`) · fanotify and the USN journal · using journals for drift detection outside areas · a callback / push API · `fs-watch` on zip filesystems · using journals directly in cl-stack-code (H5 benefits through `:auto`).
+
+---
+
+## R4c-0 — locked
+
+First milestone of R4c in the plan ("R4 detail", rung R4c: COW copies): the **clone protocol and its portable copy rung** in `cl-stack-pathlib` **0.10.0**. Portable code only, no new dependencies. The OS mechanisms come after it, one repo per OS, each running the same clone suite: R4c-1 [fs-backend-darwin](fs-backend-darwin.md#r4c-1--locked) 0.2.0 (`clonefile`), R4c-2 [fs-backend-linux](fs-backend-linux.md#r4c-2--locked) 0.2.0 (`FICLONE`), R4c-3 [fs-backend-windows](fs-backend-windows.md#r4c-3--locked) 0.2.0 (ReFS block cloning). A clone only makes materializing a tree cheaper (no data written, no space used until a side is written): the tree, its metadata and `fs-area-changes` never change, so consumers (H5 areas, subagent areas) get the speed-up through `:mechanism :auto` with no code change.
+
+**Overlay areas move to R4d** (the plan lists "overlayfs in a user namespace" under R4c). An overlay mount made in a user + mount namespace is visible only inside that namespace. The harness image cannot enter it: `unshare(CLONE_NEWUSER)` fails with `EINVAL` in a multithreaded process, and SBCL always has threads (finalizer, timers, and our own journal threads). So `fs-open-area :overlay` could never hand the harness a readable merged tree. An overlay only makes sense for a process **spawned** inside the namespace, which is exactly what R4d's `compute-backend-landlock` does (user + mount namespaces, Landlock, bubblewrap). R4d also has to solve the same CI problem: ubuntu-24.04 restricts unprivileged user namespaces through AppArmor (`kernel.apparmor_restrict_unprivileged_userns`). The pathlib side of an overlay area (reading an upper directory, with whiteouts and opaque directories, into `fs-change` values) is specified there. R4c's verdict, equivalence with `:copy`, does not need overlays. `:overlay` stays `unsupported-operation` in 0.10.0.
+
+### Decisions
+
+| Decision | Choice |
+|----------|--------|
+| **Dependencies** | None added. `fs-set-mtime` on local uses `sb-posix:utimes`, and `sb-posix` is already a dependency on SBCL. |
+| **Shape** | Two generics, **`fs-clone-tree fs source destination &key ignore mechanism`** and **`fs-clone-file fs source destination &key mechanism replace`**. Both return a **`clone-report`**: the mechanism that made the tree, the reason when `:copy` was used instead of a clone, how many regular files were cloned and how many copied, and the per-file fallbacks. Plus **`fs-clone-supported-p fs directory &optional destination`** → `(values mechanism reason)` and **`fs-set-mtime`**. |
+| **Mechanism names** | `:auto` (default): the best-ranked clone mechanism available for SOURCE and DESTINATION, else `:copy` with the reason in the report. `:copy`: the portable rung. `:clone`: the best available clone mechanism, else `unsupported-operation`. A registered name (`:clonefile`, `:ficlone`, `:block-clone`): that mechanism, else `unsupported-operation`. An unknown keyword signals `unsupported-operation`. `:auto`, `:copy` and `:clone` are reserved names. Every refusal happens **before anything is created**. |
+| **Dispatch** | Through a registry, **`*clone-mechanisms*`**, ranked like `*watch-mechanisms*` (R4b-0). A backend calls `register-clone-mechanism` at load time with a per-file `clone-file` function, a rank, an `available-p` probe of `(fs source-dir destination-dir)` → `(values available-p reason)`, and an optional `clone-tree` hook. `register` and `unregister` never modify the old list, so a `let` binding scopes registrations, which is how the tests register fakes. |
+| **Probe arguments** | SOURCE-DIR is the source directory, or the source file's directory. DESTINATION-DIR is the destination when it is an existing directory, else its **nearest existing ancestor**, so nothing has to be created to ask. A probe answers for the pair: the filesystem class, the volume's capability, and whether both are on one volume. It never signals. A probe that signals is a bug in the backend, and the error propagates. |
+| **Reasons (locked set)** | Whole call (`clone-report-reason`, `fs-clone-supported-p`): `:no-mechanism` (none registered), `:unsupported-filesystem` (memory, zip, …), `:unsupported-volume` (HFS+, ext4, NTFS, …), `:cross-volume`, and `:unavailable` (a probe said NIL without a reason). With several mechanisms registered and none available, the reason is the one given by the best-ranked mechanism. Per file (`clone-report-fallbacks`): the same set plus `:clone-failed`. |
+| **Who walks** | **pathlib** walks the tree in every case, with the `%scan-tree` walk of snapshots: sorted, ignored paths skipped, ignored directories not descended, `.git` pruned by `:auto`. It makes the directories (empty ones too, default modes), makes symlinks itself (`fs-create-symlink` with the raw `fs-read-symlink` target, never followed), skips other kinds (FIFOs, sockets, devices), and calls the mechanism's `clone-file` **for regular files only**. Then it sets permission bits and mtime on each file. The OS code stays a per-file primitive, and the tree semantics are written once. |
+| **Tree hook** | A mechanism may register `clone-tree` `(fs source destination matcher)`, where DESTINATION is an existing empty directory and MATCHER the resolved ignore matcher or NIL. pathlib calls the hook first. It returns the number of regular files it cloned, or NIL to decline, and then pathlib walks per file. A hook must make **exactly** the tree the walk would, and the suite checks that through the hook path too. (R4c-1 uses it for a whole-directory `clonefile` when MATCHER is NIL.) |
+| **Per-file fallback** | `clone-file` returns true (DESTINATION holds SOURCE's content), or `(values nil reason)` (it made nothing, and pathlib copies the file and records `(rel . reason)`, where a NIL reason counts as `:clone-failed`), or it signals **`clone-error`**. pathlib establishes the restart **`use-copy`** around every call. The restart removes a partial destination and copies the file, recording `:clone-failed`. Any other condition propagates. |
+| **Metadata (locked list)** | Kept: content; regular files as regular files; symlinks as symlinks with the same target string (never followed, a link to a directory included); **permission bits** `(logand mode #o777)` where the backend reports modes (local on SBCL / ECL unix); **mtime** to the second where the backend can set it (memory, local on SBCL unix: `fs-set-mtime`). Not kept: owner and group, setuid / setgid / sticky bits, ACLs, xattrs, flags, atime and birth time, symlink mtimes, directory modes and mtimes, hard links (each link becomes its own file), and holes on the `:copy` rung (content is equal; sparseness is a mechanism's bonus). Left out: ignored paths, other kinds. |
+| **Destination** | `fs-clone-tree`: DESTINATION absent (created with its parents) or an empty directory. Non-empty → `path-exists-error`; inside SOURCE → `path-error`; SOURCE missing → `path-not-found`; SOURCE not a directory → `path-error`. `fs-clone-file`: parents created. An existing DESTINATION → `path-exists-error` with the restart `overwrite`, unless `:replace t`. A replacement is made under a temp name in the destination's directory and renamed over it, so no temp file survives and readers see the old file or the new one. A directory SOURCE or DESTINATION → `path-error`; SOURCE missing → `path-not-found`; a symlink SOURCE gives a symlink. |
+| **Failure** | Any condition escaping `fs-clone-tree` (`clone-error` with no handler, an I/O error, …) leaves DESTINATION **as it was**: removed when it was absent, emptied when it was an empty directory. |
+| **Report** | `clone-report-mechanism` is the mechanism that made the tree (`:copy` or a name, the outer name when a hook nests calls). `clone-report-reason` is NIL when the mechanism was the one asked for or picked, and when `:copy` was asked for; with `:auto` and no clone available it is the reason. `clone-report-cloned` + `clone-report-copied` = the number of regular files made. `clone-report-fallbacks` is `((rel . reason) …)` sorted `string<`; for `fs-clone-file`, REL is the source's file name. With a hook, `cloned` is the hook's count. |
+| **`fs-set-mtime`** | `(fs-set-mtime fs pathname universal-time)` → T, or NIL where the backend or platform cannot set it (zip; local off SBCL unix), where it is a no-op like `fs-chmod`. It follows symlinks. A missing path signals `path-not-found` on every backend. Memory: the entry's timestamp. Local: `utimes(2)` with atime = mtime. Facade `set-mtime`. |
+| **Areas** | `fs-open-area` builds the area's tree with `fs-clone-tree` for every mechanism. **`:mechanism` now defaults to `:auto`**: it clones when a clone mechanism is available for BASE and the area directory, else it copies. `:copy`, `:clone` and a registered name are strict. `:overlay` (R4d) and `:virtual` (R4f) still signal `unsupported-operation`. A strict mechanism that turns out to be unavailable once the area directory exists signals `unsupported-operation` and leaves nothing on disk (a given empty DIRECTORY stays empty). `area-mechanism` → `:clone` or `:copy`; **`area-clone-report`** → the report. With nothing registered, `:auto` is the R4a copy, so every R4a / R4b test passes unchanged. |
+| **Areas: what changes for `:copy`** | Built by the same walk, a `:copy` area now keeps **all permission bits and mtimes**. R4a kept only the execute bit and gave copies the copy time. `fs-area-changes` does not change: entries still carry only the execute bit, so umask and group bits never make a change. The manifest still records hashes taken at open (read from the clone or the copy; the same content), plus size and mtime of the area's file. The racy-git rule is unchanged: an old preserved mtime is not racy, so a later edit, which sets a new mtime, is found by the size / mtime check. A same-size edit that also restores the old mtime is missed, as in R4a (a rescan cannot see it either). |
+| **Copy streaming** | The `:copy` rung on local streams files in chunks (≤ 1 MiB) and hashes them incrementally for the area manifest, so a large file is never held in memory whole. Not tested; the suite's 4 MiB and 16 MiB files are only correctness cases. |
+| **Equivalence by construction** | `:clone` and `:copy` areas differ only in the per-file primitive. The law (`fs-area-changes` EQUAL for the same edits) is still tested end to end, because a backend's primitive can be wrong (short writes, a lost tail, shared data) in ways only real edits show. |
+| **Stubs** | The contract calls `%r4c0-pending` (internal, `src/clone.lisp`). The implementation removes it and every call. |
+
+### Surface
+
+```lisp
+;;; Clones (protocol + facade)
+(fs-clone-tree fs source destination &key ignore (mechanism :auto)) → clone-report
+(fs-clone-file fs source destination &key (mechanism :auto) replace) → clone-report
+(fs-clone-supported-p fs directory &optional destination) → (values mechanism reason)
+(fs-set-mtime fs pathname universal-time) → T | NIL
+(clone-tree source destination &key ignore mechanism)  (clone-file source destination &key mechanism replace)
+(clone-supported-p directory &optional destination)    (set-mtime designator universal-time)
+
+clone-report: clone-report-p clone-report-source clone-report-destination (PATHs)
+              clone-report-mechanism clone-report-reason clone-report-cloned
+              clone-report-copied clone-report-fallbacks
+
+;;; Mechanism registry
+*clone-mechanisms*                            ; opaque; LET-bind to scope registrations
+(register-clone-mechanism name clone-file &key (rank 0) available-p clone-tree) → name
+    ; (funcall clone-file fs source destination) → true | (values nil reason); may signal CLONE-ERROR
+    ;    SOURCE: absolute pathname of a regular file; DESTINATION: absent, its directory exists
+    ; (funcall available-p fs source-dir destination-dir) → (values available-p reason); NIL = always
+    ; (funcall clone-tree fs source destination matcher) → count | NIL (declined)
+    ; same NAME again: replaced in place; :copy / :auto / :clone → ERROR; CLONE-FILE not a
+    ; function designator, RANK not an integer → TYPE-ERROR
+(unregister-clone-mechanism name) → T | NIL
+(clone-mechanisms &optional fs source destination) → names, best first (rank desc, then
+    registration order), then :copy; with FS, SOURCE, DESTINATION only the available ones
+
+;;; Conditions and restarts
+clone-error (path-error): clone-error-mechanism clone-error-operation clone-error-code
+use-copy (restart around every CLONE-FILE call)   (invoke-use-copy &optional condition)
+
+;;; Areas (changed)
+(fs-open-area fs base &key (mechanism :auto) ignore directory (journal :auto)) → area
+    ; mechanism: :auto | :copy | :clone | a registered clone mechanism name
+    ;            :overlay / :virtual / unknown → UNSUPPORTED-OPERATION, nothing created
+(open-area base &key (mechanism :auto) ignore directory journal)
+(area-mechanism area) → :clone | :copy      (area-clone-report area) → clone-report
+```
+
+### The clone suite (`cl-stack-pathlib/clone-suite`)
+
+A secondary system in `cl-stack-pathlib` (`tests/clone-suite.lisp`, package `cl-stack-pathlib/clone-suite`, public API only, no test framework). Every clone backend runs it with its own mechanism, on a volume where the mechanism works, and gives it a directory on another volume when it can:
+
+```lisp
+(run-clone-suite mechanism &key (backend :local) directory other-volume)
+  → (values failures steps)   ; FAILURES NIL = every law holds
+(clone-suite-steps &key (backend :local) (mechanism :copy) other-volume) → step names
+(clone-suite-edits &key (backend :local)) → equivalence edit names
+;; in a backend's Rove tests:
+(ok (null (run-clone-suite :clonefile :directory apfs-dir :other-volume hfs-dir)))
+```
+
+The base tree has `.gitignore` (ignoring `*.log` and `build/`), `.git/HEAD`, text files, `run.sh` (#o755), `private.txt` (#o600), a non-ASCII name under a directory with a space, an empty file, a 4 MiB pseudo-random `large.bin`, ignored `x.log` / `build/…`, empty directories, the symlinks `link` → `a.txt` and `lnk-dir` → `src` (no dangling or `..` links: cl-stack-pathlib#41), and, on local, a 16 MiB `sparse.bin` with data only at both ends. Every regular file gets a distinct mtime in 2001 (`set-mtime`), so a mechanism that does not keep mtimes cannot pass by luck. Failure plists carry `:step` and `:kind`: `:error`, `:mechanism`, `:report`, `:content`, `:metadata`, `:protocol`, `:independence`, `:equivalence`, `:corpus`, `:fallback`. Steps are independent: an error in one is recorded and the next one runs.
+
+| Step | Law | Runs on |
+|------|-----|---------|
+| `:supported` | `clone-mechanisms` ends with `:copy`; `fs-clone-supported-p` answers `(name nil)` or `(nil reason)` with a locked reason; for a real mechanism, it is available within the work directory | all |
+| `:tree` | `fs-clone-tree :ignore :auto`: report (mechanism, no reason, counts, at least one file cloned for a tree, fallbacks well-formed); **metadata**: the destination's snapshot equals the source's with `:auto` (content, modes, symlink targets, ignored paths absent), the same directories (empty ones included), equal #o777 bits (unix modes) and mtimes (SBCL unix, memory) per file | all |
+| `:no-ignore` | the same with `:ignore nil` (`.git`, `x.log`, `build/` cloned too; a hook gets a NIL matcher) | all |
+| `:matcher` | the same with an explicit matcher | all |
+| `:file` | `fs-clone-file`: content, mode and mtime of `large.bin`, `private.txt`, `run.sh`, the empty file; parents made; `path-exists-error` with `overwrite` (the old content untouched until then); `:replace t`; no temp file left; a symlink source → a symlink; a directory source or destination, a missing source, an unknown mechanism → the locked conditions, nothing left | all |
+| `:sparse` | `sparse.bin` cloned: size and content equal | local |
+| `:errors` | `fs-clone-tree` refusals (missing source, non-empty destination untouched, destination inside source, file source, unknown mechanism), nothing left; an empty existing destination is used | all |
+| `:independence` | after a clone, writes to the clone (in place with `cl:open :overwrite` on local, append, truncate, atomic replace, chmod, `set-mtime`, delete, rename, create, a write into the sparse hole) change nothing in the source: snapshot, modes, mtimes, directories | all |
+| `:equivalence` | areas opened with the mechanism and with `:copy` over the same base (`:ignore :auto`): `area-mechanism` `:clone` / `:copy`, the report names the mechanism, equal manifests; then each edit of the script below goes to both, and after each one `fs-area-changes` of the clone area (default and `:rescan t`) is EQUAL, field by field, to the copy area's, which also matches the expected changes; the base is unchanged after both are discarded | all |
+| `:cross-volume` | with OTHER-VOLUME: `fs-clone-supported-p` → `(nil :cross-volume)`, the mechanism is not listed as available, `:auto` gives a `:copy` report with reason `:cross-volume` and a correct tree; the mechanism by name, `:clone` and a `:clone` area refuse with `unsupported-operation`, leaving nothing; an `:auto` area is a `:copy` area with that reason | local, mechanism ≠ `:copy` |
+| `:independence-reverse` | writes to the source (in place, append, chmod) change nothing in a clone made before | all |
+
+Equivalence edits, in order (cumulative expectations): `:none`, `:create`, `:modify-same-size`, `:in-place` (4 octets inside `large.bin`, written in place), `:append`, `:truncate`, `:revert`, `:delete`, `:rename`, `:directory-create`, `:directory-delete`, `:directory-rename`, `:ignored`, `:symlink-create` and `:symlink-retarget` (memory; local except Windows), `:mode-change` and `:private-mode` (group bits are no change) (unix modes), `:sparse-write` (local), `:child-process` (`/bin/sh` or `cmd.exe`: create, modify, delete). The suite has no 2000-file burst, so the slow Windows rescan (cl-stack-pathlib#44) does not dominate CI. In-place and append edits use `cl:open` directly, because pathlib has no output stream yet (cl-stack-pathlib#45).
+
+### Contract (tests)
+
+`cl-stack-pathlib/tests` (Rove) now depends on `cl-stack-pathlib/clone-suite` too. The fakes live in `tests/clone-fakes.lisp` and are registered only inside `with-clone-fakes` (a `let` of `*clone-mechanisms*`). They all "clone" by copying through the protocol (`fs-read-bytes` / `fs-write-bytes`), except where noted, and they log their calls:
+
+- `:fake-clone`: exact, rank 10.
+- `:fake-tree`: a tree hook that clones the whole tree through `fs-clone-tree :mechanism :fake-clone`.
+- `:fake-decline`: a hook that always declines.
+- `:fake-partial`: hands files over 1 MiB back to the copy rung (`:clone-failed`).
+- `:fake-signal`: signals `clone-error` for `a.txt`.
+- `:fake-shared` (SBCL unix): **hard-links** the file, so the clone and its source share data. The suite must catch it.
+- `:fake-lossy`: a hook that resets mtimes and modes. The suite must catch it.
+- `:fake-cross-volume`: unavailable (`:cross-volume`) for destinations under `other-volume/`.
+- `:fake-unsupported`: rank 50, `:unsupported-volume`.
+- `:fake-unavailable`: rank 40, NIL without a reason.
+- `:fake-local-only`: `:unsupported-filesystem` off `local-filesystem`.
+- `:fake-recorder`: logs probe arguments.
+
+| File | Covers |
+|------|--------|
+| `clone-test.lisp` | the laws: the suite on `:copy` and on `:fake-clone`, `:fake-tree`, `:fake-decline`, `:fake-partial` × local / memory, with every applicable step; the cross-volume step with `:fake-cross-volume`; the suite **catches `:fake-shared`** (`:independence` at `:independence` and `:independence-reverse`) and **`:fake-lossy`** (`:metadata` mtime, and mode on unix, at `:tree`); an unavailable or unknown mechanism fails `:supported`. Registry: rank order, ties, replace in place, unregister, `let` scoping, the old list never modified, reserved names and type checks. Availability: `:no-mechanism`, `:unsupported-volume`, `:unavailable`, the best-ranked reason, `:unsupported-filesystem` on memory, unavailable mechanisms skipped, the facade; probe arguments (the destination defaults to the directory; a missing destination → its nearest existing ancestor). `fs-clone-tree`: `:auto` (no mechanism, best available, `:unsupported-volume`), `:copy` / `:clone` / named / unavailable / unknown (nothing created), the hook (called once with the resolved matcher, its count; a declining hook → per-file calls), per-file fallbacks (sorted, counts, tree whole), `clone-error` (slots; destination removed or emptied; `use-copy` offered and invoked), destinations, ignore (`:auto`, NIL, a matcher, empty and ignored directories), local metadata (all permission bits, mtime, a directory link and a `..` link kept as links, a FIFO left out) and memory mtimes. `fs-clone-file`: reports, parents, `path-exists-error` + `overwrite`, `:replace`, no temp file, refusals, symlinks made by pathlib (not by the mechanism), per-file and whole-call fallbacks. `fs-set-mtime` on local / memory / zip. Areas: `:auto` → `:copy` with `:no-mechanism`, `:copy`, `:auto` / `:clone` / named → `:clone` with the report, `:unsupported-volume`; refusals (`:overlay`, `:virtual`, unknown, unavailable; `:clone` with none available, nothing left, an empty directory left empty); a clone area equals a copy area and commits (law 6); a `:copy` area keeps modes and mtimes, and an old preserved mtime is not racy |
+| `clone-suite.lisp` | the base tree, the edit script and the runner (sealed with `tests/`) |
+
+On macOS today: **288 existing test cases pass; the 56 new ones fail on the stubs.** All R4a / R4b tests pass unchanged, because `:mechanism :auto` with nothing registered is the R4a copy and `:clone` with nothing registered still signals `unsupported-operation`. Tests must pass on macOS, Linux and Windows (CI matrix). Symlink tests skip local Windows, mode checks need unix modes, local mtime checks need SBCL unix, and the hard-link fake needs SBCL unix.
+
+### Out of scope (R4c-1 … R4c-3 and later)
+
+The OS mechanisms (R4c-1 `clonefile`, R4c-2 `FICLONE`, R4c-3 block cloning) · overlay areas (R4d, see above) · lazy manifest hashes (an area still reads every file once at open to hash it; skipping that needs base-change detection) · cloning across `filesystem` objects (local → memory) · preserving owners, ACLs, xattrs, flags, hard links, directory metadata · sparse output on the `:copy` rung · making the area's temp directory on the base's volume (today `fs-make-temp` decides, and `:auto` reports `:cross-volume` when they differ) · subvolume snapshots (btrfs, APFS) · zip destinations.

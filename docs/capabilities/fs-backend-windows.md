@@ -1,7 +1,7 @@
 # fs-backend-windows (R4b-3) — ReadDirectoryChangesW change journals
 
 **Repo:** [`egao1980/fs-backend-windows`](https://github.com/egao1980/fs-backend-windows) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) R4 detail, rung R4b · **Protocol:** [pathlib.md § R4b-0](pathlib.md#r4b-0--locked) (`cl-stack-pathlib` 0.9.0) · siblings [fs-backend-linux.md](fs-backend-linux.md) (R4b-1), [fs-backend-darwin.md](fs-backend-darwin.md) (R4b-2)
-**Status:** **R4b-3 locked**, version **0.1.0**. Contract on branch `agent/r4b3-contract-d82f` ([PR #1](https://github.com/egao1980/fs-backend-windows/pull/1); `fs-backend-windows/tests`, Rove): given code, stubs (`%r4b3-pending`) and the failing tests. Implementation via **team-solve**.
+**Status:** **R4b-3 locked**, version **0.1.0**. Contract on branch `agent/r4b3-contract-d82f` ([PR #1](https://github.com/egao1980/fs-backend-windows/pull/1); `fs-backend-windows/tests`, Rove): given code, stubs (`%r4b3-pending`) and the failing tests. Implementation via **team-solve**. **R4c-3 locked** (below): `:block-clone` ReFS / Dev Drive block cloning, version **0.2.0**, on `cl-stack-pathlib` 0.10.0's clone protocol, with a CI job on a ReFS VHD. Contract not yet authored (`%r4c3-pending`).
 
 The Windows mechanism for the R4b-0 journal protocol. Loading the system registers `:rdcw`. On Windows, `fs-watch … :mechanism :auto` and `fs-open-area … :journal :auto` then pick it for directories on local volumes with no consumer change, and `fs-area-changes` rehashes only the drained paths. The verdict is the same as for every R4b backend: `cl-stack-pathlib/journal-suite` passes with `:rdcw`, so the journal result is EQUAL to the full rescan after every corpus step.
 
@@ -131,3 +131,94 @@ The windows-latest job (SBCL 2.6.7) showed three platform facts that the first c
 ## Out of scope
 
 The USN change journal (`FSCTL_READ_USN_JOURNAL`: volume-wide, needs admin for some operations, would give resumable ids) · fanotify (Linux) · IOCP or completion-routine variants (one thread per journal is fine at area scale) · `ReadDirectoryChangesExW` with `FILE_NOTIFY_EXTENDED_INFORMATION` (Windows 10 1709+; would give file ids for rename pairing) · network volumes (`:poll`) · writes through a handle still open at drain time (NTFS reports size and last-write at cleanup; the next drain after close reports them) · memory-mapped writes · journals on zip or memory filesystems · ECL / CCL CI jobs.
+
+---
+
+## R4c-3 — locked
+
+ReFS / Dev Drive block cloning for the R4c-0 clone protocol ([pathlib.md § R4c-0](pathlib.md#r4c-0--locked), `cl-stack-pathlib` 0.10.0), in **fs-backend-windows 0.2.0**. Loading the system also registers `:block-clone`. On ReFS volumes (a Dev Drive is one), `clone-tree … :mechanism :auto` and `open-area` (default `:auto`) then clone. NTFS and FAT answer `:unsupported-volume`, and `:auto` copies. The verdict: `cl-stack-pathlib/clone-suite` passes with `:block-clone` on a real ReFS volume in CI.
+
+**Testability (as R4b-3).** The verdict for `check-feature.sh` runs on macOS, so the logic that needs no Win32 is plain Lisp in `src/block-clone-plan.lisp` and is tested on every OS: the chunk plan, the error-code mapping, the volume-flag decoding and the `DUPLICATE_EXTENTS_DATA` encoding. The Win32 half is thin glue, graded by the `refs` job.
+
+### Decisions
+
+| Decision | Choice |
+|----------|--------|
+| **Dependencies** | `cl-stack-pathlib` ≥ 0.10.0, `cffi`, `bordeaux-threads`, `uiop`, as in 0.1.0 (no threads are added for clones). New kernel32 bindings through the existing `%define-kernel32`: `GetVolumePathNameW`, `GetVolumeInformationW`, `GetVolumeNameForVolumeMountPointW`, `GetDiskFreeSpaceW`, `CreateFileW` (existing), `DeviceIoControl`, `SetFileInformationByHandle`, `GetFileSizeEx`, `GetFileAttributesW`, `DeleteFileW`, `CloseHandle` (existing). Wide strings are UTF-16LE, so non-BMP names work, which SBCL's own `OPEN` cannot do (0.1.0 note). |
+| **Registration** | `(register-clone-mechanism :block-clone 'block-clone-file :rank +block-clone-rank+ :available-p 'block-clone-available-p)`, `+block-clone-rank+` = 100. No tree hook. |
+| **Availability** | `block-clone-available-p fs source-dir destination-dir`, checked in this order. Off Windows: `(nil :unavailable)`. Not a `local-filesystem`: `(nil :unsupported-filesystem)`. The source's volume (`GetVolumePathNameW` → `GetVolumeInformationW`) lacks `FILE_SUPPORTS_BLOCK_REFCOUNTING` (#x08000000): `(nil :unsupported-volume)`. The volume GUID paths (`GetVolumeNameForVolumeMountPointW`) of the two directories differ: `(nil :cross-volume)`. Otherwise T. |
+| **Per file** | `block-clone-file fs source destination`, in this order: (1) open SOURCE `GENERIC_READ`, share READ. (2) Create DESTINATION `CREATE_NEW`, `GENERIC_READ\|GENERIC_WRITE\|DELETE`. (3) If SOURCE has `FILE_ATTRIBUTE_SPARSE_FILE`, send `FSCTL_SET_SPARSE` to DESTINATION; ReFS requires the sparse states to match. (4) Copy the integrity setting: `FSCTL_GET_INTEGRITY_INFORMATION` on SOURCE, `FSCTL_SET_INTEGRITY_INFORMATION` on DESTINATION; the states must match too. (5) Set DESTINATION's end of file to SOURCE's size (`SetFileInformationByHandle` `FileEndOfFileInfo`). (6) Send `FSCTL_DUPLICATE_EXTENTS_TO_FILE` (#x00098344) to DESTINATION for each chunk of the plan. (7) Close both handles, always. A 0-byte file takes no ioctl. Any failure deletes DESTINATION, then maps the code: `ERROR_INVALID_FUNCTION` (1) / `ERROR_NOT_SUPPORTED` (50) → `(nil :unsupported-volume)`; `ERROR_NOT_SAME_DEVICE` (17) → `(nil :cross-volume)`; `ERROR_INVALID_PARAMETER` (87, alignment or integrity mismatch) / `ERROR_BLOCK_TOO_MANY_REFERENCES` (347) → `(nil :clone-failed)`; anything else (`ERROR_ACCESS_DENIED`, `ERROR_DISK_FULL`, `ERROR_SHARING_VIOLATION`, …) → **`block-clone-error`**, a `cl-stack-pathlib:clone-error` (operation = the call, code = `GetLastError`), so `use-copy` applies. |
+| **Chunk plan** | `block-clone-chunks size cluster-size &key (max-chunk (expt 2 30))` → `((offset . byte-count) …)`. Offsets are multiples of the cluster size (`GetDiskFreeSpaceW`: sectors per cluster × bytes per sector, 4 KiB or 64 KiB on ReFS). Every chunk is at most MAX-CHUNK (the ioctl limit is < 4 GiB). The last chunk is rounded **up** to a cluster boundary, which the ioctl allows past end of file, because the end of file was set first. A size of 0 gives NIL. A MAX-CHUNK that is not a multiple of CLUSTER-SIZE → `type-error`. |
+| **Mtime** | `fs-set-mtime` on local Windows is a no-op in pathlib 0.10.0, so neither rung keeps mtimes on Windows, and the suite does not check them there (its `:mtimes` requirement is SBCL unix or memory). Specializing it here would clash with pathlib's own local method; out of scope. |
+| **Sharing check (tests)** | `file-cluster-runs pathname` → `((vcn lcn count) …)` via `FSCTL_GET_RETRIEVAL_POINTERS` (#x00090073), exported for tests. A block clone's runs map to **the same LCNs** as its source's; a copy's do not; after a write into the clone's first cluster, the clone's first LCN changes and the source's stays. That proves the ioctl really shared clusters, not just that the content matches. |
+| **Stubs** | The contract calls `%r4c3-pending` (internal, `src/block-clone-plan.lisp`). The implementation removes it and every call. |
+
+### Surface
+
+```lisp
++block-clone-rank+                                ; 100
+(block-clone-available-p fs source-dir destination-dir) → (values available-p reason)
+(block-clone-file fs source destination) → T | (values nil reason)   ; signals BLOCK-CLONE-ERROR
+block-clone-error (cl-stack-pathlib:clone-error)
+;;; pure (every OS)
+(block-clone-chunks size cluster-size &key max-chunk) → ((offset . count) …)
+(block-clone-error-reason code) → :unsupported-volume | :cross-volume | :clone-failed | NIL
+(volume-flags-block-clone-p flags) → boolean
+(encode-duplicate-extents-data handle-value source-offset target-offset byte-count) → 32 octets (x64)
+;;; Windows helpers (BLOCK-CLONE-ERROR elsewhere)
+(volume-supports-block-clone-p directory)  (volume-guid-path directory)  (volume-cluster-size directory)
+(file-cluster-runs pathname)                      ; for tests
++fsctl-duplicate-extents-to-file+ +fsctl-set-sparse+ +fsctl-get-integrity-information+
++fsctl-set-integrity-information+ +fsctl-get-retrieval-pointers+ +file-supports-block-refcounting+
++error-not-same-device+ +error-not-supported+ +error-invalid-parameter+ +error-block-too-many-references+
+```
+
+### CI: a real ReFS volume
+
+`windows-latest` (Windows Server 2025) runs on NTFS. A second job, `refs`, in `.github/workflows/test.yml`, makes a ReFS volume on the runner (the runner is an administrator, and Server SKUs can format ReFS):
+
+```yaml
+  refs:
+    runs-on: windows-latest
+    permissions: { contents: read, packages: read }
+    steps:
+      - uses: actions/checkout@v5
+      - shell: pwsh
+        run: |
+          $vhd = "$env:RUNNER_TEMP\refs.vhdx"
+          @"
+          create vdisk file="$vhd" maximum=4096 type=expandable
+          attach vdisk
+          create partition primary
+          format fs=refs quick label=r4c
+          assign letter=R
+          "@ | Set-Content "$env:RUNNER_TEMP\refs.txt"
+          diskpart /s "$env:RUNNER_TEMP\refs.txt"
+          if (-not (Test-Path R:\)) { throw "no ReFS volume" }
+      - uses: egao1980/cl-repository/.github/actions/setup-lisp@main
+      - uses: egao1980/cl-repository/.github/actions/ci@main
+        with: { phase: install }
+      - uses: egao1980/cl-repository/.github/actions/ci@main
+        with: { phase: test }
+        env:
+          FS_BACKEND_WINDOWS_REFS_DIR: 'R:\'
+          FS_BACKEND_WINDOWS_REQUIRE_REFS: "1"
+```
+
+Without `FS_BACKEND_WINDOWS_REFS_DIR`, each ReFS test is one skip with the note "block cloning needs ReFS / Dev Drive: set FS_BACKEND_WINDOWS_REFS_DIR (CI job `refs`)". With `FS_BACKEND_WINDOWS_REQUIRE_REFS=1`, a missing or non-cloning volume **fails** instead. The canned Windows job grades NTFS detection (temp → `:unsupported-volume`, `:auto` copies) and the pure layer. **A Dev Drive** (`Format-Volume -DevDrive`, Windows 11 / Server 2025) is ReFS with the same flag. It is not a separate requirement: the job may add a second VHD formatted that way behind `continue-on-error`, and its tests run when `FS_BACKEND_WINDOWS_DEVDRIVE_DIR` is set. **If ReFS cannot be created on the runner** (an image change), the `refs` job fails visibly and is not skipped. After two attempts at fixing the step, the contract is amended to detection + fallback only, the job is removed, and the change is stated in an "As shipped" section, as R4b-3 did for its platform facts.
+
+### Contract (tests)
+
+| File | OS | Covers |
+|------|----|--------|
+| `clone-registry-test.lisp` | all | `:block-clone` registered, rank 100, ahead of `:copy`, beside `:rdcw`; constants; memory → `:unsupported-filesystem`; off Windows `(nil :unavailable)`, `unsupported-operation` by name, helpers signal `block-clone-error` |
+| `block-clone-plan-test.lisp` | all | chunk plans (0, 1 octet, exactly one cluster, cluster + 1, 4 KiB and 64 KiB clusters, 3 GiB with a 1 GiB MAX-CHUNK, a MAX-CHUNK not a multiple of the cluster size → `type-error`); the error table, both ways; flag decoding; the 32-octet `DUPLICATE_EXTENTS_DATA` layout (little-endian, field offsets 0 / 8 / 16 / 24) |
+| `clone-detect-test.lisp` | Windows | NTFS temp → `(nil :unsupported-volume)`; `:auto` copies with that reason; `block-clone-file` on NTFS → `(nil :unsupported-volume)` with DESTINATION deleted; volume GUID paths stable across spellings (`C:\`, a subdirectory, a short 8.3 name) |
+| `clone-refs-test.lisp` | Windows + ReFS dir | detection T; content (0 octets, 1 octet, one cluster + 1, 8 MiB, a non-BMP name through `CreateFileW`), the sparse file (`FSCTL_SET_SPARSE` source → sparse clone, size and hash equal); **`file-cluster-runs`** shared with the source, then diverging after a write into the clone, the source's hash unchanged; ReFS → NTFS temp `(nil :cross-volume)`; a read-only destination directory (ACL) → `block-clone-error` (`ERROR_ACCESS_DENIED`), `use-copy` offered; areas: `open-area` on ReFS is `:clone` with `:block-clone` |
+| `clone-suite-test.lisp` | Windows + ReFS dir | `(run-clone-suite :block-clone :directory refs :other-volume temp)` (every step, `:cross-volume` included); `(run-clone-suite :block-clone :directory refs)` |
+
+Known issues that do not block R4c-3: fs-backend-windows#4 (SBCL's thread-handle leak; clones start no threads), cl-stack-pathlib#44 (slow rescans: the clone suite has no 2000-file burst) and #45 (no append handle: the suite's in-place edits use `cl:open`).
+
+### Out of scope
+
+`CopyFile2` / `COPY_FILE_ENABLE_BLOCK_CLONING`-style shortcuts (they hide whether a clone happened) · NTFS (no block cloning) · keeping mtimes, ACLs and alternate data streams on Windows · ReFS snapshots / VSS (admin) · Dev Drive as a hard CI requirement.
