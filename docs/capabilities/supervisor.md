@@ -1,7 +1,7 @@
-# supervisor-protocol (H8a, H8b) — process supervisor core, unit logs
+# supervisor-protocol (H8a, H8b, H8c) — process supervisor core, unit logs, log search
 
 **Repo:** [`egao1980/supervisor-protocol`](https://github.com/egao1980/supervisor-protocol) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) rows H8a–H8d, "Backlog note: why H8", "Decisions (2026-11-21)"
-**Status:** **H8a shipped** (0.1.0). **H8b locked** (0.2.0, rotated capped unit logs): [section below](#h8b-locked--rotated-capped-unit-logs-020). Implementation via **team-solve**. Later rungs: [H8a-1](#later-h8a-1-and-after).
+**Status:** **H8a shipped** (0.1.0). **H8b shipped** (0.2.0, rotated capped unit logs): [section below](#h8b-locked--rotated-capped-unit-logs-020). **H8c locked** (0.3.0, log search index, `restart-unit`, `close-unit-input`): [section below](#h8c-locked--log-search-index-manual-restart-stdin-close-030); its agent tools are [agent-tools-units.md](agent-tools-units.md). Implementation via **team-solve**. Later rungs: [H8a-1](#later-h8a-1-and-after).
 
 One in-image registry for every child the harness owns: shell jobs, rpc / MCP and language servers, spawned Lisp images, subagent threads. A **unit** has an id, a kind tag, an owner scope, labels, a command or a thread function, pid / pgid, start times, a state and an exit status. The supervisor starts units under caps with LRU eviction, restarts servers on failure with backoff, stops them graceful → grace → force (tree-wide), stops everything a scope owns when the scope closes, shuts down on image exit, publishes every state change on an ordered, replayable event stream, and records each process unit in a durable file so the next supervisor reaps what a crash left behind.
 
@@ -131,7 +131,7 @@ Locally (macOS, stubs): 9 cases pass (given code + the test programs), 2 skip, 1
 
 ## H8b locked — rotated, capped unit logs (0.2.0)
 
-**Status:** **H8b locked**, version **0.2.0** (same repo). Contract on branch `agent/h8b-contract-b2b9` ([PR #2](https://github.com/egao1980/supervisor-protocol/pull/2)): given code, stubs (`%h8b-pending`) and the failing tests. Implementation via **team-solve**. Plan: [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) row H8b, "Decisions (2026-11-21)" item 2. H8c (search / read / tail tools) and H8d (views) build on the reader API below.
+**Status:** **H8b shipped**, version **0.2.0** (same repo, published). Contract on branch `agent/h8b-contract-b2b9` ([PR #2](https://github.com/egao1980/supervisor-protocol/pull/2)): given code, stubs (`%h8b-pending`) and the failing tests. Implementation via **team-solve**. Plan: [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) row H8b, "Decisions (2026-11-21)" item 2. H8c (search / read / tail tools) and H8d (views) build on the reader API below.
 
 Every unit's stdout and stderr go to rotated, size-capped segment files by default. Memory keeps only the H8a head + tail buffer, fed from the same pump. Nothing is unbounded, and nothing is lost without a trace: a dropped segment leaves a marker with exact counts, and reads that cross it report a gap. Logs stay readable after the unit finishes, after the supervisor shuts down, and after a SIGKILL, by this image or the next.
 
@@ -231,6 +231,100 @@ Locally (macOS, stubs): the 114 H8a cases still pass or skip as before (112 pass
 
 Retention across supervisors (old sessions' logs stay until `delete-unit-log`; H8c decides a policy), compression of old segments, fsync per record, a time index, and persisting the head + tail.
 
+## H8c locked — log search index, manual restart, stdin close (0.3.0)
+
+**Status:** **H8c locked**, version **0.3.0** (same repo). Contract on branch `agent/h8c-contract-238f` ([PR #3](https://github.com/egao1980/supervisor-protocol/pull/3)): given code, stubs (`%h8c-pending`) and the failing tests. Implementation via **team-solve, run 1 of 2**; run 2 is the agent tool source in agent-tools ([agent-tools-units.md](agent-tools-units.md)), which needs this one published first. Plan: [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) row H8c, "Decisions (2026-11-21)" item 2.
+
+Agents reach unit output through search, read and tail, not raw dumps. This rung builds the engine: an incremental lexical index over the H8b segments, with structured hits for the lines an agent usually looks for first. It also adds the two controls the tool source needs and 0.2.0 lacks: a manual restart and closing a unit's stdin.
+
+### Home (decided)
+
+| Piece | Home | Why |
+|-------|------|-----|
+| Index, tokenizer, kind rules, BM25 search | **`supervisor-protocol/search`**, a secondary system in this repo (`src/search/`, package `supervisor-protocol/search`, version 0.3.0) | It reads the H8b record format and segment lifecycle directly (index files live and die with segments), so it belongs with the log writer. Pure Lisp on the stack, no agent, JSON or LLM dependency. A secondary system keeps the supervisor core free of the index for consumers that only supervise (rpc-backend-stdio, lisp-mcp) |
+| `restart-unit`, `close-unit-input` | primary `supervisor-protocol` 0.3.0 | Supervisor state transitions; the tool source must not reach into internals |
+| Agent tools (`unit_list` … `unit_control`), shell jobs as units | **agent-tools 0.3.0**, a new `unit-tools` source | The agent core (`ai-agent-protocol`) stays free of process management (the Pi lesson). Tool JSON, permissions and output caps already live in agent-tools |
+
+Considered and rejected: a separate `egao1980/unit-search` repo (one more publish hop for a module that is meaningless without the H8b format; the format version and the index version would drift apart), and putting the index in agent-tools (the TUI panel and `--rpc` of H8d need the same search without agent tools).
+
+### Prior art (intersection, not a clone)
+
+| Source | Took | Left |
+|--------|------|------|
+| Lucene / Elasticsearch BM25 | k1 1.2, b 0.75, IDF ln(1 + (N − df + 0.5)/(df + 0.5)) (never negative) | Positional indexes, analyzers per field, segment merging |
+| Code search tokenizers (GitHub code search, Sourcegraph, Zoekt) | Identifiers kept whole and split at camel / snake boundaries; paths kept whole plus components | Trigram indexes (no regex search here) |
+| Log tools (Loki labels, `grep -C`, journalctl) | Line refs and context lines; filters by unit, stream, time | A query language |
+| CI log parsers (GitHub problem matchers, Jenkins warnings-ng) | Rule-based detection of compiler errors, warnings and test failures | Per-tool regex catalogues; we keep a small, tested rule set |
+| Claude Code / Codex | Agents get bounded, ref-bearing excerpts instead of the whole buffer | — |
+
+### Decisions (locked)
+
+| Decision | Choice |
+|----------|--------|
+| **Systems** | `supervisor-protocol/search` depends on `supervisor-protocol` 0.3.0, `cl-stack-pathlib` 0.9.0 (atomic writes, unlink), `encoding-protocol` 0.2.0 (UTF-8), `bordeaux-threads`, `uiop`. Tests stay in `supervisor-protocol/tests` (it now also loads the search system) |
+| **Documents** | A **block** = lines 16B+1 … 16B+16 of one log (`+default-block-lines+`, line numbers as H8b assigns them, headers included). Fixed boundaries, so a rebuild, an incremental build and a different refresh rhythm give the same blocks. Blocks are scored; a hit is one line of a block |
+| **What is indexed** | Output records only (`o`/`e`), each record its own line (a `+` continuation is a line of its own). Record text = `log-record-text` (UTF-8, U+FFFD for invalid bytes). Header, drop and end records are not tokenized; end records are `:exit` hits |
+| **Tokenizer** (`+tokenizer-version+` 1) | (1) strip ANSI escapes; `\` → `/`. (2) Spans: runs of word characters (`alphanumericp` or `_`) and the separators `- . / : @ #`. (3) Trim separators off both ends. (4) A span still holding a separator is a **compound**: emit it; if it ends in `:<digits>` groups also emit the prefix before them (`src/foo.lisp:12:5` → `src/foo.lisp`); split that prefix at `/` and `:` and emit each component that still has a separator (`foo.lisp`, `my-package`, `some-function`). (5) Words: runs of word characters. (6) Sub-words: split a word at `_`, at lower/digit → upper, and before the last capital of a capital run followed by a lowercase letter (`parseHTTPResponse_v2` → `parse http response v2`), when that gives ≥ 2 parts; letters and digits are not split (`sha256`, `utf8`). (7) Lowercase; drop one-character terms unless a digit; drop terms over 64 characters (`+max-term-length+`). Per span: compound-level terms first (distinct), then each word and its distinct sub-words; otherwise one term per occurrence. No stemming, no stop words. Queries use the same function; `"double quotes"` add a case-insensitive phrase filter |
+| **Why this tokenizer** | Log and code queries are identifiers, paths, file:line refs and error words. Keeping compounds whole makes `src/parser.c` and `my-package::fn` precise; their parts keep recall (`parser`, `fn`). Camel / snake splitting finds `TypeError` from `error` and `test_total_counts_all_items` from `total`. Stemming and stop words hurt code tokens (`errors.c` is not an error; `in` and `at` matter in stack frames) |
+| **Kinds** | `+hit-kinds+` = `(:error :warning :stack-trace :test-failure :exit)`. One-line rules over a **word set** (words + sub-words; a path-like span — one with `/`, or a `.` between a word character and a letter — contributes only its last component's words, so `error.log` and `errors.c` are not errors): **:error** ⇔ `error err fatal panic panicked exception critical`; **:warning** ⇔ `warning warn deprecated deprecation`; either not right after `no`, `0`, `zero`, `without` (`0 Error(s)`, `no error`). Plurals do not match (`0 errors, 2 warnings`). **:test-failure** on the left-trimmed line: Rove `× <n>)`; pytest `FAILED …::…` and `…::… FAILED`; jest `✕ ` and `● … › …`; cargo `test … ... FAILED`; go `--- FAIL: `; generic `FAIL` + space/tab. **:stack-trace** (kind on the first line, `hit-extent` = first..last): Python `Traceback (most recent call last):` + indented lines + the exception line; frame runs `<n>: …` numbered from 0 (≥ 2 frames; a preceding `Backtrace for:` / `stack backtrace:` header starts it; indented `at ` lines continue it — SBCL, Rove, Rust); at-line runs (≥ 2 lines `<ws>at <x>`, continued by `Caused by: ` and `... N more`; the non-indented line before starts it — JS, Java). Each stream of a log is classified separately, in line order across segments; a trace completed by a later refresh updates the earlier line |
+| **Ranking** | Candidates: output lines of the selected logs and streams, in the time range, with a selected kind (when KINDS), containing every phrase, and at least one query term (when there are terms). **With terms**: BM25 per block, tf and dl over the block's lines in the selected streams and time range, N / df / avgdl over all blocks of the selected logs; `+ kind-boost` (0.5) when the hit line has :error, :stack-trace or :test-failure. Hit line = most distinct query terms, then a boosted kind, then earliest. One hit per block. Order: score ↓, time ↓, key, line ↑. **Without terms** (kinds only): every candidate line is a hit, score NIL, newest first (time ↓, key, line ↓). `search-logs` → `(values hits total)` where TOTAL counts hits before the cut to K, so callers can say "showing 5 of 23" honestly |
+| **Keys and refs** | Key = unit id for the index's supervisor (evicted units included), else the log directory name `<supervisor-id>--<unit-id>` (previous supervisors), or `index-add-log`'s key. Ref = `"<key>:<segment>:<line>"` (`format-log-ref`, `parse-log-ref`, `hit-ref`): the line number is what resolves; the segment says where it was found and shows a drop at a glance |
+| **Incremental** | `refresh-index` (called by every search) discovers new logs, forgets dropped segments, loads valid index files, and tokenizes only records it has not indexed (a running unit's new lines). Cheap when nothing changed (segment sizes compared). `index-stats :tokenized` proves nothing is tokenized twice |
+| **Persistence** | `NNNNNNNN.six` next to `NNNNNNNN.seg`, written atomically for every **sealed** segment (not the newest, or the newest of a closed log); the open newest segment is indexed in memory only (≤ 1 MiB to re-tokenize after a restart). Header: `"SPSI"`, u32 `+search-index-format+`, u32 `+tokenizer-version+`, u64 segment number, u64 segment byte size; body the implementation's; trailing CRC-32. Deterministic bytes: a rebuild is byte-identical. Untrusted: missing, other version, other size, bad CRC or unparsable → rebuilt from the segment. `:persist nil` writes nothing. A write failure is the WARNING `index-file-error` (the segment stays in memory) |
+| **Drops and gaps** | A segment the reader no longer lists is forgotten and its `.six` deleted. **0.3.0 sink change:** dropping segment N deletes `NNNNNNNN.*` (seg, idx, six; Windows deferred delete covers all three) and `supervisor-log-usage` counts `.six` bytes, so the total cap stays honest. Nothing in a gap is searchable; `hit-excerpt` reports gaps the context touches |
+| **Embeddings** | Hook only: GF `embed-texts (embedder texts)`, no method in this repo, no LLM dependency. With `:embedder`, each refresh calls it once per log with the texts of the blocks it completed (in order; every block once); vectors via `index-block-embedding`. Ranking ignores them in 0.3.0; hybrid ranking through `llm-protocol` embeddings is a later rung (H8c-1) |
+| **`restart-unit`** | `(restart-unit u &key grace force-grace)`: stop if live (as `stop-unit`), cancel a pending policy restart, relaunch the same unit (same id, new run). Events `:state` FINAL → `:starting` detail `(:restart :manual)`, then → `:running`. `unit-restart-count` unchanged. The log continues in one line sequence; a new segment with a header follows an end record, and `log-closed-p` / ENDED-P look at the last end record only. Evicted → `supervisor-error`; shut down → `supervisor-closed`; launch failure → `unit-start-error`, unit `:failed` |
+| **`close-unit-input`** | `(close-unit-input u)` → T when it closed stdin, NIL when already closed or finished; GF `executor-close-input` (process executor closes the pipe; default → `executor-unsupported`, so thread units refuse). `send-unit-input` afterwards → `unit-input-closed` (a `unit-error`). Lets the shell tools give foreground commands end of file |
+| **Threads** | One lock per index; searches from several tool threads are safe; no user code (embedder) runs under it |
+| **Stubs** | `%h8c-pending` (`src/model.lisp`, `src/search/model.lisp`). Given: exports, constants, conditions, `log-index` / `search-hit` classes and readers, `make-log-index`, refs, `embed-texts` GF. The implementation may add slots |
+
+### Surface (added in 0.3.0)
+
+```lisp
+;;; supervisor-protocol
+(restart-unit unit &key grace force-grace) → unit
+(close-unit-input unit) → T | NIL        executor-close-input        unit-input-closed
+
+;;; supervisor-protocol/search
++search-index-format+ +tokenizer-version+ +hit-kinds+ +default-block-lines+ +default-bm25-k1+
++default-bm25-b+ +default-kind-boost+ +max-term-length+ +default-search-k+
+(strip-ansi string) (tokenize text) (query-terms query) → (values terms phrases)
+(line-kinds text) (classify-lines texts) → ((index kinds end) …)
+(format-log-ref key segment line) (parse-log-ref string) → (values key segment line)
+(make-log-index &key supervisor state-directory (previous t) (persist t) block-lines k1 b kind-boost embedder)
+log-index index-supervisor index-state-directory index-previous-p index-persist-p index-block-lines
+index-k1 index-b index-kind-boost index-embedder index-closed-p
+(index-add-log index designator &key key) (index-remove-log index key) (index-log-keys index)
+(index-unit-log index key) (index-log-key index designator)
+(refresh-index index &key keys) → records tokenized    (index-stats index) → plist
+(close-log-index index)
+(search-logs index query &key units since until streams kinds k) → (values hits total)
+search-hit hit-key hit-log hit-segment hit-line hit-ref hit-kinds hit-score hit-stream hit-time
+hit-text hit-extent    (hit-excerpt index hit &key context) → (values records gaps)
+(embed-texts embedder texts)  (index-block-embedding index key block)
+search-condition search-error index-closed index-file-error (path, cause)
+```
+
+### Contract (tests)
+
+`supervisor-protocol/tests` grows by **51 forms / 121 cases**, all on macOS, Linux and Windows, no skips. The recorded corpus is `tests/fixtures/corpus/` (captured from real runs, local paths replaced by `/home/dev/…`; `.gitattributes` keeps the bytes): `build.log` (make + cc, 30 objects, an undeclared-identifier error and an unused-variable warning), `rove.log` (cl-repo test of a small system: 2 failures, a TYPE-ERROR, an SBCL backtrace, ANSI colours), `devserver.log` (a Node HTTP server: request lines on stdout; two TypeErrors with JS stacks and a DeprecationWarning on stderr), `pytest.log` (5 tests, 2 failed, an AssertionError and a KeyError). The tokenizer table, the kind rules and the golden rankings were checked against a throwaway prototype before sealing.
+
+| File | Covers |
+|------|--------|
+| `control-test` | `close-unit-input` ends a stdin reader (exit 0), already closed, `unit-input-closed`, thread refusal; `restart-unit` of a live process (new pid, old one dead, exact events, count unchanged), of a finished thread (one log, both runs, contiguous lines, closed only after the second end), evicted / shut down, launch failure → `:failed` |
+| `search-tokenizer-test` | constants and conditions; **18-row tokenizer table** (paths with line:col, Lisp symbols, camel / snake, URLs, emails, Windows paths, CJK, hex, long terms); ANSI; occurrence order and counts; `strip-ansi` (CSI, OSC + BEL / ST, ESC + intermediate); `query-terms` phrases |
+| `search-kinds-test` | **36-row one-line kinds table** (compiler, SBCL, npm, Rust, Java, Python, MSBuild-style counts, Rove, pytest, jest, cargo, go, false positives); Python / SBCL debugger / Rust / Java / JS traces and non-traces; **every line of the four corpus logs classified** |
+| `search-index-test` | keys and logs; **incremental refresh** (only new records tokenized); a stack trace completed by a later refresh; **`.six` written for sealed segments, loaded by a fresh index (nothing tokenized), rebuilt byte-identical when missing or corrupt**; the open newest segment in memory only; `:persist nil`; **drop forgets the segment and its file, gap respected**; excerpts report gaps; close; the embeddings hook (once per completed block) |
+| `search-rank-test` | **BM25 by hand** (scores to 1e-4, index parameters), the kind boost (and none for warnings), hit-line choice and ties, one hit per block and TOTAL, kinds-only newest first, extents, `:exit` hits, streams, time range (inclusive), unit globs, phrases, argument errors |
+| `search-golden-test` | **16 golden queries over the corpus → the expected ref in the top k** (k 1–3), stack traces across the corpus newest first with extents, errors across the corpus, the units filter |
+| `search-unit-test` | a **running unit indexed while it writes** (keys = unit ids, no record tokenized twice), **search across rotation after a drop**, **previous supervisors' logs** (and `:previous nil`), `.six` counted in `supervisor-log-usage`, a supervisor without a state directory |
+
+Locally (macOS, stubs): the H8a / H8b cases pass and skip as before; of the new cases 1 passes (constants and conditions) and 120 fail on `%h8c-pending`. No new load warnings (the ASDF "deprecated recursive use" warning is the canned test-op's, as before).
+
+### Not in 0.3.0
+
+Semantic / hybrid ranking (H8c-1, through `llm-protocol` embeddings), regex search, a query language, retention of previous sessions' logs (they stay until `delete-unit-log`; a policy waits for H6's session daemon), and indexing logs of other harness processes.
+
 ---
 
 ## Later: H8a-1 and after
@@ -238,5 +332,5 @@ Retention across supervisors (old sessions' logs stay until `delete-unit-log`; H
 - **H8a-1 — OS-enforced death** as backends with a capability query (`supervisor-supports-p :pdeathsig` …): Linux `PR_SET_PDEATHSIG` + `PR_SET_CHILD_SUBREAPER` (also catches `setsid` escapees), Windows job object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, macOS kqueue `EVFILT_PROC NOTE_EXIT` for exit notices. Natives through `fs-backend-*`-style overlays; the sweep stays as the fallback.
 - **H8a-1 — executors**: `pty-protocol` (pty-backend-native), optional **tmux** (attachable, Pi-style), later `compute-backend-*` confinement (R4d confines spawns through the supervisor).
 - **H8a-1 — consumer migration**: agent-tools `shell-tools` jobs, `rpc-backend-stdio` child servers, `lisp-mcp` `repl-spawn` become units.
-- **H8b** rotated, capped log files (locked above, 0.2.0); **H8c** search/read/tail tools; **H8d** TUI / `--rpc` / web views over the event stream.
+- **H8b** rotated, capped log files (0.2.0, shipped); **H8c** search engine (0.3.0, locked above) and the agent tools ([agent-tools-units.md](agent-tools-units.md)); **H8c-1** hybrid ranking through `llm-protocol` embeddings (`embed-texts`); **H8d** TUI / `--rpc` / web views over the event stream and the same search.
 - Not in 0.1.0: Windows graceful stop (CTRL_BREAK), a per-session total cap, persisting finished units across restarts, narrowing the sweep to processes a `setsid` moved out of the group.
