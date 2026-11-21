@@ -1,7 +1,7 @@
-# supervisor-protocol (H8a) — process supervisor core
+# supervisor-protocol (H8a, H8b) — process supervisor core, unit logs
 
 **Repo:** [`egao1980/supervisor-protocol`](https://github.com/egao1980/supervisor-protocol) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) rows H8a–H8d, "Backlog note: why H8", "Decisions (2026-11-21)"
-**Status:** **H8a locked**, version **0.1.0**. Contract on branch `agent/h8a-contract-a68e` (`supervisor-protocol/tests`, Rove): given code, stubs (`%h8a-pending`) and the failing tests. Implementation via **team-solve**. Later rungs: [H8a-1](#later-h8a-1-and-after).
+**Status:** **H8a shipped** (0.1.0). **H8b locked** (0.2.0, rotated capped unit logs): [section below](#h8b-locked--rotated-capped-unit-logs-020). Implementation via **team-solve**. Later rungs: [H8a-1](#later-h8a-1-and-after).
 
 One in-image registry for every child the harness owns: shell jobs, rpc / MCP and language servers, spawned Lisp images, subagent threads. A **unit** has an id, a kind tag, an owner scope, labels, a command or a thread function, pid / pgid, start times, a state and an exit status. The supervisor starts units under caps with LRU eviction, restarts servers on failure with backoff, stops them graceful → grace → force (tree-wide), stops everything a scope owns when the scope closes, shuts down on image exit, publishes every state change on an ordered, replayable event stream, and records each process unit in a durable file so the next supervisor reaps what a crash left behind.
 
@@ -129,10 +129,114 @@ inspector-list-processes (list-os-processes &key inspector) (os-process-start-ti
 
 Locally (macOS, stubs): 9 cases pass (given code + the test programs), 2 skip, 103 fail on `%h8a-pending`; the systems load with no warnings. Expected on Linux the same, on Windows 9 pass, 4 skip, 101 fail.
 
+## H8b locked — rotated, capped unit logs (0.2.0)
+
+**Status:** **H8b locked**, version **0.2.0** (same repo). Contract on branch `agent/h8b-contract-b2b9` ([PR #2](https://github.com/egao1980/supervisor-protocol/pull/2)): given code, stubs (`%h8b-pending`) and the failing tests. Implementation via **team-solve**. Plan: [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) row H8b, "Decisions (2026-11-21)" item 2. H8c (search / read / tail tools) and H8d (views) build on the reader API below.
+
+Every unit's stdout and stderr go to rotated, size-capped segment files by default. Memory keeps only the H8a head + tail buffer, fed from the same pump. Nothing is unbounded, and nothing is lost without a trace: a dropped segment leaves a marker with exact counts, and reads that cross it report a gap. Logs stay readable after the unit finishes, after the supervisor shuts down, and after a SIGKILL, by this image or the next.
+
+### Prior art (intersection, not a clone)
+
+| Source | Took | Left |
+|--------|------|------|
+| logrotate / journald / Docker `json-file` (`max-size` × `max-file`) | Size × count rotation per unit; a global cap; a stamped record per line | `copytruncate` (racy, double I/O); binary journal formats; compression |
+| Codex `unified_exec`, H8a | The head + tail in memory | — |
+| Kafka log segments | Numbered append-only segments with a sparse offset index, rebuilt from the segment | Time indexes, compaction |
+| SQLite WAL / LevelDB log | A checksum per record: a torn tail is detected and ignored, never trusted | Block framing |
+
+### Decisions (locked)
+
+| Decision | Choice |
+|----------|--------|
+| **Where** | `(unit-log-pathname state-directory supervisor-id unit-id)` = `<state-directory>/units/<supervisor-id>--<unit-id>/`, next to the H8a `.unit` file. The supervisor id keeps two supervisors on one state directory apart, and makes previous supervisors' logs findable (`find-unit-logs`). Files `NNNNNNNN.seg` (8 digits, from `00000001`) and `NNNNNNNN.idx`. The sweep ignores these directories; shutdown keeps them |
+| **When** | `default-output-sink` makes a `log-sink` when `(getf (unit-log-settings unit) :enabled)`: the supervisor has a state directory, `make-supervisor :log` (default T), and `start-unit :log` (default T). Otherwise a `head-tail-buffer`, as in 0.1.0. `:output-sink-factory` still replaces the default |
+| **Caps** | Per unit: `:log-segment-size` (default **1 MiB**) × `:log-segments` (default **5**), set on `make-supervisor` and overridable per `start-unit` (`unit-log-settings` = `(:enabled b :segment-size n :segments k)`). No segment file exceeds its size. Opening segment N+1 when more than K would be retained drops the oldest. Per supervisor: `:log-total-cap` (default **256 MiB**) over segment and index files of every log it wrote, including units evicted from the registry (`supervisor-log-usage`). After each rotation and each finished unit, while usage is over the cap: first the **finished** unit that finished earliest loses its oldest segment, and its newest is replaced by a stub (header + drop marker + end record, written as segment N+1 atomically, then N deleted). A unit already reduced to a stub is skipped. Then a **live** unit's oldest segment that is not its newest. A live unit's newest segment is **never** evicted, so usage can exceed the cap by at most those segments plus stubs. Other supervisors' logs are not counted |
+| **Record format** (`+log-format+` 1) | One line per record, all ASCII except UTF-8 text payloads: `<line> <wall-ms> <mono-ms> <tag> <payload> <crc>\n`. `line` is the record number, 1-based and contiguous across the unit's segments; every record takes one, including headers and markers. `wall-ms` = Unix epoch ms, `mono-ms` = the writer's monotonic clock in ms. `tag` = type (`o` stdout, `e` stderr, `h` header, `d` drop, `x` end) + encoding (`t`/`b`) + continuation (`.` = an LF ended these octets in the output (not stored), `+` = no LF: the line continues in the next record of that stream, or the output stopped). `crc` = CRC-32 (IEEE, as zlib) of every byte before ` <crc>`, 8 lowercase hex digits. Meta records (`h d x`) carry a plist printed `with-standard-io-syntax` in the keyword package (as unit files), read with `*read-eval*` NIL. Golden lines are in the tests |
+| **Why this format** | Line-oriented, so `grep`, `tail -f` and H8c's chunker work on it, and so a torn tail is simply "no LF or bad CRC". Append-only: a crash can only tear the last line. The CRC also rejects zero-filled or garbage tails (power loss) and in-place damage, which becomes a `:corrupt` gap of only the damaged line. The rejected alternatives were length-prefixed binary frames (not greppable; one bad length desynchronises the rest of the file), JSON lines (an escaping cost on every byte, and no checksum), and Lisp-printed records (`read` is slow and unsafe on damaged input) |
+| **Binary / non-UTF-8** | Per record: **escaped text** when the octets are valid UTF-8 and the escaped form is no longer than base64. Escaping is `\` → `\\`, C0 controls except TAB and DEL → `\xHH`, everything else raw. Otherwise **base64** (RFC 4648, padded). Escaping keeps normal output readable and greppable at about 1.0×. Base64 bounds the worst case at 4/3 and round-trips any bytes exactly, where a pure `\xHH` scheme costs 4× on binary. Readers get `log-record-octets` (exact) and `log-record-text` (UTF-8, invalid bytes → U+FFFD) |
+| **Splitting** | `sink-write-octets` splits each stream at LF. Each call flushes: a remainder without an LF becomes a `+` record at once, so nothing waits in memory, and prompts and progress bars are visible. The exception is an incomplete UTF-8 sequence at the end (at most 3 octets), which is carried to that stream's next call (flushed by `sink-close`). Lines longer than `:log-max-record` (default **8192** octets) split into `+` records, moved back to a character boundary when the bytes are UTF-8. Constraint: segment size ≥ 512 + 2 × max-record (else `supervisor-error`). Concatenating a stream's record octets, with an LF after each `.` record, gives back exactly the bytes the unit wrote |
+| **Header / markers / end** | Every segment starts with `h`: `(:format 1 :supervisor-id :unit-id :kind :segment :first-line :dropped-through :dropped-records :dropped-bytes)` (cumulative drops before it). Each dropped segment leaves a `d` record in the unit's newest segment: `(:segment :first-line :last-line :records :bytes :reason :rotated\|:total-cap)`, where RECORDS = lines it held and BYTES = output octets it carried (payload + 1 per `.`). `sink-close` writes `x`: `(:last-line :bytes)` (all output octets ever accepted). Dropped segments are always a numeric prefix, so readers ignore any segment at or below the highest `:dropped-through` / `d :segment` they see |
+| **Index** | `NNNNNNNN.idx`, little-endian: `"SPLX"`, u32 stride (`+log-index-stride+` 64, `make-log-sink :index-stride`), u64 first line, then u64 byte offsets of lines first + k·stride. A line lookup is one seek plus a scan of at most stride − 1 records. It is appended and flushed with the segment. Readers treat it as untrusted. If it is missing, has a bad header, or has an entry that does not point at its line, they scan instead and rewrite the index atomically (`cl-stack-pathlib` `fs-write-atomic`), except for the newest segment of an open log (no end record), whose writer may be alive in another image. `rebuild-log-index` does any segment on request. A partial last entry is ignored |
+| **Durability** | Each `sink-write-octets` ends with `finish-output` on the segment, so readers in this or another image see the records at once. Everything a unit wrote is in its records before its final state is published (pumps joined, thread streams flushed). The end record follows right after, from `sink-close` in the finish path, so code that needs it waits on `log-closed-p` or on `log-follow`'s ENDED-P. A SIGKILL loses at most the torn last line (plus ≤ 3 carried octets of a split character). No fsync: a power loss may lose the tail, and the CRC rejects whatever garbage it leaves |
+| **Windows rotation** | SBCL opens files with `FILE_SHARE_READ \| FILE_SHARE_WRITE` only (no `FILE_SHARE_DELETE`, `src/code/win32.lisp`), so a segment a reader holds open cannot be deleted or renamed. **Chosen: logical drop + deferred delete.** The marker is written at once and the segment is no longer listed or read. The physical delete is retried at every rotation, at `sink-close` and at `shutdown-supervisor`. Readers hold a segment open only for one call. Rejected: a native `CreateFileW` with `FILE_SHARE_DELETE` (SBCL-only native code that cannot fix foreign readers such as editors or `type`), and copy-on-rotate (twice the I/O, and a crash window between copy and truncate). Unix unlinks at once, and an open reader keeps its inode |
+| **Write errors** | Any ERROR while opening, writing or flushing a segment or index signals `log-write-error` (sink, unit, path, cause) inside `restart-case` with **`retry`** (reopen via `log-open-segment-stream`, write the record again), **`drop-to-memory-only`** (permanent for the sink: no more files, the head + tail keeps going, `log-sink-memory-only-p`), and, when the sink has a unit, **`abort-unit`** (request a forced stop without waiting; the unit ends `:killed`). The order is: the writing thread's dynamic handlers first (a pump, or a thread unit's own thread, so the body's `handler-bind` wins), then `make-supervisor :log-error-handler`, then the default **`drop-to-memory-only`**. Every outcome publishes one **`:log-error`** event (`+event-types+` gains it): `from` = `to` = the unit's state, detail `(:action :memory-only\|:retry\|:abort-unit :path "…" :message "…")`. The default never stops the unit and never enters the debugger |
+| **Process pumps** | `pp:launch … :element-type :octets` (all three pipes). Pumps hand each read chunk (≤ 4096 octets) to `sink-write-octets` unchanged. `send-unit-input` encodes UTF-8. The default `sink-write-octets` on any `output-sink` decodes UTF-8 incrementally per stream and calls `sink-write`, so 0.1.0 sinks keep working |
+| **Thread units** | The thread executor binds `*standard-output*` / `*error-output*` to `sink-output-stream`s (trivial-gray-streams; `:stdout` / `:stderr`). Characters are buffered until a newline, 4096 characters, `finish-output` / `force-output` or close; each flush is one `sink-write`. Both streams are flushed however the body ends. `sink-write` on a `log-sink` encodes UTF-8 and records it like a pump |
+| **Readers** | Each takes a log designator: `unit-log`, `unit`, `log-sink`, or a directory pathname / namestring. Readers parse the files, so a running unit, a finished one and a previous supervisor's log read the same way. They are thread-safe and safe while writing. `log-read (&key start end streams types limit)` → `(values records gaps next-line)`. `streams` defaults to `(:stdout :stderr)`, `types` to `(:output)` (T = all), and `next-line` continues paging. `log-tail n &key streams` → `(values records gaps)`. `log-follow (&key from wait streams limit)` → `(values records gaps next-line ended-p)`: it waits up to WAIT s, woken by the sink when it lives in this image, else polling every ≤ 100 ms. ENDED-P = end record present and nothing selected at or after FROM. Also `map-log-records`, `log-segments` → `log-segment-info` (number, path, index path, first/last line, records, bytes, output bytes, first/last wall time, `torn-p`), `log-last-line`, `log-closed-p`, `rebuild-log-index`, `find-unit-logs state-dir &key supervisor-id unit-id` (sorted by directory name), and `delete-unit-log`. A unit without a log, or a directory that is not one → `log-not-found` |
+| **Gaps** | `log-gap`: first/last line, records, bytes (NIL when unknown), reasons ⊂ `(:rotated :total-cap :corrupt :missing)`. A gap is a maximal range of missing line numbers. Its counts come from the markers and the newest header's cumulative fields, so they are exact for drops. `:corrupt` = invalid bytes between valid records (skipped up to the next LF). `:missing` = lines absent with no marker (deleted from outside). A read that touches a gap returns the whole gap. Records filtered out by STREAMS / TYPES are not gaps |
+| **File I/O** | **cl-stack-pathlib 0.9.0** for directory creation and listing, unlink, `fs-rename` (MoveFileExW replace semantics on Windows), `fs-write-atomic` (indexes, stubs), `fs-read-range` and `fs-file-size`. The append writer is a plain `cl:open … :element-type (unsigned-byte 8) :if-exists :append` stream, because pathlib's `fs-open` is input-only ([cl-stack-pathlib#45](https://github.com/egao1980/cl-stack-pathlib/issues/45)) and `fs-write-bytes :append` opens and closes per call, which is too slow for a pump. It is behind the GF `log-open-segment-stream` (tests inject failing streams through it). **encoding-protocol 0.2.0** for base64 and UTF-8. **trivial-gray-streams** for the thread streams (the stack has no Gray-stream layer). No other new dependency |
+| **Threads** | One lock per `log-sink`. Writes from both pumps and a reader in any thread are safe. No user code runs under the supervisor lock: the sink publishes `:log-error` events and calls the handler outside it |
+| **Stubs** | `%h8b-pending` (internal, `src/model.lisp`). Given: constants, exports, conditions, the classes and their readers (`log-sink`, `log-record`, `unit-log`, `log-gap`, `log-segment-info`, `sink-output-stream`), `make-log-record`, `unit-log-pathname`, the default `log-open-segment-stream` method, `make-supervisor` `:log*` keys and `start-unit` `:log*` keys (stored; `unit-log-settings` computed), and the docstrings of everything stubbed. The implementation removes `%h8b-pending` and every call, changes `default-output-sink`, the process pumps and the thread executor as described, and may add slots |
+
+### Surface (added in 0.2.0)
+
+```lisp
+;;; constants
++log-format+ +default-log-segment-size+ +default-log-segments+ +default-log-total-cap+
++default-log-max-record+ +log-index-stride+ +log-record-types+ +log-gap-reasons+
+;; +event-types+ = (:state :restart-scheduled :evicted :log-error)
+
+;;; supervisor / units
+(make-supervisor … &key (log t) log-segment-size log-segments log-total-cap log-max-record log-error-handler)
+supervisor-log-p supervisor-log-segment-size supervisor-log-segments supervisor-log-total-cap
+supervisor-log-max-record supervisor-log-error-handler (supervisor-log-usage sup)
+(start-unit … &key (log t) log-segment-size log-segments)  unit-log-settings
+
+;;; sinks
+(sink-write-octets sink stream octets &key start end)                 ; GF, default decodes → sink-write
+log-sink (make-log-sink dir &key class unit supervisor-id unit-id kind segment-size segments
+                                  max-record index-stride head-size tail-size)
+log-sink-directory log-sink-unit log-sink-supervisor-id log-sink-unit-id log-sink-kind
+log-sink-segment-size log-sink-segments log-sink-max-record log-sink-index-stride
+log-sink-memory-only-p log-sink-last-line (log-open-segment-stream sink path)
+(unit-log-pathname state-dir supervisor-id unit-id)
+sink-output-stream (make-sink-output-stream sink :stdout|:stderr) sink-output-stream-sink sink-output-stream-name
+
+;;; records
+log-record (make-log-record &key line wall-time monotonic type stream octets continued-p detail)
+log-record-line -wall-time -monotonic -type -stream -octets -text -continued-p -detail -segment -offset
+(format-log-record r) → octets   (parse-log-record octets &key start end) → record | NIL, next
+
+;;; readers
+unit-log (unit-log designator) unit-log-directory unit-log-supervisor-id unit-log-unit-id
+(find-unit-logs state-dir &key supervisor-id unit-id) (delete-unit-log log)
+(log-read log &key start end streams types limit) (log-tail log n &key streams)
+(log-follow log &key from wait streams limit) (map-log-records fn log &key start end streams types)
+(log-segments log) (log-last-line log) (log-closed-p log) (rebuild-log-index log &key segment)
+log-gap log-gap-first-line -last-line -records -bytes -reasons
+log-segment-info log-segment-number -path -index-path -first-line -last-line -records -bytes
+                 -output-bytes -first-time -last-time -torn-p
+
+;;; conditions and restarts
+log-write-error (log-write-error-sink -unit -path -cause)  log-not-found (log-not-found-path)
+retry drop-to-memory-only abort-unit
+```
+
+### Contract (tests)
+
+`supervisor-protocol/tests` grows by **49 forms / 55 cases**, all on macOS, Linux and Windows. There are no skips; the open-reader rotation case asserts per-OS expectations. Small caps (1–2 KiB segments) exercise rotation fast. The 100 MiB case uses the defaults. The 0.1.0 suite is unchanged except `+event-types+` gaining `:log-error`.
+
+| File | Covers |
+|------|--------|
+| `log-format-test` | constants and condition classes; **golden lines** (text, escapes, base64 for invalid UTF-8 and for control-heavy text, empty line, header plist), 7 parametrized round trips, rejection of torn / cut / CRC-mismatch / zero-filled / garbage / bad-escape lines |
+| `log-sink-test` | construction and the size constraint; header and end records with exact detail; empty close; `+` continuation per call and per stream; `:start`/`:end`; **long-line splitting** on character boundaries; UTF-8 carried across writes; **binary round trip** (20 000 random bytes in random chunks; no control byte in the files); the head + tail view; **rotation caps** (≤ K files, each ≤ its size); **drop markers exact** (gap = prefix, records and bytes = what was written) |
+| `log-reader-test` | **reads across rotation boundaries seamless**; paging with `next-line`; the whole gap reported; `log-tail`; **`log-follow` returns within its wait** (live sink and polled directory, timeout, end record); `map-log-records`; segment stats; index layout (entries point at their lines); **index rebuild** (missing / corrupt, byte-identical, explicit); torn tail skipped; corrupt bytes = one `:corrupt` gap; **open-reader rotation** (Windows deferred delete, Unix unlink); designators, `find-unit-logs`, `delete-unit-log`, `log-not-found` |
+| `log-supervisor-test` | default sinks and settings (`:log nil`, per-start overrides, no state dir → 0.1.0); process stdout/stderr in arrival order; **binary process output round-trips**; **a chatty unit (100 MiB) stays under 1 MiB × 5**, drop + retained bytes = everything written, memory = head + tail; thread-unit `*standard-output*` / `*error-output*`; stream flush rules; **total-cap eviction order** (finished-earliest first, then live units' old segments, never a live unit's newest; stubs; usage = file bytes); a restarted unit continues one log; logs outlive registry eviction and shutdown; follow a live echo server |
+| `log-error-test` | **disk-error restarts** through a sink subclass whose segment streams are closed: default memory-only + one `:log-error` event and the unit still `:exited`; `retry` via `:log-error-handler` (nothing lost); `abort-unit` (`:killed`); a thread body's `handler-bind` wins over the supervisor's; standalone sinks (no `abort-unit`; unhandled → memory-only, no error) |
+| `log-crash-test` | **a SIGKILLed / TerminateProcess'd child supervisor** with a chatty thread unit: the next image finds the log, reads ≥ 2000 contiguous lines across segments with no gap, skips an appended torn tail, reads without indexes and rebuilds them; a new supervisor on the same directory leaves the old log untouched |
+
+Locally (macOS, stubs): the 114 H8a cases still pass or skip as before (112 pass, 2 skip). Of the new cases, 1 passes (constants and conditions) and 54 fail on `%h8b-pending`. The systems load with no warnings. Expected the same on Linux. On Windows the H8a skips are 4, and the new cases match macOS.
+
+### Not in 0.2.0
+
+Retention across supervisors (old sessions' logs stay until `delete-unit-log`; H8c decides a policy), compression of old segments, fsync per record, a time index, and persisting the head + tail.
+
+---
+
 ## Later: H8a-1 and after
 
 - **H8a-1 — OS-enforced death** as backends with a capability query (`supervisor-supports-p :pdeathsig` …): Linux `PR_SET_PDEATHSIG` + `PR_SET_CHILD_SUBREAPER` (also catches `setsid` escapees), Windows job object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, macOS kqueue `EVFILT_PROC NOTE_EXIT` for exit notices. Natives through `fs-backend-*`-style overlays; the sweep stays as the fallback.
 - **H8a-1 — executors**: `pty-protocol` (pty-backend-native), optional **tmux** (attachable, Pi-style), later `compute-backend-*` confinement (R4d confines spawns through the supervisor).
 - **H8a-1 — consumer migration**: agent-tools `shell-tools` jobs, `rpc-backend-stdio` child servers, `lisp-mcp` `repl-spawn` become units.
-- **H8b** rotated, capped log files behind `:output-sink-factory`; **H8c** search/read/tail tools; **H8d** TUI / `--rpc` / web views over the event stream.
+- **H8b** rotated, capped log files (locked above, 0.2.0); **H8c** search/read/tail tools; **H8d** TUI / `--rpc` / web views over the event stream.
 - Not in 0.1.0: Windows graceful stop (CTRL_BREAK), a per-session total cap, persisting finished units across restarts, narrowing the sweep to processes a `setsid` moved out of the group.
