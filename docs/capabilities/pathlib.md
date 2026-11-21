@@ -1,7 +1,7 @@
 # cl-stack-pathlib — CLOS paths and pluggable filesystems
 
 **Repo:** [`egao1980/cl-stack-pathlib`](https://github.com/egao1980/cl-stack-pathlib) (nick `stack-pathlib`) · **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H (H2) and R4
-**Status:** 0.8.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations, R4a snapshots + copy areas, store GC). **R4b-0 brief locked** (change journals: protocol + `:poll` fallback, 0.9.0); contract on branch `agent/r4b0-contract-c0af` (`cl-stack-pathlib/tests`, Rove, with the reusable `cl-stack-pathlib/journal-suite`). Implementation via **team-solve**.
+**Status:** 0.8.0 shipped (local / memory / `zip://`, restarts, H2a agent-tool operations, R4a snapshots + copy areas, store GC). **R4b-0 brief locked** (change journals: protocol + `:poll` fallback, 0.9.0); contract on branch `agent/r4b0-contract-c0af` (`cl-stack-pathlib/tests`, Rove, with the reusable `cl-stack-pathlib/journal-suite`). Implementation via **team-solve**. **R4b-2 brief locked:** [fs-backend-darwin.md](fs-backend-darwin.md) (`:fsevents`, `egao1980/fs-backend-darwin` 0.1.0).
 
 A `path` is a value bound to a `filesystem`; the `fs-*` generic functions are the SPI (shaped like Java NIO `FileSystemProvider`), and the facade (`read-text`, `walk`, `glob`, …) is the pathlib / NIO `Files` DX over them. Backends today: `local-filesystem`, `memory-filesystem`, `zip-filesystem` (read-only). Errors are CLHS 9 conditions with restarts at the signal site (`create-parents`, `create-file`, `overwrite`, `ignore-missing`, `use-value`) and `retry` at the operation site — the stack's reference for [conditions.md](conditions.md).
 
