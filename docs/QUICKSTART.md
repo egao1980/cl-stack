@@ -50,8 +50,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `openapi-protocol` | **0.1.0** | OpenAPI 3.1 emit + Clack `document-app` (`stack-openapi`) |
 | `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
 | `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
-| `html-protocol` | **0.1.0** | lenient HTML parse/serialize + tiny CSS `select`; nick `stack-html` · [html-protocol](capabilities/html-protocol.md) |
-| `html-backend-plump` | **0.1.0** | default HTML backend (plump) |
+| `html-protocol` | **0.1.1** | lenient HTML parse/serialize + tiny CSS `select`; nick `stack-html` · [html-protocol](capabilities/html-protocol.md) |
+| `html-backend-plump` | **0.1.1** | default HTML backend (plump) |
 | `plump` | **2.0.0** | lenient HTML/XML parser (html pin) |
 | `array-utils` | **1.3.0** | plump dep |
 | `io-protocol` | **0.1.0** | object streams (`read-object` / `write-object`); nick `stack-io` · [cookbook](cookbooks/io.md) |
