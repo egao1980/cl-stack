@@ -236,13 +236,13 @@ lass-stylesheet                            ; ASDF component, keyword :lass-style
 
 ## engels 0.2.0 on the stack (H4h-0b-2)
 
-In `egao1980/engels` (default branch `master`), branch `agent/engels-stack-*`. Skeleton now; the full PR after css-backend-lass 0.1.0 is published.
+In `egao1980/engels` (default branch `master`). **Done:** [engels#1](https://github.com/egao1980/engels/pull/1), OCI `engels:0.2.0`. The theme is written into the LASS sheet by an `(:engels-theme)` special block that compiles `(css-theme-stylesheet (engels:theme))` back through LASS (tested byte-identical); colours derived with the classie functions keep 0.1.0's values (`#0062CC`, `#80BDFF`, `#EA1C0D`). Demo: cl-stack-demos `harness/css/page-lass.html`.
 
 - `.asd`: `:version "0.2.0"`, `:defsystem-depends-on ("css-backend-lass")`, `:depends-on ("css-protocol" "css-backend-lass")` (no `lass`, `classie`, `alexandria` from Quicklisp), `:lass-stylesheet` component, `engels/tests` (Rove). Canned `test.yml` (ubuntu, macOS, Windows) + `publish-checkout.yml`.
 - Light and dark through `make-css-theme` custom properties (`--engels-*`): colours from `src/engels.lass`'s `:let*` move into a light map and a new dark map; rules use `(css-var …)`. `prefers-color-scheme` plus the `data-theme` toggle.
 - Covers canvas-protocol's closed `data-*` vocabulary (`data-layout`, `data-gap`, `data-columns`, `data-align`, `data-badge`) and the `aria-*` states it emits, so it can replace the placeholder theme without visual loss.
 - No `url(` and no `@import` in the output (canvas freeze must stay offline).
-- API: `(engels:stylesheet)` → css-protocol stylesheet; `(engels:css-string &key (pretty nil))` → string; `(engels:css-octets)` → UTF-8 octets; `css/engels.css` stays as the committed build artefact.
+- API: `(engels:stylesheet)` → css-protocol stylesheet (cached); `(engels:css &key minify)` → string (pretty unless MINIFY; minified = `css/engels.css`); `(engels:css-octets)` → UTF-8 octets; `css/engels.css` stays as the committed build artefact.
 - **Licence:** engels stays MIT; add Marx's MIT notice (Copyright (c) Matthew Blode) to `LICENSE` and the CSS header comment, since engels is a port of Marx. Drop the stray `src/marx.css` from the source tree (keep it as reference under `docs/` with its notice) and the duplicate README.
 - Tests: the compiled sheet parses through the model, has `:root` light + dark media rule, no `url(` / `@import`, golden checksum of `css/engels.css`.
 
@@ -266,8 +266,8 @@ A CSS text parser backend (CSS Syntax 3 tokenizer → the model; unknown at-rule
 
 - [x] LASS 0.6.0 imported unmodified (cl-stack-systems#71), OCI `lass:0.6.0`
 - [x] `egao1980/css-protocol`, `egao1980/css-backend-lass` created; both and `engels` in the workspace `repos.manifest`
-- [ ] **H4h-0b-0** css-protocol 0.1.0 — contract [css-protocol#1](https://github.com/egao1980/css-protocol/pull/1) (draft; 95 deftests / 332 assertions), then team-solve
-- [ ] **H4h-0b-1** css-backend-lass 0.1.0 — classie features + tests, `:lass-stylesheet`
-- [ ] **H4h-0b-2** engels 0.2.0 — skeleton branch now, PR after css-backend-lass is published
+- [x] **H4h-0b-0** css-protocol 0.1.0 — contract [css-protocol#1](https://github.com/egao1980/css-protocol/pull/1) (draft; 95 deftests / 332 assertions), then team-solve
+- [x] **H4h-0b-1** css-backend-lass 0.1.0 — classie features + tests, `:lass-stylesheet`
+- [x] **H4h-0b-2** engels 0.2.0 — [engels#1](https://github.com/egao1980/engels/pull/1); follow-up [css-backend-lass#2](https://github.com/egao1980/css-backend-lass/issues/2) (component does not track `:include`s)
 - [ ] **H4h-0b-3** canvas-protocol default asset → engels
 - [ ] Later: css-backend-parse
