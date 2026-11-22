@@ -1,7 +1,7 @@
 # lisp-mcp/agent (H4a, H4b): Lisp image tools for a native agent, and the debugger → inbox bridge
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H4 ("`lisp-mcp/agent` native tool source (no MCP hop); … form scanner (pure / defines / mutates / io / read-eval) as permission resources; … read-only observe mode")
-**Status:** milestone **H4a** shipped as lisp-mcp **0.6.0** (0.6.1 is current), with systems `lisp-mcp/agent` and `lisp-mcp/agent/tests` (Rove) in [`egao1980/lisp-mcp`](https://github.com/egao1980/lisp-mcp), implemented through **team-solve**. Milestone **H4b locked** (the debugger → agent inbox bridge, version target **lisp-mcp 0.7.0**, then cl-stack-code 0.6.0): [H4b — locked](#h4b--locked). H4c–H4e are listed under [Roadmap](#roadmap-h4bh4e).
+**Status:** milestone **H4a** shipped as lisp-mcp **0.6.0** (0.6.1 is current), with systems `lisp-mcp/agent` and `lisp-mcp/agent/tests` (Rove) in [`egao1980/lisp-mcp`](https://github.com/egao1980/lisp-mcp), implemented through **team-solve**. Milestone **H4b locked** (the debugger → agent inbox bridge, version target **lisp-mcp 0.7.0**, then cl-stack-code 0.6.0): [H4b — locked](#h4b--locked). H4c–H4h are listed under [Roadmap](#roadmap-h4bh4h), with the H4 goal (image-first development, 2026-11-22).
 
 H4a has three parts:
 
@@ -231,11 +231,78 @@ No throwaway prototype was run, so the implementation may find test bugs. Those 
 
 ---
 
-## Roadmap (H4b–H4e)
+## Roadmap (H4b–H4h)
+
+**Goal of the H4 track (2026-11-22): image-first development.** Other harnesses are file / edit / compile / restart oriented. Here the live image is where the agent works: it evaluates, inspects, fixes in the frame and keeps state, and files are where finished definitions land. The harness image already runs everything; agent code runs in **session images** the harness controls (confined, supervised `:image` units). Self-modification of the harness itself comes later (after H6).
+
+**Order:** H4f → H4e (versioned) → ACP ([acp.md](acp.md)) → H5d → H4g → self-modification later. H4h runs after H4f, in parallel with H4e.
 
 | Slice | Content | Depends on |
 |-------|---------|------------|
 | **H4b** | **Locked**: [H4b — locked](#h4b--locked). Debugger → agent inbox bridge in lisp-mcp/agent 0.7.0, product wiring in cl-stack-code 0.6.0. The MCP `--observe` flag moves to H4d, the tool-source instructions hook is dropped, and `shell-timeout` restarts go to agent-tools | H3 (inbox), repl-protocol events |
-| **H4c** | **Image ↔ source drift + promote to source.** Compare definitions in the image (xref / `find-definitions`, function source forms) with the files (`source-outline` + hashes). Drift blocks a commit (an H6 revision hook). "Promote" writes the image's version of a form to its file with `edit-replace` | revision-protocol, H4a |
+| **H4c** | **Image ↔ source drift + promote to source.** Compare definitions in the image (xref / `find-definitions`, function source forms) with the files (`source-outline` + hashes). **Three-way drift** (2026-11-22): each image definition records the source-form hash it shadows, so drift reads as changed in the image, moved in the source, or both. Drift blocks a commit (an H6 revision hook). "Promote" writes the image's version of a form to its file with `edit-replace` | revision-protocol, H4a |
 | **H4d** | **Remote and confined images.** SSH port forward, Swank secret, Podman via `agent-runtime-backend-podman`, observe mode as the default for production attaches, the MCP server's `--observe` flag (from H4b), `image:` resources with host names | agent-runtime-protocol |
-| **H4e** | **Checkpoints, trace and profile.** Reload recipe (systems + evaluated forms journal), `fork` on Unix, saved cores. `repl-protocol` trace / profile GFs and their tools | repl-protocol 0.3 |
+| **H4e** | **Suspend / resume and versioned session images**, plus trace and profile (below) | H4f, revision-protocol, object-store-protocol, diff-protocol, repl-protocol 0.3 |
+| **H4f** | **Named live sessions and the workbench** (below). First in the H4 order | supervisor-protocol, R4d confinement |
+| **H4g** | **Code mode and `deftool`** (below) | H4f, H4e, H5d |
+| **H4h** | **Canvases**: plain CL functions in the session image served as HTML pages, live or frozen to a file (below) | H8d-1, H4f |
+
+### H4f — named live sessions and the workbench
+
+| Topic | Decision |
+|-------|----------|
+| **Tools** | `lisp_session_open` / `lisp_session_list` / `lisp_session_describe` / `lisp_session_close`, and `lisp_eval` in a named session. Every session is a supervisor `:image` unit, confined (R4d) |
+| **Workbench** | A session that replaces shell and Python for scratch work: the stack preloaded (pathlib, json / yaml / csv / sql, http-backend-async, process-protocol, diff / lisp-source, the revision backends), shipped as a **saved core** for a fast start, with a cheat sheet in the system prompt. `bash` stays for external programs |
+| **Inspection and restarts** | inspect, describe, xref, apropos and restarts are first-class. Fix in the frame: redefine, then `restart-frame`. Tools the agent builds define their own restarts |
+| **Human attach** | A shared session a person can attach to from SLIME / Sly / Lem |
+
+### H4e — suspend / resume and versioned session images
+
+| Topic | Decision |
+|-------|----------|
+| **Suspend** | Unix: fork + `save-lisp-and-die` in the child (the session keeps running). Windows: stop + save. Everywhere: a **reload recipe** (systems + an evaluated-forms journal) as the fallback |
+| **Store** | Images are versioned in a **revision-protocol** store. A revision holds the core blob in object-store-protocol (content-addressed, zstd-compressed); a provenance manifest (source commit, SBCL version, OS, arch, loaded systems, boot-probe result); an inventory of definitions with source-form hashes; the reload recipe; its parents |
+| **Operations** | commit = suspend; checkout = resume (the recipe when provenance does not match); branch = fork a warm image for a subagent; diff = the inventory diff through diff-protocol; log / tree next to the conversation tree |
+| **Where metadata lives** | Metadata may live in git / jj; cores stay in the object store. Content-defined chunking is deferred until measured |
+| **Safety (from the Autolith review)** | A core is selectable only after a clean **boot probe** plus a list of load-bearing functions. `sb-ext:*init-hooks*` release saved mutexes. The saver scrubs credentials and refuses while secrets are in use. `checkpoint-detach-state`-style GFs let tool runtimes detach and reattach |
+| **Trace / profile** | Stays here: `repl-protocol` trace / profile GFs and their tools |
+
+### H4g — code mode and `deftool`
+
+| Topic | Decision |
+|-------|----------|
+| **Code mode** | The agent's tools are callable as functions in the workbench, with an explicit allowlist of tools per eval. Self-mutation tools are excluded, payloads are capped, an interrupted callback is logged as unknown-outcome. The form scanner reports a bridge call as a `lisp:calls <tool>` permission resource |
+| **`deftool`** | Typed functions whose schema comes from the lambda list and declarations. `tool_register` runs them inside the confined image, never in the harness. Promote writes them into an extension system |
+| **Self-change journal** | pending → installed → checked → replay script → selected, with exact undo |
+| **Executable skills** | A data-only manifest: system, entrypoint, self-test, I/O contracts, needed host tools |
+| **Restart retry** | Stateless: repeat the call naming a restart, allowed by the scanner only for pure / defines forms. The held-thread mode (H4b) stays |
+
+### H4h — canvases
+
+HTML pages that a session makes. **A canvas is a plain CL function defined in the session image**: no canvas object, no registry, no `defcanvas` / `defhandler` macros.
+
+| Topic | Decision |
+|-------|----------|
+| **A canvas** | A function that takes keyword arguments (the request parameters) and returns an html-protocol tree. State is ordinary image state. Redefining the function changes what the next request shows. The agent defines canvases with `lisp_eval` |
+| **Live (default)** | Pages are generated on each request and never written to disk. A canvas lives as long as its definition in the image. Persistence, branching, rewind and image diff come from H4e, because canvases are just definitions |
+| **Frozen** | `canvas_freeze` calls the function with the given arguments, inlines the result, drops the hx links, and writes a self-contained `.html` (no network, no CDN) into the session dir; "Save to workspace" is offered. For sharing, PRs and demo output. Tables are plain HTML; charts are SVG rendered in Lisp, no JS library |
+| **Static from the start** | The same as frozen, for final reports |
+| **URL** | `/canvas/<session>/<package>::<name>?key=value`. The server checks the token, then calls the function in the session image through repl-protocol. Query and form parameters arrive as keyword → string; the function parses them or uses `check-type`. The result is serialized with escaping |
+| **Interactivity** | Vendored htmx: `hx-get` / `hx-post` point at other canvas functions, and `canvas-url 'fn :k v` builds those links. They run **in the confined session image** and return HTML fragments. Live updates over SSE (the htmx SSE extension) come from a function that returns a generator, or from a unit tail, pushed through the same server |
+| **Exposure** | Only the functions the agent explicitly opened with `canvas_open 'fn …`: an allowlist per session. The form scanner classified each function when it was defined; a mutating function behind `hx-post` needs the same approval as when the agent calls it |
+| **Server** | One local server per harness session: the H8d-1 web view on http-server-protocol + http-backend-async. Loopback only; a random per-session token in the URL, exchanged for a cookie; strict CSP (`script-src 'self'`, no inline scripts, no outside connections). Serves `/canvas/…` next to the H8d unit views and routes each request to the image that owns the session: one port, one auth, one permission layer |
+| **HTML** | html-protocol trees, which escape by construction. Library functions: table (server-side sort and paging), svg-chart (line, bar, scatter, histogram), diff-view, form, log-tail |
+| **Surfaces** | A TUI transcript entry and `/canvas`; an ACP resource link in `session/update`; the path or URL in the `-p` JSON stream |
+| **Tools** | `canvas_open`, `canvas_freeze`, `canvas_list`, `canvas_snapshot` (a text / accessibility summary, so the agent checks its page without a browser). No `canvas_create` / `canvas_update`: definitions go through `lisp_eval` |
+| **Prior art** | Claude artifacts and ChatGPT canvas (client-side only); Jupyter, marimo, Observable (a live kernel); CLOG (a Lisp GUI over websockets) |
+| **First demo** | A benchmark table and chart, frozen and live (filter, drill into a run's log) |
+
+### Small items (any time)
+
+- An **interpreter-discipline** context rule: `python3 -c` through `bash` gets a nudge toward the workbench.
+- A **tool-storm guard**: withhold repeated identical calls and A-B-A oscillation.
+- A **pristine recovery core** plus a read-only diagnosis turn after a crash, and an `--immutable` mode.
+
+### Credit: the Autolith review
+
+Several H4e / H4g / H6 decisions come from reviewing [lambda-symbolics/autolith](https://github.com/lambda-symbolics/autolith) (ISC). What to avoid, from the same review: one package for everything (distribution wrappers broke); self-mutation without per-call approval; overrides that never reach source; polling clients; plaintext non-loopback endpoints.

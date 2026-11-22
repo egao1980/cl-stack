@@ -2,7 +2,7 @@
 
 **Repos:** [`egao1980/compute-protocol`](https://github.com/egao1980/compute-protocol) (nick `stack-compute`) · [`egao1980/supervisor-protocol`](https://github.com/egao1980/supervisor-protocol) · new [`egao1980/compute-backend-seatbelt`](https://github.com/egao1980/compute-backend-seatbelt) · new [`egao1980/compute-backend-landlock`](https://github.com/egao1980/compute-backend-landlock) · [`egao1980/process-protocol`](https://github.com/egao1980/process-protocol) / [`process-backend-uiop`](https://github.com/egao1980/process-backend-uiop) (R4d-3)
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) "R4 detail" (the *who* concern, confinement backends table), row R4d, H8a ("OS-enforced death"), decisions 2026-11-20 #4 (plan-mode bash unconfined until R4d) and 2026-11-21 #1 (R4d confines spawns through the supervisor)
-**Status:** **R4d split locked** (five team-solve runs, landed in order, below). **R4d-0a** (compute-protocol 0.3.0) and **R4d-0b** (supervisor-protocol 0.4.0) contracts on branches `agent/r4d0-contract-7c02` in each repo (stubs `%r4d0-pending`). R4d-1 … R4d-4: decisions locked here; contracts written when the run starts. Windows confinement (AppContainer / restricted token) stays **R4e**. Implementation via **team-solve**.
+**Status:** **R4d split locked** (team-solve runs, landed in order, below). Shipped: R4d-0 (compute-protocol 0.3.2, the confinement suite; supervisor-protocol 0.4.0), R4d-1 (compute-backend-seatbelt 0.1.0), R4d-2 (compute-backend-landlock 0.1.0). Open: R4d-3; **R4d-4a** (agent-tools 0.4.0, confined shell tools: [agent-tools#9](https://github.com/egao1980/agent-tools/pull/9), merge pending Windows CI); **R4d-4b** (cl-stack-code); follow-ups R4d-5 (host allowlists) and **R4d-6** (`:read-only-within`). Confining the area's Lisp image moved to **H5d** (2026-11-22). Windows is **R4e**, now Windows workloads through MXC and Windows Sandbox; AppContainer is rejected ([below](#beyond-r4d-windows-r4e-and-linux-workloads-r4g)). Implementation via **team-solve**.
 
 R4a–R4c give a plan its own **area** (a copy or clone of the project). Until now only the agent's own Lisp tools were jailed to it; the shell, the spawned Lisp image and anything they start could still write outside the area, read `~/.ssh` and reach the network ([cl-stack-code.md § H5a](cl-stack-code.md#h5a--locked), "The shell is not confined"). R4d closes that gap with **lightweight, kernel-enforced confinement of one command and its children**: the area read-write, a policy for everything else, network off, a scrubbed environment. The kernel mechanism is a `compute-protocol` backend per OS; the supervisor runs a confined command as an ordinary unit, so plan-mode `bash` and the area's image become confined units.
 
@@ -12,11 +12,25 @@ R4a–R4c give a plan its own **area** (a copy or clone of the project). Until n
 
 | Source | Took | Left |
 |--------|------|------|
-| **Codex CLI** sandbox | macOS: a generated Seatbelt (SBPL) profile run through `/usr/bin/sandbox-exec`, `(deny default)` plus explicit allows; Linux: Landlock for the filesystem + a seccomp filter for the network, applied by a helper just before `exec`; **network off by default** in its workspace-write mode; writable roots = the workspace (+ temp); everything readable | Sandbox modes as a user-facing setting (our policy is a value the caller builds); `.git` read-only carve-outs inside writable roots (plan areas are copies, so not needed yet) |
-| **Claude Code** sandboxing / [`@anthropic-ai/sandbox-runtime`](https://github.com/anthropic-experimental/sandbox-runtime) | Seatbelt on macOS, **bubblewrap** on Linux; write = the working directory, read = everywhere except a deny list; network only through a proxy outside the sandbox that enforces an allowed-domain list (the sandbox may only reach the proxy's port on loopback); children inherit | The domain-filtering proxy itself (R4d ships `:none` / `:allow` / port rules; host allowlists are a later rung, see "Not in R4d") |
+| **Codex CLI** sandbox | macOS: a generated Seatbelt (SBPL) profile run through `/usr/bin/sandbox-exec`, `(deny default)` plus explicit allows; Linux: a helper applies the sandbox just before `exec` (now bubblewrap + seccomp, with Landlock as a legacy fallback, see the 2026-11-22 update); **network off by default** in its workspace-write mode; writable roots = the workspace (+ temp); everything readable; `.git`, `.codex`, `.agents` read-only inside writable roots (R4d-6) | Sandbox modes as a user-facing setting (our policy is a value the caller builds) |
+| **Claude Code** sandboxing / [`@anthropic-ai/sandbox-runtime`](https://github.com/anthropic-experimental/sandbox-runtime) | Seatbelt on macOS, **bubblewrap** on Linux; write = the working directory, read = everywhere except a deny list; network only through a proxy outside the sandbox that enforces an allowed-domain list (the sandbox may only reach the proxy's port on loopback); children inherit | The domain-filtering proxy itself (R4d ships `:none` / `:allow` / port rules; host allowlists are R4d-5, see "Not in R4d"); its fallback to running **unsandboxed** when the sandbox is unavailable unless `failIfUnavailable` is set (we always fail closed) |
+| **Cursor** agent sandboxing | Seatbelt / Landlock-style confinement of agent shells; `.git/hooks`, `.git/config`, `.cursor` read-only inside the workspace (R4d-6); **sandbox-aware tools**: the tool description states the policy and a blocked result says it was the sandbox (Cursor reports 40% fewer approval stops) — in R4d-4a | Its product settings UI |
+| **Gemini CLI** sandbox | Seatbelt profiles on macOS, a container (Docker / Podman) option elsewhere; proxy-based network allowlists | Container-first defaults on Linux |
 | bubblewrap / Flatpak | `--ro-bind / /`, `--bind area area`, `--tmpfs` over denied dirs, `--unshare-net`, `--unshare-pid --die-with-parent` (kernel kills the whole pid namespace with its init) | setuid bwrap |
 | Landlock docs (kernel ≥ 5.13) | ABI ladder: v1 fs, v2 `REFER` (cross-dir rename/link), v3 `TRUNCATE`, v4 TCP bind/connect, v5 ioctl, v6 scoped signals / abstract sockets; best effort = use what the running ABI has, report the rest | — |
 | cl-stack | `compute-protocol` 0.2 `sandbox-spec` (`:network` `:none`/`:allow`/policy, limits, `sandbox-denied`), trusted-only native backend; `supervisor-protocol` 0.3 executor GFs; `process-protocol` 0.4 `:env-mode :replace`, `:process-group t` | — |
+
+**Prior-art update (2026-11-22).**
+
+| Finding | What it means here |
+|---------|--------------------|
+| Codex on Linux moved from Landlock to **bubblewrap + seccomp**, keeping Landlock as a legacy fallback, because distros disable unprivileged user namespaces | Matches R4d-2's order (bwrap first, the Landlock trampoline second, Landlock + seccomp when namespaces are off) |
+| Claude Code falls back to running **unsandboxed** unless `failIfUnavailable` is set | We stay **fail closed** (`confinement-unavailable`; plan mode asks before each `bash`) |
+| Every product that allows network does it through a **domain-filtering proxy** the sandbox reaches on loopback | Our planned host-allowlist rung, R4d-5 |
+| Codex (`.git`, `.codex`, `.agents`) and Cursor (`.git/hooks`, `.git/config`, `.cursor`) keep paths inside writable roots read-only | R4d-6 `:read-only-within`: hooks written into an area's `.git` could run at apply time |
+| Cursor's sandbox-aware tools cut approval stops by 40% | In R4d-4a: the tool description states the policy, blocked results carry a `[sandbox: …]` note |
+
+Sources: [Inside the Codex sandbox](https://openai.com/index/inside-the-codex-sandbox/), [Building the Codex Windows sandbox](https://openai.com/index/building-codex-windows-sandbox/), [Claude Code sandboxing](https://code.claude.com/docs/en/sandboxing), [Cursor: agent sandboxing](https://cursor.com/blog/agent-sandboxing), [Gemini CLI sandbox](https://geminicli.com/docs/cli/sandbox/).
 
 **Locally verified (macOS 26, 2026-11-21):** `sandbox-exec -p` with `(deny file-write* (require-not (subpath AREA)))`, `(deny file-read* (subpath SECRETS))`, `(deny network*)` denies: a write outside, a read of the secrets dir, a write through a symlink out of the area, `ln` of an outside file into the area, `mv` out of and into the area, a child's write outside, and a loopback connect — while writes in the area succeed. Seatbelt sees physical paths: `/tmp` must be written `/private/tmp`.
 
@@ -31,9 +45,12 @@ R4a–R4c give a plan its own **area** (a copy or clone of the project). Until n
 | **R4d-1** | **new** compute-backend-seatbelt 0.1.0 | macOS: generated SBPL profile, `sandbox-exec` through process-protocol | `run-confinement-suite` → no failures on `macos-latest` |
 | **R4d-2** | **new** compute-backend-landlock 0.1.0 | Linux: Landlock via `syscall`, seccomp network fallback, user + mount (+ net, pid) namespaces, bubblewrap when installed | the suite on ubuntu-24.04 in three CI jobs (below) |
 | **R4d-3** (= H8a-1 death) | process-protocol 0.5.0, process-backend-uiop 0.4.0, supervisor-protocol 0.5.0 | kernel-enforced child death: Linux `PR_SET_PDEATHSIG` + `PR_SET_CHILD_SUBREAPER`, Windows `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, macOS kqueue `NOTE_EXIT` exit notices; a capability query; the sweep stays the fallback | SIGKILL of the harness leaves no unit process alive where the capability is T |
-| **R4d-4** | agent-tools minor, cl-stack-code minor | plan mode confines `bash` / `job_input` and the area image; decision 2026-11-20 #4 ends | the R4d row: a write outside the area and network access are denied; the image spawned in the area loads only its files |
+| **R4d-4a** | agent-tools **0.4.0** ([agent-tools#9](https://github.com/egao1980/agent-tools/pull/9), merge pending Windows CI) | confined shell tools (`make-shell-tools :confinement :compute-backend`); sandbox-aware descriptions and `[sandbox: …]` notes | its tests |
+| **R4d-4b** | cl-stack-code minor | plan mode confines `bash` / `job_input`; decision 2026-11-20 #4 ends | the R4d row: a write outside the area and network access are denied |
+| R4d-5 (follow-up) | compute-protocol + a proxy on http-backend-async | host allowlists (`:network-hosts`) through a loopback domain-filtering proxy | the suite's `:network-hosts` cases |
+| **R4d-6** (follow-up) | compute-protocol minor, both backends | `:read-only-within`: paths inside writable roots that stay read-only ([below](#r4d-6--read-only-within-follow-up)) | new suite cases |
 
-R4d-1, R4d-2 and R4d-3 are independent of each other once R4d-0a is published; R4d-4 needs R4d-0b and at least one backend.
+R4d-1, R4d-2 and R4d-3 are independent of each other once R4d-0a is published; R4d-4b needs R4d-4a, R4d-0b and at least one backend. **The area's Lisp image is not confined in R4d-4** (2026-11-22): cl-stack-code refuses `--lisp-image` in plan mode until image projections exist, so confining it moves to **H5d**.
 
 ---
 
@@ -41,7 +58,7 @@ R4d-1, R4d-2 and R4d-3 are independent of each other once R4d-0a is published; R
 
 | Decision | Choice |
 |----------|--------|
-| **Unit of confinement** | One command and **everything it starts** (children inherit; no escape by `fork`, `exec`, `setsid`, double fork). Not a container: same uid, same kernel, same host filesystem view minus the policy. Untrusted Lisp images and full isolation stay `compute-backend-podman` (R4e) |
+| **Unit of confinement** | One command and **everything it starts** (children inherit; no escape by `fork`, `exec`, `setsid`, double fork). Not a container: same uid, same kernel, same host filesystem view minus the policy. Untrusted Lisp images and full isolation stay `compute-backend-podman` (R4g-2) |
 | **Shape: a value + a launch** | A `confinement` is an immutable policy value. A backend never runs anything itself: `confine-command backend confinement argv` → a `confined-launch` (argv, **complete** environment, start directory, private temp dir) that **any launcher** runs — `run-confined` (process-protocol `run`), the supervisor's `compute-executor` (`launch`), agent-tools' pty. So pipes, ptys, unit logs, stop/kill trees and the H8 machinery are reused unchanged, and a mechanism that is "a prefix argv" (`sandbox-exec -p …`, `bwrap …`, a Landlock trampoline) fits without special cases |
 | **Policy defaults** | **Network off** (`:none`). **Writes only** under `:writable` (the area), the launch's private temp dir and `/dev/null`-like devices (`+device-paths+`). **Reads**: `:read :all` minus `:deny-read`, which defaults to the credential locations `+default-deny-read+` under `$HOME` (`.ssh/ .aws/ .gnupg/ .netrc .config/gh/ .docker/ .kube/ .azure/ .config/gcloud/ .npmrc .pypirc .git-credentials`) — the Codex / Claude Code default. `:read :system` (only the writable/readable paths, `system-read-paths` and the running Lisp's runtime) is the strict option. **Environment scrubbed** to `+default-env-allow+` (`HOME LANG LC_* LOGNAME PATH SHELL TERM TZ USER`, plus the names a Windows process needs to start); `:env` adds back. **Private `TMPDIR`** (`:tmp :private`, a fresh `stack-compute-<16 hex>/`, removed on release) |
 | **Fail closed** | Every feature a confinement needs (`confinement-requirements`) must be in the backend's `confinement-features`, else `confinement-unsupported` (a `sandbox-denied`; slot `missing`; restart `use-value` with another confinement, checked again). A backend that cannot confine on this machine → `confinement-unavailable` (reason string). Never a silent unconfined run. The native backend has no features |
@@ -153,14 +170,44 @@ Branch `agent/r4d0-contract-7c02`, draft PR. Depends on `(:version "compute-prot
 
 | Decision | Choice |
 |----------|--------|
-| **agent-tools** | `make-shell-tools … :confinement c :compute-backend b`: each command line goes through `confine-command` (`:directory` = the resolved `workdir`), then the pty or process executor runs the launch argv with exactly its env; released when the job ends. No confinement → unchanged behaviour |
-| **cl-stack-code** | Plan mode builds the area confinement: writable = the area (+ the plan's scratch dir), `:read :all` + default deny-read, network **off**, scrub with the user's settings `env` added back; backend = `compute-backend-seatbelt` on macOS, `compute-backend-landlock` on Linux (`(:feature …)` deps). The area's Lisp image (H5d) is a confined `:image` unit with `XDG_CACHE_HOME` and ASDF output translations inside the area, `:read :system` plus the runtime, so it loads only the area's files. Unavailable or refused confinement → plan mode asks before each `bash` again (0.4.0 behaviour), never silently unconfined; `--allow-network` (or a settings key) opts into `:allow` |
+| **Split (2026-11-22)** | **R4d-4a** agent-tools 0.4.0 ([agent-tools#9](https://github.com/egao1980/agent-tools/pull/9)), then **R4d-4b** cl-stack-code. The area image is not part of R4d-4: it moves to **H5d** |
+| **agent-tools (R4d-4a)** | `make-shell-tools … :confinement c :compute-backend b`: each command line goes through `confine-command` (`:directory` = the resolved `workdir`), then the pty or process executor runs the launch argv with exactly its env; released when the job ends. No confinement → unchanged behaviour |
+| **Sandbox-aware tools (R4d-4a)** | From Cursor's write-up: the `bash` tool description states the policy (writable roots, network, denied reads), and a result the sandbox blocked carries a `[sandbox: …]` note, so the model changes its approach instead of asking for approval. Cursor reports 40% fewer approval stops |
+| **cl-stack-code (R4d-4b)** | Plan mode builds the area confinement: writable = the area (+ the plan's scratch dir), `:read :all` + default deny-read, network **off**, scrub with the user's settings `env` added back; backend = `compute-backend-seatbelt` on macOS, `compute-backend-landlock` on Linux (`(:feature …)` deps); on Windows `compute-backend-mxc` once R4e-1 ships. Unavailable or refused confinement → plan mode asks before each `bash` again (0.4.0 behaviour), never silently unconfined; `--allow-network` (or a settings key) opts into `:allow` |
+| **The area image → H5d** | cl-stack-code refuses `--lisp-image` in plan mode until image projections exist (H4b check). When H5d lands, the area's image becomes a confined `:image` unit with `XDG_CACHE_HOME` and ASDF output translations inside the area, `:read :system` plus the runtime, so it loads only the area's files |
 | **Ends** | Decision 2026-11-20 #4 ("unconfined until R4d") and the H5a "known gap" note |
+
+## R4d-6 — `:read-only-within` (follow-up)
+
+| Decision | Choice |
+|----------|--------|
+| **Why** | A plan area is a copy, but it is applied back to the project, and hooks written into an area's `.git` could run at apply time (or in the user's next git command) |
+| **Value** | `make-confinement :read-only-within` — paths inside `:writable` roots that stay readable but not writable. Default: `.git/hooks`, `.git/config` and the agent config directories (`.cl-stack-code/`, `.claude/`, `.codex/`, `.cursor/`, `.agents/`) of each writable root |
+| **Prior art** | Codex: `.git`, `.codex`, `.agents` read-only. Cursor: `.git/hooks`, `.git/config`, `.cursor` |
+| **Mechanisms** | Seatbelt: `(deny file-write* (subpath P))` after the writable allows. bwrap: `--ro-bind P P` after `--bind W W`. Landlock alone cannot subtract from a grant → the trampoline's mount namespace (a read-only bind), else `confinement-unsupported` with `:missing (:read-only-within)` (fail closed) |
+| **Model and suite** | `confinement-decide` denies `:write` under a read-only-within path; new suite cases: write, create, rename into and symlink through a read-only-within path are denied, reads allowed |
+
+## Beyond R4d: Windows (R4e) and Linux workloads (R4g)
+
+Recorded 2026-11-22 (plan: HARNESS-PLAN "Decisions (2026-11-22)"). Windows Home is not a target: Pro or WSL2 is assumed.
+
+| Rung | Backend | Shape | Notes |
+|------|---------|-------|-------|
+| **R4e-1** | `compute-backend-mxc` | per-command launch: `wxc-exec.exe <request.json>` (command, read-only / read-write / denied paths, egress deny); stdio is the workload's, so it fits `confine-command` unchanged | Microsoft Execution Containers' ProcessContainer. Windows 11 24H2 build 26100.9278+ or 25H2, rolled out per device → probe, fail closed. `wxc-exec.exe` ships as a cl-repository platform overlay (MXC is MIT, Rust). Open: does the windows-latest runner (Server 2025) support it (else the suite runs on bakemono-lair); does Microsoft say MXC profiles are not yet security boundaries (a secondary source claims so; unverified) |
+| **R4e-2** | `compute-backend-windows-sandbox` | session API (`open-sandbox` / `run-sandboxed` / `close-sandbox`): `wsb start --config "<Networking>Disabled</Networking>"` once per area, `wsb share -w` for the area, the toolchain shared read-only, `wsb exec` per command, `wsb stop` | A disposable VM. `wsb exec` returns only an exit code, so output goes through a file in the shared folder; it needs `-r System` or an active session. Opt-in; tests on bakemono-lair |
+| **R4g-1** | `compute-backend-devcontainer` | session API over the devcontainer CLI (`up` / `exec`), reusing egao1980/features | Linux workloads on any host; chosen in settings or from `.devcontainer.json`, never automatically; path translation (the launch reports the directory as the workload sees it) |
+| **R4g-2** | `compute-backend-podman` | area bind mounts | Formerly part of R4e |
+| **R4g-3** | `compute-backend-wsl` | per-command: `wsl.exe -e bwrap …` | Windows host, Linux toolchain |
+
+**Rejected:** AppContainer (an app declares its capabilities up front, which does not fit shells, git and package managers — Codex's finding), and Codex's earlier restricted-token + sandbox-user design, which MXC replaces on Pro. Plan mode on Windows picks MXC when its probe passes, else asks before each `bash`.
+
+Sources: [Microsoft Execution Containers](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/microsoft-execution-containers), [MXC platform support](https://learn.microsoft.com/en-us/windows/apps/develop/mxc/platform-support), [microsoft/mxc](https://github.com/microsoft/mxc), [Codex on Windows: sandbox](https://learn.chatgpt.com/docs/windows/windows-sandbox), [Windows Sandbox CLI](https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-cli).
 
 ---
 
 ## Not in R4d
 
-- **Host allowlists** (`:network-hosts`): needs a filtering HTTP/SOCKS proxy outside the sandbox (Claude Code's design) on `http-backend-async`; the sandbox then allows only the proxy's loopback port. A later rung (R4d-5) once a consumer needs `pip install` / `npm install` inside a plan.
-- **Windows confinement**: AppContainer or restricted token + job object (`compute-backend-appcontainer`) — **R4e**, with `compute-backend-podman` areas as bind mounts.
-- `.git` read-only carve-outs inside writable roots; per-command profiles; GPU / device policies; a violation log (Seatbelt `(trace)`, Landlock audit on ≥ 6.15) — later, when a consumer needs them.
+- **Host allowlists** (`:network-hosts`): needs a filtering HTTP/SOCKS proxy outside the sandbox on `http-backend-async`; the sandbox then allows only the proxy's loopback port. Every product that allows network does it this way (Claude Code, Codex, Cursor, Gemini CLI). A later rung (R4d-5) once a consumer needs `pip install` / `npm install` inside a plan.
+- **Windows**: R4e (MXC, Windows Sandbox), [above](#beyond-r4d-windows-r4e-and-linux-workloads-r4g). AppContainer is rejected.
+- `.git` read-only carve-outs: now R4d-6 (`:read-only-within`).
+- Per-command profiles; GPU / device policies; a violation log (Seatbelt `(trace)`, Landlock audit on ≥ 6.15) — later, when a consumer needs them.

@@ -561,12 +561,38 @@ Four H3a tests change meaning with plan mode. `tools-plan-mode` now expects the 
 |-------|-------|-----------|
 | **H5a** files | This section | R4a, V1, H3c |
 | **H5b** checkpoints and rewind | Locked (0.5.0): [H5b — locked](#h5b--locked). `--apply commit` moved to a later slice | H5a, V3 |
+| **H5c-0** plan documents | Roadmap, not locked (2026-11-22): [H5c-0 — plan documents](#h5c-0--plan-documents-roadmap). After ACP-2, before H5c | H5a, R4d-4b, ACP-2 ([acp.md](acp.md)) |
 | **H5c** shadow DB | Migrations as plans through `sql-migrate` on revision + diff (R2), with approval showing `state-diff`; tests against a shadow database | R2 |
-| **H5d** image projections | The Lisp image spawned in the area with its ASDF registry pointing there; image checkpoints | H4 |
+| **H5d** image projections | The Lisp image spawned in the area with its ASDF registry pointing there, as a **confined** `:image` unit (moved here from R4d-4, 2026-11-22: until then `--lisp-image` stays refused in plan mode); image checkpoints | H4e, R4d |
 | **H5e** subagent areas | One plan area per subagent instead of a git worktree, merged back through `rebase-plan` | H5a, subagents |
 | later | `fs-reopen-area` / journals (R4b) for cheap rescans; COW areas (R4c); confined shells (R4d); per-path `.lisp` merges through `diff-backend-lisp-source` (R3); jj working copies (V2) | R4b–R4d, R3, V2 |
 
 Also out of scope in H5a: confinement of the shell (R4d; since 0.4.1 plan mode allows `bash` in the area unconfined), hunk-level partial approval, plans in RPC mode (H3d), two processes approving the same plan (no plan lock), GC of applied or discarded plan directories, and `.gitignore` changes inside a plan changing what the base compares (each side uses its own `:auto` rules).
+
+### H5c-0 — plan documents (roadmap)
+
+Recorded 2026-11-22; **not a locked contract yet**. Scheduled after ACP-2 and before H5c. Today a plan is the area and its diff; H5c-0 adds the written plan in front of it, so the user approves the intent first and the result after.
+
+| Topic | Plan |
+|-------|------|
+| **The document** | `propose_plan` writes a markdown `plan.md` into the plan's directory (outside the area). The user can edit it (`$EDITOR` from the dialog) |
+| **Questions** | An `ask_user` tool asks clarifying questions with options |
+| **Flow** | Approve / Revise (with feedback) / Reject on the document → execution in the area as today → a final dialog that shows the plan next to the diff |
+| **Steps** | A live checklist (pending / in progress / done), mapped to ACP's `plan` session update |
+| **History** | Plan revisions are recorded in the turn record, so `/tree`, export and rewind see them |
+| **Save** | "Save to workspace" (e.g. `docs/plans/`) |
+| **Template** | An optional Kiro-style spec template (requirements / design / tasks) |
+| **Flags** | a `--plan-doc` setting; `-p --propose-only`; `--resume ID --approve-plan` |
+| **Our difference** | Real enforcement (an R4d-confined area), and approving the result as well as the intent |
+
+| Prior art | What it does |
+|-----------|--------------|
+| Claude Code | A markdown file in `~/.claude/plans`; `ExitPlanMode` has no arguments; read-only is held by the prompt only |
+| Codex | `update_plan` step list, no saved file |
+| Cursor | Editable markdown, a Build button, Save to workspace |
+| Gemini CLI | `ask_user`, a read-only tool subset |
+| Kiro | `.kiro/specs` requirements / design / tasks with gates |
+| Armin Ronacher | [What is plan mode?](https://lucumr.pocoo.org/2025/12/17/what-is-plan-mode/) |
 
 ---
 
@@ -960,7 +986,7 @@ cl-stack-code                     # /ps or Ctrl-P: the session's units
 | **Live updates** | The program subscribes at `tui-init` (from the current seq); each event updates the status line count (`(:units :running N)`) and, for a `:state` → `:failed`, adds the notice `unit <id> (<kind>) failed with exit code N; /ps to inspect` (`(:unit-failed :notice …)`); the open panel redraws, ticks every 1 s and samples on its own thread | The H8a stream is ordered and replayable, so nobody polls states |
 | **Status line** | Right side `N running · <in> in · <out> out ` while N > 0, unchanged at 0 (given `%units-marker`) | Every H3b–H4b status-line test stays exact |
 | **`--rpc`** | Six methods (`+rpc-methods+`): `units/list`, `units/subscribe` (`since` replays every retained event after it, then live, in seq order, each once; `complete` false when older events were dropped), `units/unsubscribe`, `units/read` (unit or ref, `start_line` / `limit` / `tail` / `streams`), `units/search`, `units/control` (`confirmed` answers an ask). Notifications are `event` with `{"type":"unit",…}` (`+event-types+` gains `"unit"`). Thin adapters over `client-units`, `client-subscribe-units`, `client-unsubscribe-units`, `client-read-unit`, `client-search-units`, `client-control-unit` | H3d's one-core rule: RPC = SDK = the panel's model. An ask is a −32017 the client answers with its own dialog (no server→client requests, as H3d) |
-| **Web page** | **Out of 0.8.0** (a later row, H8d-1) | A listening socket is new attack surface even read-only (unit logs carry tokens and env; it needs a per-run token, origin checks and a bind policy); `--rpc` already serves external UIs, and a page is best a thin client over the same methods once `rpc-backend-http` / `-sse` exist (H3d's transport non-goal), not a second server; the stack has no live-page layer yet (SSE + JS); and every OS would need browser-free tests. Plan: `--units-web 127.0.0.1:PORT`, read-only, over the `units/*` methods |
+| **Web page** | **Out of 0.8.0** (a later row, H8d-1) | A listening socket is new attack surface even read-only (unit logs carry tokens and env; it needs a per-run token, origin checks and a bind policy); `--rpc` already serves external UIs, and a page is best a thin client over the same methods once `rpc-backend-http` / `-sse` exist (H3d's transport non-goal), not a second server; the stack has no live-page layer yet (SSE + JS); and every OS would need browser-free tests. Plan: `--units-web 127.0.0.1:PORT`, read-only, over the `units/*` methods. The same per-session server will also serve **canvases** (H4h, 2026-11-22: `/canvas/<session>/<package>::<name>`, a plain function called in the session image; loopback, a per-session token exchanged for a cookie, strict CSP), see [lisp-agent-tools.md, H4h](lisp-agent-tools.md#h4h--canvases) |
 | **Stubs** | `%h8d-pending` (`src/package.lisp`). **Given:** the conditions and their RPC codes / data fields, constants, `units-directory`, `make-code-supervisor`, `make-code-tools :supervisor`, `code-unit-tools`, the `unit-panel` class and readers, the program slots (`code-program-supervisor`, `-unit-tools`, `-panel`), `state-units-running` and `%units-marker`, `/ps` and the event routing in the core, `+rpc-methods+`, `+event-types+`. **Stubbed:** every function in `src/units.lisp` and `src/unit-panel.lisp` past the given ones, the SDK functions. **Left to the implementation:** the wiring in the program, the client sessions, -p and the `units/*` handlers. Old paths never reach a stub | — |
 
 ### Surface (new in 0.8.0)
@@ -1024,7 +1050,7 @@ The old suites change only where 0.8.0 changes them: version checks expect 0.8.0
 
 ### Non-goals (H8d)
 
-- The local web page (H8d-1, above).
+- The local web page (H8d-1, above), which H4h canvases build on.
 - Attaching to a pty or tmux unit: no executor gives a unit a terminal until H8a-1; the panel gets an `a` key then.
 - Previous sessions' logs in the panel (the agent's `unit_list include_previous` has them), deleting logs, a retention policy (H6's daemon).
 - Streaming a unit's output as `--rpc` notifications (clients page with `units/read` after `next_line`), and a server-side follow.
@@ -1041,8 +1067,9 @@ The old suites change only where 0.8.0 changes them: version checks expect 0.8.0
 | **H3c** sessions | Locked (0.3.0): [H3c — locked](#h3c--locked). Sessions as a file-backed `revision-protocol` store; `--continue` / `--resume` / `--session-id` / `--fork-session` / `--list-sessions`; `/tree` `/fork` `/rewind` `/clone` `/export`; steering (Ctrl-T) vs follow-up (Enter) on `agent-run-post` | R0, H3a, H3b |
 | **H3d** RPC and SDK | Locked (0.7.0): [H3d — locked](#h3d--locked). The in-process SDK (`make-client`, sessions, `client-turn` / `client-query`, approvals, steering, interrupts, plans, checkpoints, rewinds) and `--rpc`, a JSON-RPC 2.0 server over stdio that is a thin adapter over it; the stream-json events as notifications. `--input-format stream-json` dropped (non-goal) | H3a, H3c, H5a, H5b, rpc-backend-stdio 0.2.0 |
 | **H3e** configuration | Skills (`SKILL.md` via `steer-protocol`), prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, `@file` imports, project trust (project allow rules and `env` wait for the user's yes) | H3a–H3d |
+| **ACP-2** `cl-stack-code/acp` | A new system: cl-stack-code as an Agent Client Protocol agent over `acp-backend-stdio`, a thin adapter over the H3d SDK as `--rpc` is. Brief: [acp.md](acp.md). Order (2026-11-22): right after H4e | ACP-0 (`acp-protocol` 0.1.0), ACP-1 (`acp-backend-stdio`), H3d |
 
-After H3: the image layer (H4: [H4b — locked](#h4b--locked) is the product half of the debugger bridge), plan → project → approve (H5: [H5a — locked](#h5a--locked), later slices in its roadmap), extensions and a single binary (H6).
+After H3: the image layer (H4: [H4b — locked](#h4b--locked) is the product half of the debugger bridge; image-first slices H4c–H4h in [lisp-agent-tools.md](lisp-agent-tools.md#roadmap-h4bh4h)), plan → project → approve (H5: [H5a — locked](#h5a--locked), later slices in its roadmap, H5c-0 plan documents first), extensions and a single binary (H6).
 
 ## Model parameters (0.9.0)
 
