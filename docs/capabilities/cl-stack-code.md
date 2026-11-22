@@ -1188,7 +1188,7 @@ instruction-set-error
 
 Old suites change only where 0.12.0 changes them: the version checks expect 0.12.0.
 
-Run locally on macOS against the stubs: 126 of the 139 new cases fail, each on `%h3e1-pending` or on wiring that is not there yet. 13 pass on given code: the settings keys and flags (7), the record's `:instructions` round trip, `+event-types+`, and three guards that already hold (a path that does not match, a deny rule, no automatic plugin context), plus the bad `--context-file` flag. The 843 old cases pass (git 2.56, `ros dynamic-space-size=4096`, issue #18). The `:rules` record and `session-loaded-rules` tests are replaced by the instruction-set ones. The systems load with no new warnings. No throwaway prototype was run, so the implementation may find test bugs. Those go through a contract-fix commit, as before.
+Run locally on macOS against the stubs: 126 of the 139 new cases fail, each on `%h3e1-pending` or on wiring that is not there yet. 13 pass on given code: the settings keys and flags (7), the record's `:instructions` round trip, `+event-types+`, and three guards that already hold (a path that does not match, a deny rule, no automatic plugin context), plus the bad `--context-file` flag. The 940 old cases pass (git 2.56, `ros dynamic-space-size=4096`, issue #18). The `:rules` record and `session-loaded-rules` tests are replaced by the instruction-set ones. The systems load with no new warnings. No throwaway prototype was run, so the implementation may find test bugs. Those go through a contract-fix commit, as before.
 
 ### Non-goals (H3e-1)
 
