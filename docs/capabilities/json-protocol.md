@@ -84,6 +84,13 @@ Package nick: `stack-json` (system `json-protocol`) — not `json` (clashes with
 | `false` | `nil` | `nil` **as boolean** (see below) |
 | `null` | `:null` | `:null` |
 
+**Object member order (normative, every backend and implementation; json-protocol 0.2.2+, egao1980/json-protocol#23):**
+
+- An **alist** encodes as an object with its members **in alist order**, nested alists included. Keys: strings as is, symbols downcased. On a **duplicate key the first occurrence wins** and later ones are dropped (`assoc` semantics). Backends must not route alists through a hash-table.
+- A **hash-table** encodes in `maphash` order, which ANSI CL leaves unspecified. Use an alist when the bytes must be deterministic (golden tests, `hx-vals`, signed payloads).
+- Output is **compact** (no whitespace between tokens).
+- Conformance: `json-protocol/tests` `conformance-test.lisp` runs the same exact-string cases on every backend.
+
 **Boolean false vs empty:** Encoding `(encode nil)` is **ambiguous** in CL. Locked rule:
 
 - `(encode nil :false-nil t)` or dedicated `(encode-false)` — **prefer** keyword arg on encode: `:null-nil` default **nil** meaning `nil` → JSON `false`; pass `:null` for JSON null.
