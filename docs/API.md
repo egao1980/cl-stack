@@ -75,6 +75,8 @@
   **Brief:** [capabilities/process.md](capabilities/process.md) (#106)
 - `rpc-protocol` — interaction modes (`:call-response` / `:notify` / `:call-stream` / `:client-stream` / `:bidi-stream`); JSON-RPC is `rpc-protocol-json`; gRPC binding is `rpc-protocol-grpc`  
   **Brief:** [capabilities/rpc.md](capabilities/rpc.md) (#170) · cookbook [rpc.md](cookbooks/rpc.md)
+- `logic-protocol` / `sat-protocol` / `policy-protocol` (Track L, **planned**) — Datalog rules with incremental deltas and proofs (default `logic-backend-datalog`; ASP and imported Prolog later); propositional SAT (`sat-backend-dpll`, extracted from cl-repository); permit / forbid / ask policies with layers, obligations and SAT-based analysis  
+  **Brief:** [capabilities/logic.md](capabilities/logic.md)
 
 ## Agent wire (P1 — MCP / A2A / AG-UI)
 
