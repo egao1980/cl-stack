@@ -84,10 +84,11 @@ Package nick: `stack-json` (system `json-protocol`) — not `json` (clashes with
 | `false` | `nil` | `nil` **as boolean** (see below) |
 | `null` | `:null` | `:null` |
 
-**Object member order (normative, every backend and implementation; json-protocol 0.2.2+, egao1980/json-protocol#23):**
+**Deterministic encoding (normative, every backend and implementation; json-protocol 0.2.2+, egao1980/json-protocol#23):** the same value always encodes to the same bytes, for content hashes and ids, LLM prompt-cache prefixes (tool schemas, request bodies) and golden / demo outputs.
 
-- An **alist** encodes as an object with its members **in alist order**, nested alists included. Keys: strings as is, symbols downcased. On a **duplicate key the first occurrence wins** and later ones are dropped (`assoc` semantics). Backends must not route alists through a hash-table.
-- A **hash-table** encodes in `maphash` order, which ANSI CL leaves unspecified. Use an alist when the bytes must be deterministic (golden tests, `hx-vals`, signed payloads).
+- **Ordered inputs:** an **alist** encodes as an object with its members **in alist order**, nested alists included. Keys: strings as is, symbols downcased. On a **duplicate key the first occurrence wins** (`assoc` semantics). Backends must not route alists through a hash-table.
+- **Unordered inputs:** a **hash-table** encodes with its keys **sorted by `string<`** on the key strings, never in `maphash` order. Keys that name the same member (`:a` and `"a"`) signal `json-encode-error`.
+- A **plist** is a list, so it encodes as an array, not an object.
 - Output is **compact** (no whitespace between tokens).
 - Conformance: `json-protocol/tests` `conformance-test.lisp` runs the same exact-string cases on every backend.
 
