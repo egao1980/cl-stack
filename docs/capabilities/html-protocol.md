@@ -1,6 +1,6 @@
 # html-protocol (P1)
 
-**Status:** **shipped** — [`egao1980/html-protocol`](https://github.com/egao1980/html-protocol) OCI **0.1.0** (`stack-html`) + `html-backend-plump` **0.1.0** (plump **2.0.0**).
+**Status:** **shipped** — [`egao1980/html-protocol`](https://github.com/egao1980/html-protocol) OCI **0.1.1** (`stack-html`) + `html-backend-plump` **0.1.1** (plump **2.0.0**).
 
 Lenient HTML parse / serialize / tree query. **Not** XML Infoset — that is [`xml-protocol`](xml-protocol.md).
 
