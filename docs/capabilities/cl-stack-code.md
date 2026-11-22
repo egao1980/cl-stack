@@ -1,7 +1,7 @@
-# cl-stack-code (H3a–H3d, H5a, H5b, H4b, H8d, H3e-1, H3e-2): the coding agent's headless and interactive shell, its sessions, plan mode, checkpoints, its Lisp image, its SDK and JSON-RPC server, its views of running units, its instructions, skills and rules, and its MCP servers
+# cl-stack-code (H3a–H3d, H5a, H5c-0, H5b, H4b, H8d, H3e-1, H3e-2): the coding agent's headless and interactive shell, its sessions, plan and preview modes, checkpoints, its Lisp image, its SDK and JSON-RPC server, its views of running units, its instructions, skills and rules, and its MCP servers
 
 **Plan:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, row H3 ("Product shell: interactive / `-p` / JSON stream / RPC / SDK; settings layering (user, project, local); … `AGENTS.md` discovery"). The repo was decided there (Decision 1).
-**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0**; **0.1.1** runs H3a with no stack workarounds: `--help` / `--version` come from `stack-cli:parse` (cli-protocol 0.2.1, clingon 0.2.1; no argv pre-scan), options and commands are built with `make-option` / `make-command :backend`, the designator's model reaches the backend as the agent's `:model` (ai-agent-protocol 0.12.0), and each run makes its own HTTP backend (http-backend-async 0.2.20) ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox) shipped as **0.6.0**: [H4b — locked](#h4b--locked). Milestone **H3d** (the SDK and `--rpc`, JSON-RPC 2.0 over stdio) shipped as **0.7.0**: [H3d — locked](#h3d--locked). Milestone **H8d locked** (a supervisor per session, the TUI process panel `/ps` / Ctrl-P, the `units/*` RPC methods; version target **0.8.0**): [H8d — locked](#h8d--locked). **0.9.0** adds model sampling parameters: the `modelParams` settings key and `--model-param KEY=VALUE` ([Model parameters](#model-parameters-090)). Milestone **H3e-1 locked** (`@path` imports, Agent Skills and the `skill` tool, path-scoped rules, `contextFiles`; version target **0.12.0**, after steer-protocol 0.4.0): [H3e-1 — locked](#h3e-1--locked). Milestone **H3e-2a locked** (MCP servers: `.mcp.json` and `mcpServers` as Claude Code, project trust, stdio servers as supervised units, streamable HTTP, `mcp__server__tool` names and rules, `/mcp`, `mcp/list`; version target **0.13.0**, after mcp-protocol 0.4.0 and ai-agent-protocol 0.15.0): [H3e-2 — locked](#h3e-2--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
+**Status:** milestone **H3a** shipped as cl-stack-code **0.1.0**; **0.1.1** runs H3a with no stack workarounds: `--help` / `--version` come from `stack-cli:parse` (cli-protocol 0.2.1, clingon 0.2.1; no argv pre-scan), options and commands are built with `make-option` / `make-command :backend`, the designator's model reaches the backend as the agent's `:model` (ai-agent-protocol 0.12.0), and each run makes its own HTTP backend (http-backend-async 0.2.20) ([`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), `cl-stack-code/tests`, Rove; implemented through **team-solve**). Milestone **H3b** (the interactive mode) shipped as **0.2.0**: [H3b — locked](#h3b--locked). Milestone **H3c** (sessions and steering) shipped as **0.3.0**: [H3c — locked](#h3c--locked). Milestone **H5a** (plan → project → approve over files) shipped as **0.4.0** (0.4.1: the shell runs in the area): [H5a — locked](#h5a--locked); since 0.15.0 it is **preview mode** (renamed, same function). Milestone **H5c-0 locked** (plan mode plans: explore in a confined copy, propose a `plan.md`, approve, revise or reject it, run it in the project with a checklist, the plan next to the diff; version target **0.15.0**): [H5c-0 — locked](#h5c-0--locked). Milestone **H5b** (checkpoints and rewind, with V3: git and jj as composite parts) shipped as **0.5.0**: [H5b — locked](#h5b--locked). Milestone **H4b** (the Lisp image: lisp-mcp/agent tools, debugger events in the agent's inbox) shipped as **0.6.0**: [H4b — locked](#h4b--locked). Milestone **H3d** (the SDK and `--rpc`, JSON-RPC 2.0 over stdio) shipped as **0.7.0**: [H3d — locked](#h3d--locked). Milestone **H8d locked** (a supervisor per session, the TUI process panel `/ps` / Ctrl-P, the `units/*` RPC methods; version target **0.8.0**): [H8d — locked](#h8d--locked). **0.9.0** adds model sampling parameters: the `modelParams` settings key and `--model-param KEY=VALUE` ([Model parameters](#model-parameters-090)). Milestone **H3e-1 locked** (`@path` imports, Agent Skills and the `skill` tool, path-scoped rules, `contextFiles`; version target **0.12.0**, after steer-protocol 0.4.0): [H3e-1 — locked](#h3e-1--locked). Milestone **H3e-2a locked** (MCP servers: `.mcp.json` and `mcpServers` as Claude Code, project trust, stdio servers as supervised units, streamable HTTP, `mcp__server__tool` names and rules, `/mcp`, `mcp/list`; version target **0.13.0**, after mcp-protocol 0.4.0 and ai-agent-protocol 0.15.0): [H3e-2 — locked](#h3e-2--locked). Later slices: [Roadmap](#roadmap-h3bh3e).
 
 `cl-stack-code` is the product: a coding agent CLI on cl-stack. H3a is the **headless** half only:
 
@@ -469,6 +469,8 @@ On the stubs, 101 of the 103 H3c cases fail, and every error is a `%not-implemen
 
 ## H5a — locked
 
+**Renamed in 0.15.0 ([H5c-0](#h5c-0--locked)):** this behaviour is now **preview mode** (`--permission-mode preview`, `"permissionMode": "preview"`), and "plan mode" means H5c-0's explore-and-propose mode. The function is unchanged: every rule below holds with "plan mode" read as "preview mode". The user-facing names change (`--preview-area`, stream-json `"preview"` events and result object, `preview ID: …` on stderr, the "Preview <id8>" dialog, `/preview`, RPC `preview/apply` and `preview/reject`); `--apply`, `--reject` and `--on-drift` keep theirs. The Lisp API below keeps its names until a follow-up rename. Its tests moved with it (H5c-0's contract tests).
+
 **Plan row:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, H5 ("Plan → project → approve: edits … as plans; approvals show `state-diff`; tests run against projections …"), on R4a alone ("R4a alone is enough for H5") and V1. H5a is its first slice: **files only**.
 
 Contract: branch `agent/h5a-contract-4f0a` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.4.0**. It holds the stubs, which call `%not-implemented`, and the Rove tests in `cl-stack-code/tests` that define them. The file headers of `src/plans.lisp`, `src/headless.lisp` ("H5a"), `src/interactive.lisp` ("H5a"), `src/program.lisp` ("H5a"), `src/transcript.lisp` (`:plan` entries), `src/instructions.lisp` (`%plan-environment-sections`) and `src/arguments.lisp` (`check-plan-flags`) give the exact rules. This section summarizes them. The implementation goes through **team-solve** (`.team-solve/task.md`: `system: cl-stack-code`, `test-system: cl-stack-code/tests`, this brief).
@@ -561,7 +563,7 @@ Four H3a tests change meaning with plan mode. `tools-plan-mode` now expects the 
 |-------|-------|-----------|
 | **H5a** files | This section | R4a, V1, H3c |
 | **H5b** checkpoints and rewind | Locked (0.5.0): [H5b — locked](#h5b--locked). `--apply commit` moved to a later slice | H5a, V3 |
-| **H5c-0** plan documents | Roadmap, not locked (2026-11-22): [H5c-0 — plan documents](#h5c-0--plan-documents-roadmap). After ACP-2, before H5c | H5a, R4d-4b, ACP-2 ([acp.md](acp.md)) |
+| **H5c-0** plan mode plans | Locked (0.15.0): [H5c-0 — locked](#h5c-0--locked). H5a becomes preview mode | H5a, H5b, R4d-4b, ACP-2 ([acp.md](acp.md)), policy-protocol 0.1.0 |
 | **H5c** shadow DB | Migrations as plans through `sql-migrate` on revision + diff (R2), with approval showing `state-diff`; tests against a shadow database | R2 |
 | **H5d** image projections | The Lisp image spawned in the area with its ASDF registry pointing there, as a **confined** `:image` unit (moved here from R4d-4, 2026-11-22: until then `--lisp-image` stays refused in plan mode); image checkpoints | H4e, R4d |
 | **H5e** subagent areas | One plan area per subagent instead of a git worktree, merged back through `rebase-plan` | H5a, subagents |
@@ -569,30 +571,137 @@ Four H3a tests change meaning with plan mode. `tools-plan-mode` now expects the 
 
 Also out of scope in H5a: confinement of the shell (R4d; 0.4.1 allowed `bash` in the area unconfined, and 0.10.0 / R4d-4b confines it), hunk-level partial approval, plans in RPC mode (H3d), two processes approving the same plan (no plan lock), GC of applied or discarded plan directories, and `.gitignore` changes inside a plan changing what the base compares (each side uses its own `:auto` rules).
 
-### H5c-0 — plan documents (roadmap)
+## H5c-0 — locked
 
-Recorded 2026-11-22; **not a locked contract yet**. Scheduled after ACP-2 and before H5c. Today a plan is the area and its diff; H5c-0 adds the written plan in front of it, so the user approves the intent first and the result after.
+**Plan row:** [HARNESS-PLAN.md](https://github.com/egao1980/cl-workspace/blob/main/docs/HARNESS-PLAN.md) Track H, H5 ("Plan → project → approve"), the first slice after [H5a](#h5a--locked) and [H5b](#h5b--locked). The user's direction (2026-11-22): "Plan mode is supposed to _plan_ changes. It can run exploratory scripts, but it's not for creating a full solution." And: "the current plan behaviour is valuable but let's not call it plan mode."
 
-| Topic | Plan |
-|-------|------|
-| **The document** | `propose_plan` writes a markdown `plan.md` into the plan's directory (outside the area). The user can edit it (`$EDITOR` from the dialog) |
-| **Questions** | An `ask_user` tool asks clarifying questions with options |
-| **Flow** | Approve / Revise (with feedback) / Reject on the document → execution in the area as today → a final dialog that shows the plan next to the diff |
-| **Steps** | A live checklist (pending / in progress / done), mapped to ACP's `plan` session update |
-| **History** | Plan revisions are recorded in the turn record, so `/tree`, export and rewind see them |
-| **Save** | "Save to workspace" (e.g. `docs/plans/`) |
-| **Template** | An optional Kiro-style spec template (requirements / design / tasks) |
-| **Flags** | a `--plan-doc` setting; `-p --propose-only`; `--resume ID --approve-plan` |
-| **Our difference** | Real enforcement (an R4d-confined area), and approving the result as well as the intent |
+Contract: branch `agent/h5c0-contract-d9d4` of [`egao1980/cl-stack-code`](https://github.com/egao1980/cl-stack-code), version **0.15.0** (ACP-2 0.11.0, H3e-1 0.12.0, H3e-2a 0.13.0 and H3f 0.14.0 land first; the number follows merge order). The rules are in the header of `src/plan-docs.lisp`. The implementation goes through **team-solve** (`.team-solve/task.md`: `system: cl-stack-code`, `test-system: cl-stack-code/tests`, this brief).
 
-| Prior art | What it does |
-|-----------|--------------|
-| Claude Code | A markdown file in `~/.claude/plans`; `ExitPlanMode` has no arguments; read-only is held by the prompt only |
-| Codex | `update_plan` step list, no saved file |
-| Cursor | Editable markdown, a Build button, Save to workspace |
-| Gemini CLI | `ask_user`, a read-only tool subset |
-| Kiro | `.kiro/specs` requirements / design / tasks with gates |
-| Armin Ronacher | [What is plan mode?](https://lucumr.pocoo.org/2025/12/17/what-is-plan-mode/) |
+There are now **two modes**, and "plan" means only the first:
+
+- **plan** explores and proposes. File tools read a throwaway copy of the project, exploratory shell commands run confined in it (R4d-4b), the model may write scratch files, it can ask the user questions, and it ends with `propose_plan`, which writes a markdown `plan.md` outside the project. Nothing reaches the project. The user approves, edits, revises or rejects the **document**. On approval the plan runs in the real project under the mode the user picks, with a live checklist, and the run ends with the plan shown next to the actual diff.
+- **preview** is H5a + R4d-4b unchanged, under a new name: edits and confined shell commands in a copy, the projected diff, `--apply` / `--reject` / `--on-drift`. It is also an execution target of an approved plan ("approve and run in preview").
+
+```
+cl-stack-code -p --permission-mode plan "add a greeting"          # → plan.md, exit 0
+$EDITOR ~/.local/share/cl-stack-code/plan-docs/<key>/<id>/plan.md   # optional
+cl-stack-code -p --resume 3f9a --approve-plan                       # runs it (acceptEdits)
+cl-stack-code -p --resume 3f9a --approve-plan --permission-mode preview --apply
+cl-stack-code -p --resume 3f9a --permission-mode plan "in French"   # revision 2
+cl-stack-code -p --permission-mode preview "fix the test"            # H5a, renamed
+```
+
+### Prior art (intersection, not a clone)
+
+| Source | Took | Left |
+|--------|------|------|
+| Claude Code plan mode | Read-only exploration ended by a tool call carrying the plan (`ExitPlanMode`); approval offers "accept edits" or "ask before edits"; ACP agents show it as a permission request of kind `switch_mode` | Read-only held by the prompt alone; plans in `~/.claude/plans` with no revisions; no execution checklist |
+| Codex | `update_plan` as a live step list during execution | No saved document |
+| Cursor | Editable plan markdown, a Build button, "Save to workspace" | Its UI flow |
+| Gemini CLI | `ask_user` with options during planning | Its read-only tool subset (ours is a policy) |
+| Kiro | Specs: requirements ("WHEN … THE SYSTEM SHALL"), design, tasks, as an optional template | Gates per phase, `.kiro/specs` in the repository |
+| Armin Ronacher, [What is plan mode?](https://lucumr.pocoo.org/2025/12/17/what-is-plan-mode/) | Plan mode is a prompt-and-tooling convention around a document the user can read and change | — |
+
+**Our difference:** exploratory scripts run, but confined to a copy whose changes are never applied; the plan is a document with revisions that the user edits; the policy, not the prompt, refuses edits; and the result is approved too (the plan next to the diff, H5b's rewind one key away, or the whole execution in preview).
+
+### Decisions
+
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| **Names** | `"plan"` is the new mode only. H5a's behaviour is the mode **`preview`** (`--permission-mode preview`, `"permissionMode": "preview"`, ACP mode id `preview`). `+permission-mode-names+` = default, acceptEdits, bypassPermissions, plan, preview. | It previews the result before it lands, as an IDE's refactoring preview computes every change and shows the diff before applying it. `sandbox` was rejected: the `sandbox.*` settings already configure the confinement that **both** modes use, and Claude Code's sandbox writes to the project directly. `staged` was rejected: in a git project it would be read as git's index, while a preview lands as unstaged edits. |
+| **Renames (user-facing)** | Everything users see of H5a says "preview": stream-json `{"type":"preview",…,"preview_id"}` and the result's `"preview"` object, stderr `preview ID: …`, the TUI dialog "Preview <id8>", the entry "● preview …", "Keep working", `/preview`, `--preview-area` (`--plan-area` stays an alias with a deprecation line on stderr through 0.15.x). `--apply`, `--reject` and `--on-drift` keep their names, scoped to preview. The full list is in the header ("USER-FACING RENAMES", "Other texts"). | "Plan" must mean one thing on every surface. |
+| **Lisp names** | H5a's Lisp API keeps its names in 0.15.0 (`plan`, `open-plan`, `approve-plan`, `plan-drift`, `rebase-plan`, checkpoint reasons `:plan-before` / `:plan-after`, the core's `:plan-opened` events). New SDK names `client-apply-preview` / `client-reject-preview` are given. The rename to `preview-*`, with aliases for one minor, is a follow-up issue after the in-flight slices merge. | Four contracts edit the same files now; a global rename would collide with all of them. Users see the new names already. |
+| **RPC** | `preview/apply` and `preview/reject` are H5a's methods. `plan/approve`, `plan/reject`, `plan/revise`, `plan/get`, `plan/update`, `plan/save` act on the plan document. Through 0.15.x `plan/approve` and `plan/reject` on a session with an open preview and no proposed plan still act on the preview, and the result gains `"deprecated": "plan/approve on a preview is preview/apply; the alias goes in 0.16.0"`. | The old names cannot be plain aliases, because they now name the document's methods. A session never has both waiting: a plan executing in preview was approved first, so dispatching by state is unambiguous. |
+| **stream-json** | `"plan"` events carry plan documents (`opened`, `reopened`, `proposed`, `approved`, `step`, `executed`, `rejected`); `"preview"` events replace H5a's. No duplicate old events. | Emitting both would show every consumer two events per change, and the old type now has a new meaning. |
+| **Migration** | An existing `"permissionMode": "plan"` (and `--permission-mode plan`) means the **new** plan mode. The first plan run on a data directory prints a one-time notice (stderr in `-p`, a TUI notice): `"plan" mode now plans first … The old behaviour … is the "preview" mode`, with the marker `<data-dir>/notices/plan-mode-0.15`. Old sessions: a record with H5a's `:plan` key and mode `:plan` reads back as `:preview`; the `:plan` key stays the preview's and areas stay in `<data-dir>/plans/`, so `--resume OLD --apply`, `--reject` and `--resume OLD --permission-mode preview "…"` keep working. | The new plan mode is strictly safer than the old one (nothing is written anywhere that could be applied). A user who wanted the old flow gets one clear sentence and the new name, once. |
+| **Exploration area** | A plan's shell and file tools work in an H5a area of the working copy (kind auto / `--preview-area`), opened with the document, confined by R4d-4b's sandbox (same probe, same notices; unconfined → bash asks and `-p` refuses), kept across revisions and discarded at approval or rejection. It is **never applied**. The model's scratch directory is `<area>/.plan-scratch/`, which is copied to `<plan dir>/scratch/` at approval so the execution can use the scripts. | Exploratory commands write: build outputs, caches, lock files, git's index. A read-only project would make them fail; the copy lets them run and keeps the project untouched. Keeping it across revisions keeps the model's experiments; discarding it at approval removes any temptation to treat it as the solution. |
+| **Tool policy** | Plan mode's base rules are preview's (write / edit / multi_edit allowed; bash and job_input allowed while confined). The new rule logic is a **policy-protocol** policy, `plan-mode-tools` (`defpolicy`, `:last-match`): edits are forbidden with `+plan-mode-edit-feedback+` ("project files cannot be edited now. Describe the change in the plan instead …") except under `path:.plan-scratch`; `update_plan` is forbidden. `settings-permission-policy` returns `plan-mode-permission-policy`, an adapter for ai-agent-protocol's `:permission-policy` hook, in plan mode (and NIL otherwise). A policy only tightens, so an allow rule cannot lift the refusal. | The workspace rule (rules-and-logic): new rule logic goes through policy-protocol (0.1.0, published). **L4b** (moving the mode base rules and R4d-4b's sandbox states onto policy-protocol) is not done, so the rest stays on ai-agent-protocol rules as today; when ai-agent-protocol/policy (0.15.0, H3e-2 row 2) ships its adapter, ours becomes a call of it. |
+| **The document** | `<data-dir>/plan-docs/<project-key>/<id>/`: `meta.sexp`, `plan.md` (the user may edit it), `revisions/N.md`, `scratch/`. Statuses drafting → proposed → approved → executed \| interrupted; drafting or proposed → rejected; an interrupted plan can be approved again. One open document per session. | Outside the project, beside the sessions, like H5a's areas. |
+| **Format** | Markdown read with markdown-protocol. Required headings: Goal and Steps (`planTemplate` `"default"`), or Requirements, Design and Tasks (`"spec"`, Kiro-style). Optional: Findings, Files to change, Risks, Test plan. Steps are the items of the first list under the steps heading; files are the first code span of each item under "Files to change". A missing heading is `plan-format-error` (its `missing` list), which `propose_plan` returns as a tool error with the template, so the model can retry. | Steps and files must be read back from what the user edited, so the structure lives in the markdown, not in tool arguments. |
+| **Tools** | Plan turns get `propose_plan {markdown}` and `ask_user {question, options?}`; execution turns get `update_plan {step, status}`. None needs approval. `propose_plan` **ends the run**: no model step follows (if ai-agent-protocol has no way for a tool to end a run, that is added there). A plan turn may also end without a plan (an answer, a question). `ask_user` asks in the TUI; elsewhere it returns `+ask-user-unavailable+` ("make a reasonable assumption, state it under Findings"). | Claude Code's ExitPlanMode shape; Codex's update_plan; Gemini's ask_user. Ending the run makes the handover to the user explicit. |
+| **Approval** | Approve (accept edits / ask before edits / run in preview), Edit in `$EDITOR`, Revise, Reject, Save to workspace. Approval first records the user's edits of `plan.md` as a `:user` revision. Headless: `--resume ID --approve-plan` runs under `--permission-mode` when given (not plan), else **acceptEdits**; `--reject-plan`, `--save-plan` and `--propose-only` (an alias of `--permission-mode plan`). Revise is just the next plan turn: its prompt is the feedback. | Headless cannot ask, and the user has just approved the plan, the files it names included; a user who wants every edit asked passes `--permission-mode default`. |
+| **ACP** | Modes: the five names, plan and preview listed separately. `plan` updates come from plan documents (steps, pending / in_progress / completed); preview events are no longer `plan` updates. Approval is a **`session/request_permission`** inside the prompt that proposed, on the `propose_plan` tool call (kind `switch_mode`, the markdown as content), with the options acceptEdits / default / preview (allow) and plan / reject (reject_once / reject_always); an approval sends `current_mode_update` and runs the execution in the same prompt. `session/set_mode` out of plan while a plan is proposed approves it under that mode, and the next prompt runs it. | ACP's own `switch_mode` tool kind exists for this, and editors render a permission request with its content inline (Zed shows Claude Code's ExitPlanMode this way). `set_mode` alone cannot say revise or reject, so it is the secondary path. |
+| **Execution** | One turn in the project under the chosen mode, whose user text is `plan-execution-prompt`: the preamble, `<plan id revision>` with the markdown, the scratch directory, steps already done (interrupted plans) and the user's extra instructions. The checklist is a TUI entry replaced in place, stream-json `step` events and ACP `plan` updates. At the end, **plan versus diff**: steps done, planned files against changed files (planned / not in the plan / planned, unchanged) and the diff of the turn's H5b PRE → POST files (read even with checkpoints disabled); in preview, the projected changes. The TUI's result dialog offers Keep / Rewind the files (H5b) / Save. | H5b's checkpoints make the diff and the undo cheap; a preview makes the whole execution reviewable before it lands. |
+| **Records** | Turn records gain `plan-document` (content key `:plan-document`: id, revision, status, author, markdown, feedback), only in turns that changed the document; `+session-format+` stays 1. `/tree` marks such turns ` ✎ rN`, `/export` adds the revision, and a conversation rewind sets the document back to the latest revision on the rewound line. Settings: `planTemplate`, `planSaveDirectory` (default `docs/plans`). | Revisions are part of the conversation, so the conversation tools see them. |
+| **Stubs** | `%h5c0-pending` (`src/plan-docs.lisp`). **Given:** exports, constants, conditions, the structs and classes with their readers, `plan-documents-directory`, `plan-document-path`, the policy, the preview SDK names, `+preview-mode-feedback+`, the `.asd`. **Stubbed:** every other function in the file. **Left to the implementation:** the renames and every hook in settings, arguments, sessions, headless, interactive, program, client and rpc. The contract's edits to shared files are the `.asd` and the version line only, so it merges after the in-flight slices with little conflict. | — |
+
+### Surface (new in 0.15.0)
+
+```lisp
+;; documents (src/plan-docs.lisp)
+plan-document plan-document-p plan-document-{id project-dir directory session-id status revision
+  template title steps files area-id execution-mode opened-at}
+plan-step make-plan-step plan-step-{index text status}   plan-revision plan-revision-{index author markdown feedback recorded-at}
+(plan-documents-directory cwd &key data-dir)  (open-plan-document project-dir &key data-dir session-id id template)
+(reopen-plan-document dir id)  (list-plan-documents dir)  (plan-document-path doc)  (plan-document-markdown doc)
+(parse-plan-markdown text &key template) → (values title steps files)   (plan-template-text template)
+(propose-plan-revision doc markdown &key author feedback) → N   (sync-plan-document-edits doc)  (plan-document-revisions doc)
+(approve-plan-document doc &key mode)  (reject-plan-document doc)  (plan-execution-prompt doc &optional extra)
+(set-plan-step doc index status)  (finish-plan-execution doc &key changes interrupted)  (plan-steps-lines doc)
+(plan-versus-diff doc changes)  (plan-versus-diff-lines doc changes)  (save-plan-to-workspace doc &key directory)
+(plan-document-object doc)  (plan-document-record doc &key feedback)
+plan-tools (make-plan-tools doc &key phase ask)   plan-mode-tools (policy)   (plan-mode-permission-policy &key policy)
++plan-document-statuses+ +plan-step-statuses+ +plan-templates+ +plan-execution-modes+ +plan-scratch-directory-name+
++plan-tool-names+ +plan-document-choices+ +plan-result-choices+ +acp-plan-approval-options+ +plan-mode-section+
++plan-mode-edit-feedback+ +plan-execution-preamble+ +ask-user-unavailable+ +plan-mode-migration-notice+
++default-plan-template+ +spec-plan-template+ +default-plan-save-directory+ +preview-mode-feedback+
+;; elsewhere
+settings-plan-template settings-plan-save-directory record-plan-document
+state-plan-document state-plan-document-prompt
+invocation-approve-plan-p invocation-reject-plan-p invocation-save-plan-p invocation-propose-only-p invocation-preview-area
+client-plan-document client-approve-plan-document client-reject-plan-document client-revise-plan-document
+client-update-plan-document client-save-plan-document   client-apply-preview client-reject-preview
+;; RPC: plan/approve plan/reject plan/revise plan/get plan/update plan/save preview/apply preview/reject
+;; flags: --approve-plan --reject-plan --save-plan --propose-only --preview-area (--plan-area: deprecated alias)
+```
+
+### Conditions
+
+```
+code-error
+└── plan-document-error (document)              exit 1
+    ├── plan-document-not-found (designator)    exit 2   RPC -32030
+    ├── plan-document-state-error (status)      exit 2   RPC -32031
+    └── plan-format-error (missing)             a tool error for propose_plan; RPC plan/update -32602 "missing"
+```
+
+H5a's `plan-error` tree, its restarts and pathlib's `content-hash-mismatch` are unchanged and belong to previews.
+
+### Contract tests
+
+`cl-stack-code/tests` grows by 6 files (one of them helpers): **98 new deftests (133 cases with the parametrized rows), about 495 `ok` forms.** Every LLM interaction goes through the scripted mock backend, and the exploration shell runs through the suite's model confinement backend or a recording backend (R4d-4b's helpers).
+
+| File | Covers |
+|------|--------|
+| `plan-doc-support` | the sample plans (default, a revision, spec), propose / update / ask steps, plan documents of a project, plan runs and their events, line records, a fake `$EDITOR` |
+| `plan-doc-test` | constants; the directory; **the policy evaluated directly** (edits forbidden, scratch permitted, a prefix is not the directory, reads and the shell undecided, the feedback) and its adapter; open, reopen, list, unreadable meta; **the format** (title, steps, files, nested lists, case-insensitive headings, 5 missing-heading rows, spec); revisions, a bad proposal writing nothing, **user edits as revisions**; approve (state errors, plan refused, 4 modes, the user's edit), reject, the execution prompt, steps and their saving, interrupted and resumed; **plan versus diff** and its lines; save to workspace (date, slug, `-2`, fallback); object and record; the record round trip; **old records read as preview**; the tool source; settings and 5 error rows |
+| `plan-doc-cli-test` | **an edit refused with feedback** (also despite an allow rule), **a scratch write allowed**, **exploratory bash confined in the area with the network off and the project unchanged**, no sandbox → ask refused; **propose_plan writes plan.md and ends the run**; stream-json order and fields; no proposal → null; result only in plan runs; a bad plan as a tool error; the system prompt and tools; the spec template; ask_user headless; `--propose-only`; 10 flag-error rows and the readers; `--plan-area` deprecated alias; **`--resume ID --approve-plan` in the project under acceptEdits, the plan as the turn's instructions, step events, the executed event**; text with **plan versus diff**; extra instructions; default mode still asking; **approve in preview** (and `--apply`); no plan; **the user's edit runs and is recorded**; **revise (revision 2, feedback, both revisions in the record)**; reject; save; `/tree` mark and export; **a conversation rewind restores the revision**; the **migration notice once**, none in preview |
+| `plan-doc-core-test` | opened, proposed (dialog, entry, busy), 6 reply rows (approve × 3 switching the mode, edit, reject, save), revise and Esc, 7 command rows, `/approve` usage, commands without a plan, a waiting plan (`/clear` refused, `/permissions` fine), **the checklist replaced in place**, executed and its dialog, 3 result-reply rows, 3 closed rows, help |
+| `plan-doc-program-test` | **the dialog on screen**, **approve → execution in the project → the checklist and plan versus diff → the result dialog**, rewind the files, **revise → r2**, reject, **edit in `$EDITOR`**, **approve in preview → the preview dialog**, ask_user dialog, save, the turn record, the migration notice once |
+| `plan-doc-client-test` | SDK propose → approve → wait, revise / update / save / reject, no plan, ask_user unavailable; **RPC plan/get, plan/revise, plan/approve, plan/update (format error -32602), plan/save, plan/reject, -32030 / -32031**; **plan/approve and plan/reject on a preview: deprecated aliases** |
+
+**Moved tests** (H5a's meaning under the name preview; assertions otherwise unchanged): `plan-cli-test` (`--permission-mode preview`, `"preview"` events and `preview_id`, the result's `"preview"`, `preview ID:` stderr, `--preview-area`, the `- Preview:` prompt line, `+preview-mode-feedback+`), `plan-core-test` and `plan-program-test` ("preview <id8>", "Preview <id8>", "Keep working", `/preview`, "no proposed plan or open preview"), `client-plan-test` (`:preview`, `client-apply-preview` / `client-reject-preview`), `rpc-test` (`rpc-preview-apply-and-reject` on `preview/apply` / `preview/reject`, the flag message, the method list), `sandbox-test`, `sandbox-cli-test`, `sandbox-program-test`, `sandbox-support` and the real-sandbox tests (through `plan-run`), `checkpoint-cli-test` (preview `--apply` checkpoints, through `plan-run`), `checkpoint-core-test` (the open-preview refusal), `tools-test` (`tools-preview-mode`), `permissions-test` (base rules for both modes, the policy only in plan mode, the feedback constants), `lisp-image-test` (two preview rows), `settings-test` (five mode names). `plan-test` (H5a's Lisp API) does not change. The version checks expect 0.15.0.
+
+On the stubs (macOS, git 2.56, measured): **1077 cases, 841 passing, 236 failing.** 128 of the 133 new cases fail, each on `%h5c0-pending`, on a flag or mode that does not exist yet, or on an assertion downstream of the missing wiring. The 5 that pass check given code: the constants, the directory, **the policy itself** (`plan-mode-tools` evaluated through policy-protocol), the result without a plan outside plan mode, and no notice in preview mode. 108 moved cases fail until the rename (27 of them on `unknown --permission-mode "preview"`). Every untouched case passes. No throwaway prototype was run, so the implementation may find test bugs; those go through a contract-fix commit, as before.
+
+
+### ACP-2 adjustments (after this lands)
+
+ACP-2 ([cl-stack-code#31](https://github.com/egao1980/cl-stack-code/pull/31)) maps permission modes to session modes and H5a plan objects to ACP `plan` updates. After H5c-0 it must:
+
+1. List **five** modes (`+acp-mode-ids+` follows `+permission-mode-names+`), with titles "Plan" (explore and propose) and "Preview" (work in a copy, approve the diff).
+2. Map `"preview"` events (H5a's, renamed) to no `plan` update; map `"plan"` events to `plan` updates from the document's steps (`proposed`: pending; `step`: the whole list; `rejected`: empty).
+3. Send the plan approval as `session/request_permission` on the `propose_plan` tool call, kind `switch_mode`, with `+acp-plan-approval-options+`, call `client-approve-plan-document` with the chosen mode, send `current_mode_update`, and run the execution in the same prompt.
+4. Treat `session/set_mode` out of plan with a proposed plan as approval under that mode (ACP-2's `client-set-permission-mode` plus `client-approve-plan-document`); the next prompt's text is extra instructions.
+5. Add the seven ACP tests listed in `.team-solve/task.md` to `cl-stack-code/acp/tests`.
+
+### Non-goals (H5c-0)
+
+- `ask_user` over the SDK, RPC and ACP (ACP elicitation), and deferred approval of a plan inside one `-p` call.
+- Path templates for `planTemplate` (only `default` and `spec`), per-phase gates as in Kiro, and plans spanning several sessions.
+- Hunk-level plan-versus-diff (it compares files), and automatic re-planning when the working copy changes during planning (the area is not refreshed; execution reads the real project).
+- The Lisp API rename (`plan` → `preview` for H5a's API, checkpoint reasons, merge labels), a follow-up issue; removing the `plan/approve` alias (0.16.0).
+- Image projections in either mode (`--lisp-image` stays refused in plan and preview modes until H5d).
 
 ---
 
@@ -1339,7 +1448,7 @@ The old suites change only where 0.13.0 changes them: version checks expect 0.13
 | **H3e** configuration | **H3e-1** locked (0.12.0): [H3e-1 — locked](#h3e-1--locked): `@path` imports, Agent Skills and the `skill` tool, path-scoped rules, `contextFiles` / `skillDirs`. **H3e-2a** locked (0.13.0): [H3e-2 — locked](#h3e-2--locked): MCP servers (config, trust, stdio units, HTTP, tools, `/mcp`, RPC). **H3e-2b**: MCP sampling, elicitation, instructions, deferred tool loading. Then prompt templates (`.cl-stack-code/prompts/*.md` as `/name`), `--system-prompt` and system-prompt files, project trust (project allow rules, `env` and external imports wait for the user's yes) | H3a–H3d; H3e-1 needs steer-protocol 0.4.0 |
 | **ACP-2** `cl-stack-code/acp` | A new system: cl-stack-code as an Agent Client Protocol agent over `acp-backend-stdio`, a thin adapter over the H3d SDK as `--rpc` is. Brief: [acp.md](acp.md). Order (2026-11-22): right after H4e | ACP-0 (`acp-protocol` 0.1.0), ACP-1 (`acp-backend-stdio`), H3d |
 
-After H3: the image layer (H4: [H4b — locked](#h4b--locked) is the product half of the debugger bridge; image-first slices H4c–H4h in [lisp-agent-tools.md](lisp-agent-tools.md#roadmap-h4bh4h)), plan → project → approve (H5: [H5a — locked](#h5a--locked), later slices in its roadmap, H5c-0 plan documents first), extensions and a single binary (H6).
+After H3: the image layer (H4: [H4b — locked](#h4b--locked) is the product half of the debugger bridge; image-first slices H4c–H4h in [lisp-agent-tools.md](lisp-agent-tools.md#roadmap-h4bh4h)), plan → project → approve (H5: [H5a — locked](#h5a--locked), now preview mode; [H5c-0 — locked](#h5c-0--locked), plan mode plans; later slices in the H5 roadmap), extensions and a single binary (H6).
 
 ## Model parameters (0.9.0)
 
