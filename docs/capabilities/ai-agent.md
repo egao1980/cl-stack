@@ -68,3 +68,15 @@ Products: [`cl-stack-llm-tui`](https://github.com/egao1980/cl-stack-llm-tui) (de
 - PydanticAI toolsets
 - Promises / Blackbird
 - Colocating OpenAI or any product backend
+
+## 0.15.0 — tool-source combinators (locked)
+
+Issue [ai-agent-protocol#37](https://github.com/egao1980/ai-agent-protocol/issues/37), contract [ai-agent-protocol#38](https://github.com/egao1980/ai-agent-protocol/pull/38) (branch `agent/h3e2-ai-agent-protocol-contract-c7cd`, team-solve), after mcp-protocol 0.4.0. Rules: the headers of `src/toolsets.lisp`, `src/policy/policy.lisp` and `src/mcp/source.lisp`. Prior art: pydantic-ai's toolsets and `MCPServer` (pydantic.dev/docs/ai/tools-toolsets/toolsets, …/mcp/client).
+
+| Topic | Rule |
+|-------|------|
+| **Combinators** | CLOS sources with methods on `list-agent-tools`, `tool-executable-p`, `tool-needs-approval-p`, `invoke-tool-async`, so they nest: `wrapper-tool-source` (delegates; subclass for logging, metrics, timeouts), `combined` (duplicate names → `tool-name-conflict`, restart `continue` keeps the first), `prefixed`, `renamed` (alist new → old), `filtered` (a predicate on context and tool, every step), `prepared` (rewrite definitions per step; adding or renaming → `agent-error`), `approval-required` (a predicate on context, tool and arguments). |
+| **Predicates** | `tool-predicate-p`: a function, or (new system `ai-agent-protocol/policy`) a policy-protocol `policy` / `layered-policy` evaluated with the tool name as action and `*tool-policy-context*` facts. As a filter, `:forbid` hides; as an approval, `:ask` or `:forbid` asks. Rules that decide tools are policies (the rules-and-logic rule). |
+| **Rich output** | A callback may receive `agent-tool-output` (text, parts, structured). The invocation keeps text as its result, plus `agent-invocation-parts` and `agent-invocation-structured`; when a step's invocations carry parts, the next generate gets one :user turn after the tool results with `[output of tool NAME (ID)]` and the parts. llm-protocol tool results stay text. |
+| **MCP source (ai-agent-protocol/mcp 0.2.0)** | One source per peer, unprefixed (hosts wrap it in `prefixed`). The tool list is fetched with `list-all-tools`, cached until the client's tools generation changes (`:cache-tools nil` turns that off), app-only tools hidden. Results: text items joined by LF, placeholders for images, audio and blobs, image parts, `structuredContent`. `isError` → `:tool-error-behavior` `:retry` (default: `mcp-tool-result-error`, retryable), `:failed` (not retryable), `:error` (`mcp-tool-run-error`). Transport and protocol errors are passed through as themselves. `:process-tool-call (context call-fn name args)`; `:timeout` per call. |
+| **Later (0.16.0)** | Deferred tool loading: a wrapper that hides a source's tools behind a `tool_search` tool until the model finds them. |

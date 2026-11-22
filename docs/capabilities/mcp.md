@@ -80,3 +80,15 @@ Wave-1 methods: `server/discover` · `initialize` / `initialized` · `ping` · `
 - Replacing cl-mcp tools
 - Legacy HTTP+SSE (`2024-11-05`) except a cheap compat shim
 - Blackboard / KSAR / workspaces (→ [blackboard.md](blackboard.md))
+
+## 0.4.0 — the client side for hosts (locked)
+
+Issue [mcp-protocol#14](https://github.com/egao1980/mcp-protocol/issues/14), contract [mcp-protocol#15](https://github.com/egao1980/mcp-protocol/pull/15) (branch `agent/h3e2-mcp-protocol-contract-0943`, team-solve). Rules: the header of `src/client.lisp`. Needed by ai-agent-protocol/mcp 0.2.0 and cl-stack-code's MCP servers ([cl-stack-code.md, H3e-2](cl-stack-code.md#h3e-2--locked)). Prior art: pydantic-ai's MCP client.
+
+| Topic | Rule |
+|-------|------|
+| **Tool fields** | `%parse-tool` keeps title, outputSchema, annotations, icons and `_meta`; the server emits icons and `_meta` too. `mcp-tool-annotation`, `mcp-tool-read-only-p` (readOnlyHint exactly true), `mcp-tool-visible-to-model-p` (`_meta.ui.visibility` without `"model"` → hidden). Hints are untrusted: hosts may lower a default with them, never raise trust. |
+| **Pagination** | `list-tools` → `(values tools next-cursor)`; `list-all-tools` follows the cursor; a repeated cursor or more than `+max-tool-pages+` pages → `mcp-pagination-error`, restart `continue`. |
+| **Server messages** | `mcp-client-handle-notification` (list_changed bumps `mcp-client-tools-generation` and calls `on-tools-changed`; message → the log handler; progress → the progress handler; then `notification-hook`; handler errors dropped). `mcp-client-handle-request` (ping, sampling, elicitation, roots; -32601 otherwise). `mcp-client-transport-handlers` → the two closures rpc-backend-stdio's transport takes; mcp-backend-stdio 0.3.0 wires them ([#7](https://github.com/egao1980/mcp-backend-stdio/issues/7)). Modern-era servers notify only during a request, so hosts can turn caching off per server. |
+| **Timeouts** | `call-tool` / `list-tools` `:timeout` with client ids `"mcp-N"`; on timeout `notifications/cancelled` (reason `timeout`) and `mcp-timeout` (code -32001). The elapsed time decides, since transports name their timeouts differently. |
+| **Tests** | `tests/client-test.lisp` over rpc-backend-stdio's in-memory pipe pair: a real client transport and reader thread, the server's serve loop in a thread. |
