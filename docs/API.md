@@ -94,6 +94,8 @@ HTTP client + server are done. Wire codecs + bindings are each `*-protocol` + `*
   **Brief:** [capabilities/a2a.md](capabilities/a2a.md) (#186) · cookbook [a2a.md](cookbooks/a2a.md)
 - `ag-ui-protocol` — typed UI events (not JSON-RPC); backends SSE + protobuf + TUI sink; `/client` reducer (`json-patch` for `STATE_DELTA`)  
   **Brief:** [capabilities/ag-ui.md](capabilities/ag-ui.md) (#187) · cookbook [ag-ui.md](cookbooks/ag-ui.md)
+- `acp-protocol` — Agent Client Protocol (editor ↔ agent, v1 / schema 1.34.1): model, agent + client GFs, permission restarts; backend stdio (ACP-1)  
+  **Brief:** [capabilities/acp.md](capabilities/acp.md)
 
 Capability issues must include a **Protocol surface** section before coding backends.  
 Impl order (wire): **sse → rpc transports → protobuf/grpc → mcp → a2a → ag-ui** — **done**.
