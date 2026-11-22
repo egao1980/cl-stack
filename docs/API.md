@@ -111,6 +111,8 @@ Not agent-wire. Not blackboard. CLOS loop over `llm-protocol`. **Do not** steal 
   **Brief:** [capabilities/ai-agent.md](capabilities/ai-agent.md) · cookbook [ai-agent.md](cookbooks/ai-agent.md)
 - `cl-stack-code` (OCI **0.5.0**) — the coding agent product (`stack-code`): headless `cl-stack-code -p` with text / JSON / stream-JSON output, user / project / local settings, `AGENTS.md` discovery, permission rules and modes over `ai-agent-protocol` and `agent-tools`; an interactive TUI (H3b), sessions (H3c), and plan mode with projected diffs, approve / reject and drift restarts (H5a contract, 0.4.0).
   **Brief:** [capabilities/cl-stack-code.md](capabilities/cl-stack-code.md)
+- `agent-eval` (Track E, **planned**; E0 contract 0.1.0) — agent evals on `eval-protocol` (`stack-agent-eval`): an agent adapter protocol mirroring Harbor's `BaseAgent` (`nop`, `oracle`, `command`, and cl-stack-code `-p` stream-json first), a Terminal-Bench 2.x task loader, task environments on `compute-protocol` (a local one, and podman in `agent-eval/podman`), grading through the task's `tests/test.sh` and reward file, `eval-run` records with pass, tokens, cost, time and transcripts, save / load, and run comparisons; later `agent-eval-terminal-bench` (Harbor) and `agent-eval-cl-corpus` (CL issues and PRs from MIT / BSD repos)  
+  **Brief:** [capabilities/evals.md](capabilities/evals.md)
 - `llm-protocol` (OCI **0.5.0**) — CLOS turns + typed parts; `generate` / `stream-generate` / `respond` / `stream-respond` / `embed`. OpenAI-compat + llama.cpp are backends.  
   **Brief:** [capabilities/llm.md](capabilities/llm.md) ([#195](https://github.com/egao1980/cl-stack/issues/195)) · cookbook [llm.md](cookbooks/llm.md)
 
