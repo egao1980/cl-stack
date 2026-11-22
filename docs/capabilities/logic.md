@@ -8,10 +8,10 @@
 | `logic-backend-datalog` | new `egao1980/logic-backend-datalog` | Default backend: pure Lisp, semi-naive incremental evaluation, stratified negation, optional time-step rules (Dedalus-style) | **L0** → 0.1.0 |
 | `policy-protocol` (nick `stack-policy`) | new `egao1980/policy-protocol` | permit / forbid / ask, layers, obligations, `evaluate-policy` + trace, `defpolicy`, settings JSON/TOML loading; analysis GFs (bodies land in L2) | **L1** → 0.1.0, **L2** → 0.2.0 |
 | `sat-protocol` (nick `stack-sat`) | new `egao1980/sat-protocol` | Propositional formulas and CNF, `solve`, `solve-all`, `minimize`, unsat cores. No backend inside | **L2** → 0.1.0 |
-| `sat-backend-dpll` | new `egao1980/sat-backend-dpll` | cl-repository's solver extracted, plus unit propagation | **L2** → 0.1.0 |
+| `sat-backend-dpll` | new `egao1980/sat-backend-dpll` | cl-repository's solver algorithm (naive backtracking, constant folding) ported, plus unit propagation. cl-repository itself is not changed (deferred) | **L2** → 0.1.0 |
 | `logic-protocol/sat` | in `egao1980/logic-protocol` (separate system) | **The bridge**: grounds a finite Datalog program into clauses; reachability, conflict and widening queries | **L2** |
 | `canvas-protocol` minor | [`egao1980/canvas-protocol`](https://github.com/egao1980/canvas-protocol) | Rule-driven forms: fact deltas → htmx out-of-band swaps | **L3** |
-| migrations | ai-agent-protocol, cl-stack-code | Permissions and plan-mode / sandbox rules on policy-protocol; Quint export + MBT replay | **L4** |
+| migrations | ai-agent-protocol, cl-stack-code, agent-tools, compute-protocol, lisp-mcp, cl-stack-pathlib, others | Every rule or logic computation in the stack moves onto these protocols ([L4 migrations](#l4--migrations-expected-not-optional)); Quint export + MBT replay for plan mode | **L4a–L4f** |
 | `logic-backend-asp` | new `egao1980/logic-backend-asp` | Answer-set programming: ground, then search on sat-protocol (choice rules, integrity constraints, optimisation) | **L5** (scheduled, after L2) |
 | `logic-backend-prolog` | new `egao1980/logic-backend-prolog` + a cl-stack-systems import | Full Prolog through an existing CL Prolog, imported unmodified | **L6** (when a consumer needs it) |
 | `sat-backend-cdcl` | later | Conflict-driven clause learning (MiniSat-style) | **later** |
@@ -45,7 +45,7 @@ Separately, cl-repository embeds a SAT solver (`src/client/solver.lisp`: formula
 ```
                  policy-protocol ──────────────┐ (analysis, L2)
                       │                        ▼
- canvas forms ──► logic-protocol ◄── logic-protocol/sat ──► sat-protocol ◄── cl-repository (resolver)
+ canvas forms ──► logic-protocol ◄── logic-protocol/sat ──► sat-protocol ◄┄┄ cl-repository (resolver, deferred)
    (L3)            ▲     ▲     ▲                              ▲      ▲
                    │     │     └ logic-backend-asp ───────────┘      │
                    │     └ logic-backend-prolog (import)             sat-backend-dpll, sat-backend-cdcl
@@ -82,7 +82,7 @@ Separately, cl-repository embeds a SAT solver (`src/client/solver.lisp`: formula
 |----------|--------|-----------|
 | **Shape** | Usual cl-stack shape: protocol repos with no backend inside, backend repos, `*logic-backend*` / `*sat-backend*` specials plus a `:backend` argument | One model, several engines |
 | **Independence** | sat-protocol and logic-protocol do not depend on each other; the bridge `logic-protocol/sat` depends on both; logic-backend-asp depends on sat-protocol | Package resolution needs no rules; evaluating a policy needs no solver |
-| **Dependencies** | sat-protocol, sat-backend-dpll, logic-protocol, logic-backend-datalog: **no dependencies** (pure Lisp). policy-protocol: logic-protocol + serdes for settings data (`json-protocol`, `toml-protocol`) in a separate `policy-protocol/settings` system | cl-repository's client loads sat-protocol during bootstrap; a dependency-free system loads the same way its other stack dependencies do |
+| **Dependencies** | sat-protocol, sat-backend-dpll, logic-protocol, logic-backend-datalog: **no dependencies** (pure Lisp). policy-protocol: logic-protocol + serdes for settings data (`json-protocol`, `toml-protocol`) in a separate `policy-protocol/settings` system | Small, loadable anywhere, including a package manager's bootstrap if cl-repository migrates later |
 | **Terms** | Atoms are lists `(relation arg…)`; constants are strings, integers, keywords and symbols; logic variables are symbols starting with `?`. No function symbols in the Datalog backend | Plain data compared with `EQUAL`; no function symbols keeps evaluation finite |
 | **Rules** | `(rule HEAD :- BODY…)`; body literals are atoms, `(not ATOM)` and built-ins (`(= ?x ?y)`, `(< …)`, `(glob PATTERN ?s)`, `(prefix …)`). **Range restriction** is checked when a rule is added (`logic-unsafe-rule`) | Safe rules give finite answers |
 | **Negation** | Stratified. A cycle through `not` signals **`logic-unstratifiable`** with restarts **`drop-rule`** (add the program without the offending rule) and **`use-backend`** (retry on a backend that accepts it, e.g. ASP) | Unstratified negation needs stable models, which is ASP's job |
@@ -96,7 +96,8 @@ Separately, cl-repository embeds a SAT solver (`src/client/solver.lisp`: formula
 | **SAT model** | Formula constructors with constant folding (as cl-repository's) + `to-cnf` (Tseitin). `solve` → a model (alist) or NIL; `solve-all` → a lazy sequence of models, optionally projected on given variables; `minimize` → an optimal model for a linear objective over literals (iterated solving with a tightened bound); `unsat-core` → a subset of assumptions / named clauses | What cl-repository and ASP need |
 | **SAT heuristics hook** | `solve :order` (variable order function) and `:phase` (preferred polarity) | Keeps cl-repository's latest-version-first preference without a special solver |
 | **SAT backends** | `sat-backend-dpll` first: cl-repository's search over CNF with **unit propagation** and pure-literal elimination. `sat-backend-cdcl` later, behind the same GFs | Correct and small first; CDCL when a measured consumer needs it |
-| **cl-repository** | Its client (egao1980 fork only) replaces `solver.lisp` with sat-protocol + sat-backend-dpll; `constraint-builder.lisp` builds sat-protocol formulas; existing resolver tests stay unchanged | One solver in the stack. Never pushed to CommonLispNext |
+| **cl-repository** | **Deferred** (2026-11-22): cl-repository is left alone for now, both `solver.lisp` and `source-policy.lisp`. sat-protocol keeps the `:order` / `:phase` decision-order hook so the migration stays possible later (then: egao1980 fork only, never CommonLispNext) | Not on the critical path; the hook keeps the door open |
+| **Migrations are expected** | Every other rule or logic computation in the stack moves onto logic-protocol / policy-protocol / sat-protocol once they exist (L4a–L4f). Acceptance per migration: **behaviour unchanged**, shown by the repo's existing tests passing **untouched**, plus **one new explanation / proof test** that shows the gain | One logic, one explanation format, analysis everywhere; no new hand-written rule tables |
 | **Prolog** | `logic-backend-prolog` wraps an **existing** CL Prolog imported **unmodified** through cl-stack-systems. Candidates evaluated in L6: PAIP Prolog, Allegro Prolog, Screamer. Criteria: portable (SBCL, CCL, ECL), licence, runs unmodified, cut and assert. **No own WAM** | We don't reinvent the wheel |
 | **ASP** | `logic-backend-asp`: ground (reusing the Datalog backend for the definite part), Clark completion, lazy loop formulas for non-tight programs (ASSAT-style), search on sat-protocol. Choice rules `{…}` with bounds, integrity constraints `(:- …)`, `#minimize` / `#maximize` via `minimize`, `count` and `sum` aggregates | clingo's surface on our own solver protocol |
 | **policy-protocol** | A thin DSL that compiles to the analysable subset. Effects `:permit` / `:ask` / `:forbid`. A request is facts (`action`, `resource`, context such as `(sandbox :confined)`, `(setting :sandbox.failIfUnavailable)`) | One evaluator, analysis for free |
@@ -197,13 +198,31 @@ Plan-mode and sandbox invariants, for example **"bash never runs unconfined in p
 |-------|----------------|----------|------------|
 | **L0** | logic-protocol **0.1.0**, logic-backend-datalog **0.1.0** | Terms, rules, safety and stratification checks, semi-naive + DRed incremental `update`, queries, proofs / why-not, budgets, time-step rules + `tick` | R4d-4b done (ordering only) |
 | **L1** | policy-protocol **0.1.0** | `defpolicy`, effects, layers, combining (`:forbid-overrides`, `:last-match`), obligations, feedback, `evaluate-policy`, `policy-explain`, `load-policy` (JSON / TOML / sexp) | L0 published |
-| **L2** | sat-protocol **0.1.0**, sat-backend-dpll **0.1.0**, `logic-protocol/sat`, policy-protocol **0.2.0**; cl-repository client on sat-protocol | Formulas, Tseitin CNF, DPLL with unit propagation, `solve-all`, `minimize`, unsat cores; bridge grounding and queries; `policy-conflicts`, `policy-unreachable-rules`, `policy-subsumes-p`, `policy-equivalent-p` | L1 published |
+| **L2** | sat-protocol **0.1.0**, sat-backend-dpll **0.1.0**, `logic-protocol/sat`, policy-protocol **0.2.0** | Formulas, Tseitin CNF, DPLL with unit propagation, `solve-all`, `minimize`, unsat cores; bridge grounding and queries; `policy-conflicts`, `policy-unreachable-rules`, `policy-subsumes-p`, `policy-equivalent-p` | L1 published |
 | **L3** | canvas-protocol minor | Rule-driven forms: field facts, delta → fragments, `hx-swap-oob` responses, `explain` tooltips, bridge checks on a form | L0, H4h-0, H4h-1b |
-| **L4** | ai-agent-protocol minor, cl-stack-code minor | ai-agent-protocol permissions on policy-protocol (`permission-policy-effect` method for a policy; existing tests **unchanged**); cl-stack-code plan / sandbox rules as one layered policy, removing R4d-4b's hand-rebuilt permission lists; Quint export + MBT replay of the plan-mode invariants | L2 |
+| **L4a–L4f** | one minor per migrated repo | The migration list [below](#l4--migrations-expected-not-optional), one sub-slice each | L1 (policy) or L2 (analysis); L4d's backend selection by ASP after L5 |
 | **L5** (scheduled) | logic-backend-asp **0.1.0** | Grounding, completion + loop formulas, choice rules, integrity constraints, `count` / `sum`, `#minimize` / `#maximize`; first consumer: choosing a compute backend that satisfies a requirement set | L2 |
 | **L6** | logic-backend-prolog **0.1.0** + cl-stack-systems import | Evaluation of PAIP Prolog / Allegro Prolog / Screamer, one imported unmodified, wrapped as a logic backend | a consumer that needs full Prolog |
 
-Order: **L0 after R4d-4b**; L1 → L2; **L5 scheduled right after L2**; L3 after L0 and H4h-1b; L4 after L2; L6 on demand.
+Order: **L0 after R4d-4b**; L1 → L2; **L5 scheduled right after L2**; L3 after L0 and H4h-1b; L4a → L4b first (after L2), the other L4 rows after them; L6 on demand.
+
+### L4 — migrations (expected, not optional)
+
+Checked against each repo's `origin/main` on 2026-11-22. Acceptance for every row: the repo's existing tests pass **untouched**, plus one new explanation / proof test.
+
+| Sub-slice | Repo · file | What it decides today | Target | New explanation test |
+|-----------|-------------|-----------------------|--------|----------------------|
+| **L4a** | ai-agent-protocol `src/permissions.lisp` | `permission-rules-effect` (last match per resource, deny > ask across resources), `permission-policy-effect` (a policy only tightens), `%resources-effect` / `%denied-resources`, saved "always" rules in `permission-rule-store` | policy-protocol (`:last-match` layer per rule list, policy as an outer layer); the store saves policy rules | `policy-explain` names the deciding rule and resource for a denied call |
+| **L4b** | cl-stack-code `src/permissions.lisp`, `src/settings.lisp` | `settings-permission-rules` (mode base rules + allow / ask / deny ordered so deny wins), `%mode-base-rules`, `settings-permission-policy` (plan-mode deny list), `%merge-rules` layering of user / project / local settings, `hidden-tool-names`; plus R4d-4b's plan-mode sandbox states | One conditional layered policy: modes and sandbox states are context facts (`(mode :plan)`, `(sandbox :confined)`), settings files are layers. Removes R4d-4b's hand-rebuilt permission lists. Quint export + MBT replay of the plan-mode invariants ([Policy correctness](#policy-correctness-in-l4)) | Switching mode after a sandbox refusal keeps plan mode's bash rules, and the trace says why; `widens-p` on a project layer |
+| **L4c** | agent-tools `src/shell-scan.lisp`, `src/shell-tools.lisp`, `src/file-tools.lisp` | `shell-command-resources` (which programs write which operands: `+writes-every-operand+`, `+writes-last-operand+`, `+find-actions+`, `+indirect-programs+`, the starred cmd programs); confined vs unconfined tool selection (`shell-tools-confinement`, `make-shell-tools :confinement`); the path jail (`resolve-tool-path :allow-root`) | The lexer stays Lisp; the program tables become facts (`(writes-operand "cp" :last)`) and rules deriving resources; tool selection and the jail become policy rules | A resource list with a proof of which table entry produced each resource |
+| **L4d** | compute-protocol `src/confinement.lisp` | `confinement-decide` (the `:read` / `:write` / `:connect` reference model); `confinement-requirements` + `check-confinement` (requirements ⊆ `confinement-features`, else `confinement-unsupported` with the missing list) | `confinement-decide` → policy-protocol; feature checks → logic-protocol rules; choosing a backend that satisfies requirements → logic-backend-asp once L5 lands | `explain` for a denied `:write`; an unsat core naming the missing features |
+| **L4e** | lisp-mcp `src/scan-forms.lisp`, `src/agent/source.lisp` | The form scanner's classification (`lisp:defines`, `lisp:mutates`, `lisp:read-eval`, I/O, pure) feeding permission resources (`%code-resources`, `%resources`); observe mode (`observe-safe-resources-p`, `%observe-gate`, `observe-mode-refused`) | Scanner output as facts; observe mode and the permission mapping as a policy over them | An observe-mode refusal explained down to the scanned form |
+| **L4f** | cl-stack-pathlib `src/ignore.lisp` | gitignore-style matcher: rules in precedence order, last match wins, `!` negation, directory-only rules, a forced `.git` rule | logic-protocol rules (`:last-match` semantics, negation as re-include) behind the same `ignore-matcher` API; the hot path may stay compiled if the rule form measures slower | "Why is this path ignored?" names the rule and file |
+| **L4f** | mcp-backend-streamable-http `src/backend.lisp` | Origin check: a missing Origin is accepted, a present one must match the allowlist or Host | policy-protocol (a small permit / forbid policy over request facts) | A refused Origin explained |
+| **L4f** | cl-stack-oauth2 `src/oidc.lisp` | `%alg-allowed-p`: ID-token `alg` against an allowlist | policy-protocol (same policy shape as the Origin check) | A refused `alg` explained |
+| deferred | cl-repository `src/client/source-policy.lisp`, `src/client/solver.lisp` | Source policy (`*source-policy*`, ordered `*source-rules*`, `*default-source*`) and package resolution | policy-protocol and sat-protocol, **later** | — |
+
+The grep (hand-written rule tables, precedence / layering, allow / deny logic) also hit mcp-protocol `src/features.lisp`, schema-protocol `src/defschema.lisp`, sql-migrate `src/target.lisp` and diff-backend-lisp-source `src/align.lisp`; those are CLOS precedence lists and algorithm priorities, not rule logic, and stay as they are.
 
 ### Tests per slice (Rove)
 
@@ -232,7 +251,7 @@ Order: **L0 after R4d-4b**; L1 → L2; **L5 scheduled right after L2**; L3 after
 - `solve-test`: random 3-SAT near the threshold against brute force; `solve-all` enumerates exactly the models (projected); `:order` / `:phase` respected.
 - `minimize-test`: small weighted problems against brute force.
 - `core-test`: unsat cores are unsatisfiable and drawn from the given assumptions.
-- `cl-repository-parity-test`: cl-repository's resolver fixtures give the same selections (latest version first) on sat-backend-dpll.
+- `order-hook-test`: a latest-version-first `:order` / `:phase` (the cl-repository heuristic) selects the highest versions on package-style fixtures.
 - `bridge-test`: grounding of small programs against the Datalog backend's answers on every context; witness generation for glob intersections.
 - `analysis-test`: seeded conflicts, unreachable rules, subsumption and equivalence pairs, each with the expected witness; `widens-p` catches a project layer that permits what the user layer forbids.
 
@@ -241,10 +260,10 @@ Order: **L0 after R4d-4b**; L1 → L2; **L5 scheduled right after L2**; L3 after
 - `explain` text for a disabled field; a field that can never be visible is reported by the bridge check.
 - A three-step wizard driven by time-step rules; frozen output has no `hx-*` attributes.
 
-**L4 — migrations**
-- ai-agent-protocol's existing permission and policy tests pass **unchanged** on the policy-protocol path.
-- cl-stack-code: switching permission mode after a sandbox refusal keeps plan mode's bash rules (the R4d-4b regression); plan / sandbox settings matrix tests.
-- Quint: the plan-mode invariant holds in `quint run` / `quint verify`; ITF traces replay against cl-stack-code with no divergence.
+**L4a–L4f — migrations**
+- Each migrated repo's existing tests pass **untouched**; plus the explanation test in its row of the table above.
+- L4b: plan / sandbox settings matrix; the Quint plan-mode invariant holds in `quint run` / `quint verify`; ITF traces replay against cl-stack-code with no divergence.
+- L4d: the confinement suite gives the same results with the policy-based `confinement-decide` as the oracle.
 
 **L5 — logic-backend-asp**
 - Graph colouring, n-queens, a small scheduling problem: stable models equal brute-force stable models on small instances.
@@ -269,8 +288,8 @@ Order: **L0 after R4d-4b**; L1 → L2; **L5 scheduled right after L2**; L3 after
 
 - [ ] **L0** logic-protocol + logic-backend-datalog 0.1.0 (after R4d-4b)
 - [ ] **L1** policy-protocol 0.1.0 (golden ai-agent-protocol semantics)
-- [ ] **L2** sat-protocol + sat-backend-dpll 0.1.0, bridge, policy analysis; cl-repository on sat-protocol
+- [ ] **L2** sat-protocol + sat-backend-dpll 0.1.0, bridge, policy analysis (cl-repository deferred)
 - [ ] **L3** canvas forms on fact deltas
-- [ ] **L4** migrations (ai-agent-protocol, cl-stack-code plan / sandbox) + Quint / MBT
+- [ ] **L4a** ai-agent-protocol · **L4b** cl-stack-code (+ Quint / MBT) · **L4c** agent-tools · **L4d** compute-protocol · **L4e** lisp-mcp · **L4f** cl-stack-pathlib, mcp-backend-streamable-http, cl-stack-oauth2
 - [ ] **L5** logic-backend-asp 0.1.0 (scheduled after L2)
 - [ ] **L6** logic-backend-prolog (import, on demand)
