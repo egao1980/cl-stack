@@ -111,7 +111,7 @@ Diffs at width W:
 ## Not supported / out of scope
 
 - **Markdown:** indented code blocks, setext headings, lazy continuation lines, HTML blocks and inline HTML, reference links and definitions, images (`!` stays text), entities, footnotes, task-list markers, math, and bare-URL autolinks (terminals detect URLs themselves). All of these render as text.
-- A built-in syntax highlighter. The hook stays until the stack has a tokenizer: `lisp-source-protocol` for Lisp first.
+- A built-in syntax highlighter. The hook stays until the stack has a tokenizer. [highlight-protocol](highlight.md)'s `tokenize-lines` now returns the hook's shape, and wiring it in is [tui-markdown#4](https://github.com/egao1980/tui-markdown/issues/4).
 - Rendering fenced ```` ```diff ```` blocks with the diff renderer. A highlight hook can call `render-diff-lines` already.
 - Word-level diffs beyond token LCS (moved-line detection, character-level diffs inside a token), and intra-line highlighting across unpaired rows.
 - Background-filled diff lines in the default theme (a theme can set `:bg`), and colour-depth tiers.
