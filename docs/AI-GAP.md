@@ -67,7 +67,7 @@ Blackboard KSAR is a *different* orchestration model (not a missing LangGraph).
 | Browser | [`browser-protocol`](https://github.com/egao1980/browser-protocol) | **0.1.0** | CDP + computer-use loop (image input) | OS desktop use = wave 2 |
 | LDAP | [`ldap-protocol`](https://github.com/egao1980/ldap-protocol) | **0.1.0** | bind / search / modify; OIDC on `cl-stack-oauth2`; OpenLDAP canary (C2b) | SCIM = C5 HOLD |
 | MQ | [`mq-protocol`](https://github.com/egao1980/mq-protocol) **0.1.0** + amqp / kafka | publish / subscribe / ack; AMQP 0-9-1 + librdkafka; RabbitMQ / Redpanda canaries (C2b) | — |
-| Object store | [`object-store-protocol`](https://github.com/egao1980/object-store-protocol) **0.1.0** + s3 | put/get/list/presign; SigV4; MinIO canary (C2b) | — |
+| Object store | [`object-store-protocol`](https://github.com/egao1980/object-store-protocol) **0.1.0** + s3 **0.2.0** | put/get/list/presign; SigV4; MinIO canary (C2b); s3 sends through http-protocol by default; botocore credential chain (env, `~/.aws/credentials` / config, profiles, session tokens) | container / IMDS / SSO credentials ([object-store-backend-s3#6](https://github.com/egao1980/object-store-backend-s3/issues/6)) |
 | IMAP | `mail-protocol` **0.2.0** | SELECT / FETCH / SEARCH / IDLE + MIME | SMTP already shipped |
 | Doc extract | [`doc-extract-protocol`](https://github.com/egao1980/doc-extract-protocol) **0.2.0** + pdf **0.1.4** + docling/unstructured/libreoffice/render/render-pdf **0.1.0** | block tree + ids + markup; HTML / OOXML; pdfium CFFI + native overlays (C3b) | — |
 | Cache | [`cache-protocol`](https://github.com/egao1980/cache-protocol) **0.1.0** + redis | get/put/ttl/cas; in-memory + RESP3; Valkey canary (C2b) | — |

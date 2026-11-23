@@ -84,7 +84,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.4.0** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
-| `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
+| `cl-stack-http` | **0.2.0** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon; re-exports the `http-protocol` response readers and conditions; `:auto` = async (libuv) → dexador off Windows, no event-loop wiring needed |
 | `cl-stack-pathlib` | **0.8.0** | CLOS path + FS (`stack-pathlib`; `zip://`; snapshot-store GC (`snapshot-store-ids` / `-delete`); ranged reads, SHA-256, atomic + `:expected-hash` / `:mode` writes, `fs-chmod` / `(setf fs-mode)`, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
@@ -169,7 +169,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
 | `http-backend-async` | **0.2.22** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2); a burst waits FIFO for a free stream (`*h2-stream-wait-timeout*` 2 s, `*h2-max-stream-waiters*` 32) instead of dialing |
 | `http2` | **2.1.8** | fork; 64 KiB HPACK string / header-block limits, reset per block; header stream errors keep HPACK in sync; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers; ignore unknown SETTINGS; Homebrew `libssl` by absolute path on macOS |
-| `http-backend-dexador` | **0.1.5** | sync HTTP/1.1 (soft-loads CE codecs) |
+| `http-backend-dexador` | **0.2.0** | sync HTTP/1.1 (CE codecs probed once); protocol proxy configs resolved (`no_proxy`, SOCKS5); TOTAL deadline + HTTPS read timeout enforced |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.1** | ABCL `java.net.http` |
 | `ws-protocol` | **0.4.2** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
@@ -236,7 +236,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `grpc-backend-native` | **0.1.0** | C-core (linux/darwin) |
 | `protobuf-protocol` | **0.2.0** | serdes `:protobuf` + proto3 JSON / WKT |
 | `protobuf-backend-cl-protobufs` | **0.2.0** | default protobuf backend |
-| `event-protocol` | **0.2.2** | event-loop generics (`wake-call` / `submit` / `close-event-loop`) |
+| `event-protocol` | **0.3.0** | event-loop generics (`wake-call` / `submit` / `close-event-loop`); `event-protocol/promises`: `await` a promise, `gather`, `run-promise` (asyncio.run shape) |
 | `event-backend-libuv` | **0.2.2** | default (Windows-primary); libuv 1.53.0; per-loop submit pool |
 | `event-backend-libev` | **0.2.2** | Unix second backend; per-loop submit pool |
 | `event-backend-nio` | **0.1.2** | ABCL / JVM NIO; binds `*event-loop*` in `run` |
@@ -251,13 +251,14 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 ## 3. Minimal HTTP (facade)
 
 ```lisp
-(cl-repo:load-system "cl-stack-http" :version "0.1.11")
+(cl-repo:load-system "cl-stack-http" :version "0.2.0")
 ;; optional CE codecs: http-encoding-chipz / -brotli / -zstd / -snappy
 
 (defpackage #:demo (:use #:cl) (:local-nicknames (#:http #:cl-stack-http)))
 (in-package #:demo)
 
-;; :auto picks a backend (async/libuv preferred; winhttp on Windows)
+;; :auto picks a backend: async/libuv, then dexador (winhttp first on Windows).
+;; :async wires the libuv event backend itself.
 (http:ensure-http-backend :auto)
 
 (let ((r (http:get "https://httpbin.org/get" :params '(("q" . "1")))))
@@ -356,8 +357,8 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
 ## 4. Event loop (promises)
 
 ```lisp
-(cl-repo:load-system "event-protocol" :version "0.2.0")
-(cl-repo:load-system "event-backend-libuv" :version "0.1.4")
+(cl-repo:load-system "event-protocol" :version "0.3.0")
+(cl-repo:load-system "event-backend-libuv" :version "0.2.3")
 
 (let* ((eb (event-backend-libuv:make-libuv-backend))
        (el (event-protocol:make-event-loop eb)))
@@ -365,6 +366,20 @@ Live gates: `HTTP_ASYNC_WS_H2_LIVE=1`, `WINHTTP_WS_LIVE=1` (or `feature-or-env-e
     (event-protocol:with-event-loop-var (el)
       ;; defer / sleep* / register-io / wake-call / submit — see capability brief
       )))
+```
+
+From synchronous code (`asyncio.run(asyncio.gather(…))`): `run-promise` makes a loop, binds it, awaits the promise and closes the loop.
+
+```lisp
+(cl-repo:load-system "event-protocol" :version "0.3.0")   ; + event-protocol/promises
+(stack-event-promises:run-promise
+ (lambda ()
+   (stack-event-promises:gather
+    (stack-http:get-async "https://httpbin.org/get")
+    (stack-http:get-async "https://httpbin.org/uuid")))
+ :backend (event-backend-libuv:make-libuv-backend)
+ :timeout 30)
+;; => (#<HTTP-RESPONSE> #<HTTP-RESPONSE>)
 ```
 
 Default backend = **libuv** (Windows-primary). Unix second = **libev**. Brief: [capabilities/event-protocol.md](capabilities/event-protocol.md).

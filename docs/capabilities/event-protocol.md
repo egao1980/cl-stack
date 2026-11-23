@@ -73,6 +73,17 @@ Facade returns **promises** (resolve / reject). Rejected promises signal or carr
 
 Blackbird (or a protocol-local promise type with the same shape) is the wave-1 pin for composition macros (`alet*`, `catcher`, `finally`). Protocol code must not hard-depend on Blackbird internals — only the facade.
 
+**Shipped (event-protocol 0.3.0, `event-protocol/promises`, nick `stack-event-promises`):**
+
+| Python asyncio | Lisp |
+|----------------|------|
+| `asyncio.run(main())` | `(run-promise thunk &key backend timeout)`: fresh loop on BACKEND (default `*event-backend*`), bound around THUNK, awaited, closed on every exit |
+| `await aw` / `run_until_complete` | `(await promise &key timeout)`: a Blackbird promise or a `(lambda (resolve reject))` starter. It returns the value(s) or re-signals the rejection, and stops the loop when PROMISE settles (pending idle work does not hold it) |
+| `asyncio.gather(*aws)` | `(gather &rest promises)`: promise of the values in argument order; the first rejection wins |
+| `wait_for` timeout | `await-timeout` (an `event-error`, `await-timeout-seconds`) |
+
+Also `defer-promise`, `sleep-promise`, `submit-promise`, `cancel-promise`.
+
 ### Rejected alternatives
 
 | Option | Why not for wave-1 app DX |
