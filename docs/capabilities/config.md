@@ -1,7 +1,7 @@
 # Config facade (env + TOML)
 
 **Issues:** [#92](https://github.com/egao1980/cl-stack/issues/92) · [#98](https://github.com/egao1980/cl-stack/issues/98) · [#99](https://github.com/egao1980/cl-stack/issues/99)  
-**Status:** **done** — [`egao1980/cl-stack-config`](https://github.com/egao1980/cl-stack-config) `0.2.0` + tomlet on GHCR; cookbook [config.md](../cookbooks/config.md)
+**Status:** **done** — [`egao1980/cl-stack-config`](https://github.com/egao1980/cl-stack-config) `0.2.0` + tomlet on GHCR; cookbook [config.md](../cookbooks/config.md). **0.3.0** (publish pending, [cl-stack-config#8](https://github.com/egao1980/cl-stack-config/issues/8)): `.env` files and typed settings, see [.env and typed settings](#env-and-typed-settings-030)
 
 One app DX for configuration: structured file + environment overlay + explicit overrides. Avoid N× envy / ad-hoc `uiop:getenv` stacks.
 
@@ -21,7 +21,7 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md) (Co
 | **Env library** | **Facade-owned** (thin `uiop:getenv`) — not envy | envy = named config *profiles* in Lisp source; we want **file + env overlay**, not `defconfig` tables |
 | **Value tree** | hash-table (`equal`) + vectors; TOML tables → nested hash-tables | Aligns with `json-protocol` / tomlet JSON-compatible output |
 | **Key path** | Dot-separated strings (`"database.host"`) or list `("database" "host")` | Cookbook teaches dots; list form for programmatic |
-| **Precedence** | **file < env < explicit** | Explicit = `with-config` / `config-set` / load keywords |
+| **Precedence** | **file < .env < env < explicit** | Explicit = `with-config` / `config-set` / load keywords; the `.env` layer is 0.3.0 |
 | **Env naming** | Prefix + `__` nesting: `APP_DATABASE__HOST` → `database.host` | Double-underscore = table separator (12-factor-ish); prefix configurable (default from `load`) |
 | **Types** | Typed getters coerce strings from env; file values keep TOML types | `get-integer`, `get-boolean`, `get-string`, `get-list` |
 | **Missing keys** | Signal `config-missing-error` **or** return default when `:default` supplied | No silent `nil` for required keys |
@@ -113,8 +113,30 @@ config-error
 ├── config-parse-error       ; TOML syntax
 ├── config-missing-error     ; required key absent
 ├── config-type-error        ; typed getter coercion failed
-└── config-file-error        ; missing / unreadable file
+├── config-file-error        ; missing / unreadable file (.env: CONTINUE skips it)
+└── config-validation-error  ; load-into (also a stack-schema:schema-validation-error)
+dotenv-syntax-warning        ; a .env statement that does not parse; skipped
 ```
+
+### .env and typed settings (0.3.0)
+
+python-dotenv and pydantic-settings, [cl-stack-config#8](https://github.com/egao1980/cl-stack-config/issues/8).
+
+```lisp
+(config:parse-dotenv text)                ; ((name . value) ...), python-dotenv syntax
+(config:read-dotenv #p".env")
+(config:load-dotenv)                      ; load_dotenv(): set unset variables; :override t
+(config:load #p"config.toml" :prefix "APP" :dotenv #p".env")   ; layer: file < .env < env < explicit
+(config:load-into 'app-settings cfg)       ; schema-protocol defschema; coerced; every field error at once
+```
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **.env syntax** | python-dotenv 1.1: comments, `export`, quotes and escapes, multi-line quoted values, bare names, `${NAME}` / `${NAME:-default}`, log-and-skip on bad lines (`dotenv-syntax-warning`) | The format people already have; parity table in the tests |
+| **Deliberate differences** | Single-quoted values are literal; `NAME= # note` is empty | sh / docker compose semantics; python-dotenv expands inside single quotes and keeps `# note` |
+| **Layer, not mutation** | `load :dotenv` never touches the process env; `load-dotenv` does, only for unset names unless `:override` | 12-factor: real env wins |
+| **Typed settings** | `load-into` = `schema-protocol:parse` with `:coerce t` over the config tree; `config-validation-error` is both a `config-type-error` and a `schema-validation-error` | No second validation layer; schema-protocol owns coercion and issues |
+| **Key style** | Env names become snake_case keys, so settings schemas use `(:key-style :snake)` | Matches pydantic field names |
 
 ---
 
@@ -124,7 +146,7 @@ config-error
 - Hot reload / file watchers
 - JSON/EDN as second curated format (use `json-protocol` directly)
 - Secret stores / KMS
-- Schema validation (optional follow-on)
+- Schema validation beyond `load-into` (schema-protocol does it)
 
 ---
 
@@ -132,6 +154,7 @@ config-error
 
 - [x] #98 Brief + TOML vs YAML bakeoff (this doc)
 - [x] #99 Implement `cl-stack-config` + tomlet import + GHCR + cookbook + Rove (env overlay)
+- [x] cl-stack-config#8: `.env` files (`parse-dotenv` / `read-dotenv` / `load-dotenv`, `load :dotenv`) and `load-into` typed settings — 0.3.0, publish pending
 
 ## Cookbook (with #99)
 

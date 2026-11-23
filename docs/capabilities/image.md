@@ -1,7 +1,7 @@
 # image-protocol (P2) — image decoding and encoding
 
 **Issues:** [#275](https://github.com/egao1980/cl-stack/issues/275) · terminal [#264](https://github.com/egao1980/cl-stack/issues/264)
-**Status:** brief **locked**. Shipped: [`image-protocol`](https://github.com/egao1980/image-protocol) 0.1.0 (`stack-image`: `decode-image` / `probe-image` / `encode-image` / `convert-image`; header limits checked before any backend) + [`image-backend-stb`](https://github.com/egao1980/image-backend-stb) 0.2.1 (stb_image with Fedora's patch set, through `asdf-native`). No cookbook yet; see the repo READMEs · research: [image-libraries.md](../research/image-libraries.md)
+**Status:** brief **locked**. Shipped: [`image-protocol`](https://github.com/egao1980/image-protocol) 0.1.0 (`stack-image`: `decode-image` / `probe-image` / `encode-image` / `convert-image`; header limits checked before any backend) + [`image-backend-stb`](https://github.com/egao1980/image-backend-stb) 0.2.1 (stb_image with Fedora's patch set, through `asdf-native`). Editing operations (image-ops wave): `image-protocol` **0.2.0**, publish pending ([image-protocol#2](https://github.com/egao1980/image-protocol/issues/2)); see [Editing operations](#editing-operations-020). No cookbook yet; see the repo READMEs · research: [image-libraries.md](../research/image-libraries.md)
 
 Decode PNG, JPEG, GIF, BMP and friends into pixels, and encode pixels back, behind one CLOS API over several backends at once. Each backend declares the formats it handles and with what priority. Inputs are untrusted by default: limits are checked before pixels are allocated, unusual formats must be enabled explicitly, and both backends are fuzzed.
 
@@ -52,7 +52,7 @@ Details and sources are in the [research notes](../research/image-libraries.md).
 
 | Repo / system | Role |
 |---------------|------|
-| [`image-protocol`](https://github.com/egao1980/image-protocol) (`stack-image`) | Types, generics, limits, sniffing, conversion, EXIF orientation, dispatch, conditions |
+| [`image-protocol`](https://github.com/egao1980/image-protocol) (`stack-image`) | Types, generics, limits, sniffing, conversion, EXIF orientation, dispatch, conditions; editing operations in pure Lisp (0.2.0) |
 | [`image-backend-stb`](https://github.com/egao1980/image-backend-stb) | Native. **Vendored, pinned stb with the Fedora / Debian GHSL patches.** A small C ABI built with `STBI_NO_STDIO`, `STBI_ONLY_PNG/JPEG/GIF/BMP` (the rest opt-in at runtime through `*enabled-formats*`) and a lower `STBI_MAX_DIMENSIONS`. Never calls stb's process-wide setters at decode time; the write globals are set once at init. Probes with `stbi_info_from_memory`. GIF is decoded frame by frame through `stbi__gif_load_next` with a frame and byte budget (to be prototyped). The result is copied into Lisp and freed in `unwind-protect`. APNG gives the default image plus `image-unsupported-feature` for frames. CI runs the OSS-Fuzz `stbi_read_fuzzer` under ASan / UBSan. Zig overlays: linux amd64/arm64, darwin arm64, windows amd64. |
 | [`image-backend-lisp`](https://github.com/egao1980/image-backend-lisp) | Pure CL: **our own PNG + APNG and BMP codecs** over `compression-protocol` (needs a bounded inflate), imported `zpng` (PNG encode), `cl-jpeg` (JPEG, pinned after its PR #44; BGR→RGB; quality → q-factor), and `skippy` (GIF plus our own compositor). GIF *encode* waits for a quantiser. On SBCL the imports load under `(sb-ext:restrict-compiler-policy 'safety 1)`, because cl-jpeg compiles its codec at `safety 0`. |
 | `terminal-backend-ghostty/images` | Registers `stack-image` as libghostty-vt's PNG decoder. The pixel buffer is allocated with `ghostty_alloc` and the allocator libghostty-vt passes in; libghostty-vt then owns and frees it (`sys.h`). |
@@ -118,9 +118,34 @@ In fuzzing, any condition other than an `image-error` escaping a backend is a bu
 
 ---
 
+## Editing operations (0.2.0)
+
+[image-protocol#2](https://github.com/egao1980/image-protocol/issues/2), with the API of [#3](https://github.com/egao1980/image-protocol/issues/3). These are Pillow's most used calls, done in the protocol in pure Lisp, so they work with any backend. They are eager and functional: the input is never changed, and comes back as is when there is nothing to do. They take 8-bit images of every pixel format and keep the format and metadata.
+
+```lisp
+(resize-image image w h &key (filter :lanczos3) reducing-gap linear)  ; :nearest :box :bilinear :bicubic :lanczos3
+(thumbnail image max-w max-h &key filter (reducing-gap 2))            ; Pillow's sizes; never enlarges
+(fit-image image &key max-width max-height enlarge filter)            ; one or both bounds
+(crop-image image x y w h)
+(rotate-image image degrees)                                          ; multiples of 90, counter-clockwise
+(flip-image image :horizontal)                                        ; or :vertical
+(composite-image dst src &key x y (operator :over))                   ; Pillow's alpha_composite
+```
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Resampling** | Pillow's separable convolution. The support is widened by the reduction factor; kernels are clipped at the edges and normalised; each pass is clamped to 0–255 | Samples within 1 of Pillow 11.3 (parity table in the tests); predictable for people porting Pillow code |
+| **Alpha** | Premultiplied during resize. Composite is exact integer Porter-Duff over | No colour bleed from transparent pixels; composite equals Pillow's |
+| **Linear light** | Opt-in with `:linear t` | Pillow resamples in sRGB; same default |
+| **Pre-reduce** | `:reducing-gap`: an integer box reduce first. Default 2 in `thumbnail` / `fit-image`, off in `resize-image` (as Pillow) | Faster large reductions |
+| **Where** | Protocol, pure Lisp, typed single-float loops (12 MP Lanczos3 reduction in about 0.25 s on SBCL) | No native dependency. A backend fast path (`stb_image_resize2`, #3) can come later behind the same functions |
+| **Errors** | `image-invalid-argument` (operation, argument, value, reason); depth 16 is `image-unsupported-feature`; the output size is checked against `*image-limits*` | Typed, like the rest of `image-error` |
+
+---
+
 ## Non-goals (wave 1)
 
-- Editing (`image-ops` later). Its defaults are recorded now so the wave-1 struct doesn't block them: Lanczos3 with an integer box pre-reduce; premultiplied alpha during resize and composite; optional linear light; eager, functional operations; no global state; Porter-Duff `over`.
+- Editing (the image-ops wave): shipped in 0.2.0 with the defaults recorded here: Lanczos3, an integer box pre-reduce (`:reducing-gap`, on by default in `thumbnail` and `fit-image`), premultiplied alpha during resize and composite, optional linear light, eager functional operations, no global state, Porter-Duff `over`. See [Editing operations](#editing-operations-020). Still out: arbitrary-angle rotation, other Porter-Duff operators, drawing and text, and editing at depth 16 or float.
 - Colour management; writing metadata
 - WebP / AVIF / HEIC / TIFF / QOI decoding. They are sniffed, then reported as unsupported. Later native backends: libwebp, libavif, turbojpeg.
 - In-process timeouts

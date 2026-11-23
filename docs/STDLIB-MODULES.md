@@ -35,7 +35,8 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | model checking (Quint/TLA+) | `spec-protocol` **0.1.1** (`stack-spec`) + `spec-backend-quint` **0.1.1** |
 | `sqlite3` / SQLAlchemy | `sql-protocol` + `sql-query` + `sql-orm` + `sql-migrate` |
 | `gzip` / zipfile / `tarfile` / `bz2` | `compression-protocol` (xz overlay) |
-| pydantic-settings / pydantic models | `cl-stack-config` / `schema-protocol` |
+| pydantic-settings / pydantic models | `cl-stack-config` (`load-into`, 0.3.0) / `schema-protocol` |
+| python-dotenv | `cl-stack-config` `load-dotenv` / `parse-dotenv` / `load :dotenv` (0.3.0) |
 | websockets / SSE / grpcio | `ws-` / `sse-` / `grpc-protocol` |
 | FastMCP / a2a-sdk / AG-UI | MCP / A2A / AG-UI |
 | OpenAI / Anthropic / RAG | `llm-protocol*` + `rag-protocol` |
@@ -85,7 +86,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 5 | dateutil `rrule` | **shipped** `datetime-protocol` **0.1.3** (`schedule` / `event-schedule`; RFC 5545 interchange) |
 | 6 | watchdog | `watch-protocol` (Windows required) |
 | 7 | IMAP / async SMTP | mail-protocol backends |
-| 8 | pillow / openpyxl | leave unless a demo forces it |
+| 8 | pillow / openpyxl | pillow: `image-protocol` 0.2.0 editing operations (resize, thumbnail, crop, rotate, flip, composite). openpyxl reading: `doc-extract-protocol` 0.4.0 (XLSX sheets as table blocks). Writing XLSX: leave unless a demo forces it |
 | 9 | boto3 | SigV4 + S3 later — do not clone the AWS SDK |
 | 10 | rich / tqdm | CLI helpers |
 | 11 | hypothesis | after Rove fixtures |
