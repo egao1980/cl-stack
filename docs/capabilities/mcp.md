@@ -92,3 +92,16 @@ Issue [mcp-protocol#14](https://github.com/egao1980/mcp-protocol/issues/14), con
 | **Server messages** | `mcp-client-handle-notification` (list_changed bumps `mcp-client-tools-generation` and calls `on-tools-changed`; message → the log handler; progress → the progress handler; then `notification-hook`; handler errors dropped). `mcp-client-handle-request` (ping, sampling, elicitation, roots; -32601 otherwise). `mcp-client-transport-handlers` → the two closures rpc-backend-stdio's transport takes; mcp-backend-stdio 0.3.0 wires them ([#7](https://github.com/egao1980/mcp-backend-stdio/issues/7)). Modern-era servers notify only during a request, so hosts can turn caching off per server. |
 | **Timeouts** | `call-tool` / `list-tools` `:timeout` with client ids `"mcp-N"`; on timeout `notifications/cancelled` (reason `timeout`) and `mcp-timeout` (code -32001). The elapsed time decides, since transports name their timeouts differently. |
 | **Tests** | `tests/client-test.lisp` over rpc-backend-stdio's in-memory pipe pair: a real client transport and reader thread, the server's serve loop in a thread. |
+
+## 0.5.0 — host answers (locked)
+
+Issue [mcp-protocol#17](https://github.com/egao1980/mcp-protocol/issues/17), contract [mcp-protocol#18](https://github.com/egao1980/mcp-protocol/pull/18) (branch `agent/h3e2b-mcp-protocol-contract-344b`, team-solve). Rules: the header of `src/host.lisp`. Needed by cl-stack-code's sampling and elicitation ([cl-stack-code.md, H3e-2b](cl-stack-code.md#h3e-2b--locked)).
+
+| Topic | Rule |
+|-------|------|
+| **Capabilities** | `mcp-client-default-capabilities client` → `sampling: {}` (a sampling handler), `elicitation: {form: {}}` (an elicitation handler), `roots: {}` (roots), in that order. Sent whenever `mcp-client-client-capabilities` is unset: 2025-11-25 initialize's `capabilities`, every 2026-07-28 request's `_meta` (0.4 sent `{}`). Explicit `:capabilities` replace them whole. Backends that probe need no change. |
+| **MRTR, server side** | While `tools/call` is handled, `*mcp-input-responses*` (the request's `inputResponses`) and `*mcp-request-state*` are bound; `request-sampling` / `request-elicitation` / `request-roots` return a response that is there instead of signalling (a handler re-runs from the top on every round); `mcp-input-response id` → `(values value present-p)`. |
+| **MRTR, client side** | `call-tool` loops while `input_required`, each round carrying every answer given so far in the call (merged by id) and the latest `requestState`, up to `+max-input-rounds+` (10), then `mcp-error` "… still needs input after N rounds" (0.4 retried once and returned the second `input_required` as the result). |
+| **Unchanged** | A handler's `mcp-error` ends `call-tool` with it; a client without a handler answers -32601. |
+| **Not in scope** | Server-initiated JSON-RPC requests for 2025-11-25 servers built on this library (a serve loop that routes responses), url-mode elicitation, sampling with tools. |
+| **Tests** | `tests/host-test.lisp` over rpc-backend-stdio's in-memory pair, the server loop recording every request's params: 10 cases (8 fail on the stubs; explicit capabilities and the no-handler error hold already). |
