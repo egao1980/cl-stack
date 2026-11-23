@@ -147,6 +147,21 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
 
+## Music notation, audio and recognition (P2 — briefs draft / outline)
+
+Planned. General-purpose notation infrastructure for lead sheets and choral or small-ensemble scores: theory values, an immutable score model with stable ids and provenance, MusicXML / MIDI, engraving, batch audio, and recognisers that mark their guesses.
+
+- `music-theory` (skeleton) — spelled pitch, interval, line of fifths, key, meter and metric weight, rational time, tempo / phrase-window arithmetic, chord-symbol grammar with dialects and essential-tone priorities, Roman numerals, spelling, key detection, transposition.
+  **Brief:** [capabilities/music-theory.md](capabilities/music-theory.md)
+- `score-protocol` · `score-backend-musicxml` · `score-parity` (skeletons) · `midi-protocol` · `score-backend-midi` — FSet-backed score model, edit-operation algebra, condensed / unfold / part views, MusicXML 4.0 + `.mxl`, SMF codec and score ↔ MIDI with quantisation.
+  **Brief:** [capabilities/score.md](capabilities/score.md)
+- `engrave-protocol` · `engrave-backend-verovio` — SVG with score ids, timemaps, PDF via `browser-protocol`.
+  **Brief (outline):** [capabilities/engrave.md](capabilities/engrave.md)
+- `audio-protocol` · `audio-backend-{fluidsynth,ffmpeg,world,signalsmith}` — PCM, WAV, DSP, MIDI → stems, decoding, voice analysis / resynthesis, pitch and time stretch (batch).
+  **Brief (outline):** [capabilities/audio.md](capabilities/audio.md)
+- `omr-protocol` · `omr-backend-{ensemble,audiveris,llm}` · `transcribe-protocol` · `transcribe-backend-{pyin,basic-pitch}` · parity suites — OMR ensemble with Datalog fusion; single-voice audio transcription with key / meter / tempo hints.
+  **Brief (outline):** [capabilities/omr.md](capabilities/omr.md)
+
 ## Revision and diff (Track R — R0b / R1)
 
 - `diff-protocol` (OCI **0.4.0**) — diffs as values: change trees (`:add` `:remove` `:modify` `:move`), resource-string footprints, lazy content, engines per content type; apply / invert / compose / rebase / three-way (conflicts as data). R0: sexp engine, `:summary` / `:sexp` render. No dependencies.
