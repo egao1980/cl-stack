@@ -129,11 +129,17 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `tui-protocol` (OCI **0.2.0**) — full-screen terminal programs: `init` / `update` / `view` over a canvas of `terminal-protocol` cells; diff renderer and input decoder; headless (`terminal-protocol`) and real-tty backends. **Draft.**
   **Brief:** [capabilities/tui.md](capabilities/tui.md) ([#274](https://github.com/egao1980/cl-stack/issues/274))
 
-- `tui-markdown` (OCI **0.2.0**) — markdown and diff rendering for `tui-protocol` (`stack-tui-md`): a CommonMark-subset parser (plain-list AST) and renderer to styled runs, a `markdown-stream` whose completed blocks never re-render, and a unified / side-by-side diff renderer for `diff-protocol` values and unified text with word-level highlighting. H1c contract.
+- `tui-markdown` (OCI **0.2.1**) — markdown and diff rendering for `tui-protocol` (`stack-tui-md`): a CommonMark-subset parser (plain-list AST) and renderer to styled runs, a `markdown-stream` whose completed blocks never re-render, and a unified / side-by-side diff renderer for `diff-protocol` values and unified text with word-level highlighting. H1c contract.
   **Brief:** [capabilities/tui-markdown.md](capabilities/tui-markdown.md)
 
-- `markdown-protocol` (OCI **0.1.0**) — CommonMark-subset markdown parser (`stack-markdown`) with GFM tables and `~~strike~~`: `parse-markdown` → a plain-list block / inline AST compared with `EQUAL`. No dependencies. Used by `tui-markdown` and `doc-extract-protocol`'s `parse-markup`.
+- `markdown-protocol` (OCI **0.2.0**) — CommonMark-subset markdown parser (`stack-markdown`) with GFM tables, `~~strike~~` and images: `parse-markdown` → a plain-list block / inline AST compared with `EQUAL`. No dependencies. Used by `tui-markdown`, `html-markdown` and `doc-extract-protocol`'s `parse-markup`.
   **Brief:** [capabilities/markdown.md](capabilities/markdown.md)
+
+- `html-markdown` (OCI **0.1.0**) — the markdown AST (from markdown or Org) as html-protocol nodes (`stack-html-markdown`): CommonMark-shaped HTML, a URL function (default `safe-url`), heading offsets and ids, `unknown-markdown-node` with `continue` / `use-value`.
+  **Brief:** [capabilities/html-markdown.md](capabilities/html-markdown.md)
+
+- `org-markup` (OCI **0.1.0**) — Org-mode subset parser (`stack-org`): `parse-org` → markdown-protocol's AST plus the `#+KEY: value` keywords. No dependencies.
+  **Brief:** [capabilities/org-markup.md](capabilities/org-markup.md)
 
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)

@@ -162,7 +162,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `ai-agent-protocol` | **0.14.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
 | `cl-stack-code` | **0.5.0** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a), checkpoints + rewind (H5b) · [brief](capabilities/cl-stack-code.md) |
-| `doc-extract-protocol` | **0.3.0** | document extraction (PDF / office / docling / unstructured backends) |
+| `doc-extract-protocol` | **0.3.1** | document extraction (PDF / office / docling / unstructured backends) |
 | `doc-extract-render` | **0.1.1** | render extracted documents |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
@@ -190,8 +190,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `tui-protocol` | **0.2.0** | Elm-architecture TUIs on a cell canvas (`stack-tui`) · [tui](capabilities/tui.md) |
 | `tui-backend-terminal` | **0.1.0** | headless TUI driver on any `terminal-protocol` emulator (tests, agents) |
 | `tui-backend-tty` | **0.1.1** | real terminal for `tui-protocol`: termios raw mode + `SIGWINCH` (Unix), console VT mode (Windows), CFFI into libc / kernel32; restores on any exit · [tui](capabilities/tui.md) |
-| `markdown-protocol` | **0.1.0** | CommonMark-subset parser + GFM tables (`stack-markdown`) · [brief](capabilities/markdown.md) |
-| `tui-markdown` | **0.2.0** | markdown + diff rendering for `tui-protocol` (`stack-tui-md`) · [brief](capabilities/tui-markdown.md) |
+| `markdown-protocol` | **0.2.0** | CommonMark-subset parser + GFM tables + images (`stack-markdown`) · [brief](capabilities/markdown.md) |
+| `tui-markdown` | **0.2.1** | markdown + diff rendering for `tui-protocol` (`stack-tui-md`) · [brief](capabilities/tui-markdown.md) |
+| `html-markdown` | **0.1.0** | the markdown AST as html-protocol nodes; safe URL hook, heading ids (`stack-html-markdown`) · [brief](capabilities/html-markdown.md) |
+| `org-markup` | **0.1.0** | Org-mode subset → the markdown AST + `#+KEY` keywords (`stack-org`) · [brief](capabilities/org-markup.md) |
 | `image-protocol` | **0.1.0** | decode / encode / probe / convert images over several backends (`stack-image`) · [image](capabilities/image.md) |
 | `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
