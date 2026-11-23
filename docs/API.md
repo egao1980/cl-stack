@@ -141,6 +141,9 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `org-markup` (OCI **0.1.0**) — Org-mode subset parser (`stack-org`): `parse-org` → markdown-protocol's AST plus the `#+KEY: value` keywords. No dependencies.
   **Brief:** [capabilities/org-markup.md](capabilities/org-markup.md)
 
+- `highlight-protocol` (**0.1.0**, publish pending) — build-time syntax highlighting (`stack-highlight`): `tokenize` → `(class . text)` tokens that round-trip the input, over a fixed class set; lexers as CLOS objects in an alias registry (Common Lisp / Emacs Lisp / Scheme, Python, shell, console, JSON, YAML, diff), total and linear on any string; `highlight-nodes` / `highlight-html` (html-protocol `hl-` spans); `highlight-stylesheet` (css-protocol, light / dark `--hl-*` palettes); `tokenize-lines` for styled-run renderers. Used by cl-blog; tui-markdown next.
+  **Brief:** [capabilities/highlight.md](capabilities/highlight.md)
+
 - `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
 

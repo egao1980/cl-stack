@@ -194,6 +194,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `tui-markdown` | **0.2.1** | markdown + diff rendering for `tui-protocol` (`stack-tui-md`) · [brief](capabilities/tui-markdown.md) |
 | `html-markdown` | **0.1.0** | the markdown AST as html-protocol nodes; safe URL hook, heading ids (`stack-html-markdown`) · [brief](capabilities/html-markdown.md) |
 | `org-markup` | **0.1.0** | Org-mode subset → the markdown AST + `#+KEY` keywords (`stack-org`) · [brief](capabilities/org-markup.md) |
+| `highlight-protocol` | **0.1.0** | syntax highlighting: lexers → `(class . text)` tokens, `hl-` HTML spans, light / dark stylesheet (`stack-highlight`) · [brief](capabilities/highlight.md) |
 | `image-protocol` | **0.1.0** | decode / encode / probe / convert images over several backends (`stack-image`) · [image](capabilities/image.md) |
 | `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
