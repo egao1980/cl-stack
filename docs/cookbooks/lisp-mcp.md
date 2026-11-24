@@ -4,8 +4,8 @@
 
 | Piece | Package | OCI |
 |-------|---------|-----|
-| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.5.0** |
-| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.4** |
+| Server | [`lisp-mcp`](https://github.com/egao1980/lisp-mcp) | **0.7.3** |
+| Source CST, lint, edits, indentation | [`lisp-source-protocol`](https://github.com/egao1980/lisp-source-protocol) | **0.2.6** |
 | Live image protocol | [`repl-protocol`](https://github.com/egao1980/repl-protocol) | **0.2.7** |
 | SLIME Swank wire | [`repl-backend-swank`](https://github.com/egao1980/repl-backend-swank) | **0.2.2** |
 | Sly Slynk wire | [`repl-backend-slynk`](https://github.com/egao1980/repl-backend-slynk) | **0.2.2** |
@@ -105,7 +105,7 @@ edit-replace {"path": "src/stats.lisp", "locator": "defun average",
 ```
 
 - The input must read as balanced Lisp, or it is refused before the file is touched: `Edit input does not read as balanced Lisp: While reading list, expected the character )…`.
-- Inserted code is re-indented in Emacs/SLIME style. The rules come from the standard table, from the indentation hints a connected image sends, and from the `&body` of each `defmacro` in the project. So `(define-widget w (:size 1) …)` indents its body like the macro says.
+- Inserted code keeps its comments where they were written, and is re-indented in Emacs/SLIME style as part of the forms around it: a replaced `labels` binding indents as a local function, `cond` clauses go 2 in, and a form inserted first or last next to siblings on their own lines gets its own line. The rules come from the standard table, from the indentation hints a connected image sends, and from the `&body` of each `defmacro` in the project. So `(define-widget w (:size 1) …)` indents its body like the macro says.
 - `expected_hash` (from `source-read` / `source-outline`) refuses the edit if the file changed since you read it. Re-read and try again.
 - `dry_run` shows the unified diff without writing.
 
