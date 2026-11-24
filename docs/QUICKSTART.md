@@ -128,7 +128,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `sse-protocol` | **0.1.1** | `text/event-stream` framing (`stack-sse`) · [cookbook](cookbooks/sse.md) |
 | `sse-backend-http` | **0.1.1** | SSE client via http-protocol |
 | `sse-backend-clack` | **0.1.1** | SSE server (Clack) |
-| `mcp-protocol` | **0.3.1** | dual-era MCP (`2026-07-28` / `2025-11-25`); argument repair; server notifications, templated resources · [cookbook](cookbooks/mcp.md) |
+| `mcp-protocol` | **0.5.0** | dual-era MCP (`2026-07-28` / `2025-11-25`); argument repair; server notifications, templated resources; the client side a host needs (every tool field, pagination, server messages, timeouts); host answers: capabilities from the client's handlers, MRTR sampling / elicitation answers, `call-tool` rounds · [cookbook](cookbooks/mcp.md) |
 | `mcp-backend-stdio` | **0.2.0** | newline JSON-RPC MCP; notifications from any thread |
 | `mcp-backend-streamable-http` | **0.3.0** | Streamable HTTP (POST JSON/SSE; GET 405); request notifications as SSE events |
 | `lisp-source-protocol` | **0.2.6** | Eclector CST, recovery, lint, structural edits, table-driven indenter in the context of the enclosing forms; skips a leading `#!` line; every `#+`/`#-` branch is a form whatever the features; edit code keeps its comments (`stack-lisp-source`) · [cookbook](cookbooks/lisp-mcp.md) |
