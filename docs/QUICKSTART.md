@@ -211,10 +211,11 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `binary-protocol` | **0.1.0** | Python `struct` pack/unpack (`stack-binary`); no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.5.1** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.3.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
-| `mime-protocol` | **0.1.5** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
+| `mime-protocol` | **0.3.0** | serdes `:mime` / `:multipart`; nested multiparts; canonical header names; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
 | `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
 | `mail-backend-memory` | **0.2.0** | record sent messages |
 | `mail-backend-smtp` | **0.2.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS) |
+| `cache-protocol` | **0.2.0** | get / put (`:ttl`) / delete / incr / CAS; atomic in-memory TTL cache, monotonic clock (`stack-cache`) · [cache-protocol](https://github.com/egao1980/cache-protocol) |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
 | `avro-protocol` | **0.1.2** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
