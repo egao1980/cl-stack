@@ -39,7 +39,7 @@
 - `i18n-protocol` — locale / MF2 templating / catalogs — [i18n.md](capabilities/i18n.md)
 - `l10n-protocol` — collation / number·date format — [l10n.md](capabilities/l10n.md)
 - `bordeaux-threads` (bt2) — portable threads — [concurrency.md](capabilities/concurrency.md)
-- `cl-stack-config` — env + **TOML** (tomlet) — [config.md](capabilities/config.md)
+- `cl-stack-config` — env + **TOML** (tomlet); 0.3.0 (publish pending): `.env` files (python-dotenv) and `load-into` typed settings over schema-protocol — [config.md](capabilities/config.md)
 - `http-server-protocol` — CLOS server lifecycle; **Clack env** app contract; Hunchentoot default / Woo Unix  
   **Brief:** [capabilities/http-server.md](capabilities/http-server.md) · cookbook [http-server.md](cookbooks/http-server.md)
 
@@ -144,7 +144,7 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 - `highlight-protocol` (**0.1.0**, publish pending) — build-time syntax highlighting (`stack-highlight`): `tokenize` → `(class . text)` tokens that round-trip the input, over a fixed class set; lexers as CLOS objects in an alias registry (Common Lisp / Emacs Lisp / Scheme, Python, shell, console, JSON, YAML, diff), total and linear on any string; `highlight-nodes` / `highlight-html` (html-protocol `hl-` spans); `highlight-stylesheet` (css-protocol, light / dark `--hl-*` palettes); `tokenize-lines` for styled-run renderers. Used by cl-blog; tui-markdown next.
   **Brief:** [capabilities/highlight.md](capabilities/highlight.md)
 
-- `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied.
+- `image-protocol` — decode / encode PNG, JPEG, GIF, BMP (+ opt-in PSD, HDR, PNM, TGA) into straight-alpha pixels; several backends by priority (stb native, pure Lisp); limits before allocation; metadata read, not applied; editing operations (0.2.0, publish pending): resize (nearest / box / bilinear / bicubic / Lanczos3, premultiplied), thumbnail, fit, crop, rotate, flip, Porter-Duff over.
   **Brief:** [capabilities/image.md](capabilities/image.md) ([#275](https://github.com/egao1980/cl-stack/issues/275)) · research [image-libraries.md](research/image-libraries.md)
 
 ## Music notation, audio and recognition (P2 — briefs draft / outline)

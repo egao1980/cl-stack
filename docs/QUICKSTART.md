@@ -46,10 +46,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `cl-repository-client` | **0.27.35** | bootstrap from `ghcr.io/egao1980/cl-repository/…`; installs `:defsystem-depends-on` (e.g. `asdf-native`) before reading the `.asd`; a package drops sibling `.asd` files it does not provide (cl-repository#117); a sync without a lock resolves to the newest published version (cl-repository#167); lock entries carry digest and registry (cl-repository#163); a qlfile-only project gets its entries' closure (cl-repository#170); `cl-repo ros` starts with `+Q` (cl-repository#166); parallel images share the fasl root under a flock (cl-repository#162, SBCL off Windows) |
 | `cl-stack/meta` | hub git | ASDF metapackage — `pins/stable.pins` + `(cl-stack:apply-pins …)` |
 | `json-protocol` | **0.2.1** | encode/decode + serdes `:json`; load `json-backend-jzon` (default) or `json-backend-yason`; nick `stack-json` · [cookbook](cookbooks/json.md) |
-| `yaml-protocol` | **0.2.1** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml` |
+| `yaml-protocol` | **0.2.2** | YAML 1.2 native parser; JSON⊂YAML same Lisp mapping; serdes `:yaml`; block output without trailing blanks |
 | `openapi-protocol` | **0.1.0** | OpenAPI 3.1 emit + Clack `document-app` (`stack-openapi`) |
 | `xml-protocol` | **0.1.0** | well-formed XML 1.0 + NS Infoset / events / writer; serdes `:xml`; nick `stack-xml` · [cookbook](cookbooks/xml.md) |
-| `xml-backend-native` | **0.1.0** | default XML backend (XXE-safe Lisp parser) |
+| `xml-backend-native` | **0.1.1** | default XML backend (XXE-safe Lisp parser) |
 | `html-protocol` | **0.1.1** | lenient HTML parse/serialize + tiny CSS `select`; nick `stack-html` · [html-protocol](capabilities/html-protocol.md) |
 | `html-backend-plump` | **0.1.1** | default HTML backend (plump) |
 | `plump` | **2.0.0** | lenient HTML/XML parser (html pin) |
@@ -81,7 +81,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `l10n-backend-icu4j` | **0.1.2** | ICU4J l10n (auto-bind `#+abcl`) |
 | `cl-stack-idna` | **0.1.0** | `to-ascii` / `to-unicode` facade (`stack-idna`) |
 | `bordeaux-threads` | **0.9.4** | portable threads / bt2 ([concurrency](capabilities/concurrency.md)) |
-| `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
+| `cl-stack-config` | **0.3.0** | env + `.env` (python-dotenv syntax) + TOML + INI, typed settings (`load-into`) ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.4.0** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
 | `cl-stack-http` | **0.1.11** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon |
@@ -163,7 +163,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
 | `browser-protocol` | **0.2.0** | headless Chrome / Chromium / Edge over CDP: `launch-browser` / `with-browser` / `connect-cdp` (`browser-protocol/launch`), replies by id, `navigate :wait-until`, stack JSON + base64 (`stack-browser`) · [brief](capabilities/browser.md) |
 | `cl-stack-code` | **0.5.0** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a), checkpoints + rewind (H5b) · [brief](capabilities/cl-stack-code.md) |
-| `doc-extract-protocol` | **0.3.1** | document extraction (PDF / office / docling / unstructured backends) |
+| `doc-extract-protocol` | **0.4.0** | document extraction: HTML, markdown, DOCX and XLSX here; PDF / docling / unstructured backends |
 | `doc-extract-render` | **0.1.1** | render extracted documents |
 | `cl-stack-llm-tui` | **0.1.0** | desk chat (AG-UI TUI sink + agent loop) |
 | `cl-stack-jwt` | **0.3.3** | JWT HS* + RS256/PS256/ES256/EdDSA via crypto-protocol (`expired-p` #6 closed) |
@@ -196,7 +196,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `html-markdown` | **0.1.0** | the markdown AST as html-protocol nodes; safe URL hook, heading ids (`stack-html-markdown`) · [brief](capabilities/html-markdown.md) |
 | `org-markup` | **0.1.0** | Org-mode subset → the markdown AST + `#+KEY` keywords (`stack-org`) · [brief](capabilities/org-markup.md) |
 | `highlight-protocol` | **0.1.0** | syntax highlighting: lexers → `(class . text)` tokens, `hl-` HTML spans, light / dark stylesheet (`stack-highlight`) · [brief](capabilities/highlight.md) |
-| `image-protocol` | **0.1.0** | decode / encode / probe / convert images over several backends (`stack-image`) · [image](capabilities/image.md) |
+| `image-protocol` | **0.2.0** | decode / encode / probe / convert images over several backends, Pillow-equal resize / thumbnail / crop / rotate / flip / composite (`stack-image`) · [image](capabilities/image.md) |
 | `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
 | `http-server-backend-hunchentoot` | **0.2.0** | default server backend (Windows + Unix) |
@@ -209,8 +209,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
 | `encoding-protocol` | **0.2.0** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
 | `binary-protocol` | **0.1.0** | Python `struct` pack/unpack (`stack-binary`); no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
-| `compression-protocol` | **0.2.0** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
-| `compression-backend-chipz` | **0.2.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
+| `compression-protocol` | **0.5.1** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
+| `compression-backend-chipz` | **0.3.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
 | `mime-protocol` | **0.1.5** | serdes `:mime` / `:multipart`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
 | `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
 | `mail-backend-memory` | **0.2.0** | record sent messages |
