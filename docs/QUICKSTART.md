@@ -207,15 +207,19 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `serdes-protocol` | **0.2.2** | format encode/decode + Gray/JSONL/events + media types · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.2** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
-| `encoding-protocol` | **0.2.0** | RFC 4648 / QP / RLE (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
-| `binary-protocol` | **0.1.0** | Python `struct` pack/unpack (`stack-binary`); no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
+| `encoding-protocol` | **0.3.0** | RFC 4648 / QP / RLE; RFC 3986 `percent-encode` / `percent-decode`; strict UTF-8 decode (`stack-encoding`); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
+| `binary-protocol` | **0.1.1** | Python `struct` pack/unpack (`stack-binary`); IEEE infinity / NaN as Python; no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.5.1** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.3.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
-| `mime-protocol` | **0.3.1** | serdes `:mime` / `:multipart`; nested multiparts; canonical header names; browser form-data names (UTF-8, literal backslash); `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
-| `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only · [mail-protocol](capabilities/mail-protocol.md) |
+| `mime-protocol` | **0.3.2** | serdes `:mime` / `:multipart`; nested multiparts; canonical header names; browser form-data names (UTF-8, literal backslash); header fields: CR / LF refused (`mime-header-error`), long lines folded, RFC 2047 `encode-header-text` / `decode-header-text`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
+| `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only; 0.3.0 (Date / Message-ID, `add-alternative` / `add-attachment`) is merged ([mail-protocol#6](https://github.com/egao1980/mail-protocol/pull/6)), publish pending · [mail-protocol](capabilities/mail-protocol.md) |
 | `mail-backend-memory` | **0.2.0** | record sent messages |
-| `mail-backend-smtp` | **0.2.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS) |
-| `cache-protocol` | **0.2.0** | get / put (`:ttl`) / delete / incr / CAS; atomic in-memory TTL cache, monotonic clock (`stack-cache`) · [cache-protocol](https://github.com/egao1980/cache-protocol) |
+| `mail-backend-smtp` | **0.2.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS); 0.3.0 (AUTH PLAIN / LOGIN, STARTTLS, implicit TLS) publish pending |
+| `cache-protocol` | **0.2.0** | get / put (`:ttl`) / delete / incr / CAS; atomic in-memory TTL cache, monotonic clock (`stack-cache`) · [cache](capabilities/cache.md) |
+| `cache-backend-redis` | **0.2.0** | RESP3 Redis / Valkey: host/port or `redis[s]://` URL, AUTH, SELECT, TLS; a dropped socket is retried once on a new connection |
+| `mq-protocol` | **0.1.0** | `publish` / `poll-messages` / `ack` / `nack` (`stack-mq`) · [mq](capabilities/mq.md) |
+| `mq-backend-amqp` | **0.2.0** | AMQP 0-9-1 (RabbitMQ) in Lisp: SASL PLAIN, heartbeats, Basic.Get, broker Close as conditions, TLS · canary [`mq-parity`](https://github.com/egao1980/mq-parity) **0.2.0** |
+| `mq-backend-kafka` | **0.2.1** | Kafka over librdkafka 2.16.0 native overlays (darwin arm64, linux amd64 / arm64, windows amd64): consumer groups, `ack` commits the offset · canary [`mq-parity`](https://github.com/egao1980/mq-parity) **0.2.0** |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
 | `avro-protocol` | **0.1.2** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |

@@ -61,7 +61,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | Rank | Python | Ship | Notes |
 |------|--------|------|-------|
 | 1 | `html` / BeautifulSoup | `html-protocol` + plump | **shipped** `parse` / `serialize` / `select`; CSS/JS = opaque text |
-| 2 | `email` + `smtplib` | `mail-protocol` | **shipped** `make-message` / `send`; SMTP no AUTH/STARTTLS; not IMAP |
+| 2 | `email` + `smtplib` | `mail-protocol` | **shipped** `make-message` / `send` (0.2.0, SMTP without AUTH / STARTTLS; IMAP client); **pending** 0.3.0: `add-alternative` / `add-attachment`, `Date` / `Message-ID`, SMTP AUTH + STARTTLS + TLS (merged in [mail-protocol#6](https://github.com/egao1980/mail-protocol/pull/6), not yet on GHCR) · [mail-protocol](capabilities/mail-protocol.md) |
 | 3 | `ipaddress` | `ip-protocol` | **shipped** `parse-ip` / `parse-network`; no IPv4-mapped IPv6 |
 | 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | **shipped** ustar + `:tar.gz`; `:bzip2` inflate (chipz). xz still overlay |
 | 5 | `struct` | `binary-protocol` | **shipped** `pack` / `unpack` / `calcsize`; encodings stay RFC 4648/QP |
@@ -82,7 +82,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | 1 | Alembic | **shipped** `sql-migrate` **0.1.0** (linear runner on sql-orm `schema-op`) |
 | 2 | FastAPI OpenAPI | **shipped** `openapi-protocol` **0.1.0** — emit + Clack `document-app`; dogfood lock below |
 | 3 | lxml / html5lib | html-protocol depth (selectors OK; still no CSS/JS engines) |
-| 4 | redis | `cache-protocol` + memory/redis |
+| 4 | redis | **shipped** `cache-protocol` **0.2.0** + `cache-backend-redis` **0.2.0** (host/port, URL, AUTH, TLS) · [cache](capabilities/cache.md) |
 | 5 | dateutil `rrule` | **shipped** `datetime-protocol` **0.1.3** (`schedule` / `event-schedule`; RFC 5545 interchange) |
 | 6 | watchdog | `watch-protocol` (Windows required) |
 | 7 | IMAP / async SMTP | mail-protocol backends |

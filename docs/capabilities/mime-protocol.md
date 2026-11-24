@@ -1,6 +1,6 @@
 # mime-protocol (P2)
 
-**Status:** **shipped** — [`egao1980/mime-protocol`](https://github.com/egao1980/mime-protocol) OCI **0.3.1** (`stack-mime`)
+**Status:** **shipped** — [`egao1980/mime-protocol`](https://github.com/egao1980/mime-protocol) OCI **0.3.2** (`stack-mime`)
 
 CLOS media-type / Content-Disposition / CTE / multipart. **Implements** [`serdes-protocol`](serdes.md) `:mime` and `:multipart`. Soft-hooks `http-protocol` `*data-serializers*` when that package is loaded.
 
@@ -23,6 +23,10 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md).
 | **Multipart** | Any subtype, nested (`mixed(alternative(text, html), attachment)`); the CRLF before a delimiter is the delimiter's (RFC 2046 §5.1.1), so print and parse round-trip (0.3.0) |
 | **Header names** | Stored lowercase, looked up case-insensitively, printed by `canonical-header-name` (`MIME-Version`, `Message-ID`) (0.3.0) |
 | **Form-data names** | A header field that is valid UTF-8 is read as UTF-8, else ISO-8859-1; in a `form-data` disposition `name` / `filename` take a literal backslash and decode `%22 %0D %0A`, as browsers write them (RFC 7578, HTML form encoding); everything else keeps RFC 822 quoted-pairs (0.3.1) |
+| **Header fields** | `set-header` refuses CR, LF or NUL in a value and a name that is not RFC 5322 ftext: `mime-header-error` (a `mime-encode-error`; restart `use-value`), as Python's `EmailMessage` refuses them; `print-mime` checks every field again before it writes. A line over `:max-line-length` octets (default 998) folds before a space, so unfolding gives the value back (0.3.2) |
+| **Header text** | `print-mime` writes one character per octet, header text as UTF-8 (RFC 6532), so `parse-mime` reads back any header text; `print-mime-octets` (0.3.2) |
+| **RFC 2047** | `encode-header-text` (only the words that need it) / `encode-encoded-words` (a whole display name) / `decode-header-text` (B and Q, any charset encoding-protocol knows) (0.3.2) |
+| **Boundaries** | Default multipart boundary: 96 OS-random bits; a part holding its own delimiter line is refused (`mime-encode-error`, restart `use-value` takes another boundary) (0.3.2) |
 
 ## Non-goals
 
@@ -32,7 +36,7 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md).
 
 ## Open
 
-- [mime-protocol#12](https://github.com/egao1980/mime-protocol/issues/12): `set-header` / `print-mime` accept CR or LF in a header value (header injection; Python's `EmailMessage` raises `ValueError`)
 - [mime-protocol#13](https://github.com/egao1980/mime-protocol/issues/13): a part with no `Content-Type` parses with `mime-content-type` `NIL`, not the RFC 2045 default `text/plain`
+- [mime-protocol#11](https://github.com/egao1980/mime-protocol/issues/11): `disposition-filename` decodes `filename*` lazily, so an unsupported charset signals `mime-parse-error` when it is read, not when the header is parsed
 
 Demo: [cl-stack-demos `harness/mime-multipart`](https://github.com/egao1980/cl-stack-demos/tree/main/harness/mime-multipart) (0.3.0, with a cross-read by Python's `email` package).
