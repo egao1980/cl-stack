@@ -157,8 +157,8 @@ Planned. General-purpose notation infrastructure for lead sheets and choral or s
   **Brief:** [capabilities/score.md](capabilities/score.md)
 - `engrave-protocol` (EN0 contract) · `engrave-backend-verovio` (planned) — SVG pages as xml-protocol trees with an element id map, timemaps from the model (unfolded), PDF through a printer (`browser-protocol`), a reference `null-engine`, conformance checks.
   **Brief:** [capabilities/engrave.md](capabilities/engrave.md)
-- `audio-protocol` · `audio-backend-{fluidsynth,ffmpeg,world,signalsmith}` — PCM, WAV, DSP, MIDI → stems, decoding, voice analysis / resynthesis, pitch and time stretch (batch).
-  **Brief (outline):** [capabilities/audio.md](capabilities/audio.md)
+- `audio-protocol` (AU0 contract) · `audio-backend-fluidsynth` (AU1, feasibility checked) · `audio-backend-{ffmpeg,world,signalsmith}` (planned) — PCM buffers, WAV, mixing and loops, resampling, MIDI → mixdown or stems, decoding, DSP, voice analysis / resynthesis, pitch and time stretch (batch).
+  **Brief:** [capabilities/audio.md](capabilities/audio.md) (AU0 contract: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1))
 - `omr-protocol` · `omr-backend-{ensemble,audiveris,llm}` · `transcribe-protocol` · `transcribe-backend-{pyin,basic-pitch}` · parity suites — OMR ensemble with Datalog fusion; single-voice audio transcription with key / meter / tempo hints.
   **Brief (outline):** [capabilities/omr.md](capabilities/omr.md)
 
