@@ -161,6 +161,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.14.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
+| `browser-protocol` | **0.2.0** | headless Chrome / Chromium / Edge over CDP: `launch-browser` / `with-browser` / `connect-cdp` (`browser-protocol/launch`), replies by id, `navigate :wait-until`, stack JSON + base64 (`stack-browser`) · [brief](capabilities/browser.md) |
 | `cl-stack-code` | **0.5.0** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a), checkpoints + rewind (H5b) · [brief](capabilities/cl-stack-code.md) |
 | `doc-extract-protocol` | **0.3.1** | document extraction (PDF / office / docling / unstructured backends) |
 | `doc-extract-render` | **0.1.1** | render extracted documents |
