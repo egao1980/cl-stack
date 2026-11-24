@@ -48,7 +48,7 @@ Everything else is `diff-protocol`: `compute-diff` (`&key level context`; `conte
 
 The file is cut into **units**; their texts concatenate to the file exactly.
 
-- **Heads** are the top-level nodes of the CST that are forms: every top-level expression node, and every top-level `:feature-skipped` node (a `#+x` form whose feature is absent, i.e. every `#+` form under the empty feature list). Comments, block comments and whitespace are not heads.
+- **Heads** are the top-level nodes of the CST that are forms: every top-level expression node. Every `#+`/`#-` form is one (lisp-source-protocol ≥ 0.2.5 reads an excluded one, such as every `#+` form under the empty feature list, as a `:feature-conditional` expression with a CST of its branch; older versions gave a `:feature-skipped` trivia node, which is a head too). Comments, block comments and whitespace are not heads.
 - **A unit ends** after its head's last line: after the head, the spaces and tabs that follow, any comments that start on that line (a `;` comment runs to and includes its newline; after a `#|…|#` comment, more trailing material may follow), and the newline (`LF` or `CR LF`) that ends that line. If the next head starts on the same line, the unit ends where that head starts (`(a) (b)` → `"(a) "`, `"(b)\n"`).
 - **The next unit starts** where the previous one ended: blank lines, comments and whitespace before a form belong to that form. The first unit starts at offset 0 (a `#!` line and file header comments go with the first form).
 - **Trailer:** text after the last unit, if any (`;; end` comments, blank lines), is one more unit with key **`"eof"`**. A file with no forms but some text is a single `"eof"` unit; `""` has no units.
@@ -92,7 +92,7 @@ Each unit has a key string, unique in its file.
 
 A `:modify` of a unit has **children** when the unit's text before its head and after its head are identical on both sides and the two head nodes have the **same shape**. Two expression nodes have the same shape when they have the same node kind, the same number of children (trivia included), trivia children at the same positions, and identical **gaps** (all text of the node not covered by an expression child: delimiters, whitespace, comments). Then for each expression child pair, by index `i`: equal text → nothing; same shape → recurse; otherwise a leaf. A **leaf** is a `:modify` with path `(:form KEY i1 i2 …)`, footprint `"lisp:/KEY/i1/i2"`, `before` / `after` the node texts. Leaves are listed in node order (depth first).
 
-So an edit of a literal, a call, a docstring or an argument list is a leaf; adding or removing a body form, re-indenting, or editing a comment changes the gaps or the child count and the leaf is the smallest list that contains it (the whole unit when that is the head). A `#+x` unit is skipped input under the empty feature list (no expression children), so its changes are always form level; a `#-x` unit has children (`1` = the guarded form).
+So an edit of a literal, a call, a docstring or an argument list is a leaf; adding or removing a body form, re-indenting, or editing a comment changes the gaps or the child count and the leaf is the smallest list that contains it (the whole unit when that is the head). A `#+x` and a `#-x` unit both have children (`1` = the guarded form) with lisp-source-protocol ≥ 0.2.5; a branch that does not read as plain Lisp (another implementation's reader syntax) has none, so its changes are form level. Before 0.2.5 a `#+x` unit was skipped input under the empty feature list, always form level.
 
 ### Levels
 
