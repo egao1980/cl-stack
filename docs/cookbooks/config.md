@@ -63,7 +63,7 @@ Precedence: **file < env < `:overrides`**.
 
 ## 4. INI
 
-`.ini` / `.cfg` / `.conf` autodetect; or `:format :ini`. No interpolation.
+`.ini` / `.cfg` / `.conf` autodetect; or `:format :ini`. No interpolation. From 0.3.1 the file is read as Python's `configparser.RawConfigParser()` reads it (botocore's `~/.aws` reader): comments are whole lines only, option names are lowercased, section names and quotes are kept, and indented lines continue a value. `parse-ini` keywords bring back inline comments (`:inline-comments t`) and case-kept names (`:key-case :preserve`); see the [README](https://github.com/egao1980/cl-stack-config#ini-files).
 
 ```ini
 [database]
