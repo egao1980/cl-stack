@@ -289,7 +289,21 @@ OIDC (0.2): discovery, JWKS (`kid` cache) and ID-token validation through `cl-st
   (let ((p (http:get-async url :timeout 20.0)))
     ;; blackbird promise → response; sync SEND also awaits on async backend
     …))
+
+;; asyncio.run(asyncio.gather(client.get(a), client.get(b)))
+(stack-event-promises:run-promise
+ (lambda () (stack-event-promises:gather (http:get-async a) (http:get-async b)))
+ :backend (event-backend-libuv:make-libuv-backend)
+ :timeout 30)                        ; → (response-a response-b)
 ```
+
+`(await promise :timeout s)` drives the bound loop until PROMISE settles. It
+stops the loop then, so idle pooled connections do not keep it running. A
+plain `(event-protocol:run …)` waits for them (http-backend-async#79).
+`await-timeout` is the timeout condition. `cl-stack-http` 0.2.0+ needs no
+`*event-backend-maker*` setup for `:async`. Under `:auto`, `get-async` and the
+other `-async` calls take the async backend when libuv is installed, while
+blocking calls stay on dexador (safe from a thread pool).
 
 Event engine: `event-backend-libuv` (default) or libev. Direction changes use `update-io` (no `uv_poll_init` EEXIST).
 
