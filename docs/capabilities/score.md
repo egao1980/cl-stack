@@ -3,7 +3,7 @@
 **Issues:** to be filed
 **Status:** brief **draft**. Repos created as skeletons (0.0.0): [`score-protocol`](https://github.com/egao1980/score-protocol), [`score-backend-musicxml`](https://github.com/egao1980/score-backend-musicxml), [`score-parity`](https://github.com/egao1980/score-parity). Planned: `midi-protocol`, `score-backend-midi`.
 **Repos:** `score-protocol` (nick `stack-score`) · `score-backend-musicxml` · `score-backend-midi` · `midi-protocol` (nick `stack-midi`) · `score-parity`
-**Builds on:** [music-theory](music-theory.md), [serdes-protocol](serdes.md), [xml-protocol](xml-protocol.md) + `xml-backend-native`, [binary-protocol](binary-protocol.md), FSet (a `cl-stack-systems` import), [compression-protocol](compression.md) + `compression-backend-chipz` (`.mxl` zip archives), [sat-protocol](logic.md) (MIDI quantisation)
+**Builds on:** [music-theory](music-theory.md), [serdes-protocol](serdes.md), [xml-protocol](xml-protocol.md) + `xml-backend-native`, [binary-protocol](binary-protocol.md), FSet (a `cl-stack-systems` import), [compression-protocol](https://github.com/egao1980/compression-protocol) + `compression-backend-chipz` (`.mxl` zip archives), [sat-protocol](logic.md) (MIDI quantisation)
 
 A canonical, immutable model of a notated score, from lead sheets to choral and small-ensemble scores, together with:
 - a closed **edit-operation algebra**;
