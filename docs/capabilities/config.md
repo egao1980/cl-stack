@@ -132,7 +132,7 @@ python-dotenv and pydantic-settings, [cl-stack-config#8](https://github.com/egao
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **.env syntax** | python-dotenv 1.1: comments, `export`, quotes and escapes, multi-line quoted values, bare names, `${NAME}` / `${NAME:-default}`, log-and-skip on bad lines (`dotenv-syntax-warning`) | The format people already have; parity table in the tests |
+| **.env syntax** | python-dotenv 1.1: comments, `export`, quotes and escapes, multi-line quoted values, bare names, `${NAME}` / `${NAME:-default}`, log-and-skip on bad lines (`dotenv-syntax-warning`); a file is read with universal newlines (CRLF and CR become LF), as Python's text mode | The format people already have; parity table in the tests |
 | **Deliberate differences** | Single-quoted values are literal; `NAME= # note` is empty | sh / docker compose semantics; python-dotenv expands inside single quotes and keeps `# note` |
 | **Layer, not mutation** | `load :dotenv` never touches the process env; `load-dotenv` does, only for unset names unless `:override` | 12-factor: real env wins |
 | **Typed settings** | `load-into` = `schema-protocol:parse` with `:coerce t` over the config tree; `config-validation-error` is both a `config-type-error` and a `schema-validation-error` | No second validation layer; schema-protocol owns coercion and issues |

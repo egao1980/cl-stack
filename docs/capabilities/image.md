@@ -134,11 +134,11 @@ In fuzzing, any condition other than an `image-error` escaping a backend is a bu
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **Resampling** | Pillow's separable convolution. The support is widened by the reduction factor; kernels are clipped at the edges and normalised; each pass is clamped to 0–255 | Samples within 1 of Pillow 11.3 (parity table in the tests); predictable for people porting Pillow code |
-| **Alpha** | Premultiplied during resize. Composite is exact integer Porter-Duff over | No colour bleed from transparent pixels; composite equals Pillow's |
-| **Linear light** | Opt-in with `:linear t` | Pillow resamples in sRGB; same default |
-| **Pre-reduce** | `:reducing-gap`: an integer box reduce first. Default 2 in `thumbnail` / `fit-image`, off in `resize-image` (as Pillow) | Faster large reductions |
-| **Where** | Protocol, pure Lisp, typed single-float loops (12 MP Lanczos3 reduction in about 0.25 s on SBCL) | No native dependency. A backend fast path (`stb_image_resize2`, #3) can come later behind the same functions |
+| **Resampling** | Pillow 11.3's own steps: separable convolution (support widened by the reduction factor, kernels clipped at the edges and normalised) in 22-bit fixed point, each pass rounded to 8 bits; NEAREST's stepped coordinates | Samples equal Pillow's byte for byte (a generated parity fixture plus a random stress mode in the tests); people porting Pillow code get the same pixels |
+| **Alpha** | Premultiplied in 8 bits during resize, as Pillow's RGBa / La. Composite is Pillow's 7-bit fixed-point Porter-Duff over | No colour bleed from transparent pixels; resize and composite equal Pillow's |
+| **Linear light** | Opt-in with `:linear t`, in floats | Pillow resamples in sRGB; same default. No Pillow equivalent, so no parity claim |
+| **Pre-reduce** | `:reducing-gap`: Pillow's integer box reduce first. Default 2 in `thumbnail` / `fit-image`, off in `resize-image` (as Pillow); never for images with alpha (Pillow drops it for them) | Faster large reductions |
+| **Where** | Protocol, pure Lisp, typed fixnum loops (12 MP Lanczos3 reduction in about 0.25 s on SBCL) | No native dependency. A backend fast path (`stb_image_resize2`, #3) can come later behind the same functions |
 | **Errors** | `image-invalid-argument` (operation, argument, value, reason); depth 16 is `image-unsupported-feature`; the output size is checked against `*image-limits*` | Typed, like the rest of `image-error` |
 
 ---
