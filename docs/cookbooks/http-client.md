@@ -301,8 +301,9 @@ OIDC (0.2): discovery, JWKS (`kid` cache) and ID-token validation through `cl-st
 stops the loop then, so idle pooled connections do not keep it running. A
 plain `(event-protocol:run …)` waits for them (http-backend-async#79).
 `await-timeout` is the timeout condition. `cl-stack-http` 0.2.0+ needs no
-`*event-backend-maker*` setup for `:async`, and `:auto` picks async when
-libuv is installed.
+`*event-backend-maker*` setup for `:async`. Under `:auto`, `get-async` and the
+other `-async` calls take the async backend when libuv is installed, while
+blocking calls stay on dexador (safe from a thread pool).
 
 Event engine: `event-backend-libuv` (default) or libev. Direction changes use `update-io` (no `uv_poll_init` EEXIST).
 

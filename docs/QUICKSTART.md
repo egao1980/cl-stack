@@ -84,7 +84,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `cl-stack-config` | **0.2.0** | env + TOML + INI ([config](capabilities/config.md) · [cookbook](cookbooks/config.md)) |
 | `tomlet` | **0.1.0** | TOML parser (config pin) |
 | `http-protocol` | **0.4.0** | wire client; Basic auth via encoding-protocol; `http-body-pipe` + H2 request DATA; `:auto` codecs; CE gzip/br/zstd/**snappy** (a missing codec backend is probed once) |
-| `cl-stack-http` | **0.2.0** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon; re-exports the `http-protocol` response readers and conditions; `:auto` = async (libuv) → dexador off Windows, no event-loop wiring needed |
+| `cl-stack-http` | **0.2.0** | requests-like facade (`stack-http`); JSON via `json-protocol`/jzon; re-exports the `http-protocol` response readers and conditions; `:auto` off Windows: blocking calls dexador → async, `-async` calls async (libuv) → dexador (one libuv loop per thread is not safe yet, event-backend-libuv#31); no event-loop wiring needed |
 | `cl-stack-pathlib` | **0.8.0** | CLOS path + FS (`stack-pathlib`; `zip://`; snapshot-store GC (`snapshot-store-ids` / `-delete`); ranged reads, SHA-256, atomic + `:expected-hash` / `:mode` writes, `fs-chmod` / `(setf fs-mode)`, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
@@ -169,7 +169,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `jose` | **0.1.0** | cl-stack-systems import (JWT escape hatch) |
 | `http-backend-async` | **0.2.22** | async + H2 `:want-stream` + request DATA + `:protocol` HPACK + RFC 8441 WS; concurrent streams on one pooled h2 connection (≤ peer MAX_CONCURRENT_STREAMS, needs `http2` ≥ 2.1.2); a burst waits FIFO for a free stream (`*h2-stream-wait-timeout*` 2 s, `*h2-max-stream-waiters*` 32) instead of dialing |
 | `http2` | **2.1.8** | fork; 64 KiB HPACK string / header-block limits, reset per block; header stream errors keep HPACK in sync; omit zero-increment `WINDOW_UPDATE`; keep explicit TLS files; intern literal pseudo-headers; ignore unknown SETTINGS; Homebrew `libssl` by absolute path on macOS |
-| `http-backend-dexador` | **0.2.0** | sync HTTP/1.1 (CE codecs probed once); protocol proxy configs resolved (`no_proxy`, SOCKS5); TOTAL deadline + HTTPS read timeout enforced |
+| `http-backend-dexador` | **0.2.0** | sync HTTP/1.1 (CE codecs probed once); protocol proxy configs resolved (`no_proxy`, SOCKS5); TOTAL deadline + HTTPS read timeout enforced; one connection pool per read timeout / BIO / proxy, POST and PATCH never start on a reused connection |
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.1** | ABCL `java.net.http` |
 | `ws-protocol` | **0.4.2** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
@@ -257,8 +257,9 @@ Channel / pin-file format: [pins.md](pins.md). Overlay platforms: [overlays.md](
 (defpackage #:demo (:use #:cl) (:local-nicknames (#:http #:cl-stack-http)))
 (in-package #:demo)
 
-;; :auto picks a backend: async/libuv, then dexador (winhttp first on Windows).
-;; :async wires the libuv event backend itself.
+;; :auto picks a backend: dexador, then async/libuv, for blocking calls;
+;; async/libuv first for get-async and the other -async calls (winhttp first
+;; on Windows). :async wires the libuv event backend itself.
 (http:ensure-http-backend :auto)
 
 (let ((r (http:get "https://httpbin.org/get" :params '(("q" . "1")))))
