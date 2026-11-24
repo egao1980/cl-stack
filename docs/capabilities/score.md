@@ -1,7 +1,7 @@
 # score-protocol (P2): music notation model, MusicXML and MIDI
 
-**Issues:** to be filed
-**Status:** brief **draft**. Repos created as skeletons (0.0.0): [`score-protocol`](https://github.com/egao1980/score-protocol), [`score-backend-musicxml`](https://github.com/egao1980/score-backend-musicxml), [`score-parity`](https://github.com/egao1980/score-parity). Planned: `midi-protocol`, `score-backend-midi`.
+**Issues:** follow-ups in [Progress](#progress)
+**Status:** SC0 to SC4 **shipped**: [`score-protocol`](https://github.com/egao1980/score-protocol) 0.1.0 (SC0) and 0.2.0 (SC1), [`score-backend-musicxml`](https://github.com/egao1980/score-backend-musicxml) 0.1.0 (SC2), [`midi-protocol`](https://github.com/egao1980/midi-protocol) 0.1.0 (SC3), [`score-backend-midi`](https://github.com/egao1980/score-backend-midi) 0.1.0 (SC4). SC5 [`score-parity`](https://github.com/egao1980/score-parity) 0.1.0 **in progress**: contract [score-parity#3](https://github.com/egao1980/score-parity/pull/3). Decisions made on the way and open follow-ups: [Progress](#progress).
 **Repos:** `score-protocol` (nick `stack-score`) · `score-backend-musicxml` · `score-backend-midi` · `midi-protocol` (nick `stack-midi`) · `score-parity`
 **Builds on:** [music-theory](music-theory.md), [serdes-protocol](serdes.md), [xml-protocol](xml-protocol.md) + `xml-backend-native`, [binary-protocol](binary-protocol.md), FSet (a `cl-stack-systems` import), [compression-protocol](https://github.com/egao1980/compression-protocol) + `compression-backend-chipz` (`.mxl` zip archives), [sat-protocol](logic.md) (MIDI quantisation)
 
@@ -157,6 +157,44 @@ score-warning (warning)
 ### SC5: score-parity
 
 The corpus, the shape matrix across formats (`print-matrix`), and the MuseScore CLI oracle: `mscore` opens every exported MusicXML and MIDI file, and its re-export is semantically equal. Out of process, skipped when absent, and run in a nightly job.
+
+---
+
+## Progress
+
+### Shipped
+
+| Slice | Package | Notes |
+|-------|---------|-------|
+| SC0 | score-protocol 0.1.0 | model, ids, measure map, positions, `check-score` |
+| SC1 | score-protocol 0.2.0 | edit algebra, `condensed-view`, `unfold`, `extract-part` |
+| SC2 | score-backend-musicxml 0.1.0 | MusicXML 4.0 partwise read and write, `.mxl`, hymnal voice splitting, serdes formats `:musicxml` and `:mxl` |
+| SC3 | midi-protocol 0.1.0 | MIDI 1.0 events and the SMF codec |
+| SC4 | score-backend-midi 0.1.0 | export (tracks per voice, tempo map, unfolded repeats, lyrics, chord text, rehearsal mixes) and import (measure map, quantisation, spelling, track mapping, confidence) |
+| SC5 | score-parity 0.1.0 | **in progress**: contract [score-parity#3](https://github.com/egao1980/score-parity/pull/3). 34 MusicXML files of 30 public-domain tunes; checks for the MusicXML and `.mxl` round trips, the hymnal split, MIDI round trips with and without unfolding, and the MuseScore and XSD oracles |
+
+### Decisions made in SC1 to SC4
+
+| Decision | Choice | Slice |
+|----------|--------|-------|
+| **Endings after a jump** | Once a D.C. or D.S. is taken, `unfold` plays only the last ending of each group, and repeats are not taken again | SC1 |
+| **`.mxl` archives** | Through compression-protocol's zip archives (`compression-backend-chipz` inflates). Every entry is stored with no timestamp, so the bytes depend on the score only. The LGPL `zip` import is not used. | SC2 |
+| **MIDI quantisation** | The per-beat grid (straight or tuplet subdivisions) is chosen by `sat-protocol:minimize`: cost is onset deviation plus notation complexity | SC4 |
+| **Ids of built scores** | Readers whose ties and spanners name elements not minted yet (MusicXML reading, voice splitting, MIDI import) build the score in several passes and keep the ids `make-score` mints, until a builder with forward references lands ([score-protocol#8](https://github.com/egao1980/score-protocol/issues/8)) | SC2, SC4 |
+
+### Follow-ups
+
+- [score-protocol#4](https://github.com/egao1980/score-protocol/issues/4): two `unfold` wordings: the header's step 1 should say that only the last ending is played after a jump, and the pass of an ending's measures.
+- [score-protocol#6](https://github.com/egao1980/score-protocol/issues/6): SC1 follow-ups (the undocumented `unfold` step limit, the op named in conditions after a REFLOW restart, cost per edit).
+- [score-protocol#7](https://github.com/egao1980/score-protocol/issues/7): `invert-edit` turns small edits into a restore of the whole score.
+- [score-protocol#8](https://github.com/egao1980/score-protocol/issues/8): a builder with forward references for tie and spanner ends.
+- [score-protocol#5](https://github.com/egao1980/score-protocol/issues/5) (`logic-migration`): move the `unfold` navigation rules to the logic family.
+- [score-backend-midi#2](https://github.com/egao1980/score-backend-midi/issues/2): SC4 contract follow-ups (serdes `:midi`, recorded performances, chord guesses from accompaniment tracks, hairpins and articulations in velocity).
+- [score-backend-midi#3](https://github.com/egao1980/score-backend-midi/issues/3): a last note that snaps onto the end of the last bar; register `:midi` with serdes-protocol.
+- [score-backend-midi#4](https://github.com/egao1980/score-backend-midi/issues/4): the spelling confidence flags chromatic notes that a spelling rule already decided.
+- [score-backend-musicxml#2](https://github.com/egao1980/score-backend-musicxml/issues/2): run the XSD validation rows in CI (fetch the MusicXML 4.0 schema).
+- [score-backend-musicxml#4](https://github.com/egao1980/score-backend-musicxml/issues/4): the hymnal split leaves a measure of unisons in one voice (found building the SC5 corpus).
+- [score-parity#1](https://github.com/egao1980/score-parity/issues/1): the nightly job with MuseScore and the XSD; [score-parity#2](https://github.com/egao1980/score-parity/issues/2): the MuseScore oracle for exported MIDI files.
 
 ---
 
