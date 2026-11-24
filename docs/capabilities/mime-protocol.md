@@ -1,6 +1,6 @@
 # mime-protocol (P2)
 
-**Status:** **shipped** — [`egao1980/mime-protocol`](https://github.com/egao1980/mime-protocol) OCI **0.3.0** (`stack-mime`)
+**Status:** **shipped** — [`egao1980/mime-protocol`](https://github.com/egao1980/mime-protocol) OCI **0.3.1** (`stack-mime`)
 
 CLOS media-type / Content-Disposition / CTE / multipart. **Implements** [`serdes-protocol`](serdes.md) `:mime` and `:multipart`. Soft-hooks `http-protocol` `*data-serializers*` when that package is loaded.
 
@@ -22,6 +22,7 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md).
 | **HTTP `:data`** | `:mime` / `:multipart` via hooks; `:auto` uses them when registered |
 | **Multipart** | Any subtype, nested (`mixed(alternative(text, html), attachment)`); the CRLF before a delimiter is the delimiter's (RFC 2046 §5.1.1), so print and parse round-trip (0.3.0) |
 | **Header names** | Stored lowercase, looked up case-insensitively, printed by `canonical-header-name` (`MIME-Version`, `Message-ID`) (0.3.0) |
+| **Form-data names** | A header field that is valid UTF-8 is read as UTF-8, else ISO-8859-1; in a `form-data` disposition `name` / `filename` take a literal backslash and decode `%22 %0D %0A`, as browsers write them (RFC 7578, HTML form encoding); everything else keeps RFC 822 quoted-pairs (0.3.1) |
 
 ## Non-goals
 
