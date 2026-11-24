@@ -143,7 +143,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.5.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage, `server-compact` + `portable-turns`, lossless `part-state` (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `llm-protocol` | **0.7.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage, `server-compact` + `portable-turns`, lossless `part-state`, `llm-incomplete-response` for cut streams, typed provider errors (`llm-rate-limited`, `llm-overloaded`, `llm-auth-error`, `llm-not-found`, `llm-transport-error`), `Retry-After`, retry jitter (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `conversation-protocol` | **0.4.0** | session store + buffer / window / summary; `compact-turns`; `provider-compaction-memory` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
 | `steer-protocol` | **0.3.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) + path-scoped `AGENTS.md` discovery, base prompt builder · [cookbook](cookbooks/steer.md) |
 | `rag-protocol` | **0.1.3** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
