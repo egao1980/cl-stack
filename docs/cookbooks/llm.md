@@ -8,7 +8,7 @@
 | OpenAI-compat (`stack-llm-openai`) | [`llm-protocol-openai`](https://github.com/egao1980/llm-protocol-openai) | **0.3.2** |
 | Anthropic Messages (`stack-llm-anthropic`) | [`llm-protocol-anthropic`](https://github.com/egao1980/llm-protocol-anthropic) | **0.2.0** |
 | llama.cpp native | [`llm-backend-llama-cpp`](https://github.com/egao1980/llm-backend-llama-cpp) | **0.1.5** |
-| CFFI + overlays | [`llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.2.0** |
+| CFFI + overlays | [`llama-cpp`](https://github.com/egao1980/llama-cpp) | **0.2.1** |
 
 Brief: [llm.md](../capabilities/llm.md) (#195). Adapter — **not** a `blackboard-protocol` dep. Demiurge **consumes** this. Sampling → [ai-agent.md](ai-agent.md). Conversation memory → [conversation.md](conversation.md). Rules / skills → [steer.md](steer.md). RAG / chunk / retrieve → [rag.md](rag.md).
 

@@ -157,7 +157,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
 | `llm-protocol-openai` | **0.5.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream; `prompt_cache_key` + cached-token usage |
 | `llm-protocol-anthropic` | **0.4.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
-| `llama-cpp` | **0.2.0** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); natives through `asdf-native` (optional CUDA libs); overlay must match |
+| `llama-cpp` | **0.2.1** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); C++ shim turns llama.cpp exceptions and grammar dead ends into `llama-error`, exit with a live engine keeps its code; natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
 | `ai-agent-protocol` | **0.14.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
