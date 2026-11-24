@@ -196,8 +196,8 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `html-markdown` | **0.1.0** | the markdown AST as html-protocol nodes; safe URL hook, heading ids (`stack-html-markdown`) · [brief](capabilities/html-markdown.md) |
 | `org-markup` | **0.1.0** | Org-mode subset → the markdown AST + `#+KEY` keywords (`stack-org`) · [brief](capabilities/org-markup.md) |
 | `highlight-protocol` | **0.1.0** | syntax highlighting: lexers → `(class . text)` tokens, `hl-` HTML spans, light / dark stylesheet (`stack-highlight`) · [brief](capabilities/highlight.md) |
-| `image-protocol` | **0.2.0** | decode / encode / probe / convert images over several backends, Pillow-equal resize / thumbnail / crop / rotate / flip / composite (`stack-image`) · [image](capabilities/image.md) |
-| `image-backend-stb` | **0.2.1** | stb_image / stb_image_write with Fedora's security patches |
+| `image-protocol` | **0.3.1** | decode / encode / probe / convert images over several backends, Pillow-equal resize / thumbnail / crop / rotate / flip / composite (`stack-image`); a backend can take over resize (`backend-resize`, 0.3.0); `:reducing-gap` pays off in pure Lisp (image-protocol#9) · [image](capabilities/image.md) |
+| `image-backend-stb` | **0.3.0** | stb_image / stb_image_write with Fedora's security patches; stb_image_resize2 fast path for `resize-image` |
 | `http-server-protocol` | **0.2.0** | CLOS server; Clack env; Hunchentoot / Woo / **`http-server-backend-http2` 0.2.0** |
 | `http-server-backend-hunchentoot` | **0.2.0** | default server backend (Windows + Unix) |
 | `http-server-backend-woo` | **0.2.0** | Unix / libev second backend |
@@ -224,7 +224,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `telemetry-protocol` | **0.2.0** | traces / spans + thin metrics (`stack-telemetry`) |
 | `telemetry-backend-otlp` | **0.2.0** | OTLP/HTTP JSON |
 | `cl-stack-snappy` | **1.3.1.2** | Snappy raw + framed; HTTP CE uses raw; 4th part = package revision |
-| `cl-stack-ssl` | **3.5.9.3** | OpenSSL 3.5.9 LTS overlays for stock `cl+ssl` (linux/darwin/windows); staged `SSL_CERT_*` reach child images |
+| `cl-stack-ssl` | **3.5.9.4** | OpenSSL 3.5.9 LTS overlays for stock `cl+ssl` (linux/darwin/windows); staged `SSL_CERT_*` reach child images; a dumped image makes its SSL context at first use, not at load (cl-stack-ssl#23) |
 | `cl-stack-brotli` | **1.2.1.2** | Brotli 1.2.1 overlays + thin CFFI (`br`) |
 | `cl-stack-zstd` | **1.5.7.2** | Zstandard 1.5.7 overlays + thin CFFI (`zstd`) |
 | `http-encoding-chipz` | **0.1.1** | `gzip` / `deflate` Content-Encoding |
