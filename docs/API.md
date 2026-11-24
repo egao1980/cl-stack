@@ -155,8 +155,8 @@ Planned. General-purpose notation infrastructure for lead sheets and choral or s
   **Brief:** [capabilities/music-theory.md](capabilities/music-theory.md)
 - `score-protocol` · `score-backend-musicxml` · `score-parity` (skeletons) · `midi-protocol` · `score-backend-midi` — FSet-backed score model, edit-operation algebra, condensed / unfold / part views, MusicXML 4.0 + `.mxl`, SMF codec and score ↔ MIDI with quantisation.
   **Brief:** [capabilities/score.md](capabilities/score.md)
-- `engrave-protocol` · `engrave-backend-verovio` — SVG with score ids, timemaps, PDF via `browser-protocol`.
-  **Brief (outline):** [capabilities/engrave.md](capabilities/engrave.md)
+- `engrave-protocol` (EN0 contract) · `engrave-backend-verovio` (planned) — SVG pages as xml-protocol trees with an element id map, timemaps from the model (unfolded), PDF through a printer (`browser-protocol`), a reference `null-engine`, conformance checks.
+  **Brief:** [capabilities/engrave.md](capabilities/engrave.md)
 - `audio-protocol` · `audio-backend-{fluidsynth,ffmpeg,world,signalsmith}` — PCM, WAV, DSP, MIDI → stems, decoding, voice analysis / resynthesis, pitch and time stretch (batch).
   **Brief (outline):** [capabilities/audio.md](capabilities/audio.md)
 - `omr-protocol` · `omr-backend-{ensemble,audiveris,llm}` · `transcribe-protocol` · `transcribe-backend-{pyin,basic-pitch}` · parity suites — OMR ensemble with Datalog fusion; single-voice audio transcription with key / meter / tempo hints.
