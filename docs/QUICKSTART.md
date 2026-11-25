@@ -211,10 +211,10 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `binary-protocol` | **0.1.1** | Python `struct` pack/unpack (`stack-binary`); IEEE infinity / NaN as Python; no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.5.1** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.3.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
-| `mime-protocol` | **0.3.2** | serdes `:mime` / `:multipart`; nested multiparts; canonical header names; browser form-data names (UTF-8, literal backslash); header fields: CR / LF refused (`mime-header-error`), long lines folded, RFC 2047 `encode-header-text` / `decode-header-text`; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
-| `mail-protocol` | **0.2.0** | email compose/parse/send (`stack-mail`); Bcc envelope-only; 0.3.0 (Date / Message-ID, `add-alternative` / `add-attachment`) is merged ([mail-protocol#6](https://github.com/egao1980/mail-protocol/pull/6)), publish pending · [mail-protocol](capabilities/mail-protocol.md) |
-| `mail-backend-memory` | **0.2.0** | record sent messages |
-| `mail-backend-smtp` | **0.2.0** | SMTP EHLO/MAIL/RCPT/DATA (no AUTH/STARTTLS); 0.3.0 (AUTH PLAIN / LOGIN, STARTTLS, implicit TLS) publish pending |
+| `mime-protocol` | **0.3.3** | serdes `:mime` / `:multipart` (binary); nested multiparts; canonical header names; browser form-data names (UTF-8, literal backslash); header fields: CR / LF refused (`mime-header-error`), long lines folded, RFC 2047 `encode-header-text` / `decode-header-text`; RFC 2231 `filename*` continuations; `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
+| `mail-protocol` | **0.3.0** | email compose/parse/send (`stack-mail`); Date / Message-ID, `add-alternative` / `add-attachment`; RFC 5322 addresses (envelope = addr-specs), RFC 2047 headers; Bcc envelope-only; IMAP client · [mail-protocol](capabilities/mail-protocol.md) |
+| `mail-backend-memory` | **0.3.0** | record sent messages |
+| `mail-backend-smtp` | **0.3.0** | SMTP AUTH PLAIN / LOGIN, STARTTLS, implicit TLS (cl-stack-ssl); 8BITMIME / SMTPUTF8; no CR/LF in a command |
 | `cache-protocol` | **0.2.0** | get / put (`:ttl`) / delete / incr / CAS; atomic in-memory TTL cache, monotonic clock (`stack-cache`) · [cache](capabilities/cache.md) |
 | `cache-backend-redis` | **0.2.0** | RESP3 Redis / Valkey: host/port or `redis[s]://` URL, AUTH, SELECT, TLS; a dropped socket is retried once on a new connection |
 | `mq-protocol` | **0.1.0** | `publish` / `poll-messages` / `ack` / `nack` (`stack-mq`) · [mq](capabilities/mq.md) |

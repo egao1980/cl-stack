@@ -61,7 +61,7 @@ Do not wrap kernel-strong ANSI (numbers, sequences, conditions, CLOS). Do not cl
 | Rank | Python | Ship | Notes |
 |------|--------|------|-------|
 | 1 | `html` / BeautifulSoup | `html-protocol` + plump | **shipped** `parse` / `serialize` / `select`; CSS/JS = opaque text |
-| 2 | `email` + `smtplib` | `mail-protocol` | **shipped** `make-message` / `send` (0.2.0, SMTP without AUTH / STARTTLS; IMAP client); **pending** 0.3.0: `add-alternative` / `add-attachment`, `Date` / `Message-ID`, SMTP AUTH + STARTTLS + TLS (merged in [mail-protocol#6](https://github.com/egao1980/mail-protocol/pull/6), not yet on GHCR) · [mail-protocol](capabilities/mail-protocol.md) |
+| 2 | `email` + `smtplib` | `mail-protocol` | **shipped** 0.3.0: `make-message` / `send`, `add-alternative` / `add-attachment`, `Date` / `Message-ID`, RFC 5322 addresses, RFC 2047 headers, SMTP AUTH + STARTTLS + TLS; IMAP client · [mail-protocol](capabilities/mail-protocol.md) |
 | 3 | `ipaddress` | `ip-protocol` | **shipped** `parse-ip` / `parse-network`; no IPv4-mapped IPv6 |
 | 4 | `tarfile` / `bz2` / `lzma` | `compression-protocol` backends | **shipped** ustar + `:tar.gz`; `:bzip2` inflate (chipz). xz still overlay |
 | 5 | `struct` | `binary-protocol` | **shipped** `pack` / `unpack` / `calcsize`; encodings stay RFC 4648/QP |
