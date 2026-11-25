@@ -1,6 +1,6 @@
 # mime-protocol (P2)
 
-**Status:** **shipped** — [`egao1980/mime-protocol`](https://github.com/egao1980/mime-protocol) OCI **0.3.2** (`stack-mime`)
+**Status:** **shipped** — [`egao1980/mime-protocol`](https://github.com/egao1980/mime-protocol) OCI **0.3.3** (`stack-mime`)
 
 CLOS media-type / Content-Disposition / CTE / multipart. **Implements** [`serdes-protocol`](serdes.md) `:mime` and `:multipart`. Soft-hooks `http-protocol` `*data-serializers*` when that package is loaded.
 
@@ -26,7 +26,10 @@ Conventions: [API.md](../API.md). Gap row: [STDLIB-GAP.md](../STDLIB-GAP.md).
 | **Header fields** | `set-header` refuses CR, LF or NUL in a value and a name that is not RFC 5322 ftext: `mime-header-error` (a `mime-encode-error`; restart `use-value`), as Python's `EmailMessage` refuses them; `print-mime` checks every field again before it writes. A line over `:max-line-length` octets (default 998) folds before a space, so unfolding gives the value back (0.3.2) |
 | **Header text** | `print-mime` writes one character per octet, header text as UTF-8 (RFC 6532), so `parse-mime` reads back any header text; `print-mime-octets` (0.3.2) |
 | **RFC 2047** | `encode-header-text` (only the words that need it) / `encode-encoded-words` (a whole display name) / `decode-header-text` (B and Q, any charset encoding-protocol knows) (0.3.2) |
-| **Boundaries** | Default multipart boundary: 96 OS-random bits; a part holding its own delimiter line is refused (`mime-encode-error`, restart `use-value` takes another boundary) (0.3.2) |
+| **Boundaries** | Default multipart boundary: 96 OS-random bits; a part holding its own delimiter line is refused (`mime-boundary-error`, restart `use-value` takes another boundary) (0.3.2) |
+| **Continuations** | A long `filename*` goes out as RFC 2231 continuations outside form-data; `parse-content-disposition` joins them, as Python and Thunderbird write them (0.3.3) |
+| **Relay** | A parsed field that was not UTF-8 is printed back as its octets (0.3.3) |
+| **Serdes** | `:mime` / `:multipart` are binary formats: `encode` returns `print-mime-octets` (0.3.3) |
 
 ## Non-goals
 
