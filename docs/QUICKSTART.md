@@ -212,9 +212,9 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `compression-protocol` | **0.5.1** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.3.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
 | `mime-protocol` | **0.3.4** | serdes `:mime` / `:multipart` (binary); nested multiparts; canonical header names; browser form-data names (UTF-8, literal backslash); header fields: C0 controls but HTAB refused (`mime-header-error`), raw non-UTF-8 fields relayed as their octets (`copy-headers`), long lines folded, RFC 2047 `encode-header-text` / `decode-header-text`; RFC 2231 continuations (none in form-data); `guess-type` / `add-type` · [mime-protocol](capabilities/mime-protocol.md) |
-| `mail-protocol` | **0.3.2** | email compose/parse/send (`stack-mail`); Date / Message-ID, `add-alternative` / `add-attachment` (long and non-ASCII filenames as RFC 2231 `filename*`); RFC 5322 addresses (envelope = addr-specs), RFC 2047 headers; Bcc envelope-only; IMAP client · [mail-protocol](capabilities/mail-protocol.md) |
-| `mail-backend-memory` | **0.3.2** | record sent messages |
-| `mail-backend-smtp` | **0.3.2** | SMTP AUTH PLAIN / LOGIN, STARTTLS, implicit TLS (cl-stack-ssl); 8BITMIME / SMTPUTF8; no CR/LF in a command |
+| `mail-protocol` | **0.3.3** | email compose/parse/send (`stack-mail`); Date / Message-ID, `add-alternative` / `add-attachment` (long and non-ASCII filenames as RFC 2231 `filename*`); RFC 5322 addresses (envelope = addr-specs), RFC 2047 headers; Bcc envelope-only; IMAP client (no CR/LF/NUL in a command; literals, modified UTF-7) · [mail-protocol](capabilities/mail-protocol.md) |
+| `mail-backend-memory` | **0.3.3** | record sent messages |
+| `mail-backend-smtp` | **0.3.3** | SMTP AUTH PLAIN / LOGIN, STARTTLS, implicit TLS (cl-stack-ssl); 8BITMIME / SMTPUTF8; no CR/LF in a command |
 | `cache-protocol` | **0.2.0** | get / put (`:ttl`) / delete / incr / CAS; atomic in-memory TTL cache, monotonic clock (`stack-cache`) · [cache](capabilities/cache.md) |
 | `cache-backend-redis` | **0.2.1** | RESP3 Redis / Valkey: host/port or `redis[s]://` URL, AUTH (Redis 5 fallback), SELECT, TLS; a dropped socket or `-LOADING` is retried once on a new connection |
 | `mq-protocol` | **0.1.0** | `publish` / `poll-messages` / `ack` / `nack` (`stack-mq`) · [mq](capabilities/mq.md) |
