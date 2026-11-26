@@ -143,7 +143,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `schema-protocol-arrow` | **0.1.2** | `:arrow` emit + parse (IPC / Parquet) + table↔objects (`stack-schema-arrow`) |
 | `schema-protocol-avro` | **0.1.2** | `:avro` emit/parse (`stack-schema-avro`) |
 | `json-patch` | **0.1.0** | RFC 6902 — AG-UI `STATE_DELTA` via `ag-ui-protocol/client` |
-| `llm-protocol` | **0.7.0** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage, `server-compact` + `portable-turns`, lossless `part-state`, `llm-incomplete-response` for cut streams, typed provider errors (`llm-rate-limited`, `llm-overloaded`, `llm-auth-error`, `llm-not-found`, `llm-transport-error`), `Retry-After`, retry jitter (`stack-llm`) · [cookbook](cookbooks/llm.md) |
+| `llm-protocol` | **0.7.1** | turns + parts + catalog + `embed` / `respond` / stream; retry policy by failure class, cache-aware usage, `server-compact` + `portable-turns`, lossless `part-state`, `llm-incomplete-response` for cut streams, typed provider errors (`llm-rate-limited`, `llm-overloaded`, `llm-auth-error`, `llm-not-found`, `llm-transport-error`), `Retry-After`, retry jitter (`stack-llm`) · [cookbook](cookbooks/llm.md) |
 | `conversation-protocol` | **0.4.0** | session store + buffer / window / summary; `compact-turns`; `provider-compaction-memory` (`stack-conversation`) · [cookbook](cookbooks/conversation.md) |
 | `steer-protocol` | **0.3.0** | rules / `SKILL.md` (`stack-steer`; not A2A `agent-skill`) + path-scoped `AGENTS.md` discovery, base prompt builder · [cookbook](cookbooks/steer.md) |
 | `rag-protocol` | **0.1.3** | chunk / store / rerank / `analyze` / `fuse` / `ingest` / `retrieve` (`stack-rag`) · [cookbook](cookbooks/rag.md) |
@@ -155,11 +155,11 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `rag-backend-splade` | **0.1.0** | sparse term-weight store + encoder |
 | `rag-backend-cross-encoder` | **0.1.0** | pairwise `rerank` (`:score-fn` / `:batch-fn`) |
 | `rag-backend-text` | **0.2.0** | recursive character splitter |
-| `llm-protocol-openai` | **0.5.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream; `prompt_cache_key` + cached-token usage |
+| `llm-protocol-openai` | **0.8.0** | OpenAI-compat `/chat/completions` + `/responses` + `/embeddings` + stream; `prompt_cache_key` + cached-token usage |
 | `llm-protocol-anthropic` | **0.4.0** | Anthropic Messages (`/v1/messages`) — official / vLLM / llama-server; prompt cache breakpoints, compaction on demand (`compact-2026-09-04`) and at a threshold |
 | `llama-cpp` | **0.2.1** | CFFI `libllamastack` ABI 4 (`:grammar` / `:on-token` / `:parsed`); C++ shim turns llama.cpp exceptions and grammar dead ends into `llama-error`, exit with a live engine keeps its code; natives through `asdf-native` (optional CUDA libs); overlay must match |
 | `llm-backend-llama-cpp` | **0.1.5** | native generate / stream / embed; GBNF tools; `:chat-template` `:auto` / ChatML / Llama-3 |
-| `ai-agent-protocol` | **0.14.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
+| `ai-agent-protocol` | **0.16.0** | async-first loop + `:memory` + `:steering` + permissions (always-allow rule store, reject-all-pending), background subagents, lazily discovered instructions (`run-ai-agent`, not `run-agent`) · [cookbook](cookbooks/ai-agent.md) · [tutorial](tutorials/agent-harness.md); denied calls get a tool result; `continue-ai-agent` after a cancel is a fresh turn; `invoke-deny … :by :unattended` / `:policy` |
 | `agent-tools` | **0.2.0** | coding-agent tools: files, search, edit, shell (pty on Unix, process tree kill) · [shell brief](capabilities/agent-tools-shell.md) |
 | `browser-protocol` | **0.2.0** | headless Chrome / Chromium / Edge over CDP: `launch-browser` / `with-browser` / `connect-cdp` (`browser-protocol/launch`), replies by id, `navigate :wait-until`, stack JSON + base64 (`stack-browser`) · [brief](capabilities/browser.md) |
 | `cl-stack-code` | **0.5.0** | coding agent CLI: headless `-p` (H3a), interactive terminal mode (H3b), sessions + steering (H3c), plan mode (H5a), checkpoints + rewind (H5b) · [brief](capabilities/cl-stack-code.md) |
