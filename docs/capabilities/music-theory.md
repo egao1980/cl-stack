@@ -1,7 +1,7 @@
 # music-theory (P2): pitch, interval, key, meter, chord symbols
 
 **Issues:** open: [music-theory#3](https://github.com/egao1980/music-theory/issues/3) (MT1 follow-ups), [#11](https://github.com/egao1980/music-theory/issues/11) and [#13](https://github.com/egao1980/music-theory/issues/13) (logic migration, [below](#logic-migration)), [#18](https://github.com/egao1980/music-theory/issues/18) (chromatic notes as the leading tone of the note before), [#21](https://github.com/egao1980/music-theory/issues/21) (church modes), [#22](https://github.com/egao1980/music-theory/issues/22) (key fit with a tuning offset: [MT5](#mt5-key-fit-with-a-tuning-offset-060-contract))
-**Status:** **shipped**: slices MT0–MT4 and the 0.5.1 and 0.5.2 amendments, [`egao1980/music-theory`](https://github.com/egao1980/music-theory) OCI **0.5.2** published. **MT5 (0.6.0): contract** ([progress](#progress))
+**Status:** **shipped**: slices MT0–MT4 and the 0.5.1 and 0.5.2 amendments, [`egao1980/music-theory`](https://github.com/egao1980/music-theory) OCI **0.5.2** published. **MT5 (0.6.0): implemented, OCI 0.6.0 published** ([progress](#progress))
 **Repos:** `music-theory` (nick `stack-music`)
 **Builds on:** nothing. Pure CL with exact rational arithmetic and no dependencies. MT4 evaluated [music-spelling](https://github.com/ntrocado/music-spelling) (Apache-2.0) for an unmodified import and rejected it: nothing is imported ([MT4](#mt4-spelling-key-detection-transposition-050-done)).
 
@@ -124,7 +124,7 @@ music-theory-warning (warning)
 
 ## Slices
 
-Each slice is one team-solve run against a contract branch in `music-theory`. MT0–MT4 are done. The amendments 0.5.1 (chromatic spelling [#14](https://github.com/egao1980/music-theory/issues/14), octaves in text [#15](https://github.com/egao1980/music-theory/issues/15), MusicXML kinds [#16](https://github.com/egao1980/music-theory/issues/16)) and 0.5.2 (the deciding spelling rule, [#19](https://github.com/egao1980/music-theory/issues/19)) are published. MT5 is under contract.
+Each slice is one team-solve run against a contract branch in `music-theory`. MT0–MT4 are done. The amendments 0.5.1 (chromatic spelling [#14](https://github.com/egao1980/music-theory/issues/14), octaves in text [#15](https://github.com/egao1980/music-theory/issues/15), MusicXML kinds [#16](https://github.com/egao1980/music-theory/issues/16)) and 0.5.2 (the deciding spelling rule, [#19](https://github.com/egao1980/music-theory/issues/19)) are published. MT5 is implemented (0.6.0).
 
 ### MT0: pitch, interval, line of fifths (0.1.0, done)
 
@@ -152,7 +152,7 @@ Each slice is one team-solve run against a contract branch in `music-theory`. MT
 - **Key-detection targets, calibrated.** `detect-key` reproduces music21's rankings exactly, so the sealed tests hold each profile to music21's own top-1 / top-2 counts over the 50 melodies: Krumhansl–Kessler **39/47**, Temperley **45/49**, Aarden **41/48**. The earlier target, top-1 ≥ 85 % and top-2 ≥ 95 %, is met only by Temperley (90 % / 98 %). Krumhansl–Kessler (78 % / 94 %) and Aarden (82 % / 96 %) miss it on short monophonic melodies: the relative minor, the dominant or subdominant key, the parallel mode, a Dorian tune.
 - **Transposition.** `transpose-to-key` moves the tonic's letter at most three steps and keeps degree and alteration, so moving back is the exact inverse, and the roots and basses of `transpose-chord-symbol` with two keys are those of `transpose-to-key`. `choose-enharmonic-key` works on signatures: D♭ over C♯ major by default, F♯ and G♭ major kept as given, `:prefer` and `:max-accidentals` override.
 
-### MT5: key fit with a tuning offset (0.6.0, contract)
+### MT5: key fit with a tuning offset (0.6.0, implemented)
 
 [music-theory#22](https://github.com/egao1980/music-theory/issues/22). The first consumer is monophonic transcription of sung or hummed melodies. Pitches arrive as pitch centres in MIDI numbers with cents (61.37), optionally weighted by duration, and the singer drifts and is rarely at A4 = 440 Hz. Rounded and given to `detect-key`, a take 50 cents flat reads as a semitone down, or smears across two keys. `fit-key` searches the key and one global tuning offset together, reusing MT4's profiles, candidates and exact comparison.
 
@@ -185,7 +185,7 @@ Each slice is one team-solve run against a contract branch in `music-theory`. MT
 |-------|---------|-------|
 | MT0–MT4 | music-theory 0.1.0–0.5.0 | done |
 | 0.5.1, 0.5.2 | music-theory 0.5.2 | done, published |
-| MT5 | music-theory 0.6.0 | **contract**: [music-theory#23](https://github.com/egao1980/music-theory/pull/23) (draft). On the stubs the 1350 existing tests (2780 assertions) pass. Of the 99 MT5 tests, 97 fail (160 assertions) and 2 pass: the given offset table and result value. A throwaway reference implementation, not committed, passes all 1449 tests (3149 assertions; 369 of them MT5), and an exact-fraction Python mirror agrees with every row. Fourteen mutations of the reference are each caught, failing 1 to 57 MT5 tests; among them Pearson per fold, rounding, the offset window, the tie sign, the hint's mode, the normaliser and the restart |
+| MT5 | music-theory 0.6.0 | **implemented, published 0.6.0**: [music-theory#23](https://github.com/egao1980/music-theory/pull/23) (merged; team-solve: 1449 tests, 3149 assertions, green on ubuntu, macOS and Windows). Contract: On the stubs the 1350 existing tests (2780 assertions) pass. Of the 99 MT5 tests, 97 fail (160 assertions) and 2 pass: the given offset table and result value. A throwaway reference implementation, not committed, passes all 1449 tests (3149 assertions; 369 of them MT5), and an exact-fraction Python mirror agrees with every row. Fourteen mutations of the reference are each caught, failing 1 to 57 MT5 tests; among them Pearson per fold, rounding, the offset window, the tie sign, the hint's mode, the normaliser and the restart |
 
 ---
 
