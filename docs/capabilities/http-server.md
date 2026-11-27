@@ -23,7 +23,7 @@ Conventions: [API.md](../API.md). Event loops: [event-protocol.md](event-protoco
 | **Selection DX** | ASDF + `*http-server-backend*` | Load `http-server-backend-hunchentoot` (default) or `…-woo`; no plugin registry |
 | **JSON APIs** | `json-protocol` / `stack-json` in handlers | Cookbook = minimal JSON API over protocol |
 | **TLS terminate** | Backend-specific in wave-2; prefer reverse-proxy in cookbooks | Full TLS accept = follow-on (cl-stack-ssl server path) |
-| **WebSocket upgrade** | Out of this protocol → `ws-protocol` / `ws-backend-websocket-driver` **0.4.3** | H1 Upgrade + H2 CONNECT live there; this backend is generic Clack |
+| **WebSocket upgrade** | Out of this protocol → `ws-protocol` / `ws-backend-websocket-driver` **0.4.4** | H1 Upgrade + H2 CONNECT live there; this backend is generic Clack |
 
 **Supersedes** epic #93 wording “Non-goals: new server protocol reinventing Clack.” We **do not reinvent the Clack env**. We **do** add a thin CLOS server protocol so backends swap like the client stack.
 

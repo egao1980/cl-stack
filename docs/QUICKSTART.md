@@ -175,7 +175,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `http-backend-winhttp` | **0.1.4** | Windows; HTTP/2 + **H1 WebSocket** (`WinHttpWebSocket*`) |
 | `http-backend-java` | **0.1.1** | ABCL `java.net.http` |
 | `ws-protocol` | **0.4.2** | CLOS client + `accept` / `make-ws-server` (`:transport` `:auto`/`:http/1.1`/`:http/2`) |
-| `ws-backend-websocket-driver` | **0.4.3** | H1 Upgrade + **H2 Extended CONNECT server** (`make-ws-server :transport :http/2`); canary [`ws-parity`](https://github.com/egao1980/ws-parity) |
+| `ws-backend-websocket-driver` | **0.4.4** | H1 Upgrade + **H2 Extended CONNECT server** (`make-ws-server :transport :http/2`); client close stops the read thread cooperatively ([#11](https://github.com/egao1980/ws-backend-websocket-driver/issues/11)); canary [`ws-parity`](https://github.com/egao1980/ws-parity) |
 | `ag-ui-protocol` | **0.4.1** | 36 typed events + `/client` reducer (`stack-ag-ui`) · [cookbook](cookbooks/ag-ui.md) |
 | `a2a-protocol` | **0.2.0** | Agent Card + tasks (`stack-a2a`) · [cookbook](cookbooks/a2a.md) |
 | `a2a-backend-jsonrpc` | **0.2.2** | JSON-RPC 2.0 + SSE |

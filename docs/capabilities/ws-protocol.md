@@ -55,7 +55,7 @@ CLOS split (mirrors `http-protocol` HTTP version):
 
 | Backend | Transports | Notes |
 |---------|------------|-------|
-| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) **0.4.3** | `:http/1.1` (client+server) · `:http/2` (server) | H2 listen needs `:ssl-cert` / `:ssl-key`; client H2 stays `http-backend-async` |
+| [`ws-backend-websocket-driver`](https://github.com/egao1980/ws-backend-websocket-driver) **0.4.4** | `:http/1.1` (client+server) · `:http/2` (server) | H2 listen needs `:ssl-cert` / `:ssl-key`; client H2 stays `http-backend-async`. Client close is cooperative: `shutdown(2)` + bounded join (`*read-thread-join-timeout*`, warning `read-thread-join-timeout`), never `destroy-thread` ([#11](https://github.com/egao1980/ws-backend-websocket-driver/issues/11)) |
 | `http-backend-winhttp` **0.1.3+** | `:http/1.1` | Native WinHTTP WebSocket upgrade; live `WINHTTP_WS_LIVE` |
 | `http-backend-async` **0.2.8+** | `:http/2` | RFC 8441 Extended CONNECT + `fast-websocket`; HPACK `":protocol"` string; live `HTTP_ASYNC_WS_H2_LIVE` |
 
