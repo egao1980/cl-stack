@@ -1,7 +1,7 @@
 # audio-protocol (P2): PCM, WAV, mixing, MIDI rendering, decoding, DSP, voice processing
 
 **Issues:** follow-ups in [Progress](#progress)
-**Status:** AU0 [`audio-protocol`](https://github.com/egao1980/audio-protocol) 0.1.0 **implemented**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (merged). AU3, audio-protocol 0.2.0 (the package `stack-audio/dsp`), **contract**: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (draft), issue [audio-protocol#3](https://github.com/egao1980/audio-protocol/issues/3). AU1 (FluidSynth): feasibility checked, [below](#au1-feasibility-libfluidsynth-over-cffi); no repo yet. AU2: planned. AU4 and AU5: optional.
+**Status:** AU0 [`audio-protocol`](https://github.com/egao1980/audio-protocol) 0.1.0 **implemented**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (merged). AU3, audio-protocol 0.2.0 (the package `stack-audio/dsp`), **implemented and published**: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (merged), issue [audio-protocol#3](https://github.com/egao1980/audio-protocol/issues/3). AU1 (FluidSynth): feasibility checked, [below](#au1-feasibility-libfluidsynth-over-cffi); no repo yet. AU2: planned. AU4 and AU5: optional.
 **Repos:** `audio-protocol` (nick `stack-audio`) · `audio-backend-fluidsynth` (AU1) · `audio-backend-ffmpeg` (AU2) · `audio-backend-world` and `audio-backend-signalsmith` (optional)
 **Builds on:** [binary-protocol](binary-protocol.md) 0.1.1, `midi-protocol` 0.1.0 ([score.md](score.md), SC3), [process](process.md) and [compute-protocol](confinement.md) (ffmpeg out of process), `asdf-native` (the native overlays, as in [image.md](image.md))
 
@@ -303,7 +303,7 @@ The fetcher downloads to the user cache directory, checks SHA-256 before first u
 | AU0 | audio-protocol 0.1.0 | **implemented**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (merged). On the contract's stubs, 357 tests: 344 failed, 13 passed (the given model); an independent reference implementation passed all 1000 assertions. The implementation passes all 357 tests (1001 assertions). |
 | AU1 | audio-backend-fluidsynth | feasibility checked (above); repo not created |
 | AU2 | — | planned |
-| AU3 | audio-protocol 0.2.0 | **AU3 contract**: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (draft). 139 new tests: all 139 fail on the stubs, while the 357 AU0 tests (1001 assertions) still pass. An independent reference implementation (not committed) passes all 496 tests, 1834 assertions (833 of them new); its cost check measured about 0.6, against a limit of 3. |
+| AU3 | audio-protocol 0.2.0 | **implemented, published 0.2.0**: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (merged). team-solve: all 496 tests, 1834 assertions pass on ubuntu, macOS and Windows; cost ratios about 0.75 against the limit of 3. Contract: 139 new tests: all 139 fail on the stubs, while the 357 AU0 tests (1001 assertions) still pass. An independent reference implementation (not committed) passes all 496 tests, 1834 assertions (833 of them new); its cost check measured about 0.6, against a limit of 3. |
 
 ### Decisions made in the AU0 contract
 
