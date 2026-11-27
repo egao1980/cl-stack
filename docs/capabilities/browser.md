@@ -38,7 +38,7 @@ The sandbox story is unchanged: Chromium can run inside a `compute-protocol` san
 
 ## BR1: page recording with sound (0.3.0)
 
-**Status:** implemented in [egao1980/browser-protocol#10](https://github.com/egao1980/browser-protocol/pull/10): the contract (stubs + Rove suite), then a team-solve run. CI is green on macOS, Windows and Ubuntu, both core and record jobs ([run 46064932023](https://github.com/egao1980/browser-protocol/actions/runs/46064932023)), with the live audio tests gated as [below](#tests-and-tolerances). Not merged or published yet. **System:** `browser-protocol/record` (package `browser-protocol/record`, nickname `stack-browser/record`), so the core keeps its dependencies.
+**Status:** implemented in [egao1980/browser-protocol#10](https://github.com/egao1980/browser-protocol/pull/10): the contract (stubs + Rove suite), then a team-solve run. CI is green on macOS, Windows and Ubuntu, both core and record jobs ([run 46064932023](https://github.com/egao1980/browser-protocol/actions/runs/46064932023)), with the live audio tests gated as [below](#tests-and-tolerances). Merged and published 0.3.0. **System:** `browser-protocol/record` (package `browser-protocol/record`, nickname `stack-browser/record`), so the core keeps its dependencies.
 
 A program that drives a headless page records what the page shows **and what it plays** into one MP4 (H.264 + AAC). 0.2.0 has no screencast and no audio capture: a consumer hand-rolled `Page.startScreencast`, frame files and an ffmpeg concat call, and its videos were silent, because CDP's screencast carries no audio.
 
