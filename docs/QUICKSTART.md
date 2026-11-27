@@ -207,7 +207,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `serdes-protocol` | **0.2.2** | format encode/decode + Gray/JSONL/events + media types · [cookbook](cookbooks/serdes.md) |
 | `sexp-protocol` | **0.2.2** | serdes `:sexp` implementor |
 | `csv-protocol` | **0.1.0** | serdes `:csv` / `:tsv` (RFC 4180 dialects) · [cookbook](cookbooks/csv.md) |
-| `encoding-protocol` | **0.4.0** | RFC 4648 / QP / RLE; RFC 3986 `percent-encode` / `percent-decode`; strict UTF-8 decode (`stack-encoding`); MIME/IANA charset names; windows-125x, cp866, mac-roman, tis-620 / cp874 in core; iso-2022-jp, big5, euc-kr, cp949, gb18030 via `/cjk` (Python-exact); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
+| `encoding-protocol` | **0.5.0** | RFC 4648 / QP / RLE; RFC 3986 `percent-encode` / `percent-decode`; strict UTF-8 decode (`stack-encoding`); MIME/IANA charset names; windows-125x, cp866, mac-roman, tis-620 / cp874 in core; iso-2022-jp, big5, euc-kr + cp949, gb18030 (Python-exact) in per-charset systems loaded on first use (`*auto-load-charsets*`; `load-charsets` before `save-lisp-and-die`; `/cjk` loads all); serdes via `/serdes` · [encoding-protocol](capabilities/encoding-protocol.md) |
 | `binary-protocol` | **0.1.1** | Python `struct` pack/unpack (`stack-binary`); IEEE infinity / NaN as Python; no RFC 4648 · [binary-protocol](capabilities/binary-protocol.md) |
 | `compression-protocol` | **0.5.1** | codec + zip/ustar (`compress` / `decompress`; `:tar` / `:tar.gz`; `:bzip2` inflate) |
 | `compression-backend-chipz` | **0.3.0** | `:gzip` `:zlib` `:deflate` + `:bzip2` inflate (chipz + salza2) |
