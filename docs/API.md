@@ -155,7 +155,7 @@ MCP sampling is `ai-agent-protocol/mcp:make-mcp-sampling-handler` — **not** `l
 
 Planned. General-purpose notation infrastructure for lead sheets and choral or small-ensemble scores: theory values, an immutable score model with stable ids and provenance, MusicXML / MIDI, engraving, batch audio, and recognisers that mark their guesses.
 
-- `music-theory` (shipped, 0.5.0) — spelled pitch, interval, line of fifths, key, meter and metric weight, rational time, tempo / phrase-window arithmetic, chord-symbol grammar with dialects and essential-tone priorities, Roman numerals, spelling, key detection, transposition.
+- `music-theory` (shipped, 0.5.2; MT5 key fit with a tuning offset under contract for 0.6.0) — spelled pitch, interval, line of fifths, key, meter and metric weight, rational time, tempo / phrase-window arithmetic, chord-symbol grammar with dialects and essential-tone priorities, Roman numerals, spelling, key detection, transposition.
   **Brief:** [capabilities/music-theory.md](capabilities/music-theory.md)
 - `score-protocol` · `score-backend-musicxml` · `score-parity` (skeletons) · `midi-protocol` · `score-backend-midi` — FSet-backed score model, edit-operation algebra, condensed / unfold / part views, MusicXML 4.0 + `.mxl`, SMF codec and score ↔ MIDI with quantisation.
   **Brief:** [capabilities/score.md](capabilities/score.md)
