@@ -37,6 +37,7 @@ E2E CI: workflow **Metapackage E2E** (issues `#21` / `#22`) — clean runner, or
 | [docs/tutorials/](docs/tutorials/README.md) · [examples/](examples/agents/) | Tutorials: long-running agent (retries, compaction, permissions, subagents, `AGENTS.md`) · token-thrifty lisp-mcp session; runnable examples (`cl-repo test --system cl-stack/examples`) |
 | [docs/capabilities/ws-protocol.md](docs/capabilities/ws-protocol.md) | WebSocket client brief (`ws-backend-websocket-driver`) |
 | [docs/capabilities/json-protocol.md](docs/capabilities/json-protocol.md) | JSON encode/decode — jzon default, yason alternate |
+| [docs/capabilities/foreign-runtimes.md](docs/capabilities/foreign-runtimes.md) | Java (ABCL backends, OpenLDK on SBCL) and Python (no bridge; subprocess, py4cl2, data exchange) |
 | [docs/cookbooks/terminal.md](docs/cookbooks/terminal.md) | Headless terminals + PTYs (`terminal-protocol`, `pty-protocol`); TUI / image briefs: [tui](docs/capabilities/tui.md) · [image](docs/capabilities/image.md) |
 | [docs/pins.md](docs/pins.md) | Pin file format + stable/edge channels |
 | [docs/overlays.md](docs/overlays.md) | Wave-1 platform matrix, GHCR overlay naming, `asdf-native` `(:native-library …)` natives |
