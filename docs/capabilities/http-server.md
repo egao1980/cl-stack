@@ -15,7 +15,7 @@ Conventions: [API.md](../API.md). Event loops: [event-protocol.md](event-protoco
 |----------|--------|-----------|
 | **Shape** | **CLOS protocol + backends** (same as http/event/json) | Issue disposition upgraded from “pin Clack only”; stack rule is protocol → backend → facade |
 | **App contract** | **[Clack](https://github.com/fukamachi/clack) env** (Lack-compatible) | De-facto CL WSGI; don’t invent a second app plist. Protocol **owns lifecycle + CLOS types**; apps are still `(lambda (env) → response)` Clack functions |
-| **Middleware** | **[Lack](https://github.com/fukamachi/lack)** | Compose around Clack apps; not reimplemented in protocol |
+| **Middleware** | **[middleware-protocol](middleware.md)** (amended by [#427](https://github.com/egao1980/cl-stack/issues/427)): mixin classes with `:around` methods on `handle`; `middleware-protocol/clack` turns a handler into a Clack app (`clack-app`) | Stack middleware (sessions, headers, timing, error mapping) is written once and applies to any handler, not only Clack apps. Lack stays importable for apps that want it: a Lack app or a Lack-built stack can be the primary of a `clack-handler` |
 | **Default backend (A)** | **[Hunchentoot](https://github.com/edicl/hunchentoot)** via Clack adapter | **Windows primary** + linux/darwin; no libev; mature; good for dev + portable prod |
 | **Second backend (B)** | **[Woo](https://github.com/fukamachi/woo)** | Fast Unix accept loop on **libev**; shares native story with `event-backend-libev` |
 | **HTTP/2 backend** | **`http-server-backend-http2` 0.2.0** (same repo; zellerin `http2`) | TLS required. Advertises `ENABLE_CONNECT_PROTOCOL`. CONNECT dispatched on `process-end-headers` (not `peer-ends-http-stream`) |
@@ -43,7 +43,7 @@ Scores: **1** (poor) … **5** (excellent) for cl-stack needs.
 | Maintenance | **4** | **4** | **4** |
 | **Wave-2 role** | **Default (A)** | **Second (B)** | reject as sole story |
 
-**Verdict:** protocol + **Hunchentoot default**, **Woo second (Unix)**. Pin Clack/Lack as the app/middleware layer both backends speak.
+**Verdict:** protocol + **Hunchentoot default**, **Woo second (Unix)**. Pin Clack as the app layer both backends speak. Middleware: [middleware-protocol](middleware.md) (Lack stays importable).
 
 ---
 

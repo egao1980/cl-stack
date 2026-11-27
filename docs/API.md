@@ -42,6 +42,8 @@
 - `cl-stack-config` — env + **TOML** (tomlet); 0.3.0 (publish pending): `.env` files (python-dotenv) and `load-into` typed settings over schema-protocol — [config.md](capabilities/config.md)
 - `http-server-protocol` — CLOS server lifecycle; **Clack env** app contract; Hunchentoot default / Woo Unix  
   **Brief:** [capabilities/http-server.md](capabilities/http-server.md) · cookbook [http-server.md](cookbooks/http-server.md)
+- `middleware-protocol` (M0 contract) — middleware for any handler: one `handle` generic function, middleware as mixin classes (`:around` / `:before` / `:after`) ordered by the class precedence list, `make-handler` for run-time stacks, request property bags, `map-response` for immediate, Clack-streamed and promised responses; `/clack` bridges Clack apps  
+  **Brief:** [capabilities/middleware.md](capabilities/middleware.md) (M0: [middleware-protocol#1](https://github.com/egao1980/middleware-protocol/pull/1))
 
 ## Wave-2 app tooling (briefs locked)
 
