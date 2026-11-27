@@ -1,9 +1,9 @@
 # session-protocol (P2): anonymous server-side sessions for Clack apps
 
 **Issues:** [#426](https://github.com/egao1980/cl-stack/issues/426) (this protocol) · [rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19) (first consumer, S1) · [#427](https://github.com/egao1980/cl-stack/issues/427) (middleware-protocol, which S0b binds to)
-**Status:** S0 [`session-protocol`](https://github.com/egao1980/session-protocol) 0.1.0 **implemented and published**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged; team-solve, 308 tests, 934 assertions, green on ubuntu, macOS and Windows). Follow-ups: [#2](https://github.com/egao1980/session-protocol/issues/2) (decisions through the logic family), [#3](https://github.com/egao1980/session-protocol/issues/3). S0b and S1 are planned.
+**Status:** S0 [`session-protocol`](https://github.com/egao1980/session-protocol) 0.1.0 **implemented and published**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged; team-solve, 308 tests, 934 assertions, green on ubuntu, macOS and Windows). Follow-ups: [#2](https://github.com/egao1980/session-protocol/issues/2) (decisions through the logic family), [#3](https://github.com/egao1980/session-protocol/issues/3). S0b **contract**: [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4) (draft; `session-protocol/middleware` 0.2.0, the `session-handler` mixin). S1 is planned.
 **Repos:** `session-protocol` (nick `stack-session`)
-**Builds on:** [cache-protocol](cache.md) 0.2.0 (the store), [secrets-protocol](secrets.md) 0.1.3 (ids, constant-time compare), [json-protocol](json-protocol.md) 0.2.4 (serialization), [http-server-protocol](http-server.md) (the Clack env and response are normative), cl-cookie 0.2.0 and quri 0.7.2 (cl-stack-systems imports); later [middleware-protocol](middleware.md) (#427, S0b)
+**Builds on:** [cache-protocol](cache.md) 0.2.0 (the store), [secrets-protocol](secrets.md) 0.1.3 (ids, constant-time compare), [json-protocol](json-protocol.md) 0.2.4 (serialization), [http-server-protocol](http-server.md) (the Clack env and response are normative), cl-cookie 0.2.0 and quri 0.7.2 (cl-stack-systems imports); [middleware-protocol](middleware.md) 0.1.0 and `middleware-protocol/clack` 0.1.0 (#427, S0b only)
 
 Web apps on http-server-protocol (Clack apps such as rpc-backend-htmx and canvas apps) have no per-visitor state. Multi-page flows (a wizard, recent items, per-visitor limits) need an **anonymous server-side session per browser**:
 - one cookie with a random id;
@@ -139,14 +139,50 @@ Restart functions `skip-value` and `retry` follow CLHS style: they invoke the re
 - store failures with RETRY and CONTINUE in both phases, a corrupt record, the cache's own restarts kept live;
 - no id in any report.
 
-### S0b: the middleware binding (once middleware-protocol exists)
+### S0b: the middleware binding (session-protocol/middleware 0.2.0)
 
-The middleware binding is a **`session-handler` mixin** on middleware-protocol, slice S0b, once that protocol exists; rpc-backend-htmx#19 (S1) uses it. middleware-protocol is CLOS method combination (#427, "Design decision: middleware is CLOS method combination"), so the mixin specializes its `handle` generic function's hooks:
-- the mixin holds a `session-manager` (an initarg);
-- its `prepare-request` hook calls `begin-session` on the request's Clack env, installs the env it returns (`setf clack-request-env`), and puts the session on the request (`request-property :session`);
-- its `finish-response` hook calls `finish-session` through `map-response`, so a streamed response commits before its body. `finish-session` then gets the response list, or the head of a streamed response; its own streaming case is for callers that do not go through `map-response`.
+The middleware binding is a **`session-handler` mixin** on [middleware-protocol](middleware.md) 0.1.0. It lives in the secondary system **`session-protocol/middleware`** (package `session-protocol/middleware`, nickname `stack-session-middleware`), which depends on session-protocol, `middleware-protocol` 0.1.0 and `middleware-protocol/clack` 0.1.0. The core system `session-protocol` does not depend on middleware-protocol. Every system in the `.asd` is 0.2.0, and S0's behaviour does not change. rpc-backend-htmx#19 (S1) uses the mixin. `begin-session` and `finish-session` stay the transport-neutral core.
 
-`begin-session` and `finish-session` stay the transport-neutral core. The sketch in [middleware.md](middleware.md) (Examples) is this mixin.
+**Contract:** [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4) (draft). The header of `src/middleware.lisp` is the specification.
+
+```lisp
+;; session-protocol/middleware (stack-session-middleware)
+(defclass session-handler (stack-middleware:handler) ())   ; :session-manager, SESSION-HANDLER-MANAGER
+(defmethod stack-middleware:prepare-request ((h session-handler) (r clack-request)))           ; → request
+(defmethod stack-middleware:finish-response ((h session-handler) (r clack-request) response))  ; → response
+(defun request-session (request))                          ; → session or NIL
+
+(stack-middleware-clack:clack-app
+ (stack-middleware:make-handler '(response-headers-handler session-handler clack-handler)
+                                :session-manager manager :app #'my-app …))
+```
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Where it lives** | A secondary system of session-protocol, not part of middleware-protocol, so the core stays lean. This answers S0's open question. | Each protocol owns its binding. middleware-protocol does not know about sessions. |
+| **Configuration** | `:session-manager` (the initarg is named after the mixin, and the slot is a symbol of its package). The default is a fresh `(make-session-manager)` for each handler instance: process-local, for development. Anything that is not a `session-manager` is a `type-error` from `make-instance` and `make-handler`. | middleware.md, "Slot names". Zero-configuration development, as in S0. |
+| **Hooks only** | `session-handler` has no `handle` method (no `:around`, `:before` or `:after`). It specializes `prepare-request` and `finish-response` on `clack-request` and nothing else. | The hooks run inside middleware-protocol's base method, which is what the short-circuit and error rules below rest on |
+| **Env propagation** | `prepare-request` calls `begin-session` on `(clack-request-env request)`. It puts the session on the request as `:session` and installs the env that `begin-session` returns with `(setf clack-request-env)`; that env is `(list* :session session env)`. Then it returns `(call-next-method)`. `clack-handler` calls the app with `(list* :middleware.request request env*)`. Inside the app, `(env-session env)` and `(request-session (env-request env))` are the same session. The server's env is not modified: it is the tail of the new env. | middleware M0: "layers that change the env install a new plist". S0's key `:session` is in the app's env, unchanged. |
+| **Hook order** | The session is begun before the `prepare-request` methods of inner mixins (those after it in the class precedence list), so they see it on the request and in the env. Outer mixins see it only after their `call-next-method`. `finish-response` commits the response that the inner mixins' `finish-response` methods return. Outer hooks, and every `:around` that maps the response (`response-headers-handler`, `timing-handler`), see the response with the Set-Cookie, wherever they sit. | The onion of M0's hooks |
+| **The commit** | `(finish-session manager session (clack-request-env request) response*)`. The base method calls `finish-response` through `map-response`, so `response*` is always an immediate list. For a Clack streaming response, it is the head the app hands its responder. **The commit runs when the app calls its responder, before the body** (verified against middleware-protocol/clack's `map-response` on `function`). A later write signals `session-write-error`. An app that never calls its responder commits nothing. `finish-session`'s own streaming case is not used here. A request whose session is missing (an inner `prepare-request` replaced it, or a direct call) passes through unchanged. | D7, D8. The head is the last moment headers can change. |
+| **Short-circuit** | An `:around` that answers without `call-next-method` skips both hooks, wherever it sits in the class precedence list (for example, a gate's 403). No `begin-session` runs, the store is not called, nothing is committed, no Set-Cookie is sent, and the request has no session. Outer `:around`s still map the answer. | middleware M0: "hooks belong to requests that reach the primary" |
+| **Errors** | A condition escaping the app unwinds the base method before `finish-response`. The session was begun but is not committed. That holds also when `error-handler` maps the condition to a response, wherever `error-handler` sits: its `:around` is outside the base method. So the 500 has no session Set-Cookie, nothing is stored, the request's changes are lost and the stored session is unchanged. The error function still sees the begun session through `request-session`. An error page that must keep the session calls `finish-session` itself. S0's store restarts stay live inside an error function, because `handle-error` runs before unwinding. A store failure while a streamed response commits propagates out of the responder call, outside `error-handler` (middleware M2). | S0: "a condition escaping the app means no commit". A half-done request should not persist its changes. |
+| **Pass-through** | A request that is not a `clack-request` gets no session, because neither method applies. That covers a plain `request`, later an rpc request, and any other object. The manager is not called, and the answer is unchanged. Subclasses of `clack-request` (`clack-app`'s `:request-class`) get sessions. `request-session` returns NIL for anything that is not a `request`, so code that may get any request can ask. | D5: inapplicable methods are the pass-through |
+| **No special variable** | The channels are the request property and the env key. A streamed body still reaches both. | D6 |
+| **Tests layout** | The existing `session-protocol/tests` system gets four files, `tests/middleware-*.lisp`, in their own package `session-protocol/middleware/tests`. They reuse S0's world, counting cache and cookie jar (`browser`). `session-protocol/middleware`'s test-op is the same system. One `cl-repo test --system session-protocol` runs S0 and S0b, and CI is unchanged. | One verdict, with S0 as the regression guard and no copied helpers |
+
+**Tests (49, Rove, `deftest-parametrize` for the CPL tables).** Clack apps built with `make-handler`, driven over several requests with S0's cookie jar:
+- configuration, and hooks only;
+- persistence; a new browser; no cookie when nothing is stored (the app's response comes back `eq`); a read within the refresh interval;
+- rotation and ending through the handler;
+- the env and request seen by the app; Secure on https; a `clack-request` subclass; the default manager;
+- streaming: the commit at the responder call, before the first chunk; writes after it; an app that never responds; a read-only head passed through `eq`; a loaded session; the server's writer passed through; the head through header and timing mixins in three orders; a store failure at the responder call, with CONTINUE;
+- the hook order; CPL variants that give the same headers and cookies (session outside and inside `response-headers-handler`, with timing, with errors, and a `defclass` handler); an app cookie with the session's name;
+- timing seeing the cookie in either order;
+- the gate in three positions, and for a new browser;
+- an error mapped in three positions, for a new browser, and committed by hand; an error that propagates with no `error-handler`;
+- load failures through the handler, with RETRY and CONTINUE; a save failure decided by an error function;
+- pass-through for four request kinds.
 
 ### S1: rpc-backend-htmx (rpc-backend-htmx#19)
 
@@ -173,7 +209,7 @@ S1 uses S0b.
 | Slice | Package | State |
 |-------|---------|-------|
 | S0 | session-protocol 0.1.0 | **implemented, published 0.1.0**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged). team-solve: 308 tests, 934 assertions. Contract: On the stubs, 308 tests: 250 fail, 58 pass (the given conditions and constructors). An independent reference implementation passes all 308 tests (934 assertions). |
-| S0b | `session-handler` on middleware-protocol | planned; needs middleware-protocol (#427) |
+| S0b | session-protocol/middleware 0.2.0 | **contract**: [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4) (draft). 49 new tests. On the stubs, S0's 308 tests pass (934 assertions); of the 49, 2 pass (the given configuration) and 47 fail. A throwaway reference implementation passes all 357 tests (1198 assertions), and eleven mutations of it (an `:around` instead of the hooks, a commit before the inner hooks, no env install, and others) are each caught. Next: team-solve. |
 | S1 | rpc-backend-htmx | planned ([rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19)) |
 
 ### Follow-ups
@@ -184,6 +220,5 @@ S1 uses S0b.
 
 ## Open questions
 
-- Where the S0b mixin lives: a secondary system `session-protocol/middleware` that depends on middleware-protocol (lean), or inside middleware-protocol.
 - A fresh session in the same request after `end-session`, for a logout that leaves a flash message. In 0.1.0 such a write is `session-write-error`.
 - Whether S1 wants a shorter default idle TTL than one day.
