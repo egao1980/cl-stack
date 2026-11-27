@@ -44,6 +44,8 @@
   **Brief:** [capabilities/http-server.md](capabilities/http-server.md) · cookbook [http-server.md](cookbooks/http-server.md)
 - `middleware-protocol` (M0 contract) — middleware for any handler: one `handle` generic function, middleware as mixin classes (`:around` / `:before` / `:after`) ordered by the class precedence list, `make-handler` for run-time stacks, request property bags, `map-response` for immediate, Clack-streamed and promised responses; `/clack` bridges Clack apps  
   **Brief:** [capabilities/middleware.md](capabilities/middleware.md) (M0: [middleware-protocol#1](https://github.com/egao1980/middleware-protocol/pull/1))
+- `session-protocol` (S0 contract) — anonymous server-side sessions for Clack apps (`stack-session`): JSON values, a store protocol over cache-protocol, `token-urlsafe 32` ids, a cookie policy, `begin-session` / `finish-session` phases for middleware  
+  **Brief:** [capabilities/session.md](capabilities/session.md) ([#426](https://github.com/egao1980/cl-stack/issues/426); S0 contract: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1))
 
 ## Wave-2 app tooling (briefs locked)
 
