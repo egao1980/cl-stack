@@ -1,7 +1,7 @@
 # audio-protocol (P2): PCM, WAV, mixing, MIDI rendering, decoding, DSP, voice processing
 
 **Issues:** follow-ups in [Progress](#progress)
-**Status:** AU0 [`audio-protocol`](https://github.com/egao1980/audio-protocol) 0.1.0 **contract**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (draft). AU1 (FluidSynth): feasibility checked, [below](#au1-feasibility-libfluidsynth-over-cffi); no repo yet. AU2 and AU3: planned. AU4 and AU5: optional.
+**Status:** AU0 [`audio-protocol`](https://github.com/egao1980/audio-protocol) 0.1.0 **implemented**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (merged). AU3, audio-protocol 0.2.0 (the package `stack-audio/dsp`), **contract**: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (draft), issue [audio-protocol#3](https://github.com/egao1980/audio-protocol/issues/3). AU1 (FluidSynth): feasibility checked, [below](#au1-feasibility-libfluidsynth-over-cffi); no repo yet. AU2: planned. AU4 and AU5: optional.
 **Repos:** `audio-protocol` (nick `stack-audio`) · `audio-backend-fluidsynth` (AU1) · `audio-backend-ffmpeg` (AU2) · `audio-backend-world` and `audio-backend-signalsmith` (optional)
 **Builds on:** [binary-protocol](binary-protocol.md) 0.1.1, `midi-protocol` 0.1.0 ([score.md](score.md), SC3), [process](process.md) and [compute-protocol](confinement.md) (ffmpeg out of process), `asdf-native` (the native overlays, as in [image.md](image.md))
 
@@ -32,6 +32,19 @@ The first consumer is the rehearsal set of [score.md](score.md) (SC4). score-bac
 
 No permissive, maintained CL library covers WAV with extensible formats, mixing and a MIDI render protocol (survey 2026-11). CL MIDI libraries are prior art in [score.md](score.md).
 
+### FFT survey (AU3)
+
+Checked 2026-11-27 for a permissive (MIT, BSD, zlib), SBCL-clean CL FFT to import instead of writing one.
+
+| Library | License | Finding |
+|---------|---------|---------|
+| napa-fft3 (Paul Khuong) | BSD-3 | Fast split-radix with real FFTs, power-of-two sizes. But it is SBCL only: its packages `:use SB-EXT`, it locks with `sb-thread`, and it calls the internal `sb-vm::swap-complex`. It generates code at run time, its main system loads its tests, and its last commit is from 2015. Not imported. |
+| Bordeaux-FFT | GPL-2 | Rejected by the [license policy](../LICENSE-POLICY.md) |
+| cl-fft and pfft (Patrick Stein, 2011) | not stated | No license found on its pages; unmaintained. Not imported. |
+| numpy, scipy, librosa, aubio | BSD-3, ISC (librosa), GPL-3 (aubio) | Conventions only: numpy's FFT scaling, scipy's periodic analysis windows, librosa's centred frames and `win_length = frame_length // 2`, aubio's d′ = 1 on a zero sum. No code. |
+
+**Decision:** our own radix-2 FFT in the DSP package. The sizes are small (frames of 2048 points), the code is short, and it runs on every Lisp the stack tests.
+
 ---
 
 ## Locked decisions
@@ -54,7 +67,15 @@ No permissive, maintained CL library covers WAV with extensible formats, mixing 
 | **SoundFont synthesis (AU1)** | libfluidsynth **2.6.x** over CFFI (asdf-native overlay), with `osal=cpp11`, no GLib, every driver off, built with `zig cc` for the four overlay targets. LGPL-2.1 native, so it ships as an overlay plus `NOTICE`, dynamically linked; the Lisp stays MIT. | Feasibility below: all four targets built, and SBCL ran it with traps on |
 | **SoundFont** | **FluidR3_GM** (MIT; Frank Wen, Toby Smithe), 148,398,306 bytes. **Never vendored**: fetched on first use from a pinned URL, checked against its SHA-256, and cached. AU1's own tests use a tiny SF2 that the test suite **writes itself**, so CI downloads nothing. GeneralUser GS (custom permissive license, sample provenance uncertain by the author's own account) is a user-supplied option, not a default. | MIT is on the [allowlist](../LICENSE-POLICY.md); a custom license is not |
 | **Decoding (AU2)** | `decode-audio source &key format` / `encode-audio buffer format`. WAV stays in Lisp. MP3/M4A/AAC/Opus/WebM go through **ffmpeg out of process**: in a container (compute-backend-podman, R4g-2) where available, else a host ffmpeg confined by compute-protocol (Seatbelt / Landlock, network off, the work directory only). Batch only, with size and duration limits. | Hostile uploads never meet an in-process decoder; ffmpeg's licence never touches the image |
-| **DSP (AU3)** | A `stack-audio/dsp` module: radix-2 complex and real FFT, Hann/Hamming/Blackman windows, frames and hops, RMS, peak, `normalize`, and an STFT. It is what transcribe-protocol's pYIN backend needs. If a permissive, SBCL-clean CL FFT library exists, it is imported instead (to check in AU3). | The transcription front end; FFT is not in AU0 |
+| **DSP (AU3)** | A DSP module: radix-2 complex and real FFT, Hann/Hamming/Blackman windows, frames and hops, an STFT, RMS, peak, `normalize`, `downmix`, and the YIN lag functions through the FFT. It is what transcribe-protocol's pYIN backend needs (16 kHz, frames of 2048, hop 256). Pure Lisp, with our own FFT: the AU3 survey ([prior art](#fft-survey-au3)) found no permissive, portable library to import. The rows below lock the details. | The transcription front end; FFT is not in AU0 |
+| **DSP package** | `audio-protocol/dsp`, nickname `stack-audio/dsp`, in the `audio-protocol` system (0.2.0). It uses `audio-protocol` and exports no name that package exports. | `fft`, `rms`, `peak` and `normalize` are common words. A consumer can `:use` both packages, or give the DSP one a local nickname. |
+| **DSP types** | Arithmetic is `double-float`. Results are fresh **`double-vector`s**, `(simple-array double-float (*))`, and **`complex-vector`s**, `(simple-array (complex double-float) (*))`. Frames and STFTs are simple-vectors of them. Inputs are any vector of the stated numbers; a list is a `type-error`. A mono `pcm-buffer` stands for its samples; a buffer of more channels is an `audio-error` (`downmix` first). Nothing modifies an argument. | Analysis sums thousands of products, so doubles. Buffers stay single-floats, as AU0 decided. |
+| **FFT** | Radix 2, power-of-two sizes. The forward transform is unscaled, X_k = Σ x_n e^(−2πikn/N); `ifft` scales by 1/N; `rfft` returns bins 0 … ⌊N/2⌋. Results are within 1e-11 · Σ\|x_n\| of the exact DFT, so twiddles come from exact angles (or a table of them). | numpy's convention: `(ifft (fft x))` is x, and Parseval holds with 1/N |
+| **Sizes that are not powers of two** | `fft-size-error` (an `audio-error`, slot `size`), signalled inside two restarts: **`zero-pad`** (pad to the next power of two) and **`use-value`** (another input, checked again). `stft` checks its frame size once per call; there `zero-pad` keeps the frames and window and pads each windowed frame, the usual FFT longer than the window, and `use-value` takes another size. The lag functions take any length and never signal it. | The standard restart for a replacement, plus the one recovery everybody wants (25 ms frames at 16 kHz are 400 samples, 512 points) |
+| **Windows** | `make-window kind size &key symmetric`, kinds `:rectangular`, `:hann`, `:hamming` and `:blackman`. **Periodic by default** (u = 2πn/N); `:symmetric t` divides by N − 1. Classic coefficients: 0.54/0.46 and 0.42/0.5/0.08. Size 1 gives #(1). | Periodic windows overlap-add flat (Hann at a hop of N/2 sums to exactly 1) and are scipy's analysis default. Symmetric is numpy's `hanning`. |
+| **Framing** | `frame-signal signal size hop &key pad`. **`:center` by default**: frame i is centred on sample i·hop, with zeros past each end, so there are ⌈L/hop⌉ frames (every centre a sample of the signal; librosa and torch add one more when hop divides L). `:end`: frames from sample 0 up to the first one that reaches the last sample, the tail zero-padded. `:none`: whole frames only. `frame-count` and `frame-start` give the arithmetic. | Frame i sits at time i·hop/rate, which is what a pitch tracker reports |
+| **Levels** | `rms` and `peak` count every sample of every channel. `frame-rms` sums each frame on its own, so a silent frame after a loud passage is exactly 0. `normalize x &key (peak-db 0)` scales to a peak in dBFS with no clipping; silence is copied unscaled. `downmix` is the channel mean in double-float; for stereo it is exactly `(mix (list b) :channels 1 :clip :none)`. | AU0 has `pcm-channel` and a two-channel `mix` only |
+| **YIN lag functions** | `autocorrelation` (linear) and `yin-difference` (YIN's d over the first W = ⌊N/2⌋ samples, lags up to N − W), both through the FFT in O(N log N), within 1e-11 · E of their direct sums (E the frame's energy). d then snaps values below 1e-10 · E to 0, so silence, a constant frame and an exact period give exact zeros. `cumulative-mean-normalize` gives d′, with d′(0) = 1 and d′ = 1 where the running sum is 0 (aubio's rule; librosa's tiny epsilon makes silence look periodic). `yin-cmndf` is the composition. A test checks the O(N log N) cost. | pYIN thresholds d′. Without the snap, round-off turns 0/0 into noise. |
 | **Licenses** | GPL tools (Autotalent, Zita-AT1, x42-autotune, MXTune) are study only | License policy |
 
 ---
@@ -63,7 +84,7 @@ No permissive, maintained CL library covers WAV with extensible formats, mixing 
 
 | Repo / system | Role |
 |---------------|------|
-| `audio-protocol` | The model, WAV, `pan-gains`, `mix`, `loop-region`, `resample`, the engine protocol and `reference-engine` (AU0); `stack-audio/dsp` (AU3); `decode-audio` / `encode-audio` generic functions (AU2) |
+| `audio-protocol` | The model, WAV, `pan-gains`, `mix`, `loop-region`, `resample`, the engine protocol and `reference-engine` (AU0); the package `audio-protocol/dsp`, nickname `stack-audio/dsp` (AU3); `decode-audio` / `encode-audio` generic functions (AU2) |
 | `audio-backend-fluidsynth` | AU1: `fluidsynth-engine` (`render-midi`, a one-pass `render-stems`), the libfluidsynth overlay for linux-amd64, linux-arm64, darwin-arm64 and windows-amd64, the SoundFont fetcher |
 | `audio-backend-ffmpeg` | AU2: an `audio-codec` running ffmpeg out of process through compute-protocol |
 | `audio-backend-world`, `audio-backend-signalsmith` | Optional (AU4, AU5): voice analysis and resynthesis (WORLD, modified BSD), and pitch and time stretching (Signalsmith Stretch, MIT, behind a small C shim) |
@@ -100,7 +121,7 @@ No permissive, maintained CL library covers WAV with extensible formats, mixing 
 (defclass reference-engine (audio-engine) (waveform amplitude))
 ```
 
-Later slices add `(defgeneric codec-decode (codec source &key format))`, `codec-encode` and the conveniences `decode-audio` and `encode-audio` (AU2), and the `stack-audio/dsp` functions (AU3).
+Later slices add `(defgeneric codec-decode (codec source &key format))`, `codec-encode` and the conveniences `decode-audio` and `encode-audio` (AU2), and the DSP package (AU3, below).
 
 ### Conditions
 
@@ -111,14 +132,48 @@ audio-error (error)                         reason
 ├── audio-encode-error                      index
 ├── audio-mismatch-error                    index — restarts skip-input, use-value
 ├── audio-limit-exceeded                    limit, value — restart continue (renders)
-└── audio-engine-error                      engine
-    └── audio-backend-unavailable           no method, no native library, no SoundFont
+├── audio-engine-error                      engine
+│   └── audio-backend-unavailable           no method, no native library, no SoundFont
+└── fft-size-error (AU3, stack-audio/dsp)   size — restarts zero-pad, use-value
 audio-warning (warning)                     reason
 ├── samples-clipped                         count, peak
 └── wav-format-warning                      offset (a partial frame)
 ```
 
 AU2 signals `audio-format-error` for undecodable input, and lets compute-protocol's own conditions (`sandbox-denied`, `confinement-unavailable`) through with their restarts. Backends define no parallel tree.
+
+## Protocol surface (AU3)
+
+```lisp
+;; package audio-protocol/dsp (nickname stack-audio/dsp); it uses audio-protocol
+(deftype double-vector ())  (deftype complex-vector ())        ; fresh results
+(define-condition fft-size-error (audio-error) (size))         ; restarts zero-pad, use-value
+(defun zero-pad (&optional condition))
+
+;; FFT (radix 2)
+(defun power-of-two-p (n))  (defun next-power-of-two (n))
+(defun fft (x))  (defun ifft (spectrum))  (defun rfft (x))     ; rfft: bins 0 .. N/2
+
+;; windows, frames, STFT
+(defparameter +window-kinds+ '(:rectangular :hann :hamming :blackman))
+(defparameter +pad-policies+ '(:center :end :none))
+(defun make-window (kind size &key symmetric))                 ; periodic unless symmetric
+(defun frame-count (length size hop &key (pad :center)))
+(defun frame-start (index size hop &key (pad :center)))
+(defun frame-signal (signal size hop &key (pad :center)))      ; → simple-vector of frames
+(defun stft (signal size hop &key (window :hann) (pad :center))) ; → simple-vector of half spectra
+(defun magnitude (spectrum))  (defun bin-frequency (k size sample-rate))
+
+;; levels
+(defun rms (x))  (defun peak (x))  (defun frame-rms (signal size hop &key (pad :center)))
+(defun normalize (x &key (peak-db 0)))  (defun downmix (buffer))
+
+;; lags (through the FFT, O(N log N))
+(defun autocorrelation (frame &key max-lag))                   ; r(0 .. max-lag), linear
+(defun yin-difference (frame &key window max-lag))             ; YIN's d
+(defun cumulative-mean-normalize (difference))                 ; YIN's d'
+(defun yin-cmndf (frame &key window max-lag))                  ; d' of a frame
+```
 
 ---
 
@@ -156,11 +211,14 @@ AU2 signals `audio-format-error` for undecodable input, and lets compute-protoco
 
 ### AU3: DSP for transcription (audio-protocol 0.2.0)
 
-**Stubbed:** `stack-audio/dsp`: FFT and real FFT (radix 2), windows, framing, STFT, RMS, peak and `normalize`. **Tests:**
-- FFT against a direct DFT, and Parseval's theorem.
-- Window sums, and the frame count rule.
-- STFT peaks of the reference engine's notes.
-- A 44.1 → 16 kHz → pYIN-ready pipeline over a rendered melody.
+**Contract:** [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (draft), for issue [audio-protocol#3](https://github.com/egao1980/audio-protocol/issues/3). **Given:** the package `audio-protocol/dsp` (`stack-audio/dsp`) and its exports, `double-vector` and `complex-vector`, `fft-size-error` and the `zero-pad` restart function, `+window-kinds+` and `+pad-policies+`. **Stubbed:** FFT, inverse and real FFT (radix 2), windows, framing, STFT, RMS, peak, `frame-rms`, `normalize`, `downmix`, autocorrelation and YIN's d and d′. **Tests** (139):
+- FFT: against a direct DFT at 9 sizes (seeded random input) and the inverse DFT, round trips, Parseval's theorem, known transforms, the real FFT against both, input types, fresh results, and `fft-size-error` with both restarts.
+- Windows: closed forms for every kind and convention, symmetry, sums, and flat overlap-add.
+- Frames: the frame count rule (26 cases), frame contents at the edges for each padding policy, buffers.
+- STFT: the real FFT of windowed frames, a bin-centred sine with exact bin magnitudes, peaks of the reference engine's notes, and the size restarts.
+- Levels: `rms`, `peak`, `frame-rms` (a silent frame after a loud one is 0), `normalize`, `downmix` (equal to `mix` to one channel).
+- Lags: autocorrelation, d and d′ against their direct definitions, exact zeros, and an O(N log N) cost check.
+- A 44.1 → 16 kHz → pYIN-ready pipeline over a rendered melody: `downmix`, `normalize`, `resample`, centred frames of 2048 every 256, and d′ dips within a sample of each note's period.
 
 ### Later, optional: WORLD and Signalsmith (AU4, AU5)
 
@@ -242,9 +300,10 @@ The fetcher downloads to the user cache directory, checks SHA-256 before first u
 
 | Slice | Package | State |
 |-------|---------|-------|
-| AU0 | audio-protocol 0.1.0 | **contract**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (draft). On the stubs, 357 tests: 344 fail, 13 pass (the given model). An independent reference implementation passes all 1000 assertions. |
+| AU0 | audio-protocol 0.1.0 | **implemented**: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1) (merged). On the contract's stubs, 357 tests: 344 failed, 13 passed (the given model); an independent reference implementation passed all 1000 assertions. The implementation passes all 357 tests (1001 assertions). |
 | AU1 | audio-backend-fluidsynth | feasibility checked (above); repo not created |
-| AU2, AU3 | — | planned |
+| AU2 | — | planned |
+| AU3 | audio-protocol 0.2.0 | **AU3 contract**: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4) (draft). 139 new tests: all 139 fail on the stubs, while the 357 AU0 tests (1001 assertions) still pass. An independent reference implementation (not committed) passes all 496 tests, 1834 assertions (833 of them new); its cost check measured about 0.6, against a limit of 3. |
 
 ### Decisions made in the AU0 contract
 
@@ -255,6 +314,20 @@ The fetcher downloads to the user cache directory, checks SHA-256 before first u
 | **No extensible output** | Extensible fmt chunks are read, never written. More than 2 channels are written with tag 1, which `wave`, libsndfile and ffmpeg all read |
 | **Resampling moved into AU0** | One documented quality. The outline had it in the DSP module |
 | **The engine protocol is generic functions with `:around` checks** | Instead of the outline's `synth-render-midi` with a `stems` flag; stems have their own generic function and a default |
+
+### Decisions made in the AU3 contract
+
+| Decision | Choice |
+|----------|--------|
+| **A package of its own** | `audio-protocol/dsp` in the same system, not more exports from `audio-protocol`: the names are common words, and the AU0 test package already has helpers called `rms` |
+| **No FFT import** | The [survey](#fft-survey-au3) found nothing permissive and portable; the slice keeps its own radix-2 FFT |
+| **Two restarts for a bad size** | `zero-pad` (the usual recovery) and CLHS `use-value` (a replacement). `stft` checks once per call, not once per frame |
+| **`:center` frames count ⌈L/hop⌉** | For an even size, librosa and torch count one more when hop divides L, a frame centred past the last sample. Here every centre is a sample. |
+| **The lag functions added** | `autocorrelation`, `yin-difference`, `cumulative-mean-normalize` and `yin-cmndf`, which the outline didn't list (issue #3 did). The FFT route lives next to the FFT, and the tests hold d and d′ to their direct sums. |
+| **Exact zeros in d** | Values below 1e-10 · E become 0 after a computation within 1e-11 · E, so whatever is 0 in exact arithmetic is 0d0, and d′ never divides round-off by round-off |
+| **d′ = 1 on a zero sum** | aubio's rule. librosa adds a tiny constant to the denominator, which makes silence look perfectly periodic. |
+| **`downmix` added** | AU0 has `pcm-channel` and `mix :channels 1` (one or two channels) only; `downmix` takes any channel count and agrees with `mix` on stereo |
+| **A cost test** | One frame 16 times longer must take less than 3 times as long as 32 short ones (best of 5 runs each): the direct sums would take about 8 times, an FFT about ⅔. The test compares two timings on one machine, so it holds on slow CI too. |
 
 ### Follow-ups
 
