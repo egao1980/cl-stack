@@ -8,7 +8,7 @@
 | `browser-protocol` (`stack-browser`) | Page and session GFs, the CDP client (`cdp-browser-backend` over `send-fn` / `recv-fn`), the mock backend, the computer-use loop over `llm-protocol` |
 | `browser-protocol/launch` | `launch-browser` / `with-browser` / `connect-cdp`: Chrome, Chromium or Edge over a CDP websocket |
 | `browser-protocol/capability` | `:world` adapter |
-| `browser-protocol/record` (`stack-browser/record`) | BR1 (0.3.0, [contract](https://github.com/egao1980/browser-protocol/pull/10)): record a page with sound into one MP4 ([below](#br1-page-recording-with-sound-030)) |
+| `browser-protocol/record` (`stack-browser/record`) | BR1 (0.3.0, implemented in [#10](https://github.com/egao1980/browser-protocol/pull/10), not yet merged): record a page with sound into one MP4 ([below](#br1-page-recording-with-sound-030)) |
 
 ## Locked decisions
 
@@ -38,7 +38,7 @@ The sandbox story is unchanged: Chromium can run inside a `compute-protocol` san
 
 ## BR1: page recording with sound (0.3.0)
 
-**Status:** contract (stubs + Rove suite) in egao1980/browser-protocol#10, implemented by a team-solve run. **System:** `browser-protocol/record` (package `browser-protocol/record`, nickname `stack-browser/record`), so the core keeps its dependencies.
+**Status:** implemented in [egao1980/browser-protocol#10](https://github.com/egao1980/browser-protocol/pull/10): the contract (stubs + Rove suite), then a team-solve run. CI is green on macOS, Windows and Ubuntu, both core and record jobs ([run 46064932023](https://github.com/egao1980/browser-protocol/actions/runs/46064932023)), with the live audio tests gated as [below](#tests-and-tolerances). Not merged or published yet. **System:** `browser-protocol/record` (package `browser-protocol/record`, nickname `stack-browser/record`), so the core keeps its dependencies.
 
 A program that drives a headless page records what the page shows **and what it plays** into one MP4 (H.264 + AAC). 0.2.0 has no screencast and no audio capture: a consumer hand-rolled `Page.startScreencast`, frame files and an ffmpeg concat call, and its videos were silent, because CDP's screencast carries no audio.
 
@@ -126,7 +126,7 @@ recording-stop-time recording-active-p recording-directory recording-warnings
 
 ### Tests and tolerances
 
-Pure tests (no Chrome, no ffmpeg; a fake CDP peer whose receive blocks like a socket): frame timing and ffconcat (exact durations, tail, out-of-order and duplicate timestamps, microsecond boundaries), PCM decoding, payload parsing (24 malformed payloads), clock mapping, track assembly (gaps, overlaps, out-of-order chunks), mixing at exact sample positions (overlaps, clamping, resampling 16 → 48 kHz against audio-protocol's own `resample`), clip placement by `:at` and `:epoch`, the ffmpeg command line, `run-ffmpeg` with stand-in programs (stderr tail, `retry`, `use-value`), the CDP command sequence, frames and chunks read on the recording's thread, best-effort stop, the conditions and restarts. Live tests skip, saying why, without Chrome (or a running AudioContext) or ffmpeg/ffprobe: a strict-CSP `file:` page playing a tone, a navigation mid-tone, saved frames and clips to MP4, ffprobe stream checks, the decoded AAC analysed with `audio-protocol/dsp`.
+Pure tests (no Chrome, no ffmpeg; a fake CDP peer whose receive blocks like a socket): frame timing and ffconcat (exact durations, tail, out-of-order and duplicate timestamps, microsecond boundaries), PCM decoding, payload parsing (24 malformed payloads), clock mapping, track assembly (gaps, overlaps, out-of-order chunks), mixing at exact sample positions (overlaps, clamping, resampling 16 → 48 kHz against audio-protocol's own `resample`), clip placement by `:at` and `:epoch`, the ffmpeg command line, `run-ffmpeg` with stand-in programs (stderr tail, `retry`, `use-value`), the CDP command sequence, frames and chunks read on the recording's thread, best-effort stop, the conditions and restarts. Live tests skip, saying why, without Chrome (or a running AudioContext), ffmpeg/ffprobe or, for those that check played page audio, an audio output device (rule below): a strict-CSP `file:` page playing a tone, a navigation mid-tone, saved frames and clips to MP4, ffprobe stream checks, the decoded AAC analysed with `audio-protocol/dsp`.
 
 Tolerances, measured over 19 runs (Chrome 158, ffmpeg 9.0.2, macOS) and locked in the suite:
 
@@ -141,7 +141,10 @@ Tolerances, measured over 19 runs (Chrome 158, ffmpeg 9.0.2, macOS) and locked i
 
 Contract counts: 139 tests, 457 assertions; the throwaway reference passes all of them, 18 single-rule mutations of it are each caught, and on the stubs 129 tests fail (the 10 that pass cover the given parts and the fixture's CSP).
 
-CI: the GitHub runners have Chrome on macOS and Windows (not in the Ubuntu ci-base container) and no ffmpeg anywhere, so the Chrome-only live tests run on macOS/Windows and the ffmpeg ones skip (egao1980/browser-protocol#12); `.github/workflows/test.yml` runs the record suite as its own job.
+| Where | Rule |
+|---|---|
+| Tests | **No audio, no audio tests** (decided 2026-11-27). Some live tests play a tone through the page and check the captured audio: the strict-CSP capture, the tap installed in the current document, a navigation mid-tone, and a page with sound to MP4. They run only on a machine whose OS reports an audio output device, and skip, saying why, without one. A test that also checks video says so in its skip reason. Without an output device Chrome plays into a fake output whose timing stalls, so there is no page audio to check (egao1980/browser-protocol#15, #16). Detection is asked once and printed once: on macOS, `system_profiler SPAudioDataType -json` (a device with output channels or the default output, on a hardware transport; virtual, aggregate and unknown transports don't count, and under a hypervisor, `kern.hv_vmm_present`, neither does a builtin one); on Windows, the active MMDevices render endpoints; on Linux, `/proc/asound/cards`. **`BROWSER_PROTOCOL_AUDIO_TESTS=1`** runs these tests anyway, and `0` skips them. On a machine with a device every assertion and tolerance applies unchanged. Everything else runs regardless: the strict-CSP worklet check, the MP4 tests from saved frames and clips (ffmpeg only), the ffmpeg failure and find tests, and the pure tests |
+| CI | The GitHub runners have Chrome on macOS and Windows (not in the Ubuntu ci-base container), no ffmpeg anywhere (egao1980/browser-protocol#12), and no audio output device. macos-latest is a VM: an "Apple Virtual Sound Device" (builtin transport) and a "Null Audio Device" (virtual). windows-latest has 0 render endpoints. So the strict-CSP worklet check runs on macOS and Windows, the audio tests skip on the gate, and the ffmpeg ones skip for lack of ffmpeg. `.github/workflows/test.yml` runs the record suite as its own job |
 
 ### Slices
 
