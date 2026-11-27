@@ -195,6 +195,8 @@ A middleware, written once for immediate and streamed responses:
                   (call-next-method)))
 ```
 
+This is a sketch of the pattern. The real mixin is `session-handler` in `session-protocol/middleware` ([session.md](session.md), S0b). It takes `:session-manager`, calls `begin-session` on the request's Clack env and installs the env that `begin-session` returns.
+
 ### Conditions
 
 ```text
@@ -272,7 +274,7 @@ The http client keeps `prepare-request` / `handle-response` and `:around` on `se
 
 ### Consumers
 
-- **session-protocol S0b:** `session-handler` is a mixin. `prepare-request` begins the session (request property `:session`). `finish-response` commits it and sets the cookie through `map-response`, so a streamed response commits before its body. The two-phase functions (`begin-session` / `finish-session`) stay the transport-neutral core.
+- **session-protocol S0b** (contract: [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4)): `session-handler` is a mixin. `prepare-request` begins the session (request property `:session`). `finish-response` commits it and sets the cookie through `map-response`, so a streamed response commits before its body. The two-phase functions (`begin-session` / `finish-session`) stay the transport-neutral core.
 - **rpc-backend-htmx#19:** the app becomes a `clack-handler`. Sessions, the client address (#15) and rate limits are mixins, inside the token gate.
 - **Migration** (follow-up [rpc-backend-htmx#20](https://github.com/egao1980/rpc-backend-htmx/issues/20)): `htmx-app`'s token gate becomes an `:around` mixin that short-circuits with 403, and its CSP header becomes `response-headers-handler`, outside the gate.
 
