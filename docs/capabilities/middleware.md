@@ -1,7 +1,7 @@
 # middleware-protocol (P2): middleware for any handler, through method combination
 
 **Issues:** [#427](https://github.com/egao1980/cl-stack/issues/427) (this brief; the analysis and D1 to D11 are recorded there) · consumers [#426](https://github.com/egao1980/cl-stack/issues/426) (session-protocol) and [rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19)
-**Status:** M0 **contract**: [`middleware-protocol`](https://github.com/egao1980/middleware-protocol) 0.1.0, [draft PR #1](https://github.com/egao1980/middleware-protocol/pull/1) (`%m0-pending` stubs; a reference implementation passes all 356 assertions). M1 and later: decisions below, contracts written when each run starts.
+**Status:** M0 **implemented and published**: [`middleware-protocol`](https://github.com/egao1980/middleware-protocol) 0.1.0, [PR #1](https://github.com/egao1980/middleware-protocol/pull/1) (merged; team-solve, 112 tests, 356 assertions, green on ubuntu, macOS and Windows; follow-ups [#2](https://github.com/egao1980/middleware-protocol/issues/2), [#3](https://github.com/egao1980/middleware-protocol/issues/3)). Contract history: (`%m0-pending` stubs; a reference implementation passes all 356 assertions). M1 and later: decisions below, contracts written when each run starts.
 **Repos:** `middleware-protocol` (nick `stack-middleware`) with the subsystems `middleware-protocol/clack` (nick `stack-middleware-clack`) and `middleware-protocol/blackbird`
 **Builds on:** closer-mop and bordeaux-threads (core); [http-server-protocol](http-server.md)'s app contract, the Clack env (the `/clack` adapter, which loads no Clack system); blackbird (the `/blackbird` adapter, already a stack dependency through http-protocol)
 
@@ -284,7 +284,7 @@ The http client keeps `prepare-request` / `handle-response` and `:around` on `se
 
 | Slice | Package | Notes |
 |-------|---------|-------|
-| M0 | middleware-protocol 0.1.0 | Contract [middleware-protocol#1](https://github.com/egao1980/middleware-protocol/pull/1) (draft), 112 tests. On the stubs, 108 tests fail; the 4 that pass cover the given parts (the condition tree, a user-defined CLOS handler, the required `:function` initarg). A throwaway reference implementation passes all 356 assertions, and ten mutations of it are each caught (2 to 16 failing assertions each) |
+| M0 | middleware-protocol 0.1.0 | **Implemented, published 0.1.0** ([#1](https://github.com/egao1980/middleware-protocol/pull/1) merged; team-solve: 112 tests, 356 assertions). Contract, 112 tests. On the stubs, 108 tests fail; the 4 that pass cover the given parts (the condition tree, a user-defined CLOS handler, the required `:function` initarg). A throwaway reference implementation passes all 356 assertions, and ten mutations of it are each caught (2 to 16 failing assertions each) |
 
 ### Follow-ups
 
