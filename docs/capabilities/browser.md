@@ -1,6 +1,6 @@
 # browser-protocol: headless browser over CDP
 
-**Repo:** [`egao1980/browser-protocol`](https://github.com/egao1980/browser-protocol) · **0.2.0** (egao1980/browser-protocol#4: #1, #2, #3)
+**Repo:** [`egao1980/browser-protocol`](https://github.com/egao1980/browser-protocol) · **0.3.0** (egao1980/browser-protocol#10: BR1 page recording with sound; 0.2.0: #4)
 **Python counterparts:** Playwright (`chromium.launch()`, `page.goto(wait_until=)`, `connect_over_cdp`), Selenium WebDriver.
 
 | System | Role |
@@ -8,7 +8,7 @@
 | `browser-protocol` (`stack-browser`) | Page and session GFs, the CDP client (`cdp-browser-backend` over `send-fn` / `recv-fn`), the mock backend, the computer-use loop over `llm-protocol` |
 | `browser-protocol/launch` | `launch-browser` / `with-browser` / `connect-cdp`: Chrome, Chromium or Edge over a CDP websocket |
 | `browser-protocol/capability` | `:world` adapter |
-| `browser-protocol/record` (`stack-browser/record`) | BR1 (0.3.0, implemented in [#10](https://github.com/egao1980/browser-protocol/pull/10), not yet merged): record a page with sound into one MP4 ([below](#br1-page-recording-with-sound-030)) |
+| `browser-protocol/record` (`stack-browser/record`) | BR1 (0.3.0, merged and published: [#10](https://github.com/egao1980/browser-protocol/pull/10)): record a page with sound into one MP4 ([below](#br1-page-recording-with-sound-030)) |
 
 ## Locked decisions
 
