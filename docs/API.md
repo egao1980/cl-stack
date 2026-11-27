@@ -163,7 +163,9 @@ Planned. General-purpose notation infrastructure for lead sheets and choral or s
   **Brief:** [capabilities/engrave.md](capabilities/engrave.md)
 - `audio-protocol` (AU0 implemented, AU3 DSP contract) · `audio-backend-fluidsynth` (AU1, feasibility checked) · `audio-backend-{ffmpeg,world,signalsmith}` (planned) — PCM buffers, WAV, mixing and loops, resampling, MIDI → mixdown or stems, decoding, DSP, voice analysis / resynthesis, pitch and time stretch (batch).
   **Brief:** [capabilities/audio.md](capabilities/audio.md) (AU0: [audio-protocol#1](https://github.com/egao1980/audio-protocol/pull/1); AU3 contract: [audio-protocol#4](https://github.com/egao1980/audio-protocol/pull/4))
-- `omr-protocol` · `omr-backend-{ensemble,audiveris,llm}` · `transcribe-protocol` · `transcribe-backend-{pyin,basic-pitch}` · parity suites — OMR ensemble with Datalog fusion; single-voice audio transcription with key / meter / tempo hints.
+- `transcribe-protocol` (T0 contract) · `transcribe-backend-pyin` (T1, planned) · `transcribe-backend-basic-pitch` · `transcribe-parity` (later) — monophonic audio-to-notes transcription of sung or hummed lines: note events (rational seconds, MIDI pitch with cents, confidence), the f0 contour with voicing, the take's tuning offset and per-phrase drift removed by the protocol, a music-theory key fit against the key hint, mir_eval note F-measure, test synthesis, an oracle and a YIN baseline.
+  **Brief:** [capabilities/transcribe.md](capabilities/transcribe.md) ([#425](https://github.com/egao1980/cl-stack/issues/425); T0 contract: [transcribe-protocol#1](https://github.com/egao1980/transcribe-protocol/pull/1))
+- `omr-protocol` · `omr-backend-{ensemble,audiveris,llm}` · parity suite — OMR ensemble with Datalog fusion.
   **Brief (outline):** [capabilities/omr.md](capabilities/omr.md)
 
 ## Revision and diff (Track R — R0b / R1)

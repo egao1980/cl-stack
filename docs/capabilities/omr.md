@@ -28,6 +28,8 @@ Both accept **hints**: `:key`, `:meter`, `:tempo`.
 
 ## Transcription: locked so far
 
+**Superseded** by [transcribe.md](transcribe.md), which locks the protocol (T0) and plans the pYIN backend (T1). Where the two differ, transcribe.md decides: note events carry onset and offset (not a duration); the key hint feeds a key fit after the take's tuning and drift are removed, and the hint distance reports a take in another key; and the Vocadito plan stands as below. The table is kept as the outline's history.
+
 | Decision | Choice |
 |----------|--------|
 | **Shape** | `transcribe backend audio &key hints` returns note events (onset s, duration s, pitch as fractional MIDI, confidence) plus the f0 contour. `transcription->score` goes through score-backend-midi's import path (tempo/beat, quantisation, spelling). |

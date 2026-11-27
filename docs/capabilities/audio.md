@@ -9,7 +9,7 @@
 - PCM buffers, WAV files, mixing and loops;
 - rendering Standard MIDI Files to a mixdown or to stems, one per track or channel, through an engine: a reference tone synth in the protocol, a SoundFont synthesiser in a backend;
 - decoding compressed uploads;
-- a small DSP module for a transcription front end ([omr.md](omr.md), transcribe-protocol);
+- a small DSP module for a transcription front end ([transcribe.md](transcribe.md));
 - later, optionally, voice analysis and resynthesis and pitch and time stretching.
 
 Everything is a batch job: whole buffers in, fresh buffers out. There is no real-time audio I/O, no device access and no streaming.
