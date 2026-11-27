@@ -73,6 +73,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `unicode-backend-icu4j` | **0.1.2** | ICU4J / ABCL (auto-bind `#+abcl`) |
 | `cl-stack-icu` | **79.1.2** | ICU4C 79.1 overlays + CFFI (linux/darwin/windows); loads through `asdf-native`, keg-only Homebrew `icu4c` fallback |
 | `cl-stack-icu4j` | **79.1.0** | ICU4J 79.1 jar + ABCL bridge |
+| `java-backend-openldk` | **0.1.1** | Java jars on SBCL without a JVM (OpenLDK 1.0.2; Maven jar + SHA-256; JDK 25 class library; not Windows) · [foreign-runtimes](capabilities/foreign-runtimes.md) |
 | `i18n-protocol` | **0.1.0** | locale / MF2 / plural / catalogs (`stack-i18n`) |
 | `i18n-backend-icu` | **0.1.1** | ICU4C i18n |
 | `i18n-backend-icu4j` | **0.1.1** | ICU4J i18n (auto-bind `#+abcl`) |
