@@ -1,7 +1,7 @@
 # session-protocol (P2): anonymous server-side sessions for Clack apps
 
 **Issues:** [#426](https://github.com/egao1980/cl-stack/issues/426) (this protocol) · [rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19) (first consumer, S1) · [#427](https://github.com/egao1980/cl-stack/issues/427) (middleware-protocol, which S0b binds to)
-**Status:** S0 [`session-protocol`](https://github.com/egao1980/session-protocol) 0.1.0 **implemented and published**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged; team-solve, 308 tests, 934 assertions, green on ubuntu, macOS and Windows). Follow-ups: [#2](https://github.com/egao1980/session-protocol/issues/2) (decisions through the logic family), [#3](https://github.com/egao1980/session-protocol/issues/3). S0b **implemented and published**: [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4) (merged, 0.2.0; `session-protocol/middleware` 0.2.0, the `session-handler` mixin). S1 is planned.
+**Status:** S0 [`session-protocol`](https://github.com/egao1980/session-protocol) 0.1.0 **implemented and published**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged; team-solve, 308 tests, 934 assertions, green on ubuntu, macOS and Windows). Follow-ups: [#2](https://github.com/egao1980/session-protocol/issues/2) (decisions through the logic family), [#3](https://github.com/egao1980/session-protocol/issues/3). S0b **implemented and published**: [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4) (merged, 0.2.0; `session-protocol/middleware` 0.2.0, the `session-handler` mixin). S1 **contract**: [rpc-backend-htmx#22](https://github.com/egao1980/rpc-backend-htmx/pull/22) (draft; rpc-backend-htmx 0.5.0, sessions and request context).
 **Repos:** `session-protocol` (nick `stack-session`)
 **Builds on:** [cache-protocol](cache.md) 0.2.0 (the store), [secrets-protocol](secrets.md) 0.1.3 (ids, constant-time compare), [json-protocol](json-protocol.md) 0.2.4 (serialization), [http-server-protocol](http-server.md) (the Clack env and response are normative), cl-cookie 0.2.0 and quri 0.7.2 (cl-stack-systems imports); [middleware-protocol](middleware.md) 0.1.0 and `middleware-protocol/clack` 0.1.0 (#427, S0b only)
 
@@ -184,16 +184,44 @@ The middleware binding is a **`session-handler` mixin** on [middleware-protocol]
 - load failures through the handler, with RETRY and CONTINUE; a save failure decided by an error function;
 - pass-through for four request kinds.
 
-### S1: rpc-backend-htmx (rpc-backend-htmx#19)
+### S1: rpc-backend-htmx 0.5.0 (rpc-backend-htmx#19, #15)
 
-These parts belong to rpc-backend-htmx, not to session-protocol:
-- a `:sessions` option;
-- the session on `*htmx-request*`, where handlers read, write, rotate and end it;
-- SSE streams read the session; after the commit a write is `session-write-error`;
-- `htmx-client` keeps a cookie jar, so tests can walk a multi-page flow;
-- the request context of rpc-backend-htmx#15 (client address with trusted proxies, `Last-Event-ID`).
+**Contract:** [rpc-backend-htmx#22](https://github.com/egao1980/rpc-backend-htmx/pull/22) (draft). The headers of `src/session.lisp`, `src/server.lisp` (Sessions), `src/codec.lisp` (Client address) and `src/client.lisp` (Cookie jar) are the specification. S1 uses S0b.
 
-S1 uses S0b.
+```lisp
+(hc:make-canvas-htmx-transport :sessions t)                    ; or a session-manager
+(h:htmx-app transport handlers :sessions manager)              ; per app, as :csp and :token
+(h:htmx-session)                                               ; → the request's session or NIL
+(h:htmx-session-value key &optional default)                   ; and its SETF
+(h:htmx-session-regenerate) (h:htmx-session-end)               ; → the session, never the id
+(h:htmx-message-client-address h:*htmx-request*)               ; :trusted-proxies on the transport
+(getf (h:htmx-message-metadata h:*htmx-request*) :last-event-id)
+(h:make-htmx-client app :cookies t :remote-addr "203.0.113.7") ; htmx-client-cookies, -cookie
+```
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Option shape** | `:sessions` on `make-htmx-transport`, `make-canvas-htmx-transport` and `htmx-app`: NIL (the default: no layer is built, every response is 0.4.0's byte for byte), T (a fresh `make-session-manager`, made once by the transport, so every app built from it shares one in-memory store; `htmx-app :sessions t` makes the app its own), or a `session-manager`. No plist form. Reader `htmx-transport-sessions`. | A manager is one call that checks its own arguments; a plist would repeat those checks. |
+| **Order** | CSP outermost, then the token gate, then the session layer, then `htmx-handle-request`. The gate and the CSP stay 0.3.0's closures; rpc-backend-htmx#20 moves them into mixins later, in the same order. | The gate stays first: an unauthenticated request never begins a session, reaches the store or has its body read. The CSP header is on every response, the gate's 403 and the cross-origin 403 included, and stays the last header, after the session's Set-Cookie. Keeping the closures means the gate's behaviour does not change in this slice. |
+| **The session layer** | `(clack-app (make-handler (list <S1 mixin> 'clack-handler) :session-manager manager :app inner))`, the mixin a subclass of S0b's `session-handler`, built once per `htmx-app`. Only requests under the transport's method prefix get a session: the canvas asset route and other paths pass with no store call and no Set-Cookie. | S0b's rules as they are. Static files before sessions, as in Express and Rails. |
+| **Failures** | A response with status 500 or more commits nothing. A `session-store-error` when the session is loaded or committed gives the 500 error fragment inside the app's boundary: nothing escapes the app. At a stream's head the mixin takes session-protocol's CONTINUE (only a refresh or an expiry can happen there, since no handler code runs before the head). | Django's `SessionMiddleware` skips the save on a 5xx. S0b commits nothing when a condition escapes the app; here a handler's condition comes back as a 500, so the status stands for it. |
+| **Handler access** | Thin delegations to session-protocol through `*htmx-request*` (the message's session): `htmx-session`, `htmx-session-value` and its SETF, `htmx-session-regenerate`, `htmx-session-end`. A write with no session is an `htmx-error` (500). A `:call-stream` handler reads the session; the stream's head already committed it, so a write is session-protocol's `session-write-error` (the stream's error event, or CONTINUE). JSON-RPC calls have no session. | No parallel API. Ids are bearer credentials and stay out of handler code. |
+| **CSRF** | Yes, in S1. With sessions on, an unsafe request that a browser sent from another origin is a 403 (`htmx-cross-origin`, a subclass of `htmx-forbidden`) before any session, store call or body read. The rule is Go 1.25's `CrossOriginProtection`: GET, HEAD, OPTIONS pass; `Sec-Fetch-Site` must be `same-origin` or `none`; without it, an `Origin` must have the `Host` header's host; with neither header the request passes. One pure function, `%cross-origin-verdict`, isolated for policy-protocol ([rpc-backend-htmx#21](https://github.com/egao1980/rpc-backend-htmx/issues/21), logic-migration). Not configurable in 0.5.0. | SameSite=Lax already keeps the cookie off cross-site POSTs. The check also covers a page on a sibling subdomain (same-site) and browsers without SameSite, costs two header reads and needs no token. Synchronizer tokens stay under Later. |
+| **Client address (#15)** | `htmx-message-client-address`: the env's `:remote-addr`. With `:trusted-proxies` (addresses and CIDR networks, read by ip-protocol), the walk starts at the peer and goes right to left through `X-Forwarded-For` while the address is a trusted proxy (nginx `real_ip_recursive`). The result is the right-most untrusted hop, or the left-most hop when all are trusted. A peer that is not a trusted proxy means the header is ignored, and a hop that is not an address stops the walk. `Forwarded`, `X-Real-IP` and `X-Forwarded-Proto` are not read. | A client cannot choose its own address, except through a path the operator trusts. |
+| **Last-Event-ID (#15)** | `:last-event-id` appended to `+request-metadata-headers+`, the header string as sent. | An EventSource reconnect resumes after the last event id it saw. |
+| **Test client** | `make-htmx-client :cookies t`: cl-cookie's jar, per client. Set-Cookie headers go in and the matching cookies go out; an explicit Cookie header wins; Max-Age 0 or less removes the cookie at once. `:remote-addr`. The default is no jar, so the 0.4.0 tests, which send cookies by hand, are unchanged. | The stack has no cookie-jar protocol; cl-cookie's is the one dexador uses. |
+| **System layout** | Sessions are in the main system. New dependencies: session-protocol and `/middleware` 0.2.0, middleware-protocol and `/clack` 0.1.0, cache-protocol 0.2.0, ip-protocol 0.1.0, cl-cookie 0.2.0. The application loads the backends (secrets, JSON); `htmx-app` checks them when sessions are on, as the gate checks its CSPRNG. | All the new dependencies are first-party protocols except cl-cookie, and their third-party dependencies (cl-cookie, local-time, cl-ppcre, closer-mop) are already in the graph through http-protocol. A secondary system would still need a slot and a hook in the core, because the gate lives in `htmx-app`. |
+| **Defaults** | session-protocol's: idle TTL one day, no absolute lifetime, cookie `sid` (SameSite=Lax). A cookie name equal to the gate's token name is an `htmx-error` at `htmx-app`. | A manager carries any lifetime; this answers S0's open question. |
+
+**Tests (75 new, Rove, `deftest-parametrize` for the address and cross-origin tables).** Through `htmx-client` (and hand-made Clack envs for https and raw headers):
+- the option, its validation and defaults, one manager per transport, the app override;
+- a multi-request flow keeps values; two clients get two sessions; a request that stores nothing sets no cookie and makes no store call; forged and malformed cookies; rotation, with the old id gone, and ending, with the expiry cookie; idle expiry on an injected clock;
+- a 5xx commits nothing and a 4xx commits; store failures as 500 fragments with nothing escaping; sessions off is 0.4.0; access outside a request; the backend checks;
+- the gate first (no store call for a 403, the exchange begins no session); the gate's cookie and the session cookie together in one jar; a clashing cookie name; the CSP on every response kind with sessions on, last, after the Set-Cookie;
+- streams: the session read, committed before the first event; the refresh in the stream's head; a write as the error event, or ignored with CONTINUE; a store failure at the head;
+- the cross-origin rule table (19 rows), the refusal before the body, the method check and the path; the condition;
+- the client address table (12 rows), spoofing ignored without trusted proxies, streams and JSON-RPC; Last-Event-ID in a stream;
+- the cookie jar: in and out, replacement and Max-Age 0, the explicit header, Secure only over https, per client, the caller's env untouched, `:remote-addr`, the gate walked with the jar.
 
 ### Later
 
@@ -210,15 +238,17 @@ S1 uses S0b.
 |-------|---------|-------|
 | S0 | session-protocol 0.1.0 | **implemented, published 0.1.0**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged). team-solve: 308 tests, 934 assertions. Contract: On the stubs, 308 tests: 250 fail, 58 pass (the given conditions and constructors). An independent reference implementation passes all 308 tests (934 assertions). |
 | S0b | session-protocol/middleware 0.2.0 | **implemented, published 0.2.0**: [session-protocol#4](https://github.com/egao1980/session-protocol/pull/4) (merged; team-solve: 357 tests, 1198 assertions, green on ubuntu, macOS and Windows). Contract: 49 new tests. On the stubs, S0's 308 tests pass (934 assertions); of the 49, 2 pass (the given configuration) and 47 fail. A throwaway reference implementation passes all 357 tests (1198 assertions), and eleven mutations of it (an `:around` instead of the hooks, a commit before the inner hooks, no env install, and others) are each caught. Next: team-solve. |
-| S1 | rpc-backend-htmx | planned ([rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19)) |
+| S1 | rpc-backend-htmx 0.5.0 | **contract**: [rpc-backend-htmx#22](https://github.com/egao1980/rpc-backend-htmx/pull/22) (draft). 75 new tests. On the stubs, the 156 tests of 0.4.0 pass (1055 assertions); of the 75, 6 pass (the given option checks, the condition, `Last-Event-ID` in the metadata, a client without a jar) and 69 fail. A throwaway reference implementation passes all 231 tests (1508 assertions), and seventeen mutations of it (the session layer outside the gate, the CSP inside it, no 5xx rule, sessions for assets, the cross-origin rule loosened, the address walk ignoring trust, the jar merging an explicit Cookie, and others) are each caught. ECL loads the reference's main system. Next: team-solve. |
 
 ### Follow-ups
 
-- [cl-stack-systems#90](https://github.com/egao1980/cl-stack-systems/issues/90): cl-cookie has no request `Cookie` parser (the quri split is now in two places), and it writes `Max-age`.
+- [cl-stack-systems#90](https://github.com/egao1980/cl-stack-systems/issues/90): cl-cookie has no request `Cookie` parser (the quri split is now in two places), and it writes `Max-age`; its `expired-cookie-p` keeps a `Max-Age=0` cookie for up to a second (S1's test client removes it at once).
+- [rpc-backend-htmx#21](https://github.com/egao1980/rpc-backend-htmx/issues/21): S1's cross-origin verdict through policy-protocol (logic-migration).
+- [xml-protocol#13](https://github.com/egao1980/xml-protocol/issues/13): the xml-protocol 0.1.0 package carries a stale `xml-backend-native.asd`; ECL can pick it (found while checking S1 on ECL).
 
 ---
 
 ## Open questions
 
 - A fresh session in the same request after `end-session`, for a logout that leaves a flash message. In 0.1.0 such a write is `session-write-error`.
-- Whether S1 wants a shorter default idle TTL than one day.
+- ~~Whether S1 wants a shorter default idle TTL than one day.~~ No: S1 keeps session-protocol's defaults, and a manager passed as `:sessions` carries any lifetime.
