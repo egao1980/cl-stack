@@ -1,13 +1,13 @@
 # music-theory (P2): pitch, interval, key, meter, chord symbols
 
-**Issues:** open: [music-theory#3](https://github.com/egao1980/music-theory/issues/3) (MT1 follow-ups), [#11](https://github.com/egao1980/music-theory/issues/11) and [#13](https://github.com/egao1980/music-theory/issues/13) (logic migration, [below](#logic-migration)), [#14](https://github.com/egao1980/music-theory/issues/14) (spelling of chromatic steps)
-**Status:** **shipped**: slices MT0–MT4 done, [`egao1980/music-theory`](https://github.com/egao1980/music-theory) OCI **0.5.0** published
+**Issues:** open: [music-theory#3](https://github.com/egao1980/music-theory/issues/3) (MT1 follow-ups), [#11](https://github.com/egao1980/music-theory/issues/11) and [#13](https://github.com/egao1980/music-theory/issues/13) (logic migration, [below](#logic-migration)), [#18](https://github.com/egao1980/music-theory/issues/18) (chromatic notes as the leading tone of the note before), [#21](https://github.com/egao1980/music-theory/issues/21) (church modes), [#22](https://github.com/egao1980/music-theory/issues/22) (key fit with a tuning offset: [MT5](#mt5-key-fit-with-a-tuning-offset-060-contract))
+**Status:** **shipped**: slices MT0–MT4 and the 0.5.1 and 0.5.2 amendments, [`egao1980/music-theory`](https://github.com/egao1980/music-theory) OCI **0.5.2** published. **MT5 (0.6.0): contract** ([progress](#progress))
 **Repos:** `music-theory` (nick `stack-music`)
 **Builds on:** nothing. Pure CL with exact rational arithmetic and no dependencies. MT4 evaluated [music-spelling](https://github.com/ntrocado/music-spelling) (Apache-2.0) for an unmodified import and rejected it: nothing is imported ([MT4](#mt4-spelling-key-detection-transposition-050-done)).
 
 The vocabulary of tonal music theory as **values and arithmetic**. Its consumers are [score-protocol](score.md), MIDI import, audio transcription and OMR ([omr.md](omr.md)), engraving ([engrave.md](engrave.md)), and any [logic-protocol](logic.md) program that reasons about chords, keys or voice-leading.
 
-The library does no I/O and holds no rules or style decisions. It answers questions such as "which spelled pitch classes does `G7/B` realise", "what interval lies between E♭4 and A4", "how many beats fit in 9.5 s at ♩ = 72 in 6/8", and "which key does this pitch histogram suggest".
+The library does no I/O and holds no rules or style decisions. It answers questions such as "which spelled pitch classes does `G7/B` realise", "what interval lies between E♭4 and A4", "how many beats fit in 9.5 s at ♩ = 72 in 6/8", "which key does this pitch histogram suggest", and "in which key, and how many cents off A440, were these pitch centres sung".
 
 ---
 
@@ -44,6 +44,7 @@ The library does no I/O and holds no rules or style decisions. It answers questi
 | **Roman numerals** | `roman-numeral` = degree + quality + inversion figure + applied target (V/V) + mixture flag. `roman-for chord key` and `chord-for roman key` convert both ways. | Data conversion only; harmonic *analysis* belongs to consumers |
 | **Spelling** | `spell-midi midi &key key previous` (one note) and `spell-sequence midis &key key (window 8)`. Line-of-fifths rules S0–S7, the first that applies: previous note, key (a minor key's raised 7th included), one side, the window's accidental, semitone resolution, no augmented or diminished step, nearest center, and a tie signals `ambiguous-spelling` (restarts `use-value`, `muffle-warning`). Returns spelled pitches plus a per-note ambiguity d/6 (distance from the center). With no key, `spell-sequence` uses the first key of `detect-key` on note counts. | MIDI and audio import, transposition |
 | **Key detection** | `detect-key histogram &key profiles` returns all 24 keys as `(key . correlation)`, best first (Krumhansl–Kessler by default; Temperley, Aarden selectable, or a caller's `(major minor)` pair). The input is a duration-weighted pitch-class histogram (`pitch-class-histogram`). Pearson r is computed in rationals and the ranking decided exactly; ties keep a fixed candidate order; a constant histogram gives `NIL`. The candidates are spelled with the fewest accidentals (D♭ major, C♯ minor, F♯ major, E♭ minor). | The score is a confidence a UI can flag |
+| **Key fit with a tuning offset** (MT5) | `fit-key events &key hint profiles` takes real MIDI pitch centres with cents (61.37), optionally weighted. It searches the 24 candidate keys and one global offset of −50 … 49 cents together, and returns a `key-fit`: the key, the offset, the score, the 24 keys ranked at that offset, each note's nearest MIDI number and deviation in cents and, with a hint key, the hint's own best offset and score and the semitone distance to it. Decisions in [MT5](#mt5-key-fit-with-a-tuning-offset-060-contract). | Sung and played pitch centres are rarely at A440. Rounded first, a take 50 cents flat reads as a semitone down |
 | **Transposition** | `transpose-pitch p interval` preserves spelling (F♯ up M2 is G♯). `transpose-to-key p from to` is key-aware respelling. `choose-enharmonic-key key` prefers ≤ 6 accidentals (D♭ over C♯ major), with an override. Chord symbols transpose and respell the same way. | One transposition semantics for notes and symbols |
 | **No rules here** | No voice-leading, doubling or style logic. Those are logic-protocol programs in consumer code (see [logic.md](logic.md), rules-and-logic). Tables in this repo are **facts** (interval names, chord qualities, priorities, profiles). Two rule sets inside the library, chord-symbol admission and spelling, are still hand-written and tracked for migration ([below](#logic-migration)). | Keeps the logic-family policy |
 
@@ -53,7 +54,7 @@ The library does no I/O and holds no rules or style decisions. It answers questi
 
 | Repo / system | Role |
 |---------------|------|
-| `music-theory` | `src/`: package, conditions, pitch, interval, fifths, time, meter, tempo, key, chord-symbol (grammar, dialects, realisation, priorities), roman, spell, key-detect, transpose |
+| `music-theory` | `src/`: package, conditions, pitch, interval, fifths, time, meter, tempo, key, chord-symbol (grammar, dialects, realisation, priorities), roman, spell, key-detect, key-fit, transpose |
 | `music-theory/tests` | Rove + `deftest-parametrize`; generated vectors under `tests/fixtures/` with `PROVENANCE.md` |
 
 ---
@@ -94,8 +95,11 @@ The library does no I/O and holds no rules or style decisions. It answers questi
 
 (defun spell-midi (midi &key key previous))
 (defun spell-sequence (midis &key key (window 8)))      ; → spelled pitches, ambiguity scores
-(defun pitch-class-histogram (events &key (weight :duration))) ; events: (pitch . duration) or bare pitches
+(defun pitch-class-histogram (events &key (weight :duration))) ; events: (pitch . duration) or bare pitches; a real pitch splits (MT5)
 (defun detect-key (histogram &key (profiles :krumhansl-kessler)))
+(defstruct key-fit key offset correlation ranking midis deviations    ; MT5
+           hint hint-offset hint-correlation hint-distance)
+(defun fit-key (events &key hint (profiles :krumhansl-kessler)))   ; events: real MIDI pitch centres or (pitch . weight)
 (defun transpose-to-key (pitch from-key to-key))
 (defun transpose-chord-symbol (chord interval-or-keys))
 (defun choose-enharmonic-key (key &key (max-accidentals 6) prefer)) ; prefer :sharps, :flats or NIL
@@ -109,7 +113,8 @@ music-theory-error (error)
 ├── invalid-interval
 ├── invalid-meter
 ├── invalid-key
-└── chord-symbol-parse-error     ; slots: text, position, expected — restarts use-value (a chord-symbol), skip-chord-symbol
+├── chord-symbol-parse-error     ; slots: text, position, expected — restarts use-value (a chord-symbol), skip-chord-symbol
+└── no-key-evidence              ; fit-key: zero total weight, or every fold constant — restart use-value (MT5)
 music-theory-warning (warning)
 ├── unknown-chord-quality        ; parsed with a fallback quality — restart use-value
 └── ambiguous-spelling           ; slots: midi, candidates — muffled by default
@@ -119,7 +124,7 @@ music-theory-warning (warning)
 
 ## Slices
 
-Each slice is one team-solve run against a contract branch in `music-theory`. All five are done, and 0.5.0 is published.
+Each slice is one team-solve run against a contract branch in `music-theory`. MT0–MT4 are done. The amendments 0.5.1 (chromatic spelling [#14](https://github.com/egao1980/music-theory/issues/14), octaves in text [#15](https://github.com/egao1980/music-theory/issues/15), MusicXML kinds [#16](https://github.com/egao1980/music-theory/issues/16)) and 0.5.2 (the deciding spelling rule, [#19](https://github.com/egao1980/music-theory/issues/19)) are published. MT5 is under contract.
 
 ### MT0: pitch, interval, line of fifths (0.1.0, done)
 
@@ -147,6 +152,41 @@ Each slice is one team-solve run against a contract branch in `music-theory`. Al
 - **Key-detection targets, calibrated.** `detect-key` reproduces music21's rankings exactly, so the sealed tests hold each profile to music21's own top-1 / top-2 counts over the 50 melodies: Krumhansl–Kessler **39/47**, Temperley **45/49**, Aarden **41/48**. The earlier target, top-1 ≥ 85 % and top-2 ≥ 95 %, is met only by Temperley (90 % / 98 %). Krumhansl–Kessler (78 % / 94 %) and Aarden (82 % / 96 %) miss it on short monophonic melodies: the relative minor, the dominant or subdominant key, the parallel mode, a Dorian tune.
 - **Transposition.** `transpose-to-key` moves the tonic's letter at most three steps and keeps degree and alteration, so moving back is the exact inverse, and the roots and basses of `transpose-chord-symbol` with two keys are those of `transpose-to-key`. `choose-enharmonic-key` works on signatures: D♭ over C♯ major by default, F♯ and G♭ major kept as given, `:prefer` and `:max-accidentals` override.
 
+### MT5: key fit with a tuning offset (0.6.0, contract)
+
+[music-theory#22](https://github.com/egao1980/music-theory/issues/22). The first consumer is monophonic transcription of sung or hummed melodies. Pitches arrive as pitch centres in MIDI numbers with cents (61.37), optionally weighted by duration, and the singer drifts and is rarely at A4 = 440 Hz. Rounded and given to `detect-key`, a take 50 cents flat reads as a semitone down, or smears across two keys. `fit-key` searches the key and one global tuning offset together, reusing MT4's profiles, candidates and exact comparison.
+
+**Given:** the `key-fit` struct, `+key-fit-offsets+`, the `no-key-evidence` condition, and `detect-key` refactored onto two shared kernels, `%profile-modes` and `%key-scores`. **Stubbed:** `fit-key`, and the real-pitch branch of `pitch-class-histogram` (`%mt5-pending`). **Fixtures:** none new. The takes are MT4's 50 melodies: in tune, shifted by whole cents or semitones, as double-floats, detuned note by note by a pinned Park–Miller generator in the test file, or drifting. **Tests:** in-tune takes are `detect-key` at offset 0, under all three profiles and both weightings. Shifts of +23, −37, ±1, 12, −45, 49 and −50 cents give that offset exactly, and shifts past a half semitone move the key instead. Float pitches land within the 1-cent grid. The relative keys come out as `detect-key` decides them. Weights decide the key (Beethoven's Fifth: C minor by duration, E♭ major by count) and the offset. Hints: a semitone below gives distance −1 and a semitone above +1, on all 50 melodies, a tritone gives +6, enharmonic hints match, and a key outside the 30 works. Ties, the shared normaliser, MIDI numbers and deviations, spelling the take with `spell-sequence`, detuned and drifting takes at calibrated counts, `no-key-evidence` and its `use-value`, argument errors and `store-value`.
+
+#### Locked decisions (MT5)
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Input** | `events`: a proper list of real MIDI pitch centres, the fraction in hundredths of a semitone, or `(pitch . weight)` with a non-negative real weight (a duration in any unit). The shape is `pitch-class-histogram`'s. Every pitch and weight is taken as `rational`, so every quantity but a square root is exact. `hint` is NIL or any KEY. `profiles` is as for `detect-key`. | One event shape across the slice. Exact arithmetic makes the ranking and its ties the same on every implementation |
+| **Offsets** | One offset for the whole take: the 100 integers −50 … 49, in cents above 12-TET at A4 = 440 Hz (positive = sharp). The grid step is 1 cent. +50 is not searched: 50 cents sharp of C is 50 flat of D♭, so the key absorbs whole semitones and each tuning has one reading (offset −50, the tonic a semitone up). | Half-open, so the offset and the key never describe the same tuning twice |
+| **Fold** | At offset d the histogram is `pitch-class-histogram` of the pitches lowered by d/100. 0.6.0 extends `pitch-class-histogram`: a real pitch splits between the two classes around it in proportion to its nearness, (1 − f) to ⌊q⌋ and f to ⌊q⌋ + 1. Integers are unchanged. | The fold moves continuously with d. Rounding gives one histogram for every offset that moves no pitch across a half semitone, so an in-tune take fits equally well from −49 to 49 |
+| **Score** | score(K, d) = c(K, d) / √(v_K · H). c is `detect-key`'s covariance of the fold with K's rotated profile, v_K the profile's variance, and H the largest histogram variance among the 100 folds. All 2400 pairs rank by `detect-key`'s exact comparison. A score is a double rounded as `detect-key`'s correlation, −1 … 1, and equals it at the crispest fold. | Splitting is linear in the histogram, so for in-tune pitches c(K, d) mixes K's covariance at offset 0 with that of the key a semitone away, and no offset beats 0. Each fold's own Pearson r rewards smearing: under Krumhansl–Kessler it puts 28 of MT4's 50 in-tune melodies 3 to 46 cents off. One normaliser keeps every score comparable, so the hint's score never exceeds the best |
+| **Best and ties** | The highest score. Ties go to the smaller \|d\|, then the negative d, then `detect-key`'s candidate order (`+key-fit-offsets+` is 0 −1 1 … −49 49 −50). | Deterministic. The smallest correction wins a plateau |
+| **Ranking** | The 24 candidates at the take's offset, as `(key . score)`, best first. That is `detect-key`'s order for that fold, and its keys are `+detect-key-keys+`. | The offset belongs to the take, not to a key. Ranked each at its own offset, the keys a semitone from the best would borrow half its score at ±50 cents and crowd the list |
+| **Per note** | `midis`: each event's nearest MIDI number after the offset, a half rounding up. `deviations`: 100·(q − midi), exact cents in [−50, 50). Zero-weight events included. | Feeds `spell-sequence … :key (key-fit-key fit)` directly, and flags notes sung off the grid |
+| **Hint** | Its candidate is matched by tonic pitch class and mode (C♯ major → D♭ major); `key-fit-hint` keeps the hint as given. `hint-offset` and `hint-correlation` are the hint's own best offset and its score there, at most the best. `hint-distance` counts semitones from the hint's tonic up to the first ranking entry in the hint's mode, folded into −5 … 6, a tritone being +6. −1 means sung a semitone below the hint, +1 above, 0 in its key. | The hint's mode decides, because `detect-key` often prefers the relative key on a short melody: Jingle Bells, notated F major and ranking A minor first, reads 0 against an F major hint. A fifth can still lead the mode (Canon in D: A major above D major, −5). The caller sees that through the scores |
+| **"In the hint key"** | Caller policy, not computed. The contract reports numbers only. Examples: distance 0, or a hint score within a margin of the best. A nonzero distance with the hint's score clearly below the best means a transposition fits better. | A threshold is a style decision for consumers (a policy or logic program, per the logic family), not arithmetic |
+| **No evidence** | Zero total weight (no events, or zero weights only), or H = 0 (every fold constant, as for the 12 chromatic notes at equal weights at any tuning). `fit-key` signals `no-key-evidence` (a `music-theory-error`, REASON "zero total weight" or "constant histogram at every offset") with `error`, inside a `use-value` restart whose value it returns. The argument checks are `check-type`, so a bad argument offers `store-value`. Then a constant profile signals "constant key profile", as in `detect-key`. | The caller asked for a fit, so silence is explicit; `detect-key` keeps returning NIL for a constant histogram. There is one recovery, a value to return, so one standard restart |
+| **Reuse** | `+key-profiles+` and the `profiles` argument, `+detect-key-keys+`, `%centered`, `%ranks-before-p` and `%correlation` from MT4. The contract moves `detect-key`'s kernel into `%profile-modes` and `%key-scores`, and MT4's tests pin the move. | No second correlation implementation |
+| **No rules** | An argmax with a total tie order, not a rule table. | Logic-family policy ([below](#logic-migration)) |
+
+**Calibrated robustness** (asserted at the reference's own counts, which any implementation of the exact rules reproduces). Detuned takes are sung −40 … 40 cents off, each note detuned by the sum of three draws in −10 … 10 cents (σ ≈ 10.5, at most 30). They keep the in-tune key on 48/50, and the in-tune top two on 50/50. Their offset is within 5 cents on 40/50 and within 10 on 47/50, worst 15. Takes drifting 20 cents from the first note to the last keep the key on 48/50, and their offset always lies inside the drift. Every miss has a near-tie in tune (Silent Night: B♭ major, D minor).
+
+---
+
+## Progress
+
+| Slice | Package | State |
+|-------|---------|-------|
+| MT0–MT4 | music-theory 0.1.0–0.5.0 | done |
+| 0.5.1, 0.5.2 | music-theory 0.5.2 | done, published |
+| MT5 | music-theory 0.6.0 | **contract**: [music-theory#23](https://github.com/egao1980/music-theory/pull/23) (draft). On the stubs the 1350 existing tests (2780 assertions) pass. Of the 99 MT5 tests, 97 fail (160 assertions) and 2 pass: the given offset table and result value. A throwaway reference implementation, not committed, passes all 1449 tests (3149 assertions; 369 of them MT5), and an exact-fraction Python mirror agrees with every row. Fourteen mutations of the reference are each caught, failing 1 to 57 MT5 tests; among them Pearson per fold, rounding, the offset window, the tie sign, the hint's mode, the normaliser and the restart |
+
 ---
 
 ## Logic migration
@@ -160,7 +200,7 @@ The logic-family policy ([logic.md](logic.md)) covers rules, precedence and sele
 
 ## Non-goals (wave 1)
 
-- Microtones, tunings and temperaments (`alter` rationals are reserved)
+- Microtones, tunings and temperaments (`alter` rationals are reserved). MT5 reads pitch centres with cents only to measure one global offset from 12-TET at A440. Spelled pitches stay in 12-TET, and the per-note deviations are reported, not modelled
 - Non-Western pitch systems
 - Harmonic analysis, cadence detection and voice-leading rules (consumer logic programs)
 - Any file format, MIDI or audio (see [score.md](score.md), [audio.md](audio.md))
