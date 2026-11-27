@@ -88,7 +88,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `cl-stack-pathlib` | **0.8.0** | CLOS path + FS (`stack-pathlib`; `zip://`; snapshot-store GC (`snapshot-store-ids` / `-delete`); ranged reads, SHA-256, atomic + `:expected-hash` / `:mode` writes, `fs-chmod` / `(setf fs-mode)`, gitignore matcher, `grep`, `stat`; `with-temp-*` / `rmtree` / `copytree` / `which`) · [conditions](cookbooks/conditions.md); `symlink-p` on Windows = reparse point |
 | `datetime-protocol` | **0.1.3** | instant / duration / period / date / zone / recurrence (`stack-datetime`) · [cookbook](cookbooks/datetime.md) |
 | `cl-stack-tzdata` | **2026.6.0.1** | IANA tzdb (TZif) — no OS zoneinfo |
-| `cl-stack-calendars` | **0.4.1** | holidays / business days / exchange sessions / event-schedule |
+| `cl-stack-calendars` | **0.5.0** | holidays / business days / exchange sessions / event-schedule; XNYS / XNAS on the `"NYSE"` calendar (Rule 7.2 + special closures), and every exchange query honours the exchange calendar (cl-stack-calendars#11) |
 | `cl-stack-calendar-l10n` | **0.1.3** | localized calendar names (ICU) |
 | `schema-protocol` | **0.2.2** | CLOS `defschema` (`stack-schema`); `emit-schema` / `parse-schema` · [cookbook](cookbooks/schema.md) |
 | `sql-protocol` | **0.1.0** | connectivity + pool (`stack-sql`) · [cookbook](cookbooks/sql.md) |
