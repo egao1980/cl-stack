@@ -1,7 +1,7 @@
 # score-protocol (P2): music notation model, MusicXML and MIDI
 
 **Issues:** follow-ups in [Progress](#progress)
-**Status:** SC0 to SC4 **shipped**: [`score-protocol`](https://github.com/egao1980/score-protocol) 0.1.0 (SC0) and 0.2.0 (SC1), [`score-backend-musicxml`](https://github.com/egao1980/score-backend-musicxml) 0.1.0 (SC2), [`midi-protocol`](https://github.com/egao1980/midi-protocol) 0.1.0 (SC3), [`score-backend-midi`](https://github.com/egao1980/score-backend-midi) 0.1.0 (SC4). SC5 [`score-parity`](https://github.com/egao1980/score-parity) 0.1.0 **in progress**: contract [score-parity#3](https://github.com/egao1980/score-parity/pull/3). SC6 (timed note events to a score, `score-backend-midi` 0.2.0) **contract**: [SC6](#sc6-timed-notes-to-a-score-score-backend-midi-020). Decisions made on the way and open follow-ups: [Progress](#progress).
+**Status:** SC0 to SC4 **shipped**: [`score-protocol`](https://github.com/egao1980/score-protocol) 0.1.0 (SC0) and 0.2.0 (SC1), [`score-backend-musicxml`](https://github.com/egao1980/score-backend-musicxml) 0.1.0 (SC2), [`midi-protocol`](https://github.com/egao1980/midi-protocol) 0.1.0 (SC3), [`score-backend-midi`](https://github.com/egao1980/score-backend-midi) 0.1.0 (SC4). SC5 [`score-parity`](https://github.com/egao1980/score-parity) 0.1.0 **in progress**: contract [score-parity#3](https://github.com/egao1980/score-parity/pull/3). SC6 (timed note events to a score, `score-backend-midi` 0.2.0) **implemented, OCI 0.2.0 published** ([#10](https://github.com/egao1980/score-backend-midi/pull/10)): [SC6](#sc6-timed-notes-to-a-score-score-backend-midi-020). Decisions made on the way and open follow-ups: [Progress](#progress).
 **Repos:** `score-protocol` (nick `stack-score`) · `score-backend-musicxml` · `score-backend-midi` · `midi-protocol` (nick `stack-midi`) · `score-parity`
 **Builds on:** [music-theory](music-theory.md) (0.6.0 `fit-key` for SC6), [serdes-protocol](serdes.md), [xml-protocol](xml-protocol.md) + `xml-backend-native`, [binary-protocol](binary-protocol.md), FSet (a `cl-stack-systems` import), [compression-protocol](https://github.com/egao1980/compression-protocol) + `compression-backend-chipz` (`.mxl` zip archives), [sat-protocol](logic.md) (MIDI quantisation)
 
@@ -194,7 +194,7 @@ The corpus, the shape matrix across formats (`print-matrix`), and the MuseScore 
 | SC3 | midi-protocol 0.1.0 | MIDI 1.0 events and the SMF codec |
 | SC4 | score-backend-midi 0.1.0 | export (tracks per voice, tempo map, unfolded repeats, lyrics, chord text, rehearsal mixes) and import (measure map, quantisation, spelling, track mapping, confidence) |
 | SC5 | score-parity 0.1.0 | **in progress**: contract [score-parity#3](https://github.com/egao1980/score-parity/pull/3). 34 MusicXML files of 30 public-domain tunes; checks for the MusicXML and `.mxl` round trips, the hymnal split, MIDI round trips with and without unfolding, and the MuseScore and XSD oracles |
-| SC6 | score-backend-midi 0.2.0 | **contract**: [score-backend-midi#10](https://github.com/egao1980/score-backend-midi/pull/10). Timed note events to a score: `notes-to-score`, `estimate-tempo` |
+| SC6 | score-backend-midi 0.2.0 | **implemented, published 0.2.0**: [score-backend-midi#10](https://github.com/egao1980/score-backend-midi/pull/10) (merged; team-solve: 504 tests, 1924 assertions, green on ubuntu, macOS and Windows). Timed note events to a score: `notes-to-score`, `estimate-tempo` |
 
 ### Decisions made in SC1 to SC4
 
