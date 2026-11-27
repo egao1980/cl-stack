@@ -1,7 +1,7 @@
 # session-protocol (P2): anonymous server-side sessions for Clack apps
 
 **Issues:** [#426](https://github.com/egao1980/cl-stack/issues/426) (this protocol) · [rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19) (first consumer, S1) · [#427](https://github.com/egao1980/cl-stack/issues/427) (middleware-protocol, which S0b binds to)
-**Status:** S0 [`session-protocol`](https://github.com/egao1980/session-protocol) 0.1.0 **contract**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (draft). S0b and S1 are planned.
+**Status:** S0 [`session-protocol`](https://github.com/egao1980/session-protocol) 0.1.0 **implemented and published**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged; team-solve, 308 tests, 934 assertions, green on ubuntu, macOS and Windows). Follow-ups: [#2](https://github.com/egao1980/session-protocol/issues/2) (decisions through the logic family), [#3](https://github.com/egao1980/session-protocol/issues/3). S0b and S1 are planned.
 **Repos:** `session-protocol` (nick `stack-session`)
 **Builds on:** [cache-protocol](cache.md) 0.2.0 (the store), [secrets-protocol](secrets.md) 0.1.3 (ids, constant-time compare), [json-protocol](json-protocol.md) 0.2.4 (serialization), [http-server-protocol](http-server.md) (the Clack env and response are normative), cl-cookie 0.2.0 and quri 0.7.2 (cl-stack-systems imports); later [middleware-protocol](middleware.md) (#427, S0b)
 
@@ -172,7 +172,7 @@ S1 uses S0b.
 
 | Slice | Package | State |
 |-------|---------|-------|
-| S0 | session-protocol 0.1.0 | **contract**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (draft). On the stubs, 308 tests: 250 fail, 58 pass (the given conditions and constructors). An independent reference implementation passes all 308 tests (934 assertions). |
+| S0 | session-protocol 0.1.0 | **implemented, published 0.1.0**: [session-protocol#1](https://github.com/egao1980/session-protocol/pull/1) (merged). team-solve: 308 tests, 934 assertions. Contract: On the stubs, 308 tests: 250 fail, 58 pass (the given conditions and constructors). An independent reference implementation passes all 308 tests (934 assertions). |
 | S0b | `session-handler` on middleware-protocol | planned; needs middleware-protocol (#427) |
 | S1 | rpc-backend-htmx | planned ([rpc-backend-htmx#19](https://github.com/egao1980/rpc-backend-htmx/issues/19)) |
 
