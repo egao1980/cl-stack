@@ -177,7 +177,7 @@ htmx **is** RPC: a canvas function is a method, an htmx request is a call. So it
 | **Client (tests)** | `htmx-client`: call a method the way a browser would (GET/POST, `HX-*` request headers, form encoding), returning status, headers and the parsed fragment; read an SSE stream as `(event . fragment)` pairs |
 | **Tests** | codec round trips (path → method, query / urlencoded / multipart → params, headers → metadata), each mode end to end through the Clack app with the test client, allowlist 404, error mapping (status + retarget + escaped fragment), response headers from data, SSE framing as htmx expects, page vs fragment by `HX-Request`, the same handlers over JSON-RPC give the same fragments, the canvas resolver round trip (URL it builds → codec → same method + params) |
 
-### rpc-backend-htmx 0.5.0 — visitor sessions and request context (S1, contract)
+### rpc-backend-htmx 0.5.0 — visitor sessions and request context (S1, implemented)
 
 Slice S1 of [session.md](session.md#s1-rpc-backend-htmx-050-rpc-backend-htmx19-15) (the decisions are locked there); contract [rpc-backend-htmx#22](https://github.com/egao1980/rpc-backend-htmx/pull/22) (draft). For this brief:
 
