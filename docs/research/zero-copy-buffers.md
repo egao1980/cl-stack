@@ -1,6 +1,6 @@
 # Zero-copy typed buffers for cl-stack: research report
 
-**Date:** 2026-11-28. **Status:** research, no decision yet. Tracks [egao1980/arrow-protocol#8](https://github.com/egao1980/arrow-protocol/issues/8). Paths are relative to the cl-workspace checkout.
+**Date:** 2026-11-28. **Status:** research, no decision yet. Amended the same day: ABCL can use JVM off-heap memory (§1 ABCL (e)). Tracks [egao1980/arrow-protocol#8](https://github.com/egao1980/arrow-protocol/issues/8). Paths are relative to the cl-workspace checkout.
 
 Scope: arrow-protocol#8 (typed storage plus the Arrow C Data Interface) and whether a stack-wide `buffer-protocol` is warranted. No code was changed. "Verified" means I checked it locally: SBCL 2.6.9 arm64, ECL 26.5.5, ABCL 1.9.2 on macOS. CCL is not installed here, so CCL claims come from source and documentation only.
 
@@ -54,10 +54,18 @@ The quickest gains do not need foreign memory at all. Specialized vectors in `ar
 
 ### ABCL
 
-**(a)** Verified on 1.9.2: only `(unsigned-byte 8/16/32)` and `bit` specialize. `signed-byte 8/16/32`, `unsigned-byte 64`, `single-float` and `double-float` all upgrade to `T`, which means boxed Java objects. ABCL gets no unboxed float columns no matter what we do.
+**(a)** Verified on 1.9.2: only `(unsigned-byte 8/16/32)` and `bit` specialize. `signed-byte 8/16/32`, `unsigned-byte 64`, `single-float` and `double-float` all upgrade to `T`, which means boxed Java objects. ABCL gets no unboxed float columns *as Lisp arrays*. The JVM itself can hold them unboxed, off heap: see (e).
 **(b)** There is no pinning, and JNA reaches the JVM heap only through copies. CFFI's ABCL `with-pointer-to-vector-data` **copies the vector into a foreign buffer, runs the body, and copies it back** (cffi-abcl.lisp l.358–370). It also looks the vector up in `*static-vector-pointer*` at *macroexpansion* time with the unevaluated form, so it probably always copies. That is an inference; unverified.
 **(c)** `make-array … :nio-buffer` (feature `:nio`, verified) wraps a `java.nio.ByteBuffer`, and so a JNA `Memory`'s direct buffer, as a Lisp octet vector. This is real foreign-backed storage, and static-vectors uses it. Verified caveat: with `:element-type 'double-float` the `:nio-buffer` is **silently ignored** and you get a `SIMPLE-VECTOR`. Only ub8/16/32 work. Other types need a typed accessor layer over the `ByteBuffer` (`getDouble(index)`) or JNA `Pointer.getDouble`.
 **(d)** `ext:finalize`, backed by JVM reference queues.
+**(e) JVM off-heap memory (verified on ABCL 1.9.2, JDK 27, 2026-11-28).** The Lisp-array limit does not bound the storage: through Java interop ABCL reaches unboxed, typed, off-heap memory.
+- **FFM API** (`java.lang.foreign`, final in JDK 22): `Arena.ofConfined` + `MemorySegment.allocate`, `setAtIndex` / `getAtIndex` with `ValueLayout.JAVA_DOUBLE` work and expose a native `address`. `MemorySegment.ofAddress` + `reinterpret` wraps a foreign address without copying (a restricted method: the JVM warns unless started with `--enable-native-access=ALL-UNNAMED`). Closing the arena frees the memory, which matches a `with-*` scope. Its `Linker` can call C directly, so it could replace JNA on JDK 22+.
+- **Direct `ByteBuffer`** with a little-endian `asDoubleBuffer()` view works on every JDK; JNA `Pointer.getByteBuffer` gives the same view over foreign memory without a copy.
+- **Java primitive arrays** (`jnew-array "double"`, class `[D`) are unboxed but on the moving JVM heap: good for one bulk copy, still copied when passed to C.
+- **`sun.misc.Unsafe`** works but the JVM prints "terminally deprecated … will be removed" (JEP 471 / 498): do not use it.
+- **JNA** is not on ABCL's default classpath; CFFI's ABCL backend loads it through abcl-contrib.
+
+The remaining ABCL cost is per element: each value read into Lisp is a freshly allocated Java double (short-lived garbage per access, not a copy of the column). Bulk work can run on the Java side. CFFI's copying `with-pointer-to-vector-data` is a limit of CFFI's ABCL backend, which buffer-protocol's ABCL backend can bypass.
 
 ### Prior art
 
@@ -143,7 +151,7 @@ Note that `duckdb_data_chunk_to_arrow` produces the `ArrowArray` by converting a
 
 | Option | `aref`-able | Lifetime | Portability | Verdict |
 |---|---|---|---|---|
-| A. Specialized Lisp vector, pin on demand | yes, fastest | GC | SBCL/CCL/ECL good; ABCL floats boxed | **Default storage** |
+| A. Specialized Lisp vector, pin on demand | yes, fastest | GC | SBCL/CCL/ECL good; ABCL floats boxed in Lisp arrays | **Default storage** |
 | B. static-vectors (foreign-allocated Lisp vector) | yes | explicit free; dangling Lisp reference = UAF | SBCL fake header, CCL heap-ivector, ECL plain array, ABCL nio for ub8/16/32 only | **Exportable storage** |
 | C. Foreign pointer + length + element type (+ release) | no: SAP / `mem-aref` accessors | refcount, scope, finalizer backstop | all (CFFI) | **Imported storage** |
 | D. Fake headers over foreign memory | yes | n/a | unsafe on SBCL (header outside our block), workable only on ECL (displaced) | Reject, except an ECL optimisation |
@@ -170,7 +178,7 @@ You cannot get one representation that is both `aref`-able and able to wrap arbi
   - On release, `:foreign`/`:static` buffers set the pointer to NIL so later access signals a `buffer-released-error` (a typed condition with a `use-value` restart where meaningful) instead of crashing.
 - **Aliasing and immutability:** buffers carry a `read-only` flag. Imported Arrow buffers are read-only (the spec says SHOULD be immutable), and exported ones become read-only on export. Mutating through `(setf buffer-ref)` checks the flag (one slot read), and `buffer-copy` produces a mutable copy. Do not try to enforce this for raw pointers.
 - **Fallback:** `:lisp` is always available. Where a feature is missing, the protocol degrades instead of failing:
-  - ABCL: `f64` storage is a boxed `simple-vector` or a ByteBuffer accessor; export copies into foreign memory.
+  - ABCL: `:foreign` (and `:static`) storage is a `MemorySegment` on JDK 22+, else a direct `ByteBuffer`, chosen at run time (ABCL runs on Java 8+). Import and export need no copy; element access from Lisp allocates a boxed double per read. `:lisp` `f64` storage stays a boxed `simple-vector`.
   - CCL: `with-buffer-pointer` on `:lisp` suspends the GC, so blocking FFI calls must require `:static`. This is a declared capability, `(buffer-capability :pin-across-blocking-call)`.
   - Every backend runs the same Rove suite.
 - **Pools:** fold http2's size-class pool idea in as `buffer-pool` (lock-free, size-classed, recycles `:static` buffers for socket and codec I/O). That avoids per-message `posix_memalign`/free and the static-vectors allocation cost (malloc + header write).
@@ -220,7 +228,7 @@ These are isolated, measurable, and need no design decision.
 **Phase 3: export.**
 - `export-arrow-array` from `:static` buffers (zero-copy) or `:lisp` buffers (one `memcpy` into a 64-byte-aligned foreign block). A `release` `defcallback` with a global handle table and atomic refcounts.
 - Use it for `append-arrow-table` through `duckdb_data_chunk_from_arrow`, replacing both the row appender and the Parquet temp-file detour.
-- Risks: callbacks from DuckDB worker threads (SBCL foreign-thread adoption, ECL's `mp` registration), and ABCL (copy only).
+- Risks: callbacks from DuckDB worker threads (SBCL foreign-thread adoption, ECL's `mp` registration), and ABCL (JNA or FFM upcalls for `release`; zero-copy through `MemorySegment` / direct `ByteBuffer`, slower per element).
 
 **Phase 4: I/O and messaging (later; design hinges on the libuv decision).**
 - event-backend-libuv moves from `uv_poll` to `uv_read_start` with an `alloc_cb` that hands out `:static` buffers from a `buffer-pool`, so libuv reads straight into them.
@@ -238,7 +246,7 @@ Risks for Phase 4:
 **Cross-cutting risks:**
 - UAF from `:static` buffers freed while a Lisp reference survives. Released buffers NIL their pointer, but a raw `storage` vector extracted earlier cannot be protected, so document "never retain `buffer-storage` of a `:static` buffer".
 - SBCL internals used by static-vectors could change. It already copes with the `%vector-widetag-and-n-bits` rename, and it is pinned through the import.
-- ABCL: the ceiling is copies plus boxed floats. Accept it and test it as the reference fallback.
+- ABCL: storage can be zero-copy and unboxed (FFM or direct `ByteBuffer`, see §1 ABCL (e)); the ceiling is a boxed value per element read from Lisp. Test it as the slow backend of the same design, not a copying fallback.
 
 ## Sources
 
