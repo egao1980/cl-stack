@@ -220,7 +220,7 @@ No `CL_SOURCE_REGISTRY`. No `ql:quickload`. A missing `:depends-on` or qlfile na
 | `cache-backend-redis` | **0.2.2** | RESP3 Redis / Valkey: host/port or `redis[s]://` URL, AUTH (Redis 5 fallback), SELECT, TLS; a dropped socket or `-LOADING` is retried once on a new connection; ratio values and connection options on a caller `:stream` / `:send-fn` are refused |
 | `mq-protocol` | **0.1.0** | `publish` / `poll-messages` / `ack` / `nack` (`stack-mq`) · [mq](capabilities/mq.md) |
 | `mq-backend-amqp` | **0.2.2** | AMQP 0-9-1 (RabbitMQ) in Lisp: SASL PLAIN, heartbeats, Basic.Get, broker Close as conditions, TLS · canary [`mq-parity`](https://github.com/egao1980/mq-parity) **0.2.0** |
-| `mq-backend-kafka` | **0.2.2** | Kafka over librdkafka 2.16.0 native overlays (darwin arm64, linux amd64 / arm64, windows amd64): consumer groups, `ack` commits the offset · canary [`mq-parity`](https://github.com/egao1980/mq-parity) **0.2.0** |
+| `mq-backend-kafka` | **0.2.3** | Kafka over librdkafka 2.16.0 native overlays (darwin arm64, linux amd64 / arm64, windows amd64): consumer groups, `ack` commits the offset · canary [`mq-parity`](https://github.com/egao1980/mq-parity) **0.2.0** |
 | `cbor-protocol` | **0.1.0** | serdes `:cbor` · [cbor-protocol](capabilities/cbor-protocol.md) |
 | `messagepack-protocol` | **0.1.0** | serdes `:messagepack` / `:msgpack` · [messagepack-protocol](capabilities/messagepack-protocol.md) |
 | `avro-protocol` | **0.1.2** | serdes `:avro` · [avro-protocol](capabilities/avro-protocol.md) |
